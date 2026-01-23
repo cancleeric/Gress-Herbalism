@@ -5,8 +5,8 @@
  * @description 顯示遊戲桌面，包含蓋牌區域和遊戲進行狀態
  */
 
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useMemo, useCallback } from 'react';
+import { useSelector, shallowEqual } from 'react-redux';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
@@ -58,22 +58,12 @@ function HiddenCard({ card, isRevealed, index }) {
  * @returns {JSX.Element} 遊戲桌面組件
  */
 function GameBoard({ currentPlayerId, isGuessing = false }) {
-  // 從 Redux store 取得遊戲狀態
-  const gameState = useSelector((state) => ({
-    hiddenCards: state.hiddenCards,
-    gamePhase: state.gamePhase,
-    winner: state.winner,
-    currentPlayerIndex: state.currentPlayerIndex,
-    players: state.players
-  }));
-
-  const {
-    hiddenCards,
-    gamePhase,
-    winner,
-    currentPlayerIndex,
-    players
-  } = gameState;
+  // 從 Redux store 取得遊戲狀態（使用 shallowEqual 避免不必要的重新渲染）
+  const hiddenCards = useSelector(state => state.hiddenCards);
+  const gamePhase = useSelector(state => state.gamePhase);
+  const winner = useSelector(state => state.winner);
+  const currentPlayerIndex = useSelector(state => state.currentPlayerIndex);
+  const players = useSelector(state => state.players);
 
   /**
    * 判斷是否應該顯示蓋牌

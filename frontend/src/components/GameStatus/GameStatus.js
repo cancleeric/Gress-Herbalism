@@ -330,24 +330,22 @@ GameStatus.propTypes = {
  * @returns {JSX.Element} 遊戲狀態顯示容器
  */
 function GameStatusContainer({ showHistory = true }) {
-  // 從 Redux store 取得遊戲狀態
-  const gameState = useSelector((state) => ({
-    players: state.players,
-    currentPlayerIndex: state.currentPlayerIndex,
-    gamePhase: state.gamePhase,
-    winner: state.winner,
-    gameHistory: state.gameHistory,
-    currentPlayerId: state.currentPlayerId
-  }));
+  // 從 Redux store 取得遊戲狀態（分開選取以避免不必要的重新渲染）
+  const players = useSelector(state => state.players);
+  const currentPlayerIndex = useSelector(state => state.currentPlayerIndex);
+  const gamePhase = useSelector(state => state.gamePhase);
+  const winner = useSelector(state => state.winner);
+  const gameHistory = useSelector(state => state.gameHistory);
+  const currentPlayerId = useSelector(state => state.currentPlayerId);
 
   return (
     <GameStatus
-      players={gameState.players}
-      currentPlayerIndex={gameState.currentPlayerIndex}
-      gamePhase={gameState.gamePhase}
-      winner={gameState.winner}
-      gameHistory={gameState.gameHistory}
-      myPlayerId={gameState.currentPlayerId}
+      players={players}
+      currentPlayerIndex={currentPlayerIndex}
+      gamePhase={gamePhase}
+      winner={winner}
+      gameHistory={gameHistory}
+      myPlayerId={currentPlayerId}
       showHistory={showHistory}
     />
   );

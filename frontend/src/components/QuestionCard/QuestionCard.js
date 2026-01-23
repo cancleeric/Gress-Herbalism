@@ -479,21 +479,19 @@ QuestionCard.propTypes = {
 function QuestionCardContainer({ isOpen = true, onClose }) {
   const dispatch = useDispatch();
 
-  // 從 Redux store 取得遊戲狀態
-  const gameState = useSelector((state) => ({
-    gameId: state.gameId,
-    players: state.players,
-    currentPlayerId: state.currentPlayerId,
-    currentPlayerIndex: state.currentPlayerIndex
-  }));
+  // 從 Redux store 取得遊戲狀態（分開選取以避免不必要的重新渲染）
+  const gameId = useSelector(state => state.gameId);
+  const players = useSelector(state => state.players);
+  const currentPlayerId = useSelector(state => state.currentPlayerId);
+  const currentPlayerIndex = useSelector(state => state.currentPlayerIndex);
 
   // 本地狀態
   const [isLoading, setIsLoading] = useState(false);
   const [questionResult, setQuestionResult] = useState(null);
 
   // 取得當前玩家資訊
-  const currentPlayer = gameState.players[gameState.currentPlayerIndex] || {};
-  const currentPlayerId = gameState.currentPlayerId || currentPlayer.id;
+  const currentPlayer = players[currentPlayerIndex] || {};
+  const effectivePlayerId = currentPlayerId || currentPlayer.id;
   const currentPlayerHand = currentPlayer.hand || [];
 
   /**
@@ -501,7 +499,7 @@ function QuestionCardContainer({ isOpen = true, onClose }) {
    * @param {Object} questionData - 問牌資料
    */
   const handleSubmit = useCallback(async (questionData) => {
-    if (!gameState.gameId) {
+    if (!gameId) {
       setQuestionResult({
         success: false,
         message: '遊戲不存在'
@@ -514,14 +512,14 @@ function QuestionCardContainer({ isOpen = true, onClose }) {
     try {
       // 建立問牌動作
       const action = {
-        playerId: currentPlayerId,
+        playerId: effectivePlayerId,
         targetPlayerId: questionData.targetPlayerId,
         colors: questionData.colors,
         questionType: questionData.questionType
       };
 
       // 調用 gameService 處理問牌動作
-      const result = processQuestionAction(gameState.gameId, action);
+      const result = processQuestionAction(gameId, action);
 
       setQuestionResult(result);
 
@@ -541,7 +539,7 @@ function QuestionCardContainer({ isOpen = true, onClose }) {
     } finally {
       setIsLoading(false);
     }
-  }, [gameState.gameId, currentPlayerId, dispatch]);
+  }, [gameId, effectivePlayerId, dispatch]);
 
   /**
    * 處理取消
@@ -565,8 +563,8 @@ function QuestionCardContainer({ isOpen = true, onClose }) {
 
   return (
     <QuestionCard
-      players={gameState.players}
-      currentPlayerId={currentPlayerId}
+      players={players}
+      currentPlayerId={effectivePlayerId}
       currentPlayerHand={currentPlayerHand}
       onSubmit={handleSubmit}
       onCancel={handleCancel}

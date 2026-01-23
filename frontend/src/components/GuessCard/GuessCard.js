@@ -425,13 +425,11 @@ GuessCard.propTypes = {
 function GuessCardContainer({ isOpen = true, onClose }) {
   const dispatch = useDispatch();
 
-  // 從 Redux store 取得遊戲狀態
-  const gameState = useSelector((state) => ({
-    gameId: state.gameId,
-    currentPlayerId: state.currentPlayerId,
-    currentPlayerIndex: state.currentPlayerIndex,
-    players: state.players
-  }));
+  // 從 Redux store 取得遊戲狀態（分開選取以避免不必要的重新渲染）
+  const gameId = useSelector(state => state.gameId);
+  const reduxCurrentPlayerId = useSelector(state => state.currentPlayerId);
+  const currentPlayerIndex = useSelector(state => state.currentPlayerIndex);
+  const players = useSelector(state => state.players);
 
   // 本地狀態
   const [isLoading, setIsLoading] = useState(false);
@@ -439,20 +437,20 @@ function GuessCardContainer({ isOpen = true, onClose }) {
   const [hiddenCards, setHiddenCards] = useState([]);
 
   // 取得當前玩家資訊
-  const currentPlayer = gameState.players[gameState.currentPlayerIndex] || {};
-  const currentPlayerId = gameState.currentPlayerId || currentPlayer.id;
+  const currentPlayer = players[currentPlayerIndex] || {};
+  const currentPlayerId = reduxCurrentPlayerId || currentPlayer.id;
 
   /**
    * 取得蓋牌答案（供猜牌者查看）
    */
   const fetchHiddenCards = useCallback(() => {
-    if (!gameState.gameId || !currentPlayerId) return;
+    if (!gameId || !currentPlayerId) return;
 
-    const result = revealHiddenCards(gameState.gameId, currentPlayerId);
+    const result = revealHiddenCards(gameId, currentPlayerId);
     if (result.success) {
       setHiddenCards(result.cards);
     }
-  }, [gameState.gameId, currentPlayerId]);
+  }, [gameId, currentPlayerId]);
 
   // 組件載入時取得蓋牌答案
   React.useEffect(() => {
@@ -466,7 +464,7 @@ function GuessCardContainer({ isOpen = true, onClose }) {
    * @param {Object} guessData - 猜牌資料
    */
   const handleSubmit = useCallback(async (guessData) => {
-    if (!gameState.gameId) {
+    if (!gameId) {
       setGuessResult({
         success: false,
         isCorrect: false,
@@ -485,7 +483,7 @@ function GuessCardContainer({ isOpen = true, onClose }) {
       };
 
       // 調用 gameService 處理猜牌動作
-      const result = processGuessAction(gameState.gameId, action);
+      const result = processGuessAction(gameId, action);
 
       setGuessResult(result);
 
@@ -509,7 +507,7 @@ function GuessCardContainer({ isOpen = true, onClose }) {
     } finally {
       setIsLoading(false);
     }
-  }, [gameState.gameId, currentPlayerId, dispatch]);
+  }, [gameId, currentPlayerId, dispatch]);
 
   /**
    * 處理取消

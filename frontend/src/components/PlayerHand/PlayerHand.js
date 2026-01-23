@@ -20,7 +20,7 @@ import './PlayerHand.css';
  * @param {number} props.index - 卡牌索引
  * @returns {JSX.Element} 卡牌組件
  */
-function Card({ card, isSelected, isSelectable, onClick, index }) {
+function Card({ card, isSelected = false, isSelectable = false, onClick = null, index = 0 }) {
   const cardClass = [
     'hand-card',
     `card-${card.color}`,
@@ -75,12 +75,6 @@ Card.propTypes = {
   index: PropTypes.number
 };
 
-Card.defaultProps = {
-  isSelected: false,
-  isSelectable: false,
-  onClick: null,
-  index: 0
-};
 
 /**
  * 玩家手牌組件
