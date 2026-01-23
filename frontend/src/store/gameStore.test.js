@@ -22,7 +22,7 @@ import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 describe('gameStore - 工作單 0012', () => {
   describe('Action Types', () => {

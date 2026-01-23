@@ -17,7 +17,7 @@ describe('App - 工作單 0013', () => {
 
     test('首頁應顯示遊戲大廳', () => {
       render(<App />);
-      expect(screen.getByText('遊戲大廳 - 待實作')).toBeInTheDocument();
+      expect(screen.getByText('3-4 人推理卡牌遊戲')).toBeInTheDocument();
     });
 
     test('應用程式應包含 app 容器', () => {

@@ -22,7 +22,7 @@ import {
   QUESTION_TYPE_ONE_EACH,
   QUESTION_TYPE_ALL_ONE_COLOR,
   QUESTION_TYPE_GIVE_ONE_GET_ALL
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 describe('gameService - 工作單 0009', () => {
   // 每個測試後清除所有遊戲

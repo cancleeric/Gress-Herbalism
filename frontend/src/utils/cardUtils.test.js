@@ -21,7 +21,7 @@ import {
   MIN_PLAYERS,
   MAX_PLAYERS,
   HIDDEN_CARDS_COUNT
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 describe('createDeck - 工作單 0003', () => {
   let deck;

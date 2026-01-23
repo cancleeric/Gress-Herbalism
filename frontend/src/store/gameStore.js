@@ -11,7 +11,7 @@ import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 // ==================== Action Types ====================
 

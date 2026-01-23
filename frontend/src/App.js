@@ -8,18 +8,10 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import store from './store/gameStore';
+import Lobby from './components/Lobby';
 import './styles/App.css';
 
 // 臨時佔位組件（將在後續工作單中實作）
-function Lobby() {
-  return (
-    <div className="lobby">
-      <h1>桌遊網頁版</h1>
-      <p>遊戲大廳 - 待實作</p>
-    </div>
-  );
-}
-
 function GameRoom() {
   return (
     <div className="game-room">

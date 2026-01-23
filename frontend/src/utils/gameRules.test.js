@@ -19,7 +19,7 @@ import {
   QUESTION_TYPE_GIVE_ONE_GET_ALL,
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 describe('validatePlayerCount - 工作單 0007', () => {
   test('3 人應返回 true', () => {

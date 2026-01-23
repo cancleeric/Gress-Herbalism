@@ -30,7 +30,7 @@ import {
   QUESTION_TYPE_GIVE_ONE_GET_ALL,
   ACTION_TYPE_QUESTION,
   ACTION_TYPE_GUESS
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 // ==================== 遊戲狀態儲存 ====================
 

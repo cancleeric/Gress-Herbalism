@@ -13,7 +13,7 @@ import {
   MIN_PLAYERS,
   MAX_PLAYERS,
   HIDDEN_CARDS_COUNT
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 /**
  * 牌卡資料結構

@@ -16,7 +16,7 @@ import {
   GAME_PHASE_FINISHED,
   isValidColor,
   isValidQuestionType
-} from '../../../shared/constants.js';
+} from '../shared/constants';
 
 import { countCardsByColor } from './cardUtils.js';
 
