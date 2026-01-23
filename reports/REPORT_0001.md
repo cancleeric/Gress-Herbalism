@@ -156,7 +156,29 @@
 
 4. **目錄結構**：所有目錄已建立，但尚未包含任何實際檔案。後續工作單將逐步填充這些目錄。
 
+## 版本控制
+
+### Git 初始化
+- ✅ Git 倉庫已初始化
+- ✅ 所有檔案已加入暫存區
+- ✅ 已建立初始提交
+
+### 提交資訊
+- **提交訊息**：`Work Order 0001: Setup project structure and configuration files`
+- **提交檔案**：
+  - 專案配置檔案（.gitignore, README.md）
+  - 前端配置（frontend/package.json）
+  - 後端配置（backend/package.json）
+  - 工作單和報告（work_orders/, reports/）
+  - 文檔（docs/, PROJECT_PLAN.md）
+
+### 版本控制狀態
+- Git 倉庫已建立
+- 所有變更已提交
+- 可開始下一張工作單
+
 ---
 
 **報告撰寫日期：** 2026-01-23  
-**報告狀態：** 完成 ✅
+**報告狀態：** 完成 ✅  
+**版本控制：** 已完成 ✅
