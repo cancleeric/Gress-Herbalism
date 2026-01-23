@@ -1,10 +1,18 @@
 /**
  * 牌組工具函數單元測試
- * 工作單 0003, 0004
+ * 工作單 0003, 0004, 0005
  */
 
-import { createDeck, shuffleDeck } from './cardUtils';
-import { COLORS, CARD_COUNTS, TOTAL_CARDS, ALL_COLORS } from '../../../shared/constants.js';
+import { createDeck, shuffleDeck, dealCards } from './cardUtils';
+import {
+  COLORS,
+  CARD_COUNTS,
+  TOTAL_CARDS,
+  ALL_COLORS,
+  MIN_PLAYERS,
+  MAX_PLAYERS,
+  HIDDEN_CARDS_COUNT
+} from '../../../shared/constants.js';
 
 describe('createDeck - 工作單 0003', () => {
   let deck;
@@ -133,5 +141,97 @@ describe('shuffleDeck - 工作單 0004', () => {
     const shuffled = shuffleDeck(singleCard);
     expect(shuffled).toHaveLength(1);
     expect(shuffled[0].id).toBe('red-1');
+  });
+});
+
+describe('dealCards - 工作單 0005', () => {
+  let deck;
+
+  beforeEach(() => {
+    deck = shuffleDeck(createDeck());
+  });
+
+  test('應正確抽出 2 張蓋牌', () => {
+    const result = dealCards(deck, 3);
+    expect(result.hiddenCards).toHaveLength(HIDDEN_CARDS_COUNT);
+  });
+
+  test('蓋牌的 isHidden 應為 true', () => {
+    const result = dealCards(deck, 3);
+    result.hiddenCards.forEach(card => {
+      expect(card.isHidden).toBe(true);
+    });
+  });
+
+  test('3 人遊戲時每人應有 4 張牌', () => {
+    const result = dealCards(deck, 3);
+    expect(result.playerHands).toHaveLength(3);
+    result.playerHands.forEach(hand => {
+      expect(hand).toHaveLength(4);
+    });
+  });
+
+  test('4 人遊戲時每人應有 3 張牌', () => {
+    const result = dealCards(deck, 4);
+    expect(result.playerHands).toHaveLength(4);
+    result.playerHands.forEach(hand => {
+      expect(hand).toHaveLength(3);
+    });
+  });
+
+  test('所有牌應被分配完畢', () => {
+    const result = dealCards(deck, 3);
+    const hiddenCount = result.hiddenCards.length;
+    const handCount = result.playerHands.reduce((sum, hand) => sum + hand.length, 0);
+    expect(hiddenCount + handCount).toBe(TOTAL_CARDS);
+  });
+
+  test('不應修改原牌組', () => {
+    const originalDeck = createDeck();
+    const originalCopy = JSON.parse(JSON.stringify(originalDeck));
+    dealCards(originalDeck, 3);
+    expect(originalDeck).toEqual(originalCopy);
+  });
+
+  test('玩家手牌不應包含蓋牌', () => {
+    const result = dealCards(deck, 3);
+    const hiddenIds = result.hiddenCards.map(card => card.id);
+    result.playerHands.forEach(hand => {
+      hand.forEach(card => {
+        expect(hiddenIds).not.toContain(card.id);
+      });
+    });
+  });
+
+  test('玩家手牌的 isHidden 應為 false', () => {
+    const result = dealCards(deck, 3);
+    result.playerHands.forEach(hand => {
+      hand.forEach(card => {
+        expect(card.isHidden).toBe(false);
+      });
+    });
+  });
+
+  test('玩家數量少於 3 人應拋出錯誤', () => {
+    expect(() => dealCards(deck, 2)).toThrow();
+  });
+
+  test('玩家數量多於 4 人應拋出錯誤', () => {
+    expect(() => dealCards(deck, 5)).toThrow();
+  });
+
+  test('牌組數量不足應拋出錯誤', () => {
+    const smallDeck = [{ id: 'red-1', color: 'red', isHidden: false }];
+    expect(() => dealCards(smallDeck, 3)).toThrow();
+  });
+
+  test('所有牌的 id 應該是唯一的', () => {
+    const result = dealCards(deck, 3);
+    const allIds = [
+      ...result.hiddenCards.map(card => card.id),
+      ...result.playerHands.flat().map(card => card.id)
+    ];
+    const uniqueIds = [...new Set(allIds)];
+    expect(uniqueIds).toHaveLength(allIds.length);
   });
 });

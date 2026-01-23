@@ -6,7 +6,14 @@
  * @module cardUtils
  */
 
-import { COLORS, CARD_COUNTS, ALL_COLORS } from '../../../shared/constants.js';
+import {
+  COLORS,
+  CARD_COUNTS,
+  ALL_COLORS,
+  MIN_PLAYERS,
+  MAX_PLAYERS,
+  HIDDEN_CARDS_COUNT
+} from '../../../shared/constants.js';
 
 /**
  * 牌卡資料結構
@@ -82,4 +89,70 @@ export function shuffleDeck(deck) {
   }
 
   return shuffled;
+}
+
+/**
+ * 發牌結果資料結構
+ * @typedef {Object} DealResult
+ * @property {Card[]} hiddenCards - 2張蓋牌
+ * @property {Card[][]} playerHands - 每個玩家的手牌陣列
+ */
+
+/**
+ * 發牌功能
+ *
+ * 從牌組中抽出2張蓋牌，並將剩餘的牌平均分配給所有玩家
+ *
+ * @param {Card[]} deck - 洗牌後的牌組陣列
+ * @param {number} playerCount - 玩家數量（3-4人）
+ * @returns {DealResult} 發牌結果，包含蓋牌和各玩家手牌
+ * @throws {Error} 當玩家數量無效或牌組數量不足時拋出錯誤
+ *
+ * @example
+ * const deck = shuffleDeck(createDeck());
+ * const result = dealCards(deck, 3);
+ * // result.hiddenCards: 2張蓋牌（isHidden: true）
+ * // result.playerHands: [[玩家1的牌], [玩家2的牌], [玩家3的牌]]
+ */
+export function dealCards(deck, playerCount) {
+  // 驗證玩家數量
+  if (playerCount < MIN_PLAYERS || playerCount > MAX_PLAYERS) {
+    throw new Error(`玩家數量必須在 ${MIN_PLAYERS} 到 ${MAX_PLAYERS} 人之間`);
+  }
+
+  // 驗證牌組數量
+  if (deck.length < HIDDEN_CARDS_COUNT) {
+    throw new Error(`牌組數量不足，至少需要 ${HIDDEN_CARDS_COUNT} 張牌`);
+  }
+
+  // 複製牌組，避免修改原陣列
+  const deckCopy = deck.map(card => ({ ...card }));
+
+  // 抽出蓋牌
+  const hiddenCards = deckCopy.splice(0, HIDDEN_CARDS_COUNT).map(card => ({
+    ...card,
+    isHidden: true
+  }));
+
+  // 計算每位玩家應得的牌數
+  const remainingCards = deckCopy.length;
+  const baseCardsPerPlayer = Math.floor(remainingCards / playerCount);
+  const extraCards = remainingCards % playerCount;
+
+  // 初始化玩家手牌陣列
+  const playerHands = [];
+  let cardIndex = 0;
+
+  for (let i = 0; i < playerCount; i++) {
+    // 計算此玩家的牌數（前 extraCards 個玩家多拿一張）
+    const cardsForThisPlayer = baseCardsPerPlayer + (i < extraCards ? 1 : 0);
+    const hand = deckCopy.slice(cardIndex, cardIndex + cardsForThisPlayer);
+    playerHands.push(hand);
+    cardIndex += cardsForThisPlayer;
+  }
+
+  return {
+    hiddenCards,
+    playerHands
+  };
 }
