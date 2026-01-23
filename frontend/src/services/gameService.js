@@ -35,11 +35,133 @@ import {
 const gameStore = new Map();
 
 /**
+ * 房間列表監聽器
+ * @type {Set<Function>}
+ */
+const roomListeners = new Set();
+
+/**
  * 產生唯一遊戲 ID
  * @returns {string} 唯一遊戲 ID
  */
 function generateGameId() {
   return `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * 通知房間列表變更
+ */
+function notifyRoomListChange() {
+  const rooms = getAvailableRooms();
+  roomListeners.forEach(listener => {
+    try {
+      listener(rooms);
+    } catch (error) {
+      console.error('Error in room list listener:', error);
+    }
+  });
+}
+
+/**
+ * 訂閱房間列表變更
+ * @param {Function} listener - 監聽函數
+ * @returns {Function} 取消訂閱函數
+ */
+export function subscribeToRoomList(listener) {
+  roomListeners.add(listener);
+  // 立即通知當前房間列表
+  listener(getAvailableRooms());
+  return () => {
+    roomListeners.delete(listener);
+  };
+}
+
+/**
+ * 取得可用房間列表
+ * @returns {Array} 可用房間列表
+ */
+export function getAvailableRooms() {
+  const rooms = [];
+  gameStore.forEach((state, gameId) => {
+    // 只返回等待中的房間
+    if (state.gamePhase === GAME_PHASE_WAITING) {
+      const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
+      rooms.push({
+        id: gameId,
+        name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
+        playerCount: state.players.length,
+        maxPlayers: state.maxPlayers || 4
+      });
+    }
+  });
+  return rooms;
+}
+
+/**
+ * 加入現有房間
+ * @param {string} gameId - 遊戲 ID
+ * @param {Object} player - 玩家資訊
+ * @returns {Object} 加入結果
+ */
+export function joinRoom(gameId, player) {
+  const gameState = gameStore.get(gameId);
+
+  if (!gameState) {
+    return {
+      success: false,
+      gameState: null,
+      message: '房間不存在，請確認房間ID是否正確'
+    };
+  }
+
+  if (gameState.gamePhase !== GAME_PHASE_WAITING) {
+    return {
+      success: false,
+      gameState,
+      message: '遊戲已開始，無法加入'
+    };
+  }
+
+  const maxPlayers = gameState.maxPlayers || 4;
+  if (gameState.players.length >= maxPlayers) {
+    return {
+      success: false,
+      gameState,
+      message: '房間已滿，無法加入'
+    };
+  }
+
+  // 檢查玩家是否已存在
+  const existingPlayer = gameState.players.find(p => p.id === player.id);
+  if (existingPlayer) {
+    return {
+      success: false,
+      gameState,
+      message: '玩家已在房間中'
+    };
+  }
+
+  // 添加玩家到房間
+  const updatedPlayers = [...gameState.players, {
+    ...player,
+    isActive: true,
+    isCurrentTurn: false,
+    hand: []
+  }];
+
+  const updatedState = {
+    ...gameState,
+    players: updatedPlayers
+  };
+
+  gameStore.set(gameId, updatedState);
+  notifyRoomListChange();
+
+  return {
+    success: true,
+    gameState: updatedState,
+    message: '成功加入房間'
+  };
 }
 
 // ==================== 遊戲狀態管理函數 ====================
@@ -101,6 +223,9 @@ export function createGameRoom(hostPlayer, maxPlayers = 4) {
 
   // 儲存房間狀態
   gameStore.set(gameId, roomState);
+
+  // 通知房間列表變更
+  notifyRoomListChange();
 
   return roomState;
 }

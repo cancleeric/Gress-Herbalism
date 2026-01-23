@@ -37,6 +37,9 @@ const renderWithProviders = (component) => {
 describe('Lobby - 工作單 0014', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock subscribeToRoomList 返回一個 unsubscribe 函數
+    gameService.subscribeToRoomList.mockReturnValue(() => {});
+    gameService.getAvailableRooms.mockReturnValue([]);
   });
 
   describe('渲染', () => {
@@ -157,6 +160,9 @@ describe('Lobby - 工作單 0014', () => {
 describe('Lobby - 工作單 0015', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock subscribeToRoomList 返回一個 unsubscribe 函數
+    gameService.subscribeToRoomList.mockReturnValue(() => {});
+    gameService.getAvailableRooms.mockReturnValue([]);
   });
 
   describe('玩家數量選擇器', () => {
@@ -280,7 +286,11 @@ describe('Lobby - 工作單 0015', () => {
 
   describe('加入房間功能', () => {
     test('房間不存在應顯示錯誤', () => {
-      gameService.getGameState.mockReturnValue(null);
+      gameService.joinRoom.mockReturnValue({
+        success: false,
+        gameState: null,
+        message: '房間不存在，請確認房間ID是否正確'
+      });
 
       renderWithProviders(<Lobby />);
 
@@ -296,10 +306,14 @@ describe('Lobby - 工作單 0015', () => {
     });
 
     test('房間已滿應顯示錯誤', () => {
-      gameService.getGameState.mockReturnValue({
-        gamePhase: 'waiting',
-        players: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }],
-        maxPlayers: 3
+      gameService.joinRoom.mockReturnValue({
+        success: false,
+        gameState: {
+          gamePhase: 'waiting',
+          players: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }],
+          maxPlayers: 3
+        },
+        message: '房間已滿，無法加入'
       });
 
       renderWithProviders(<Lobby />);
@@ -316,10 +330,14 @@ describe('Lobby - 工作單 0015', () => {
     });
 
     test('遊戲已開始應顯示錯誤', () => {
-      gameService.getGameState.mockReturnValue({
-        gamePhase: 'playing',
-        players: [{ id: 'p1' }, { id: 'p2' }],
-        maxPlayers: 4
+      gameService.joinRoom.mockReturnValue({
+        success: false,
+        gameState: {
+          gamePhase: 'playing',
+          players: [{ id: 'p1' }, { id: 'p2' }],
+          maxPlayers: 4
+        },
+        message: '遊戲已開始，無法加入'
       });
 
       renderWithProviders(<Lobby />);
@@ -336,10 +354,14 @@ describe('Lobby - 工作單 0015', () => {
     });
 
     test('加入房間成功應導航到遊戲房間', () => {
-      gameService.getGameState.mockReturnValue({
-        gamePhase: 'waiting',
-        players: [{ id: 'p1' }],
-        maxPlayers: 4
+      gameService.joinRoom.mockReturnValue({
+        success: true,
+        gameState: {
+          gamePhase: 'waiting',
+          players: [{ id: 'p1' }, { id: 'p2', name: '玩家2' }],
+          maxPlayers: 4
+        },
+        message: '成功加入房間'
       });
 
       renderWithProviders(<Lobby />);

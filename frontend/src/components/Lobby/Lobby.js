@@ -5,7 +5,7 @@
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,7 +15,10 @@ import {
 } from '../../store/gameStore';
 import {
   createGameRoom,
-  getGameState
+  getGameState,
+  getAvailableRooms,
+  subscribeToRoomList,
+  joinRoom
 } from '../../services/gameService';
 import { validatePlayerCount } from '../../utils/gameRules';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
@@ -29,10 +32,9 @@ import './Lobby.css';
 function Lobby() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const gameState = useSelector((state) => ({
-    gameId: state.gameId,
-    players: state.players
-  }));
+  // 分開選取以避免不必要的重新渲染
+  const gameId = useSelector(state => state.gameId);
+  const players = useSelector(state => state.players);
 
   // 本地狀態
   const [playerName, setPlayerName] = useState('');
@@ -41,6 +43,14 @@ function Lobby() {
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // 訂閱房間列表更新
+  useEffect(() => {
+    const unsubscribe = subscribeToRoomList((updatedRooms) => {
+      setRooms(updatedRooms);
+    });
+    return () => unsubscribe();
+  }, []);
 
   /**
    * 處理玩家名稱變更
@@ -174,30 +184,6 @@ function Lobby() {
     try {
       const trimmedRoomId = roomId.trim();
 
-      // 獲取遊戲狀態以驗證房間
-      const gameState = getGameState(trimmedRoomId);
-
-      if (!gameState) {
-        setError('房間不存在，請確認房間ID是否正確');
-        setIsLoading(false);
-        return;
-      }
-
-      // 檢查房間是否已滿
-      const maxPlayers = gameState.maxPlayers || MAX_PLAYERS;
-      if (gameState.players && gameState.players.length >= maxPlayers) {
-        setError('房間已滿，無法加入');
-        setIsLoading(false);
-        return;
-      }
-
-      // 檢查遊戲是否已開始
-      if (gameState.gamePhase !== 'waiting') {
-        setError('遊戲已開始，無法加入');
-        setIsLoading(false);
-        return;
-      }
-
       // 創建新玩家資訊
       const newPlayer = {
         id: `player_${Date.now()}`,
@@ -207,8 +193,23 @@ function Lobby() {
         hand: []
       };
 
+      // 使用 gameService 的 joinRoom 函數
+      const result = joinRoom(trimmedRoomId, newPlayer);
+
+      if (!result.success) {
+        setError(result.message);
+        setIsLoading(false);
+        return;
+      }
+
       // 更新 Redux store
       dispatch(joinGame(trimmedRoomId, newPlayer));
+      dispatch(updateGameState({
+        gameId: trimmedRoomId,
+        players: result.gameState.players,
+        maxPlayers: result.gameState.maxPlayers,
+        gamePhase: result.gameState.gamePhase
+      }));
 
       // 導航到遊戲房間
       navigate(`/game/${trimmedRoomId}`);
@@ -233,27 +234,6 @@ function Lobby() {
     setError('');
 
     try {
-      const gameState = getGameState(selectedRoomId);
-
-      if (!gameState) {
-        setError('房間不存在');
-        setIsLoading(false);
-        return;
-      }
-
-      const maxPlayers = gameState.maxPlayers || MAX_PLAYERS;
-      if (gameState.players && gameState.players.length >= maxPlayers) {
-        setError('房間已滿');
-        setIsLoading(false);
-        return;
-      }
-
-      if (gameState.gamePhase !== 'waiting') {
-        setError('遊戲已開始');
-        setIsLoading(false);
-        return;
-      }
-
       const newPlayer = {
         id: `player_${Date.now()}`,
         name: playerName.trim(),
@@ -262,7 +242,24 @@ function Lobby() {
         hand: []
       };
 
+      // 使用 gameService 的 joinRoom 函數
+      const result = joinRoom(selectedRoomId, newPlayer);
+
+      if (!result.success) {
+        setError(result.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // 更新 Redux store
       dispatch(joinGame(selectedRoomId, newPlayer));
+      dispatch(updateGameState({
+        gameId: selectedRoomId,
+        players: result.gameState.players,
+        maxPlayers: result.gameState.maxPlayers,
+        gamePhase: result.gameState.gamePhase
+      }));
+
       navigate(`/game/${selectedRoomId}`);
     } catch (err) {
       console.error('快速加入房間錯誤:', err);
