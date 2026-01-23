@@ -1,6 +1,6 @@
 /**
  * 遊戲服務單元測試
- * 工作單 0009
+ * 工作單 0009, 0010
  */
 
 import {
@@ -8,13 +8,17 @@ import {
   getGameState,
   updateGameState,
   deleteGame,
-  clearAllGames
+  clearAllGames,
+  processQuestionAction
 } from './gameService';
 
 import {
   GAME_PHASE_PLAYING,
   TOTAL_CARDS,
-  HIDDEN_CARDS_COUNT
+  HIDDEN_CARDS_COUNT,
+  QUESTION_TYPE_ONE_EACH,
+  QUESTION_TYPE_ALL_ONE_COLOR,
+  QUESTION_TYPE_GIVE_ONE_GET_ALL
 } from '../../../shared/constants.js';
 
 describe('gameService - 工作單 0009', () => {
@@ -205,6 +209,225 @@ describe('gameService - 工作單 0009', () => {
     test('刪除不存在的遊戲應返回 false', () => {
       const result = deleteGame('non_existent_game');
       expect(result).toBe(false);
+    });
+  });
+});
+
+describe('processQuestionAction - 工作單 0010', () => {
+  afterEach(() => {
+    clearAllGames();
+  });
+
+  // 建立一個有已知手牌的遊戲用於測試
+  function createTestGame() {
+    const players = [
+      { id: 'p1', name: '玩家1' },
+      { id: 'p2', name: '玩家2' },
+      { id: 'p3', name: '玩家3' }
+    ];
+    const gameState = createGame(players);
+
+    // 設定已知的手牌用於測試
+    const testHands = [
+      [
+        { id: 'red-1', color: 'red', isHidden: false },
+        { id: 'blue-1', color: 'blue', isHidden: false }
+      ],
+      [
+        { id: 'red-2', color: 'red', isHidden: false },
+        { id: 'yellow-1', color: 'yellow', isHidden: false },
+        { id: 'yellow-2', color: 'yellow', isHidden: false }
+      ],
+      [
+        { id: 'green-1', color: 'green', isHidden: false },
+        { id: 'blue-2', color: 'blue', isHidden: false }
+      ]
+    ];
+
+    const updatedPlayers = gameState.players.map((p, i) => ({
+      ...p,
+      hand: testHands[i]
+    }));
+
+    updateGameState(gameState.gameId, { players: updatedPlayers });
+    return getGameState(gameState.gameId);
+  }
+
+  describe('基本驗證', () => {
+    test('遊戲不存在應返回錯誤', () => {
+      const result = processQuestionAction('non_existent', {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'blue'],
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('不存在');
+    });
+
+    test('不是當前玩家回合應返回錯誤', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p2', // p2 不是當前玩家
+        targetPlayerId: 'p1',
+        colors: ['red', 'blue'],
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('不是你的回合');
+    });
+  });
+
+  describe('類型1 - 兩個顏色各一張', () => {
+    test('目標玩家兩個顏色都有時應各給一張', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'yellow'],
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.cardsReceived).toHaveLength(2);
+      expect(result.result.hasCards).toBe(true);
+    });
+
+    test('目標玩家只有一個顏色時應只給一張', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'blue'], // p2 沒有 blue
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.cardsReceived).toHaveLength(1);
+      expect(result.result.cardsReceived[0].color).toBe('red');
+    });
+
+    test('目標玩家兩個顏色都沒有時應返回 hasCards: false', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['green', 'blue'], // p2 沒有 green 和 blue
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.cardsReceived).toHaveLength(0);
+      expect(result.result.hasCards).toBe(false);
+    });
+  });
+
+  describe('類型2 - 其中一種顏色全部', () => {
+    test('應正確給出指定顏色的全部牌', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['yellow', 'blue'],
+        questionType: QUESTION_TYPE_ALL_ONE_COLOR,
+        selectedColor: 'yellow'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.cardsReceived).toHaveLength(2); // p2 有 2 張 yellow
+      expect(result.result.cardsReceived.every(c => c.color === 'yellow')).toBe(true);
+    });
+
+    test('目標玩家沒有該顏色時應返回 hasCards: false', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['green', 'blue'],
+        questionType: QUESTION_TYPE_ALL_ONE_COLOR
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.hasCards).toBe(false);
+    });
+  });
+
+  describe('類型3 - 給一張要全部', () => {
+    test('應正確給一張並收到全部', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'yellow'],
+        questionType: QUESTION_TYPE_GIVE_ONE_GET_ALL,
+        giveColor: 'red',
+        getColor: 'yellow'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.cardsGiven).toHaveLength(1);
+      expect(result.result.cardsGiven[0].color).toBe('red');
+      expect(result.result.cardsReceived).toHaveLength(2); // p2 有 2 張 yellow
+    });
+
+    test('目標玩家沒有要的顏色時，已給的牌不收回', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'green'],
+        questionType: QUESTION_TYPE_GIVE_ONE_GET_ALL,
+        giveColor: 'red',
+        getColor: 'green' // p2 沒有 green
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.result.cardsGiven).toHaveLength(1); // 給出的牌
+      expect(result.result.cardsReceived).toHaveLength(0); // 沒有收到牌
+      expect(result.result.hasCards).toBe(false);
+    });
+  });
+
+  describe('遊戲狀態更新', () => {
+    test('問牌後應切換到下一個玩家', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'yellow'],
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.gameState.currentPlayerIndex).toBe(1);
+      expect(result.gameState.players[0].isCurrentTurn).toBe(false);
+      expect(result.gameState.players[1].isCurrentTurn).toBe(true);
+    });
+
+    test('問牌應記錄到遊戲歷史', () => {
+      const gameState = createTestGame();
+
+      const result = processQuestionAction(gameState.gameId, {
+        playerId: 'p1',
+        targetPlayerId: 'p2',
+        colors: ['red', 'yellow'],
+        questionType: QUESTION_TYPE_ONE_EACH
+      });
+
+      expect(result.gameState.gameHistory).toHaveLength(1);
+      expect(result.gameState.gameHistory[0].type).toBe('question');
+      expect(result.gameState.gameHistory[0].playerId).toBe('p1');
     });
   });
 });
