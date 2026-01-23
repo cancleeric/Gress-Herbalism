@@ -2,16 +2,39 @@
  * App 組件樣式
  *
  * @description 主應用組件的 CSS 樣式
+ * 工作單 0029 - UI/UX 優化
  */
 
-/* 主應用容器 */
+/* ==================== 主應用容器 ==================== */
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, var(--color-background) 0%, #0f1629 100%);
 }
 
-/* 遊戲大廳樣式 */
+/* ==================== 頁面過渡動畫 ==================== */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+/* ==================== 遊戲大廳樣式 ==================== */
 .lobby {
   flex: 1;
   display: flex;
@@ -19,29 +42,53 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-xl);
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lobby h1 {
-  font-size: 2.5rem;
+  font-size: var(--font-size-3xl);
   margin-bottom: var(--spacing-lg);
   color: var(--color-accent);
+  text-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+    text-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 50px rgba(233, 69, 96, 0.5), 0 0 100px rgba(233, 69, 96, 0.2);
+  }
 }
 
 .lobby p {
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
 }
 
-/* 遊戲房間樣式 */
+/* ==================== 遊戲房間樣式 ==================== */
 .game-room {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: var(--spacing-lg);
+  animation: fadeIn var(--transition-slow) ease-out;
 }
 
 .game-room h1 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-md);
   text-align: center;
 }
@@ -51,7 +98,7 @@
   color: var(--color-text-secondary);
 }
 
-/* 錯誤邊界樣式 */
+/* ==================== 錯誤邊界樣式 ==================== */
 .error-boundary {
   flex: 1;
   display: flex;
@@ -60,10 +107,11 @@
   justify-content: center;
   padding: var(--spacing-xl);
   text-align: center;
+  animation: fadeIn var(--transition-slow) ease-out;
 }
 
 .error-boundary h1 {
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
   color: var(--color-error);
   margin-bottom: var(--spacing-md);
 }
@@ -74,12 +122,136 @@
 }
 
 .error-boundary button {
-  background-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
   color: white;
   padding: var(--spacing-md) var(--spacing-xl);
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-lg);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
 }
 
 .error-boundary button:hover {
-  background-color: #c13a50;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+}
+
+/* ==================== 通用組件動畫 ==================== */
+.fade-in {
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+.slide-up {
+  animation: slideUp var(--transition-slow) ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-down {
+  animation: slideDown var(--transition-slow) ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scale-in {
+  animation: scaleIn var(--transition-normal) ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ==================== 玻璃擬態效果 ==================== */
+.glass {
+  background: rgba(22, 33, 62, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  background: rgba(15, 52, 96, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ==================== 懸浮效果 ==================== */
+.hover-lift {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ==================== 響應式優化 ==================== */
+@media (max-width: 768px) {
+  .lobby h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .game-room {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .lobby {
+    padding: var(--spacing-md);
+  }
+
+  .lobby h1 {
+    font-size: var(--font-size-xl);
+  }
+
+  .error-boundary {
+    padding: var(--spacing-md);
+  }
+
+  .error-boundary button {
+    width: 100%;
+    padding: var(--spacing-md);
+  }
 }
