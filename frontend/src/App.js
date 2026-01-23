@@ -9,17 +9,8 @@ import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import store from './store/gameStore';
 import Lobby from './components/Lobby';
+import GameRoom from './components/GameRoom';
 import './styles/App.css';
-
-// 臨時佔位組件（將在後續工作單中實作）
-function GameRoom() {
-  return (
-    <div className="game-room">
-      <h1>遊戲房間</h1>
-      <p>遊戲進行中 - 待實作</p>
-    </div>
-  );
-}
 
 /**
  * 錯誤邊界組件
