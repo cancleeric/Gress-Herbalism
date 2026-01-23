@@ -186,8 +186,8 @@ describe('Lobby - 工作單 0015', () => {
   });
 
   describe('創建房間功能', () => {
-    test('創建房間成功應調用 gameService.createGame', () => {
-      gameService.createGame.mockReturnValue({
+    test('創建房間成功應調用 gameService.createGameRoom', () => {
+      gameService.createGameRoom.mockReturnValue({
         gameId: 'test_game_123',
         players: []
       });
@@ -199,11 +199,11 @@ describe('Lobby - 工作單 0015', () => {
 
       fireEvent.click(screen.getByText('創建新房間'));
 
-      expect(gameService.createGame).toHaveBeenCalled();
+      expect(gameService.createGameRoom).toHaveBeenCalled();
     });
 
     test('創建房間成功應導航到遊戲房間', () => {
-      gameService.createGame.mockReturnValue({
+      gameService.createGameRoom.mockReturnValue({
         gameId: 'test_game_123',
         players: []
       });
@@ -219,7 +219,7 @@ describe('Lobby - 工作單 0015', () => {
     });
 
     test('創建房間失敗應顯示錯誤', () => {
-      gameService.createGame.mockReturnValue(null);
+      gameService.createGameRoom.mockReturnValue(null);
 
       renderWithProviders(<Lobby />);
 
@@ -229,6 +229,52 @@ describe('Lobby - 工作單 0015', () => {
       fireEvent.click(screen.getByText('創建新房間'));
 
       expect(screen.getByText('創建房間失敗，請重試')).toBeInTheDocument();
+    });
+
+    test('選擇 3 人時創建房間應成功', () => {
+      gameService.createGameRoom.mockReturnValue({
+        gameId: 'test_game_3p',
+        players: [],
+        maxPlayers: 3
+      });
+
+      renderWithProviders(<Lobby />);
+
+      const playerNameInput = screen.getByLabelText('玩家名稱');
+      const playerCountSelect = screen.getByLabelText('玩家數量');
+
+      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
+      fireEvent.change(playerCountSelect, { target: { value: '3' } });
+      fireEvent.click(screen.getByText('創建新房間'));
+
+      expect(gameService.createGameRoom).toHaveBeenCalledWith(
+        expect.objectContaining({ name: '玩家1' }),
+        3
+      );
+      expect(mockNavigate).toHaveBeenCalledWith('/game/test_game_3p');
+    });
+
+    test('選擇 4 人時創建房間應成功', () => {
+      gameService.createGameRoom.mockReturnValue({
+        gameId: 'test_game_4p',
+        players: [],
+        maxPlayers: 4
+      });
+
+      renderWithProviders(<Lobby />);
+
+      const playerNameInput = screen.getByLabelText('玩家名稱');
+      const playerCountSelect = screen.getByLabelText('玩家數量');
+
+      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
+      fireEvent.change(playerCountSelect, { target: { value: '4' } });
+      fireEvent.click(screen.getByText('創建新房間'));
+
+      expect(gameService.createGameRoom).toHaveBeenCalledWith(
+        expect.objectContaining({ name: '玩家1' }),
+        4
+      );
+      expect(mockNavigate).toHaveBeenCalledWith('/game/test_game_4p');
     });
   });
 

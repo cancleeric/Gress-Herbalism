@@ -74,6 +74,45 @@ function generateGameId() {
  */
 
 /**
+ * 創建遊戲房間（等待玩家加入）
+ *
+ * @param {Object} hostPlayer - 房主玩家資訊
+ * @param {string} hostPlayer.id - 玩家 ID
+ * @param {string} hostPlayer.name - 玩家名稱
+ * @param {number} maxPlayers - 最大玩家數量（3 或 4）
+ * @returns {Object} 房間狀態物件
+ *
+ * @example
+ * const room = createGameRoom({ id: 'p1', name: '玩家1' }, 4);
+ */
+export function createGameRoom(hostPlayer, maxPlayers = 4) {
+  const gameId = generateGameId();
+
+  const roomState = {
+    gameId,
+    players: [{
+      id: hostPlayer.id,
+      name: hostPlayer.name,
+      hand: [],
+      isActive: true,
+      isCurrentTurn: false,
+      isHost: true
+    }],
+    hiddenCards: [],
+    currentPlayerIndex: 0,
+    gamePhase: GAME_PHASE_WAITING,
+    winner: null,
+    gameHistory: [],
+    maxPlayers
+  };
+
+  // 儲存房間狀態
+  gameStore.set(gameId, roomState);
+
+  return roomState;
+}
+
+/**
  * 建立新遊戲
  *
  * @param {Array<{id: string, name: string}>} players - 玩家陣列

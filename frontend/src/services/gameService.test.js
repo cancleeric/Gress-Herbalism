@@ -5,6 +5,7 @@
 
 import {
   createGame,
+  createGameRoom,
   getGameState,
   updateGameState,
   deleteGame,
@@ -15,6 +16,7 @@ import {
 } from './gameService';
 
 import {
+  GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED,
   TOTAL_CARDS,
@@ -117,6 +119,56 @@ describe('gameService - 工作單 0009', () => {
       ];
 
       expect(() => createGame(fivePlayers)).toThrow();
+    });
+  });
+
+  describe('createGameRoom - 工作單 0036', () => {
+    test('應正確建立 3 人房間', () => {
+      const hostPlayer = { id: 'p1', name: '玩家1' };
+      const room = createGameRoom(hostPlayer, 3);
+
+      expect(room).toBeDefined();
+      expect(room.gameId).toBeDefined();
+      expect(room.players).toHaveLength(1);
+      expect(room.players[0].name).toBe('玩家1');
+      expect(room.players[0].isHost).toBe(true);
+      expect(room.hiddenCards).toHaveLength(0);
+      expect(room.gamePhase).toBe(GAME_PHASE_WAITING);
+      expect(room.maxPlayers).toBe(3);
+    });
+
+    test('應正確建立 4 人房間', () => {
+      const hostPlayer = { id: 'p1', name: '房主' };
+      const room = createGameRoom(hostPlayer, 4);
+
+      expect(room.maxPlayers).toBe(4);
+      expect(room.gamePhase).toBe(GAME_PHASE_WAITING);
+    });
+
+    test('房間應可以被查詢', () => {
+      const hostPlayer = { id: 'p1', name: '玩家1' };
+      const room = createGameRoom(hostPlayer, 3);
+      const retrieved = getGameState(room.gameId);
+
+      expect(retrieved).toEqual(room);
+    });
+
+    test('預設最大玩家數應為 4', () => {
+      const hostPlayer = { id: 'p1', name: '玩家1' };
+      const room = createGameRoom(hostPlayer);
+
+      expect(room.maxPlayers).toBe(4);
+    });
+
+    test('房主應有正確的初始狀態', () => {
+      const hostPlayer = { id: 'host123', name: '房主玩家' };
+      const room = createGameRoom(hostPlayer, 3);
+
+      expect(room.players[0].id).toBe('host123');
+      expect(room.players[0].name).toBe('房主玩家');
+      expect(room.players[0].isHost).toBe(true);
+      expect(room.players[0].isActive).toBe(true);
+      expect(room.players[0].hand).toEqual([]);
     });
   });
 

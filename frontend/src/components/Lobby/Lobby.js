@@ -14,7 +14,7 @@ import {
   updateGameState
 } from '../../store/gameStore';
 import {
-  createGame,
+  createGameRoom,
   getGameState
 } from '../../services/gameService';
 import { validatePlayerCount } from '../../utils/gameRules';
@@ -130,13 +130,10 @@ function Lobby() {
         hand: []
       };
 
-      // 使用 gameService 創建遊戲
-      // 注意：createGame 需要完整的玩家列表，這裡先創建只有房主的遊戲
-      // 其他玩家會在加入時添加
-      const players = [hostPlayer];
-
-      // 創建遊戲並獲取遊戲狀態
-      const newGame = createGame(players);
+      // 使用 gameService 創建遊戲房間
+      // 房間創建時只有房主，其他玩家會在加入時添加
+      // 遊戲正式開始（發牌）會在所有玩家加入後進行
+      const newGame = createGameRoom(hostPlayer, playerCount);
 
       if (!newGame || !newGame.gameId) {
         setError('創建房間失敗，請重試');
@@ -145,11 +142,12 @@ function Lobby() {
       }
 
       // 更新 Redux store
-      dispatch(createGameAction(players));
+      dispatch(createGameAction([hostPlayer]));
       dispatch(joinGame(newGame.gameId, hostPlayer));
       dispatch(updateGameState({
         gameId: newGame.gameId,
-        maxPlayers: playerCount
+        maxPlayers: playerCount,
+        gamePhase: 'waiting'
       }));
 
       // 導航到遊戲房間
