@@ -6,9 +6,19 @@
  */
 
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { createGameAction, joinGame } from '../../store/gameStore';
+import {
+  createGameAction,
+  joinGame,
+  updateGameState
+} from '../../store/gameStore';
+import {
+  createGame,
+  getGameState
+} from '../../services/gameService';
+import { validatePlayerCount } from '../../utils/gameRules';
+import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
 import './Lobby.css';
 
 /**
@@ -19,12 +29,18 @@ import './Lobby.css';
 function Lobby() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const gameState = useSelector((state) => ({
+    gameId: state.gameId,
+    players: state.players
+  }));
 
   // 本地狀態
   const [playerName, setPlayerName] = useState('');
+  const [playerCount, setPlayerCount] = useState(MIN_PLAYERS);
   const [roomId, setRoomId] = useState('');
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
    * 處理玩家名稱變更
@@ -32,6 +48,15 @@ function Lobby() {
    */
   const handlePlayerNameChange = (e) => {
     setPlayerName(e.target.value);
+    setError('');
+  };
+
+  /**
+   * 處理玩家數量變更
+   * @param {React.ChangeEvent<HTMLSelectElement>} e - 事件物件
+   */
+  const handlePlayerCountChange = (e) => {
+    setPlayerCount(parseInt(e.target.value, 10));
     setError('');
   };
 
@@ -53,46 +78,148 @@ function Lobby() {
       setError('請輸入玩家名稱');
       return false;
     }
+    if (playerName.trim().length > 20) {
+      setError('玩家名稱不可超過20個字元');
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * 驗證房間ID格式
+   * @param {string} id - 房間ID
+   * @returns {boolean} 是否有效
+   */
+  const validateRoomId = (id) => {
+    if (!id || !id.trim()) {
+      setError('請輸入房間ID');
+      return false;
+    }
+    // 基本格式驗證：只允許英數字和底線
+    const validPattern = /^[a-zA-Z0-9_]+$/;
+    if (!validPattern.test(id.trim())) {
+      setError('房間ID格式不正確，只允許英數字和底線');
+      return false;
+    }
     return true;
   };
 
   /**
    * 創建新房間
+   * 收集玩家資訊，驗證玩家數量，創建遊戲並導航到遊戲房間
    */
   const handleCreateRoom = () => {
     if (!validatePlayerName()) return;
 
-    const newRoomId = `room_${Date.now()}`;
-    const player = {
-      id: `player_${Date.now()}`,
-      name: playerName.trim(),
-      isHost: true
-    };
+    // 驗證玩家數量
+    if (!validatePlayerCount(playerCount)) {
+      setError(`玩家數量必須在 ${MIN_PLAYERS} 到 ${MAX_PLAYERS} 人之間`);
+      return;
+    }
 
-    dispatch(createGameAction([player]));
-    dispatch(joinGame(newRoomId, player));
-    navigate(`/game/${newRoomId}`);
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // 創建房主玩家資訊
+      const hostPlayer = {
+        id: `player_${Date.now()}`,
+        name: playerName.trim(),
+        isHost: true,
+        isCurrentTurn: false,
+        hand: []
+      };
+
+      // 使用 gameService 創建遊戲
+      // 注意：createGame 需要完整的玩家列表，這裡先創建只有房主的遊戲
+      // 其他玩家會在加入時添加
+      const players = [hostPlayer];
+
+      // 創建遊戲並獲取遊戲狀態
+      const newGame = createGame(players);
+
+      if (!newGame || !newGame.gameId) {
+        setError('創建房間失敗，請重試');
+        setIsLoading(false);
+        return;
+      }
+
+      // 更新 Redux store
+      dispatch(createGameAction(players));
+      dispatch(joinGame(newGame.gameId, hostPlayer));
+      dispatch(updateGameState({
+        gameId: newGame.gameId,
+        maxPlayers: playerCount
+      }));
+
+      // 導航到遊戲房間
+      navigate(`/game/${newGame.gameId}`);
+    } catch (err) {
+      console.error('創建房間錯誤:', err);
+      setError('創建房間失敗：' + (err.message || '未知錯誤'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /**
    * 加入現有房間
+   * 驗證房間ID，檢查房間狀態，加入玩家到遊戲
    */
   const handleJoinRoom = () => {
     if (!validatePlayerName()) return;
+    if (!validateRoomId(roomId)) return;
 
-    if (!roomId.trim()) {
-      setError('請輸入房間ID');
-      return;
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const trimmedRoomId = roomId.trim();
+
+      // 獲取遊戲狀態以驗證房間
+      const gameState = getGameState(trimmedRoomId);
+
+      if (!gameState) {
+        setError('房間不存在，請確認房間ID是否正確');
+        setIsLoading(false);
+        return;
+      }
+
+      // 檢查房間是否已滿
+      const maxPlayers = gameState.maxPlayers || MAX_PLAYERS;
+      if (gameState.players && gameState.players.length >= maxPlayers) {
+        setError('房間已滿，無法加入');
+        setIsLoading(false);
+        return;
+      }
+
+      // 檢查遊戲是否已開始
+      if (gameState.gamePhase !== 'waiting') {
+        setError('遊戲已開始，無法加入');
+        setIsLoading(false);
+        return;
+      }
+
+      // 創建新玩家資訊
+      const newPlayer = {
+        id: `player_${Date.now()}`,
+        name: playerName.trim(),
+        isHost: false,
+        isCurrentTurn: false,
+        hand: []
+      };
+
+      // 更新 Redux store
+      dispatch(joinGame(trimmedRoomId, newPlayer));
+
+      // 導航到遊戲房間
+      navigate(`/game/${trimmedRoomId}`);
+    } catch (err) {
+      console.error('加入房間錯誤:', err);
+      setError('加入房間失敗：' + (err.message || '未知錯誤'));
+    } finally {
+      setIsLoading(false);
     }
-
-    const player = {
-      id: `player_${Date.now()}`,
-      name: playerName.trim(),
-      isHost: false
-    };
-
-    dispatch(joinGame(roomId.trim(), player));
-    navigate(`/game/${roomId.trim()}`);
   };
 
   /**
@@ -100,16 +227,51 @@ function Lobby() {
    * @param {string} selectedRoomId - 選擇的房間ID
    */
   const handleQuickJoin = (selectedRoomId) => {
+    setRoomId(selectedRoomId);
+    // 設定完房間ID後，觸發加入
     if (!validatePlayerName()) return;
 
-    const player = {
-      id: `player_${Date.now()}`,
-      name: playerName.trim(),
-      isHost: false
-    };
+    setIsLoading(true);
+    setError('');
 
-    dispatch(joinGame(selectedRoomId, player));
-    navigate(`/game/${selectedRoomId}`);
+    try {
+      const gameState = getGameState(selectedRoomId);
+
+      if (!gameState) {
+        setError('房間不存在');
+        setIsLoading(false);
+        return;
+      }
+
+      const maxPlayers = gameState.maxPlayers || MAX_PLAYERS;
+      if (gameState.players && gameState.players.length >= maxPlayers) {
+        setError('房間已滿');
+        setIsLoading(false);
+        return;
+      }
+
+      if (gameState.gamePhase !== 'waiting') {
+        setError('遊戲已開始');
+        setIsLoading(false);
+        return;
+      }
+
+      const newPlayer = {
+        id: `player_${Date.now()}`,
+        name: playerName.trim(),
+        isHost: false,
+        isCurrentTurn: false,
+        hand: []
+      };
+
+      dispatch(joinGame(selectedRoomId, newPlayer));
+      navigate(`/game/${selectedRoomId}`);
+    } catch (err) {
+      console.error('快速加入房間錯誤:', err);
+      setError('加入房間失敗');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -132,6 +294,7 @@ function Lobby() {
               onChange={handlePlayerNameChange}
               placeholder="請輸入您的名稱"
               maxLength={20}
+              disabled={isLoading}
             />
           </div>
         </section>
@@ -139,11 +302,24 @@ function Lobby() {
         {/* 創建房間區 */}
         <section className="lobby-section create-section">
           <h2>創建房間</h2>
+          <div className="input-group">
+            <label htmlFor="playerCount">玩家數量</label>
+            <select
+              id="playerCount"
+              value={playerCount}
+              onChange={handlePlayerCountChange}
+              disabled={isLoading}
+            >
+              <option value={3}>3 人</option>
+              <option value={4}>4 人</option>
+            </select>
+          </div>
           <button
             className="btn btn-primary"
             onClick={handleCreateRoom}
+            disabled={isLoading}
           >
-            創建新房間
+            {isLoading ? '創建中...' : '創建新房間'}
           </button>
         </section>
 
@@ -158,13 +334,15 @@ function Lobby() {
               value={roomId}
               onChange={handleRoomIdChange}
               placeholder="請輸入房間ID"
+              disabled={isLoading}
             />
           </div>
           <button
             className="btn btn-secondary"
             onClick={handleJoinRoom}
+            disabled={isLoading}
           >
-            加入房間
+            {isLoading ? '加入中...' : '加入房間'}
           </button>
         </section>
 
@@ -179,11 +357,12 @@ function Lobby() {
                 <li key={room.id} className="room-item">
                   <span className="room-name">{room.name}</span>
                   <span className="room-players">
-                    {room.playerCount}/4 玩家
+                    {room.playerCount}/{room.maxPlayers || 4} 玩家
                   </span>
                   <button
                     className="btn btn-small"
                     onClick={() => handleQuickJoin(room.id)}
+                    disabled={isLoading}
                   >
                     加入
                   </button>
@@ -195,7 +374,7 @@ function Lobby() {
 
         {/* 錯誤訊息 */}
         {error && (
-          <div className="error-message">
+          <div className="error-message" role="alert">
             {error}
           </div>
         )}
