@@ -1,0 +1,251 @@
+/**
+ * 問牌介面樣式
+ *
+ * @description QuestionCard 組件的 CSS 樣式
+ */
+
+.question-card {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 100%;
+}
+
+/* 標題區 */
+.question-card-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.question-card-header h3 {
+  margin: 0;
+  font-size: var(--font-size-xlarge);
+  color: var(--color-accent);
+}
+
+/* 內容區 */
+.question-card-body {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* 選擇器通用樣式 */
+.selector-title {
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* 顏色選擇器 */
+.color-selector {
+  display: flex;
+  flex-direction: column;
+}
+
+.color-options {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 80px;
+  height: 50px;
+  border: 3px solid transparent;
+  border-radius: var(--border-radius-md);
+  font-weight: bold;
+  text-transform: uppercase;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-option.color-red {
+  background: linear-gradient(135deg, var(--color-red), #c0392b);
+}
+
+.color-option.color-yellow {
+  background: linear-gradient(135deg, var(--color-yellow), #f39c12);
+  color: #333;
+}
+
+.color-option.color-green {
+  background: linear-gradient(135deg, var(--color-green), #1e8449);
+}
+
+.color-option.color-blue {
+  background: linear-gradient(135deg, var(--color-blue), #2471a3);
+}
+
+.color-option:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.color-option.selected {
+  border-color: white;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.selection-hint {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+/* 玩家選擇器 */
+.player-selector {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-options {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.player-option {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.player-option:hover {
+  background-color: var(--color-primary);
+}
+
+.player-option.selected {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.no-players {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* 要牌方式選擇器 */
+.question-type-selector {
+  display: flex;
+  flex-direction: column;
+}
+
+.type-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.type-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.type-option:hover {
+  border-color: var(--color-accent);
+}
+
+.type-option.selected {
+  background-color: rgba(233, 69, 96, 0.2);
+  border-color: var(--color-accent);
+}
+
+.type-number {
+  font-weight: bold;
+  color: var(--color-accent);
+  font-size: var(--font-size-small);
+  margin-bottom: var(--spacing-xs);
+}
+
+.type-description {
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+}
+
+/* 錯誤訊息 */
+.question-card .error-message {
+  padding: var(--spacing-sm);
+  background-color: rgba(231, 76, 60, 0.2);
+  border: 1px solid var(--color-error);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-error);
+  text-align: center;
+}
+
+/* 底部按鈕區 */
+.question-card-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--color-primary);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+}
+
+/* 按鈕樣式 */
+.question-card .btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.question-card .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.question-card .btn-primary {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.question-card .btn-primary:hover:not(:disabled) {
+  background-color: #c13a50;
+}
+
+.question-card .btn-secondary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.question-card .btn-secondary:hover:not(:disabled) {
+  background-color: #1a4a7a;
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+  .question-card {
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .color-options {
+    justify-content: center;
+  }
+
+  .player-options {
+    justify-content: center;
+  }
+}
