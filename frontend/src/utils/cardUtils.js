@@ -1,0 +1,55 @@
+/**
+ * 牌組工具函數
+ *
+ * 此檔案包含牌組相關的工具函數
+ *
+ * @module cardUtils
+ */
+
+import { COLORS, CARD_COUNTS, ALL_COLORS } from '../../../shared/constants.js';
+
+/**
+ * 牌卡資料結構
+ * @typedef {Object} Card
+ * @property {string} id - 牌的唯一識別碼（格式：顏色-編號，如 'red-1'）
+ * @property {string} color - 牌的顏色（'red' | 'yellow' | 'green' | 'blue'）
+ * @property {boolean} isHidden - 是否為蓋牌（預設為 false）
+ */
+
+/**
+ * 建立完整的牌組
+ *
+ * 根據 constants.js 中的配置建立牌組，包含：
+ * - 紅色 2 張
+ * - 黃色 3 張
+ * - 綠色 4 張
+ * - 藍色 5 張
+ *
+ * @returns {Card[]} 包含 14 張牌的牌組陣列
+ *
+ * @example
+ * const deck = createDeck();
+ * // 返回：
+ * // [
+ * //   { id: 'red-1', color: 'red', isHidden: false },
+ * //   { id: 'red-2', color: 'red', isHidden: false },
+ * //   { id: 'yellow-1', color: 'yellow', isHidden: false },
+ * //   ...
+ * // ]
+ */
+export function createDeck() {
+  const deck = [];
+
+  ALL_COLORS.forEach((color) => {
+    const count = CARD_COUNTS[color];
+    for (let i = 1; i <= count; i++) {
+      deck.push({
+        id: `${color}-${i}`,
+        color: color,
+        isHidden: false
+      });
+    }
+  });
+
+  return deck;
+}
