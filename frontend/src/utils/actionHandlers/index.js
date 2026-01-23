@@ -6,7 +6,7 @@
  */
 
 export * from './questionAction';
+export * from './guessAction';
 
 // TODO: 可擴展點 - 新增動作處理器時，在此添加匯出
-// export * from './guessAction';
 // export * from './otherAction';
