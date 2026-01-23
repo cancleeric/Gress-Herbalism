@@ -1,0 +1,177 @@
+/**
+ * Socket.io 連線服務
+ */
+
+import { io } from 'socket.io-client';
+
+// 從環境變數或預設值取得後端 URL
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+
+let socket = null;
+let connectionCallbacks = [];
+
+/**
+ * 初始化 Socket 連線
+ */
+export function initSocket() {
+  if (socket) return socket;
+
+  socket = io(SOCKET_URL, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+  });
+
+  socket.on('connect', () => {
+    console.log('已連線到伺服器');
+    connectionCallbacks.forEach(cb => cb(true));
+  });
+
+  socket.on('disconnect', () => {
+    console.log('與伺服器斷線');
+    connectionCallbacks.forEach(cb => cb(false));
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('連線錯誤:', error.message);
+  });
+
+  return socket;
+}
+
+/**
+ * 取得 Socket 實例
+ */
+export function getSocket() {
+  if (!socket) {
+    return initSocket();
+  }
+  return socket;
+}
+
+/**
+ * 監聽連線狀態變化
+ */
+export function onConnectionChange(callback) {
+  connectionCallbacks.push(callback);
+  // 立即通知目前狀態
+  if (socket) {
+    callback(socket.connected);
+  }
+  return () => {
+    connectionCallbacks = connectionCallbacks.filter(cb => cb !== callback);
+  };
+}
+
+/**
+ * 監聽房間列表更新
+ */
+export function onRoomList(callback) {
+  const s = getSocket();
+  s.on('roomList', callback);
+  return () => s.off('roomList', callback);
+}
+
+/**
+ * 監聯遊戲狀態更新
+ */
+export function onGameState(callback) {
+  const s = getSocket();
+  s.on('gameState', callback);
+  return () => s.off('gameState', callback);
+}
+
+/**
+ * 監聽錯誤訊息
+ */
+export function onError(callback) {
+  const s = getSocket();
+  s.on('error', callback);
+  return () => s.off('error', callback);
+}
+
+/**
+ * 監聽房間創建成功
+ */
+export function onRoomCreated(callback) {
+  const s = getSocket();
+  s.on('roomCreated', callback);
+  return () => s.off('roomCreated', callback);
+}
+
+/**
+ * 監聽加入房間成功
+ */
+export function onJoinedRoom(callback) {
+  const s = getSocket();
+  s.on('joinedRoom', callback);
+  return () => s.off('joinedRoom', callback);
+}
+
+/**
+ * 監聽蓋牌揭示
+ */
+export function onHiddenCardsRevealed(callback) {
+  const s = getSocket();
+  s.on('hiddenCardsRevealed', callback);
+  return () => s.off('hiddenCardsRevealed', callback);
+}
+
+/**
+ * 創建房間
+ */
+export function createRoom(player, maxPlayers) {
+  const s = getSocket();
+  s.emit('createRoom', { player, maxPlayers });
+}
+
+/**
+ * 加入房間
+ */
+export function joinRoom(gameId, player) {
+  const s = getSocket();
+  s.emit('joinRoom', { gameId, player });
+}
+
+/**
+ * 開始遊戲
+ */
+export function startGame(gameId) {
+  const s = getSocket();
+  s.emit('startGame', { gameId });
+}
+
+/**
+ * 發送遊戲動作
+ */
+export function sendGameAction(gameId, action) {
+  const s = getSocket();
+  s.emit('gameAction', { gameId, action });
+}
+
+/**
+ * 請求查看蓋牌
+ */
+export function requestRevealHiddenCards(gameId, playerId) {
+  const s = getSocket();
+  s.emit('revealHiddenCards', { gameId, playerId });
+}
+
+/**
+ * 離開房間
+ */
+export function leaveRoom(gameId, playerId) {
+  const s = getSocket();
+  s.emit('leaveRoom', { gameId, playerId });
+}
+
+/**
+ * 斷開連線
+ */
+export function disconnect() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+}

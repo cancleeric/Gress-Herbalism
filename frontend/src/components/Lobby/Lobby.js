@@ -6,21 +6,22 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
-  createGameAction,
   joinGame,
   updateGameState
 } from '../../store/gameStore';
 import {
-  createGameRoom,
-  getGameState,
-  getAvailableRooms,
-  subscribeToRoomList,
+  initSocket,
+  onRoomList,
+  onRoomCreated,
+  onJoinedRoom,
+  onError,
+  onConnectionChange,
+  createRoom,
   joinRoom
-} from '../../services/gameService';
-import { validatePlayerCount } from '../../utils/gameRules';
+} from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
 import './Lobby.css';
 
@@ -32,9 +33,6 @@ import './Lobby.css';
 function Lobby() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // 分開選取以避免不必要的重新渲染
-  const gameId = useSelector(state => state.gameId);
-  const players = useSelector(state => state.players);
 
   // 本地狀態
   const [playerName, setPlayerName] = useState('');
@@ -43,18 +41,66 @@ function Lobby() {
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [playerId] = useState(`player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
 
-  // 訂閱房間列表更新
+  // 初始化 Socket 連線
   useEffect(() => {
-    const unsubscribe = subscribeToRoomList((updatedRooms) => {
+    initSocket();
+
+    const unsubConnect = onConnectionChange((connected) => {
+      setIsConnected(connected);
+      if (!connected) {
+        setError('與伺服器斷線，請確認後端是否啟動');
+      } else {
+        setError('');
+      }
+    });
+
+    const unsubRooms = onRoomList((updatedRooms) => {
       setRooms(updatedRooms);
     });
-    return () => unsubscribe();
-  }, []);
+
+    const unsubError = onError(({ message }) => {
+      setError(message);
+      setIsLoading(false);
+    });
+
+    const unsubCreated = onRoomCreated(({ gameId, gameState }) => {
+      dispatch(updateGameState({
+        gameId,
+        players: gameState.players,
+        maxPlayers: gameState.maxPlayers,
+        gamePhase: gameState.gamePhase,
+        currentPlayerId: playerId
+      }));
+      navigate(`/game/${gameId}`);
+      setIsLoading(false);
+    });
+
+    const unsubJoined = onJoinedRoom(({ gameId, gameState }) => {
+      dispatch(updateGameState({
+        gameId,
+        players: gameState.players,
+        maxPlayers: gameState.maxPlayers,
+        gamePhase: gameState.gamePhase,
+        currentPlayerId: playerId
+      }));
+      navigate(`/game/${gameId}`);
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubConnect();
+      unsubRooms();
+      unsubError();
+      unsubCreated();
+      unsubJoined();
+    };
+  }, [dispatch, navigate, playerId]);
 
   /**
    * 處理玩家名稱變更
-   * @param {React.ChangeEvent<HTMLInputElement>} e - 事件物件
    */
   const handlePlayerNameChange = (e) => {
     setPlayerName(e.target.value);
@@ -63,7 +109,6 @@ function Lobby() {
 
   /**
    * 處理玩家數量變更
-   * @param {React.ChangeEvent<HTMLSelectElement>} e - 事件物件
    */
   const handlePlayerCountChange = (e) => {
     setPlayerCount(parseInt(e.target.value, 10));
@@ -72,7 +117,6 @@ function Lobby() {
 
   /**
    * 處理房間ID變更
-   * @param {React.ChangeEvent<HTMLInputElement>} e - 事件物件
    */
   const handleRoomIdChange = (e) => {
     setRoomId(e.target.value);
@@ -81,7 +125,6 @@ function Lobby() {
 
   /**
    * 驗證玩家名稱
-   * @returns {boolean} 是否有效
    */
   const validatePlayerName = () => {
     if (!playerName.trim()) {
@@ -96,177 +139,70 @@ function Lobby() {
   };
 
   /**
-   * 驗證房間ID格式
-   * @param {string} id - 房間ID
-   * @returns {boolean} 是否有效
-   */
-  const validateRoomId = (id) => {
-    if (!id || !id.trim()) {
-      setError('請輸入房間ID');
-      return false;
-    }
-    // 基本格式驗證：只允許英數字和底線
-    const validPattern = /^[a-zA-Z0-9_]+$/;
-    if (!validPattern.test(id.trim())) {
-      setError('房間ID格式不正確，只允許英數字和底線');
-      return false;
-    }
-    return true;
-  };
-
-  /**
    * 創建新房間
-   * 收集玩家資訊，驗證玩家數量，創建遊戲並導航到遊戲房間
    */
   const handleCreateRoom = () => {
     if (!validatePlayerName()) return;
-
-    // 驗證玩家數量
-    if (!validatePlayerCount(playerCount)) {
-      setError(`玩家數量必須在 ${MIN_PLAYERS} 到 ${MAX_PLAYERS} 人之間`);
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
       return;
     }
 
     setIsLoading(true);
     setError('');
 
-    try {
-      // 創建房主玩家資訊
-      const hostPlayer = {
-        id: `player_${Date.now()}`,
-        name: playerName.trim(),
-        isHost: true,
-        isCurrentTurn: false,
-        hand: []
-      };
+    const player = {
+      id: playerId,
+      name: playerName.trim()
+    };
 
-      // 使用 gameService 創建遊戲房間
-      // 房間創建時只有房主，其他玩家會在加入時添加
-      // 遊戲正式開始（發牌）會在所有玩家加入後進行
-      const newGame = createGameRoom(hostPlayer, playerCount);
-
-      if (!newGame || !newGame.gameId) {
-        setError('創建房間失敗，請重試');
-        setIsLoading(false);
-        return;
-      }
-
-      // 更新 Redux store
-      dispatch(createGameAction([hostPlayer]));
-      dispatch(joinGame(newGame.gameId, hostPlayer));
-      dispatch(updateGameState({
-        gameId: newGame.gameId,
-        maxPlayers: playerCount,
-        gamePhase: 'waiting'
-      }));
-
-      // 導航到遊戲房間
-      navigate(`/game/${newGame.gameId}`);
-    } catch (err) {
-      console.error('創建房間錯誤:', err);
-      setError('創建房間失敗：' + (err.message || '未知錯誤'));
-    } finally {
-      setIsLoading(false);
-    }
+    createRoom(player, playerCount);
   };
 
   /**
    * 加入現有房間
-   * 驗證房間ID，檢查房間狀態，加入玩家到遊戲
    */
   const handleJoinRoom = () => {
     if (!validatePlayerName()) return;
-    if (!validateRoomId(roomId)) return;
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
+      return;
+    }
+    if (!roomId.trim()) {
+      setError('請輸入房間ID');
+      return;
+    }
 
     setIsLoading(true);
     setError('');
 
-    try {
-      const trimmedRoomId = roomId.trim();
+    const player = {
+      id: playerId,
+      name: playerName.trim()
+    };
 
-      // 創建新玩家資訊
-      const newPlayer = {
-        id: `player_${Date.now()}`,
-        name: playerName.trim(),
-        isHost: false,
-        isCurrentTurn: false,
-        hand: []
-      };
-
-      // 使用 gameService 的 joinRoom 函數
-      const result = joinRoom(trimmedRoomId, newPlayer);
-
-      if (!result.success) {
-        setError(result.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // 更新 Redux store
-      dispatch(joinGame(trimmedRoomId, newPlayer));
-      dispatch(updateGameState({
-        gameId: trimmedRoomId,
-        players: result.gameState.players,
-        maxPlayers: result.gameState.maxPlayers,
-        gamePhase: result.gameState.gamePhase
-      }));
-
-      // 導航到遊戲房間
-      navigate(`/game/${trimmedRoomId}`);
-    } catch (err) {
-      console.error('加入房間錯誤:', err);
-      setError('加入房間失敗：' + (err.message || '未知錯誤'));
-    } finally {
-      setIsLoading(false);
-    }
+    joinRoom(roomId.trim(), player);
   };
 
   /**
    * 快速加入房間（從列表點擊）
-   * @param {string} selectedRoomId - 選擇的房間ID
    */
   const handleQuickJoin = (selectedRoomId) => {
-    setRoomId(selectedRoomId);
-    // 設定完房間ID後，觸發加入
     if (!validatePlayerName()) return;
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
+      return;
+    }
 
     setIsLoading(true);
     setError('');
 
-    try {
-      const newPlayer = {
-        id: `player_${Date.now()}`,
-        name: playerName.trim(),
-        isHost: false,
-        isCurrentTurn: false,
-        hand: []
-      };
+    const player = {
+      id: playerId,
+      name: playerName.trim()
+    };
 
-      // 使用 gameService 的 joinRoom 函數
-      const result = joinRoom(selectedRoomId, newPlayer);
-
-      if (!result.success) {
-        setError(result.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // 更新 Redux store
-      dispatch(joinGame(selectedRoomId, newPlayer));
-      dispatch(updateGameState({
-        gameId: selectedRoomId,
-        players: result.gameState.players,
-        maxPlayers: result.gameState.maxPlayers,
-        gamePhase: result.gameState.gamePhase
-      }));
-
-      navigate(`/game/${selectedRoomId}`);
-    } catch (err) {
-      console.error('快速加入房間錯誤:', err);
-      setError('加入房間失敗');
-    } finally {
-      setIsLoading(false);
-    }
+    joinRoom(selectedRoomId, player);
   };
 
   return (
@@ -274,6 +210,9 @@ function Lobby() {
       <header className="lobby-header">
         <h1>本草 Herbalism</h1>
         <p className="lobby-subtitle">3-4 人推理卡牌遊戲</p>
+        <p className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+          {isConnected ? '已連線' : '未連線'}
+        </p>
       </header>
 
       <main className="lobby-content">
@@ -312,7 +251,7 @@ function Lobby() {
           <button
             className="btn btn-primary"
             onClick={handleCreateRoom}
-            disabled={isLoading}
+            disabled={isLoading || !isConnected}
           >
             {isLoading ? '創建中...' : '創建新房間'}
           </button>
@@ -335,7 +274,7 @@ function Lobby() {
           <button
             className="btn btn-secondary"
             onClick={handleJoinRoom}
-            disabled={isLoading}
+            disabled={isLoading || !isConnected}
           >
             {isLoading ? '加入中...' : '加入房間'}
           </button>
@@ -357,7 +296,7 @@ function Lobby() {
                   <button
                     className="btn btn-small"
                     onClick={() => handleQuickJoin(room.id)}
-                    disabled={isLoading}
+                    disabled={isLoading || !isConnected}
                   >
                     加入
                   </button>

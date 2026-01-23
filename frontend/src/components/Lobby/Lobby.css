@@ -58,6 +58,28 @@
   letter-spacing: 1px;
 }
 
+/* 連線狀態 */
+.connection-status {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-top: var(--spacing-sm);
+}
+
+.connection-status.connected {
+  background-color: rgba(39, 174, 96, 0.2);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.connection-status.disconnected {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
 /* 主要內容區 */
 .lobby-content {
   flex: 1;

@@ -10,10 +10,17 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   updateGameState,
-  leaveGame,
   resetGame
 } from '../../store/gameStore';
-import { getGameState, startGame } from '../../services/gameService';
+import {
+  onGameState,
+  onError,
+  onHiddenCardsRevealed,
+  startGame as socketStartGame,
+  sendGameAction,
+  requestRevealHiddenCards,
+  leaveRoom
+} from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
@@ -21,8 +28,8 @@ import {
 } from '../../shared/constants';
 import GameBoard from '../GameBoard/GameBoard';
 import PlayerHand from '../PlayerHand/PlayerHand';
-import { QuestionCardContainer } from '../QuestionCard/QuestionCard';
-import { GuessCardContainer } from '../GuessCard/GuessCard';
+import QuestionCard from '../QuestionCard/QuestionCard';
+import GuessCard from '../GuessCard/GuessCard';
 import { GameStatusContainer } from '../GameStatus/GameStatus';
 import './GameRoom.css';
 
@@ -45,19 +52,22 @@ function GameRoom() {
     winner: state.winner,
     hiddenCards: state.hiddenCards,
     gameHistory: state.gameHistory,
-    currentPlayerId: state.currentPlayerId
+    currentPlayerId: state.currentPlayerId,
+    maxPlayers: state.maxPlayers
   }));
 
   // 本地狀態
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showQuestionCard, setShowQuestionCard] = useState(false);
   const [showGuessCard, setShowGuessCard] = useState(false);
   const [isGuessing, setIsGuessing] = useState(false);
+  const [hiddenCardsForGuess, setHiddenCardsForGuess] = useState([]);
+  const [questionResult, setQuestionResult] = useState(null);
+  const [guessResult, setGuessResult] = useState(null);
 
   /**
    * 取得當前回合的玩家
-   * @returns {Object|null} 當前回合玩家
    */
   const getCurrentPlayer = useCallback(() => {
     if (gameState.players && gameState.players.length > 0) {
@@ -68,20 +78,16 @@ function GameRoom() {
 
   /**
    * 取得自己的玩家資訊
-   * @returns {Object|null} 自己的玩家資訊
    */
   const getMyPlayer = useCallback(() => {
-    // 使用 currentPlayerId 找到自己的玩家
     if (gameState.currentPlayerId) {
       return gameState.players.find(p => p.id === gameState.currentPlayerId) || null;
     }
-    // 如果沒有 currentPlayerId，假設第一個玩家是自己
     return gameState.players[0] || null;
   }, [gameState.players, gameState.currentPlayerId]);
 
   /**
    * 檢查是否是自己的回合
-   * @returns {boolean} 是否是自己的回合
    */
   const isMyTurn = useCallback(() => {
     const currentPlayer = getCurrentPlayer();
@@ -92,7 +98,6 @@ function GameRoom() {
 
   /**
    * 計算活躍玩家數量
-   * @returns {number} 活躍玩家數量
    */
   const getActivePlayerCount = useCallback(() => {
     return gameState.players.filter(p => p.isActive !== false).length;
@@ -100,46 +105,47 @@ function GameRoom() {
 
   /**
    * 檢查是否只剩一個活躍玩家（必須猜牌）
-   * @returns {boolean} 是否必須猜牌
    */
   const mustGuess = useCallback(() => {
     return getActivePlayerCount() <= 1;
   }, [getActivePlayerCount]);
 
   /**
-   * 組件掛載時載入遊戲狀態
+   * 訂閱 Socket 事件
    */
   useEffect(() => {
-    loadGameState();
-
-    // 組件卸載時的清理
-    return () => {
-      // 清理任何訂閱或計時器
-    };
-  }, [gameId]);
-
-  /**
-   * 載入遊戲狀態
-   */
-  const loadGameState = () => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // 如果有遊戲ID，嘗試從 gameService 取得狀態
-      if (gameId) {
-        const serverState = getGameState(gameId);
-        if (serverState) {
-          dispatch(updateGameState(serverState));
-        }
-      }
-    } catch (err) {
-      console.error('載入遊戲狀態錯誤:', err);
-      setError('無法載入遊戲狀態');
-    } finally {
+    // 監聽遊戲狀態更新
+    const unsubGameState = onGameState((newState) => {
+      dispatch(updateGameState({
+        gameId: newState.gameId,
+        players: newState.players,
+        currentPlayerIndex: newState.currentPlayerIndex,
+        gamePhase: newState.gamePhase,
+        winner: newState.winner,
+        hiddenCards: newState.hiddenCards,
+        gameHistory: newState.gameHistory,
+        maxPlayers: newState.maxPlayers
+      }));
       setIsLoading(false);
-    }
-  };
+    });
+
+    // 監聽錯誤
+    const unsubError = onError(({ message }) => {
+      setError(message);
+      setIsLoading(false);
+    });
+
+    // 監聽蓋牌揭示
+    const unsubHidden = onHiddenCardsRevealed(({ cards }) => {
+      setHiddenCardsForGuess(cards);
+    });
+
+    return () => {
+      unsubGameState();
+      unsubError();
+      unsubHidden();
+    };
+  }, [dispatch]);
 
   /**
    * 離開房間
@@ -147,7 +153,7 @@ function GameRoom() {
   const handleLeaveRoom = () => {
     const myPlayer = getMyPlayer();
     if (myPlayer && gameId) {
-      dispatch(leaveGame(gameId, myPlayer.id));
+      leaveRoom(gameId, myPlayer.id);
     }
     dispatch(resetGame());
     navigate('/');
@@ -157,25 +163,9 @@ function GameRoom() {
    * 開始遊戲
    */
   const handleStartGame = () => {
-    if (gameState.players.length >= 3) {
-      // 使用 gameService.startGame 來正確初始化遊戲
-      if (gameId) {
-        const result = startGame(gameId);
-        if (result && result.success) {
-          dispatch(updateGameState(result.gameState));
-        } else {
-          // 如果 startGame 不存在，使用本地更新
-          dispatch(updateGameState({
-            gamePhase: GAME_PHASE_PLAYING,
-            currentPlayerIndex: 0
-          }));
-        }
-      } else {
-        dispatch(updateGameState({
-          gamePhase: GAME_PHASE_PLAYING,
-          currentPlayerIndex: 0
-        }));
-      }
+    if (gameState.players.length >= 3 && gameId) {
+      setIsLoading(true);
+      socketStartGame(gameId);
     } else {
       setError('需要至少 3 位玩家才能開始遊戲');
     }
@@ -187,6 +177,7 @@ function GameRoom() {
   const handleOpenQuestion = () => {
     setShowQuestionCard(true);
     setIsGuessing(false);
+    setQuestionResult(null);
   };
 
   /**
@@ -194,6 +185,7 @@ function GameRoom() {
    */
   const handleCloseQuestion = () => {
     setShowQuestionCard(false);
+    setQuestionResult(null);
   };
 
   /**
@@ -202,6 +194,12 @@ function GameRoom() {
   const handleOpenGuess = () => {
     setShowGuessCard(true);
     setIsGuessing(true);
+    setGuessResult(null);
+    // 請求查看蓋牌
+    const myPlayer = getMyPlayer();
+    if (myPlayer && gameId) {
+      requestRevealHiddenCards(gameId, myPlayer.id);
+    }
   };
 
   /**
@@ -210,11 +208,55 @@ function GameRoom() {
   const handleCloseGuess = () => {
     setShowGuessCard(false);
     setIsGuessing(false);
+    setGuessResult(null);
+    setHiddenCardsForGuess([]);
+  };
+
+  /**
+   * 處理問牌提交
+   */
+  const handleQuestionSubmit = (questionData) => {
+    const myPlayer = getMyPlayer();
+    if (!myPlayer || !gameId) return;
+
+    setIsLoading(true);
+
+    const action = {
+      type: 'question',
+      playerId: myPlayer.id,
+      targetPlayerId: questionData.targetPlayerId,
+      colors: questionData.colors,
+      questionType: questionData.questionType,
+      selectedColor: questionData.colors[0], // 用於類型2
+      giveColor: questionData.colors[0], // 用於類型3
+      getColor: questionData.colors[1]  // 用於類型3
+    };
+
+    sendGameAction(gameId, action);
+    setShowQuestionCard(false);
+  };
+
+  /**
+   * 處理猜牌提交
+   */
+  const handleGuessSubmit = (guessData) => {
+    const myPlayer = getMyPlayer();
+    if (!myPlayer || !gameId) return;
+
+    setIsLoading(true);
+
+    const action = {
+      type: 'guess',
+      playerId: myPlayer.id,
+      guessedColors: guessData.guessedColors
+    };
+
+    sendGameAction(gameId, action);
+    setShowGuessCard(false);
   };
 
   /**
    * 取得遊戲階段顯示文字
-   * @returns {string} 遊戲階段文字
    */
   const getGamePhaseText = () => {
     switch (gameState.gamePhase) {
@@ -229,20 +271,9 @@ function GameRoom() {
     }
   };
 
-  // 載入中狀態
-  if (isLoading) {
-    return (
-      <div className="game-room loading">
-        <div className="loading-spinner">
-          <p>載入中...</p>
-        </div>
-      </div>
-    );
-  }
-
   const myPlayer = getMyPlayer();
   const currentPlayer = getCurrentPlayer();
-  const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING;
+  const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING && myPlayer?.isActive !== false;
   const onlyGuess = mustGuess();
 
   return (
@@ -275,10 +306,15 @@ function GameRoom() {
             <button
               className="btn btn-primary start-game-btn"
               onClick={handleStartGame}
-              disabled={gameState.players.length < 3}
+              disabled={gameState.players.length < 3 || isLoading}
             >
-              開始遊戲 ({gameState.players.length}/3-4)
+              {isLoading ? '啟動中...' : `開始遊戲 (${gameState.players.length}/${gameState.maxPlayers || 4})`}
             </button>
+          )}
+
+          {/* 等待中非房主提示 */}
+          {gameState.gamePhase === GAME_PHASE_WAITING && !myPlayer?.isHost && (
+            <p className="waiting-host">等待房主開始遊戲...</p>
           )}
         </aside>
 
@@ -294,7 +330,7 @@ function GameRoom() {
             <div className="game-over-info">
               {gameState.winner ? (
                 <p className="winner-message">
-                  🏆 獲勝者: {gameState.players.find(p => p.id === gameState.winner)?.name || '未知'}
+                  獲勝者: {gameState.players.find(p => p.id === gameState.winner)?.name || '未知'}
                 </p>
               ) : (
                 <p className="no-winner-message">遊戲結束，沒有獲勝者</p>
@@ -303,7 +339,7 @@ function GameRoom() {
           )}
         </section>
 
-        {/* 右側：玩家列表（簡易版，GameStatus 已有詳細版） */}
+        {/* 右側：玩家列表 */}
         <aside className="players-sidebar">
           <h2>玩家列表</h2>
           <ul className="player-list">
@@ -350,6 +386,7 @@ function GameRoom() {
               <button
                 className="btn btn-primary"
                 onClick={handleOpenQuestion}
+                disabled={isLoading}
               >
                 問牌
               </button>
@@ -358,13 +395,17 @@ function GameRoom() {
               <button
                 className={`btn ${onlyGuess ? 'btn-danger' : 'btn-secondary'}`}
                 onClick={handleOpenGuess}
+                disabled={isLoading}
               >
                 猜牌
                 {onlyGuess && <span className="must-guess-hint">（必須猜牌）</span>}
               </button>
             )}
-            {!canAct && currentPlayer && (
+            {!canAct && currentPlayer && myPlayer?.isActive !== false && (
               <p className="waiting-turn">等待 {currentPlayer.name} 的回合...</p>
+            )}
+            {myPlayer?.isActive === false && (
+              <p className="eliminated-message">你已退出遊戲，等待結果...</p>
             )}
           </div>
         )}
@@ -374,9 +415,16 @@ function GameRoom() {
       {showQuestionCard && (
         <div className="modal-overlay" onClick={handleCloseQuestion}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <QuestionCardContainer
+            <QuestionCard
+              players={gameState.players.filter(p => p.isActive !== false)}
+              currentPlayerId={myPlayer?.id}
+              currentPlayerHand={myPlayer?.hand || []}
+              onSubmit={handleQuestionSubmit}
+              onCancel={handleCloseQuestion}
               isOpen={showQuestionCard}
-              onClose={handleCloseQuestion}
+              isLoading={isLoading}
+              questionResult={questionResult}
+              onResultClose={handleCloseQuestion}
             />
           </div>
         </div>
@@ -386,9 +434,15 @@ function GameRoom() {
       {showGuessCard && (
         <div className="modal-overlay" onClick={handleCloseGuess}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <GuessCardContainer
+            <GuessCard
+              onSubmit={handleGuessSubmit}
+              onCancel={handleCloseGuess}
               isOpen={showGuessCard}
-              onClose={handleCloseGuess}
+              isLoading={isLoading}
+              guessResult={guessResult}
+              onResultClose={handleCloseGuess}
+              hiddenCards={hiddenCardsForGuess}
+              canViewAnswer={true}
             />
           </div>
         </div>
@@ -398,6 +452,7 @@ function GameRoom() {
       {error && (
         <div className="error-message" role="alert">
           {error}
+          <button onClick={() => setError('')} className="close-error">×</button>
         </div>
       )}
     </div>
