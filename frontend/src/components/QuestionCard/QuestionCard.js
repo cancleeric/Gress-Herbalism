@@ -5,7 +5,8 @@
  * @description 問牌操作介面，包含顏色選擇、目標玩家選擇和要牌方式選擇
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
   ALL_COLORS,
@@ -14,6 +15,9 @@ import {
   QUESTION_TYPE_GIVE_ONE_GET_ALL,
   QUESTION_TYPE_DESCRIPTIONS
 } from '../../shared/constants';
+import { validateQuestionType } from '../../utils/gameRules';
+import { processQuestionAction } from '../../services/gameService';
+import { updateGameState } from '../../store/gameStore';
 import './QuestionCard.css';
 
 /**
@@ -156,22 +160,84 @@ QuestionTypeSelector.propTypes = {
 };
 
 /**
+ * 問牌結果顯示組件
+ *
+ * @param {Object} props - 組件屬性
+ * @param {Object} props.result - 問牌結果
+ * @param {Function} props.onClose - 關閉回調
+ * @returns {JSX.Element} 結果顯示組件
+ */
+function QuestionResult({ result, onClose }) {
+  if (!result) return null;
+
+  return (
+    <div className="question-result">
+      <h4 className="result-title">
+        {result.success ? '問牌成功' : '問牌失敗'}
+      </h4>
+      <p className="result-message">{result.message}</p>
+      {result.success && result.result && result.result.cardsReceived.length > 0 && (
+        <div className="result-cards">
+          <p>收到的牌：</p>
+          <ul>
+            {result.result.cardsReceived.map(card => (
+              <li key={card.id} className={`result-card card-${card.color}`}>
+                {card.color}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {result.success && result.result && result.result.cardsReceived.length === 0 && (
+        <p className="result-no-cards">目標玩家沒有該顏色的牌</p>
+      )}
+      <button
+        type="button"
+        className="btn btn-primary"
+        onClick={onClose}
+      >
+        確定
+      </button>
+    </div>
+  );
+}
+
+QuestionResult.propTypes = {
+  result: PropTypes.shape({
+    success: PropTypes.bool,
+    message: PropTypes.string,
+    result: PropTypes.shape({
+      cardsReceived: PropTypes.array
+    })
+  }),
+  onClose: PropTypes.func.isRequired
+};
+
+/**
  * 問牌介面組件
  *
  * @param {Object} props - 組件屬性
  * @param {Array} props.players - 玩家列表
  * @param {string} props.currentPlayerId - 當前玩家ID
+ * @param {Array} props.currentPlayerHand - 當前玩家手牌（用於類型3驗證）
  * @param {Function} props.onSubmit - 提交回調
  * @param {Function} props.onCancel - 取消回調
  * @param {boolean} props.isOpen - 是否開啟
+ * @param {boolean} props.isLoading - 是否載入中
+ * @param {Object} props.questionResult - 問牌結果
+ * @param {Function} props.onResultClose - 關閉結果回調
  * @returns {JSX.Element} 問牌介面組件
  */
 function QuestionCard({
   players = [],
   currentPlayerId,
+  currentPlayerHand = [],
   onSubmit,
   onCancel,
-  isOpen = true
+  isOpen = true,
+  isLoading = false,
+  questionResult = null,
+  onResultClose
 }) {
   // 狀態
   const [selectedColors, setSelectedColors] = useState([]);
@@ -181,9 +247,11 @@ function QuestionCard({
 
   /**
    * 驗證表單
+   * 使用 gameRules 進行完整驗證
    * @returns {boolean} 是否有效
    */
   const validateForm = () => {
+    // 基本驗證
     if (selectedColors.length !== 2) {
       setError('請選擇兩個不同顏色');
       return false;
@@ -201,6 +269,22 @@ function QuestionCard({
 
     if (!selectedType) {
       setError('請選擇要牌方式');
+      return false;
+    }
+
+    // 使用 gameRules 進行問牌類型驗證
+    const targetPlayer = players.find(p => p.id === selectedPlayerId);
+    const targetHand = targetPlayer ? targetPlayer.hand || [] : [];
+
+    const validation = validateQuestionType(
+      selectedType,
+      selectedColors,
+      currentPlayerHand,
+      targetHand
+    );
+
+    if (!validation.isValid) {
+      setError(validation.message);
       return false;
     }
 
@@ -284,6 +368,23 @@ function QuestionCard({
 
   if (!isOpen) return null;
 
+  // 顯示問牌結果
+  if (questionResult) {
+    return (
+      <div className="question-card">
+        <div className="question-card-header">
+          <h3>問牌結果</h3>
+        </div>
+        <div className="question-card-body">
+          <QuestionResult
+            result={questionResult}
+            onClose={onResultClose || handleCancel}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="question-card">
       <div className="question-card-header">
@@ -291,6 +392,14 @@ function QuestionCard({
       </div>
 
       <div className="question-card-body">
+        {/* 載入指示器 */}
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner" aria-label="載入中"></div>
+            <p>處理中...</p>
+          </div>
+        )}
+
         {/* 顏色選擇 */}
         <ColorSelector
           selectedColors={selectedColors}
@@ -325,6 +434,7 @@ function QuestionCard({
           type="button"
           className="btn btn-secondary"
           onClick={handleCancel}
+          disabled={isLoading}
         >
           取消
         </button>
@@ -332,9 +442,9 @@ function QuestionCard({
           type="button"
           className="btn btn-primary"
           onClick={handleSubmit}
-          disabled={!canSubmit()}
+          disabled={!canSubmit() || isLoading}
         >
-          確認問牌
+          {isLoading ? '處理中...' : '確認問牌'}
         </button>
       </div>
     </div>
@@ -344,12 +454,134 @@ function QuestionCard({
 QuestionCard.propTypes = {
   players: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired
+    name: PropTypes.string.isRequired,
+    hand: PropTypes.array
   })),
   currentPlayerId: PropTypes.string,
+  currentPlayerHand: PropTypes.array,
   onSubmit: PropTypes.func,
   onCancel: PropTypes.func,
-  isOpen: PropTypes.bool
+  isOpen: PropTypes.bool,
+  isLoading: PropTypes.bool,
+  questionResult: PropTypes.object,
+  onResultClose: PropTypes.func
+};
+
+/**
+ * 問牌介面容器組件
+ * 處理 Redux 整合和 gameService 調用
+ *
+ * @param {Object} props - 組件屬性
+ * @param {boolean} props.isOpen - 是否開啟
+ * @param {Function} props.onClose - 關閉回調
+ * @returns {JSX.Element} 問牌介面容器組件
+ */
+function QuestionCardContainer({ isOpen = true, onClose }) {
+  const dispatch = useDispatch();
+
+  // 從 Redux store 取得遊戲狀態
+  const gameState = useSelector((state) => ({
+    gameId: state.gameId,
+    players: state.players,
+    currentPlayerId: state.currentPlayerId,
+    currentPlayerIndex: state.currentPlayerIndex
+  }));
+
+  // 本地狀態
+  const [isLoading, setIsLoading] = useState(false);
+  const [questionResult, setQuestionResult] = useState(null);
+
+  // 取得當前玩家資訊
+  const currentPlayer = gameState.players[gameState.currentPlayerIndex] || {};
+  const currentPlayerId = gameState.currentPlayerId || currentPlayer.id;
+  const currentPlayerHand = currentPlayer.hand || [];
+
+  /**
+   * 處理問牌提交
+   * @param {Object} questionData - 問牌資料
+   */
+  const handleSubmit = useCallback(async (questionData) => {
+    if (!gameState.gameId) {
+      setQuestionResult({
+        success: false,
+        message: '遊戲不存在'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // 建立問牌動作
+      const action = {
+        playerId: currentPlayerId,
+        targetPlayerId: questionData.targetPlayerId,
+        colors: questionData.colors,
+        questionType: questionData.questionType
+      };
+
+      // 調用 gameService 處理問牌動作
+      const result = processQuestionAction(gameState.gameId, action);
+
+      setQuestionResult(result);
+
+      // 如果成功，更新 Redux store
+      if (result.success && result.gameState) {
+        dispatch(updateGameState({
+          players: result.gameState.players,
+          currentPlayerIndex: result.gameState.currentPlayerIndex,
+          gameHistory: result.gameState.gameHistory
+        }));
+      }
+    } catch (err) {
+      setQuestionResult({
+        success: false,
+        message: '處理問牌時發生錯誤：' + (err.message || '未知錯誤')
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [gameState.gameId, currentPlayerId, dispatch]);
+
+  /**
+   * 處理取消
+   */
+  const handleCancel = useCallback(() => {
+    setQuestionResult(null);
+    if (onClose) {
+      onClose();
+    }
+  }, [onClose]);
+
+  /**
+   * 處理結果關閉
+   */
+  const handleResultClose = useCallback(() => {
+    setQuestionResult(null);
+    if (onClose) {
+      onClose();
+    }
+  }, [onClose]);
+
+  return (
+    <QuestionCard
+      players={gameState.players}
+      currentPlayerId={currentPlayerId}
+      currentPlayerHand={currentPlayerHand}
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+      isOpen={isOpen}
+      isLoading={isLoading}
+      questionResult={questionResult}
+      onResultClose={handleResultClose}
+    />
+  );
+}
+
+QuestionCardContainer.propTypes = {
+  isOpen: PropTypes.bool,
+  onClose: PropTypes.func
 };
 
 export default QuestionCard;
+export { QuestionCardContainer };

@@ -4,4 +4,4 @@
  * @module QuestionCard/index
  */
 
-export { default } from './QuestionCard';
+export { default, QuestionCardContainer } from './QuestionCard';
