@@ -158,11 +158,21 @@
   - `shared/constants.js` - 遊戲常數定義檔案
 
 ### 版本控制狀態
-- 工作單分支開發完成
-- 待合併到 `master` 分支
+- ✅ 工作單分支開發完成
+- ✅ 已合併到 `master` 分支
+- ✅ 已添加標籤 `work-order-0002-complete`
+
+### 提交記錄
+- `d24bdad` - Work Order 0002: Create game constants file
+- `5530cca` - Work Order 0002: Complete report
+
+### 合併資訊
+- 合併方式：Fast-forward（無衝突）
+- 新增檔案：2 個（shared/constants.js, reports/REPORT_0002.md）
+- 新增行數：423 行
 
 ---
 
 **報告撰寫日期：** 2026-01-23  
 **報告狀態：** 完成 ✅  
-**版本控制：** 工作單分支已完成，待合併 ✅
+**版本控制：** 已完成並合併到 master ✅
