@@ -1,0 +1,85 @@
+/**
+ * App 組件樣式
+ *
+ * @description 主應用組件的 CSS 樣式
+ */
+
+/* 主應用容器 */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 遊戲大廳樣式 */
+.lobby {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
+.lobby h1 {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-accent);
+}
+
+.lobby p {
+  font-size: var(--font-size-large);
+  color: var(--color-text-secondary);
+}
+
+/* 遊戲房間樣式 */
+.game-room {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+}
+
+.game-room h1 {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.game-room p {
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* 錯誤邊界樣式 */
+.error-boundary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.error-boundary h1 {
+  font-size: 2rem;
+  color: var(--color-error);
+  margin-bottom: var(--spacing-md);
+}
+
+.error-boundary p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-boundary button {
+  background-color: var(--color-accent);
+  color: white;
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-large);
+}
+
+.error-boundary button:hover {
+  background-color: #c13a50;
+}
