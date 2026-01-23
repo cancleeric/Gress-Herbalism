@@ -53,3 +53,33 @@ export function createDeck() {
 
   return deck;
 }
+
+/**
+ * Fisher-Yates 洗牌演算法
+ *
+ * 使用 Fisher-Yates (Knuth) shuffle 演算法隨機打亂陣列
+ * 時間複雜度：O(n)，空間複雜度：O(n)
+ *
+ * @param {Card[]} deck - 要洗牌的牌組陣列
+ * @returns {Card[]} 洗牌後的新牌組陣列（不修改原陣列）
+ *
+ * @example
+ * const deck = createDeck();
+ * const shuffled = shuffleDeck(deck);
+ * // deck 保持原順序
+ * // shuffled 是隨機打亂後的新陣列
+ *
+ * // TODO: 可擴展點 - 可替換為其他洗牌演算法
+ */
+export function shuffleDeck(deck) {
+  // 複製陣列，不修改原陣列
+  const shuffled = [...deck];
+
+  // Fisher-Yates 洗牌演算法
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+}
