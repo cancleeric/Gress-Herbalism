@@ -17,15 +17,19 @@ import {
 import {
   validatePlayerCount,
   validateQuestionType,
-  getNextPlayerIndex
+  validateGuess,
+  getNextPlayerIndex,
+  mustGuess
 } from '../utils/gameRules.js';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
+  GAME_PHASE_FINISHED,
   QUESTION_TYPE_ONE_EACH,
   QUESTION_TYPE_ALL_ONE_COLOR,
   QUESTION_TYPE_GIVE_ONE_GET_ALL,
-  ACTION_TYPE_QUESTION
+  ACTION_TYPE_QUESTION,
+  ACTION_TYPE_GUESS
 } from '../../../shared/constants.js';
 
 // ==================== 遊戲狀態儲存 ====================
@@ -469,5 +473,201 @@ export function processQuestionAction(gameId, action) {
     gameState: updatedGameState,
     result,
     message
+  };
+}
+
+// ==================== 猜牌動作處理 ====================
+
+/**
+ * 處理猜牌動作
+ *
+ * @param {string} gameId - 遊戲 ID
+ * @param {Object} action - 猜牌動作物件
+ * @param {string} action.playerId - 發起玩家 ID
+ * @param {string[]} action.guessedColors - 猜測的兩個顏色
+ * @returns {Object} 處理結果
+ *
+ * @example
+ * const result = processGuessAction('game_123', {
+ *   playerId: 'p1',
+ *   guessedColors: ['red', 'blue']
+ * });
+ */
+export function processGuessAction(gameId, action) {
+  const gameState = getGameState(gameId);
+
+  if (!gameState) {
+    return {
+      success: false,
+      gameState: null,
+      isCorrect: false,
+      revealedCards: null,
+      message: '遊戲不存在'
+    };
+  }
+
+  const { playerId, guessedColors } = action;
+
+  // 找到玩家
+  const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+
+  if (playerIndex === -1) {
+    return {
+      success: false,
+      gameState,
+      isCorrect: false,
+      revealedCards: null,
+      message: '玩家不存在'
+    };
+  }
+
+  // 驗證是否為當前玩家的回合
+  if (gameState.currentPlayerIndex !== playerIndex) {
+    return {
+      success: false,
+      gameState,
+      isCorrect: false,
+      revealedCards: null,
+      message: '不是你的回合'
+    };
+  }
+
+  // 驗證猜牌
+  const guessResult = validateGuess(guessedColors, gameState.hiddenCards);
+
+  // 記錄歷史
+  const historyEntry = {
+    type: ACTION_TYPE_GUESS,
+    playerId,
+    guessedColors,
+    isCorrect: guessResult.isCorrect,
+    timestamp: Date.now()
+  };
+
+  if (guessResult.isCorrect) {
+    // 猜對：遊戲結束，該玩家獲勝
+    const revealedCards = gameState.hiddenCards.map(card => ({
+      ...card,
+      isHidden: false
+    }));
+
+    const updatedPlayers = gameState.players.map((p, index) => ({
+      ...p,
+      isCurrentTurn: false
+    }));
+
+    const updatedGameState = updateGameState(gameId, {
+      players: updatedPlayers,
+      hiddenCards: revealedCards,
+      gamePhase: GAME_PHASE_FINISHED,
+      winner: playerId,
+      gameHistory: [...gameState.gameHistory, historyEntry]
+    });
+
+    return {
+      success: true,
+      gameState: updatedGameState,
+      isCorrect: true,
+      revealedCards,
+      message: '恭喜猜對了！你獲勝了！'
+    };
+  } else {
+    // 猜錯：該玩家退出遊戲
+    let updatedPlayers = gameState.players.map((p, index) => {
+      if (index === playerIndex) {
+        return { ...p, isActive: false, isCurrentTurn: false };
+      }
+      return p;
+    });
+
+    // 計算剩餘活躍玩家數
+    const activePlayers = updatedPlayers.filter(p => p.isActive);
+
+    if (activePlayers.length === 0) {
+      // 沒有活躍玩家了：遊戲結束，沒有獲勝者
+      const updatedGameState = updateGameState(gameId, {
+        players: updatedPlayers,
+        gamePhase: GAME_PHASE_FINISHED,
+        winner: null,
+        gameHistory: [...gameState.gameHistory, historyEntry]
+      });
+
+      return {
+        success: true,
+        gameState: updatedGameState,
+        isCorrect: false,
+        revealedCards: null,
+        message: '猜錯了！遊戲結束，沒有獲勝者。'
+      };
+    }
+
+    // 還有其他玩家：繼續遊戲，切換到下一個玩家
+    const nextPlayerIndex = getNextPlayerIndex(playerIndex, updatedPlayers);
+    updatedPlayers = updatedPlayers.map((p, index) => ({
+      ...p,
+      isCurrentTurn: index === nextPlayerIndex
+    }));
+
+    const updatedGameState = updateGameState(gameId, {
+      players: updatedPlayers,
+      currentPlayerIndex: nextPlayerIndex,
+      gameHistory: [...gameState.gameHistory, historyEntry]
+    });
+
+    return {
+      success: true,
+      gameState: updatedGameState,
+      isCorrect: false,
+      revealedCards: null,
+      message: '猜錯了！你已退出遊戲。'
+    };
+  }
+}
+
+/**
+ * 取得蓋牌顏色（猜牌者查看答案用）
+ *
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} playerId - 玩家 ID
+ * @returns {Object} 查看結果
+ */
+export function revealHiddenCards(gameId, playerId) {
+  const gameState = getGameState(gameId);
+
+  if (!gameState) {
+    return {
+      success: false,
+      cards: null,
+      message: '遊戲不存在'
+    };
+  }
+
+  const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+
+  if (playerIndex === -1) {
+    return {
+      success: false,
+      cards: null,
+      message: '玩家不存在'
+    };
+  }
+
+  // 驗證是否為當前玩家的回合
+  if (gameState.currentPlayerIndex !== playerIndex) {
+    return {
+      success: false,
+      cards: null,
+      message: '不是你的回合'
+    };
+  }
+
+  // 返回蓋牌顏色（但不修改遊戲狀態）
+  return {
+    success: true,
+    cards: gameState.hiddenCards.map(card => ({
+      id: card.id,
+      color: card.color
+    })),
+    message: '這是蓋牌的顏色'
   };
 }

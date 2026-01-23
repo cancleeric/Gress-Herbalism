@@ -1,6 +1,6 @@
 /**
  * 遊戲服務單元測試
- * 工作單 0009, 0010
+ * 工作單 0009, 0010, 0011
  */
 
 import {
@@ -9,11 +9,14 @@ import {
   updateGameState,
   deleteGame,
   clearAllGames,
-  processQuestionAction
+  processQuestionAction,
+  processGuessAction,
+  revealHiddenCards
 } from './gameService';
 
 import {
   GAME_PHASE_PLAYING,
+  GAME_PHASE_FINISHED,
   TOTAL_CARDS,
   HIDDEN_CARDS_COUNT,
   QUESTION_TYPE_ONE_EACH,
@@ -428,6 +431,179 @@ describe('processQuestionAction - 工作單 0010', () => {
       expect(result.gameState.gameHistory).toHaveLength(1);
       expect(result.gameState.gameHistory[0].type).toBe('question');
       expect(result.gameState.gameHistory[0].playerId).toBe('p1');
+    });
+  });
+});
+
+describe('processGuessAction - 工作單 0011', () => {
+  afterEach(() => {
+    clearAllGames();
+  });
+
+  // 建立一個有已知蓋牌的遊戲用於測試
+  function createTestGameWithKnownHidden() {
+    const players = [
+      { id: 'p1', name: '玩家1' },
+      { id: 'p2', name: '玩家2' },
+      { id: 'p3', name: '玩家3' }
+    ];
+    const gameState = createGame(players);
+
+    // 設定已知的蓋牌
+    const testHiddenCards = [
+      { id: 'red-1', color: 'red', isHidden: true },
+      { id: 'blue-1', color: 'blue', isHidden: true }
+    ];
+
+    updateGameState(gameState.gameId, { hiddenCards: testHiddenCards });
+    return getGameState(gameState.gameId);
+  }
+
+  describe('基本驗證', () => {
+    test('遊戲不存在應返回錯誤', () => {
+      const result = processGuessAction('non_existent', {
+        playerId: 'p1',
+        guessedColors: ['red', 'blue']
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('不存在');
+    });
+
+    test('不是當前玩家回合應返回錯誤', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p2',
+        guessedColors: ['red', 'blue']
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('不是你的回合');
+    });
+  });
+
+  describe('猜對', () => {
+    test('猜對應設定獲勝者並結束遊戲', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['red', 'blue']
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isCorrect).toBe(true);
+      expect(result.gameState.winner).toBe('p1');
+      expect(result.gameState.gamePhase).toBe(GAME_PHASE_FINISHED);
+    });
+
+    test('猜對應公布蓋牌', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['red', 'blue']
+      });
+
+      expect(result.revealedCards).not.toBeNull();
+      expect(result.revealedCards).toHaveLength(2);
+      expect(result.revealedCards.every(c => c.isHidden === false)).toBe(true);
+    });
+
+    test('猜對順序不同也算正確', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['blue', 'red'] // 順序相反
+      });
+
+      expect(result.isCorrect).toBe(true);
+    });
+  });
+
+  describe('猜錯', () => {
+    test('猜錯應標記玩家為非活躍', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['red', 'yellow'] // 錯誤
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isCorrect).toBe(false);
+      expect(result.gameState.players[0].isActive).toBe(false);
+    });
+
+    test('猜錯不應公布蓋牌', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['red', 'yellow']
+      });
+
+      expect(result.revealedCards).toBeNull();
+    });
+
+    test('猜錯後應切換到下一個玩家', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['red', 'yellow']
+      });
+
+      expect(result.gameState.currentPlayerIndex).toBe(1);
+      expect(result.gameState.players[1].isCurrentTurn).toBe(true);
+    });
+  });
+
+  describe('最後一個玩家猜錯', () => {
+    test('最後一個玩家猜錯應結束遊戲但無獲勝者', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      // 設定只剩一個活躍玩家
+      const updatedPlayers = gameState.players.map((p, i) => ({
+        ...p,
+        isActive: i === 0,
+        isCurrentTurn: i === 0
+      }));
+      updateGameState(gameState.gameId, {
+        players: updatedPlayers,
+        currentPlayerIndex: 0
+      });
+
+      const result = processGuessAction(gameState.gameId, {
+        playerId: 'p1',
+        guessedColors: ['red', 'yellow'] // 錯誤
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isCorrect).toBe(false);
+      expect(result.gameState.gamePhase).toBe(GAME_PHASE_FINISHED);
+      expect(result.gameState.winner).toBeNull();
+    });
+  });
+
+  describe('revealHiddenCards', () => {
+    test('當前玩家可以查看蓋牌', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = revealHiddenCards(gameState.gameId, 'p1');
+
+      expect(result.success).toBe(true);
+      expect(result.cards).toHaveLength(2);
+    });
+
+    test('非當前玩家不能查看蓋牌', () => {
+      const gameState = createTestGameWithKnownHidden();
+
+      const result = revealHiddenCards(gameState.gameId, 'p2');
+
+      expect(result.success).toBe(false);
     });
   });
 });
