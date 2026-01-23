@@ -1,0 +1,286 @@
+/**
+ * 遊戲狀態顯示樣式
+ *
+ * @description GameStatus 組件的 CSS 樣式
+ */
+
+.game-status {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* 通用標題樣式 */
+.game-status h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-primary);
+  padding-bottom: var(--spacing-xs);
+}
+
+/* 遊戲階段顯示 */
+.game-phase-display {
+  text-align: center;
+}
+
+.phase-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-weight: bold;
+  font-size: var(--font-size-base);
+}
+
+.game-phase-display.phase-waiting .phase-badge {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.game-phase-display.phase-playing .phase-badge {
+  background-color: var(--color-success);
+  color: white;
+  animation: pulse-playing 2s infinite;
+}
+
+.game-phase-display.phase-finished .phase-badge {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+@keyframes pulse-playing {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(39, 174, 96, 0);
+  }
+}
+
+.game-result {
+  margin-top: var(--spacing-sm);
+}
+
+.winner-announcement {
+  color: var(--color-warning);
+  font-size: var(--font-size-large);
+}
+
+.winner-announcement strong {
+  color: var(--color-accent);
+}
+
+.no-winner {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* 當前玩家顯示 */
+.current-player-display {
+  padding: var(--spacing-sm);
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-md);
+}
+
+.current-player-display.your-turn {
+  border: 2px solid var(--color-success);
+  animation: glow-turn 1.5s ease-in-out infinite;
+}
+
+@keyframes glow-turn {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(39, 174, 96, 0.6);
+  }
+}
+
+.current-player-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-large);
+  color: var(--color-text);
+}
+
+.player-indicator {
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-success);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.your-turn-badge {
+  background-color: var(--color-success);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+}
+
+.no-player {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* 玩家狀態列表 */
+.player-status-list {
+  /* 繼承通用樣式 */
+}
+
+.players-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s ease;
+}
+
+.player-item.current {
+  border-left: 3px solid var(--color-success);
+}
+
+.player-item.is-me {
+  background-color: rgba(233, 69, 96, 0.1);
+}
+
+.player-item.eliminated {
+  opacity: 0.5;
+}
+
+.player-item.eliminated .player-name {
+  text-decoration: line-through;
+  color: var(--color-text-secondary);
+}
+
+.player-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.me-badge {
+  font-size: var(--font-size-small);
+  color: var(--color-accent);
+  margin-left: var(--spacing-xs);
+}
+
+.player-status {
+  font-size: var(--font-size-small);
+  padding: 2px var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+}
+
+.player-status.active {
+  background-color: rgba(39, 174, 96, 0.2);
+  color: var(--color-success);
+}
+
+.player-status.inactive {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: var(--color-error);
+}
+
+.turn-indicator {
+  color: var(--color-success);
+  font-size: var(--font-size-small);
+  animation: blink 1s infinite;
+}
+
+.no-players {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+/* 遊戲歷史記錄 */
+.game-history-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-small);
+}
+
+.history-item.question {
+  border-left: 3px solid var(--color-primary);
+}
+
+.history-item.guess {
+  border-left: 3px solid var(--color-warning);
+}
+
+.history-icon {
+  flex-shrink: 0;
+}
+
+.history-text {
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.no-history {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+.more-history {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  margin-top: var(--spacing-sm);
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+  .game-status {
+    padding: var(--spacing-sm);
+  }
+
+  .player-item {
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .game-history-list {
+    max-height: 200px;
+  }
+}

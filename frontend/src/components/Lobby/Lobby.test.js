@@ -42,7 +42,7 @@ describe('Lobby - 工作單 0014', () => {
   describe('渲染', () => {
     test('應顯示遊戲標題', () => {
       renderWithProviders(<Lobby />);
-      expect(screen.getByText('桌遊網頁版')).toBeInTheDocument();
+      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
     });
 
     test('應顯示副標題', () => {

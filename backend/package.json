@@ -1,7 +1,7 @@
 {
-  "name": "table-game-backend",
+  "name": "herbalism-backend",
   "version": "1.0.0",
-  "description": "桌遊網頁版 - 後端服務（可選）",
+  "description": "本草 Herbalism - 後端服務（可選）",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

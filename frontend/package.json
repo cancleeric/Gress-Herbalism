@@ -1,7 +1,7 @@
 {
-  "name": "table-game-frontend",
+  "name": "herbalism-frontend",
   "version": "1.0.0",
-  "description": "桌遊網頁版 - 前端應用",
+  "description": "本草 Herbalism - 前端應用",
   "private": true,
   "scripts": {
     "start": "react-scripts start",

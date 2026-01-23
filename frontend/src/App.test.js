@@ -12,7 +12,7 @@ describe('App - 工作單 0013', () => {
     test('應用程式應該正常渲染', () => {
       render(<App />);
       // 檢查大廳標題是否顯示
-      expect(screen.getByText('桌遊網頁版')).toBeInTheDocument();
+      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
     });
 
     test('首頁應顯示遊戲大廳', () => {
@@ -58,7 +58,7 @@ describe('App - 工作單 0013', () => {
   describe('路由設定', () => {
     test('根路徑應渲染 Lobby 組件', () => {
       render(<App />);
-      expect(screen.getByText('桌遊網頁版')).toBeInTheDocument();
+      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
     });
   });
 

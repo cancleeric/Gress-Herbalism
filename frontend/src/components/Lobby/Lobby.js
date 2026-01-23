@@ -275,7 +275,7 @@ function Lobby() {
   return (
     <div className="lobby">
       <header className="lobby-header">
-        <h1>桌遊網頁版</h1>
+        <h1>本草 Herbalism</h1>
         <p className="lobby-subtitle">3-4 人推理卡牌遊戲</p>
       </header>
 
