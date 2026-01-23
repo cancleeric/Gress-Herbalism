@@ -67,23 +67,23 @@
 .game-room-main {
   flex: 1;
   display: grid;
-  grid-template-columns: 250px 1fr 250px;
+  grid-template-columns: 280px 1fr 250px;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   overflow: hidden;
 }
 
 /* 側邊欄通用樣式 */
-.players-sidebar,
-.history-sidebar {
+.status-sidebar,
+.players-sidebar {
   background-color: var(--color-surface);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-md);
   overflow-y: auto;
 }
 
-.players-sidebar h2,
-.history-sidebar h2 {
+.status-sidebar h2,
+.players-sidebar h2 {
   font-size: var(--font-size-large);
   color: var(--color-text);
   margin-bottom: var(--spacing-md);
@@ -114,6 +114,11 @@
   border-color: var(--color-accent);
 }
 
+.player-item.eliminated {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
 .player-name {
   font-weight: 600;
   color: var(--color-text);
@@ -130,6 +135,12 @@
   font-weight: 600;
 }
 
+.eliminated-badge {
+  font-size: var(--font-size-small);
+  color: #e74c3c;
+  font-weight: 600;
+}
+
 .start-game-btn {
   width: 100%;
   margin-top: var(--spacing-md);
@@ -142,57 +153,23 @@
   gap: var(--spacing-md);
 }
 
-.game-board {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+/* 遊戲結束資訊 */
+.game-over-info {
+  text-align: center;
+  padding: var(--spacing-lg);
   background-color: var(--color-surface);
   border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  min-height: 300px;
 }
 
-.waiting-message,
-.game-over-message,
-.game-in-progress {
-  text-align: center;
-}
-
-.waiting-message h2,
-.game-over-message h2,
-.game-in-progress h2 {
+.winner-message {
+  font-size: var(--font-size-xlarge);
   color: var(--color-accent);
-  margin-bottom: var(--spacing-md);
+  font-weight: bold;
 }
 
-.waiting-message p,
-.game-over-message p,
-.game-in-progress p {
+.no-winner-message {
+  font-size: var(--font-size-large);
   color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.placeholder-text {
-  color: var(--color-text-secondary);
-  font-style: italic;
-}
-
-/* 隱藏牌揭曉 */
-.hidden-cards-reveal {
-  text-align: center;
-}
-
-.hidden-cards-reveal h3 {
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
-}
-
-.hidden-cards {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-md);
 }
 
 /* 卡牌樣式 */
@@ -228,23 +205,6 @@
   background: linear-gradient(135deg, var(--color-blue), #2471a3);
 }
 
-/* 歷史記錄 */
-.history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.history-item,
-.no-history {
-  padding: var(--spacing-sm);
-  margin-bottom: var(--spacing-xs);
-  background-color: var(--color-background);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-small);
-  color: var(--color-text-secondary);
-}
-
 /* 底部區域 */
 .game-room-footer {
   display: flex;
@@ -255,35 +215,48 @@
   border-top: 2px solid var(--color-primary);
 }
 
-.my-hand {
+.my-hand-section {
   flex: 1;
-}
-
-.my-hand h3 {
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  margin-bottom: var(--spacing-sm);
-}
-
-.hand-cards {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.hand-cards .card {
-  width: 60px;
-  height: 90px;
-  font-size: var(--font-size-small);
-}
-
-.no-cards {
-  color: var(--color-text-secondary);
-  font-style: italic;
 }
 
 .action-buttons {
   display: flex;
+  align-items: center;
   gap: var(--spacing-md);
+}
+
+.waiting-turn {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.must-guess-hint {
+  font-size: var(--font-size-small);
+  margin-left: var(--spacing-xs);
+}
+
+/* Modal 樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 /* 錯誤訊息 */
@@ -333,10 +306,19 @@
   background-color: #1a4a7a;
 }
 
+.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
 /* 響應式設計 */
 @media (max-width: 1024px) {
   .game-room-main {
-    grid-template-columns: 200px 1fr 200px;
+    grid-template-columns: 220px 1fr 200px;
   }
 }
 
@@ -346,7 +328,7 @@
     grid-template-rows: auto 1fr auto;
   }
 
-  .players-sidebar {
+  .status-sidebar {
     order: 1;
   }
 
@@ -354,7 +336,7 @@
     order: 2;
   }
 
-  .history-sidebar {
+  .players-sidebar {
     order: 3;
   }
 
@@ -363,17 +345,18 @@
     gap: var(--spacing-md);
   }
 
-  .my-hand {
+  .my-hand-section {
     width: 100%;
     text-align: center;
-  }
-
-  .hand-cards {
-    justify-content: center;
   }
 
   .action-buttons {
     width: 100%;
     justify-content: center;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
   }
 }

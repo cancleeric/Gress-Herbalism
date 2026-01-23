@@ -178,6 +178,72 @@ export function getGameState(gameId) {
 }
 
 /**
+ * 開始遊戲（從等待狀態轉為進行中）
+ *
+ * @param {string} gameId - 遊戲 ID
+ * @returns {Object} 開始結果
+ *
+ * @example
+ * const result = startGame('game_123');
+ */
+export function startGame(gameId) {
+  const gameState = getGameState(gameId);
+
+  if (!gameState) {
+    return {
+      success: false,
+      gameState: null,
+      message: '遊戲不存在'
+    };
+  }
+
+  // 驗證玩家數量
+  if (!validatePlayerCount(gameState.players.length)) {
+    return {
+      success: false,
+      gameState,
+      message: '玩家數量必須在 3-4 人之間'
+    };
+  }
+
+  // 驗證遊戲是否處於等待狀態
+  if (gameState.gamePhase !== GAME_PHASE_WAITING) {
+    return {
+      success: false,
+      gameState,
+      message: '遊戲已經開始或已結束'
+    };
+  }
+
+  // 建立牌組、洗牌、發牌
+  const deck = createDeck();
+  const shuffledDeck = shuffleDeck(deck);
+  const { hiddenCards, playerHands } = dealCards(shuffledDeck, gameState.players.length);
+
+  // 更新玩家狀態，分配手牌
+  const updatedPlayers = gameState.players.map((player, index) => ({
+    ...player,
+    hand: playerHands[index],
+    isActive: true,
+    isCurrentTurn: index === 0
+  }));
+
+  // 更新遊戲狀態
+  const updatedGameState = updateGameState(gameId, {
+    players: updatedPlayers,
+    hiddenCards,
+    currentPlayerIndex: 0,
+    gamePhase: GAME_PHASE_PLAYING
+  });
+
+  return {
+    success: true,
+    gameState: updatedGameState,
+    message: '遊戲開始！'
+  };
+}
+
+/**
  * 更新遊戲狀態
  *
  * @param {string} gameId - 遊戲 ID
