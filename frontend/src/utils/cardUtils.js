@@ -156,3 +156,75 @@ export function dealCards(deck, playerCount) {
     playerHands
   };
 }
+
+// ==================== 手牌管理輔助函數 ====================
+
+/**
+ * 從手牌中篩選出指定顏色的牌
+ *
+ * @param {Card[]} hand - 手牌陣列
+ * @param {string} color - 要篩選的顏色
+ * @returns {Card[]} 指定顏色的牌陣列
+ *
+ * @example
+ * const redCards = getCardsByColor(hand, 'red');
+ */
+export function getCardsByColor(hand, color) {
+  return hand.filter(card => card.color === color);
+}
+
+/**
+ * 檢查手牌中是否包含指定的牌
+ *
+ * @param {Card[]} hand - 手牌陣列
+ * @param {string} cardId - 要檢查的牌 ID
+ * @returns {boolean} 是否包含該牌
+ *
+ * @example
+ * const exists = hasCard(hand, 'red-1');
+ */
+export function hasCard(hand, cardId) {
+  return hand.some(card => card.id === cardId);
+}
+
+/**
+ * 從手牌中移除指定的牌
+ *
+ * @param {Card[]} hand - 手牌陣列
+ * @param {string} cardId - 要移除的牌 ID
+ * @returns {Card[]} 移除後的新手牌陣列（不修改原陣列）
+ *
+ * @example
+ * const newHand = removeCard(hand, 'red-1');
+ */
+export function removeCard(hand, cardId) {
+  return hand.filter(card => card.id !== cardId);
+}
+
+/**
+ * 將牌加入手牌
+ *
+ * @param {Card[]} hand - 手牌陣列
+ * @param {Card} card - 要加入的牌
+ * @returns {Card[]} 加入後的新手牌陣列（不修改原陣列）
+ *
+ * @example
+ * const newHand = addCard(hand, { id: 'red-1', color: 'red', isHidden: false });
+ */
+export function addCard(hand, card) {
+  return [...hand, card];
+}
+
+/**
+ * 計算手牌中指定顏色的牌數
+ *
+ * @param {Card[]} hand - 手牌陣列
+ * @param {string} color - 要計算的顏色
+ * @returns {number} 該顏色的牌數
+ *
+ * @example
+ * const count = countCardsByColor(hand, 'red');
+ */
+export function countCardsByColor(hand, color) {
+  return hand.filter(card => card.color === color).length;
+}

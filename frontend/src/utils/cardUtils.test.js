@@ -1,9 +1,18 @@
 /**
  * 牌組工具函數單元測試
- * 工作單 0003, 0004, 0005
+ * 工作單 0003, 0004, 0005, 0006
  */
 
-import { createDeck, shuffleDeck, dealCards } from './cardUtils';
+import {
+  createDeck,
+  shuffleDeck,
+  dealCards,
+  getCardsByColor,
+  hasCard,
+  removeCard,
+  addCard,
+  countCardsByColor
+} from './cardUtils';
 import {
   COLORS,
   CARD_COUNTS,
@@ -233,5 +242,120 @@ describe('dealCards - 工作單 0005', () => {
     ];
     const uniqueIds = [...new Set(allIds)];
     expect(uniqueIds).toHaveLength(allIds.length);
+  });
+});
+
+describe('手牌管理輔助函數 - 工作單 0006', () => {
+  let hand;
+
+  beforeEach(() => {
+    hand = [
+      { id: 'red-1', color: 'red', isHidden: false },
+      { id: 'red-2', color: 'red', isHidden: false },
+      { id: 'yellow-1', color: 'yellow', isHidden: false },
+      { id: 'blue-1', color: 'blue', isHidden: false }
+    ];
+  });
+
+  describe('getCardsByColor', () => {
+    test('應返回指定顏色的所有牌', () => {
+      const redCards = getCardsByColor(hand, 'red');
+      expect(redCards).toHaveLength(2);
+      redCards.forEach(card => {
+        expect(card.color).toBe('red');
+      });
+    });
+
+    test('沒有該顏色時應返回空陣列', () => {
+      const greenCards = getCardsByColor(hand, 'green');
+      expect(greenCards).toHaveLength(0);
+    });
+
+    test('空手牌應返回空陣列', () => {
+      const result = getCardsByColor([], 'red');
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('hasCard', () => {
+    test('手牌中有該牌時應返回 true', () => {
+      expect(hasCard(hand, 'red-1')).toBe(true);
+    });
+
+    test('手牌中沒有該牌時應返回 false', () => {
+      expect(hasCard(hand, 'green-1')).toBe(false);
+    });
+
+    test('空手牌應返回 false', () => {
+      expect(hasCard([], 'red-1')).toBe(false);
+    });
+  });
+
+  describe('removeCard', () => {
+    test('應正確移除指定的牌', () => {
+      const newHand = removeCard(hand, 'red-1');
+      expect(newHand).toHaveLength(3);
+      expect(hasCard(newHand, 'red-1')).toBe(false);
+    });
+
+    test('不應修改原陣列', () => {
+      const originalLength = hand.length;
+      removeCard(hand, 'red-1');
+      expect(hand).toHaveLength(originalLength);
+    });
+
+    test('移除不存在的牌應返回相同的陣列', () => {
+      const newHand = removeCard(hand, 'green-1');
+      expect(newHand).toHaveLength(hand.length);
+    });
+
+    test('空手牌應返回空陣列', () => {
+      const result = removeCard([], 'red-1');
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('addCard', () => {
+    test('應正確加入牌', () => {
+      const newCard = { id: 'green-1', color: 'green', isHidden: false };
+      const newHand = addCard(hand, newCard);
+      expect(newHand).toHaveLength(5);
+      expect(hasCard(newHand, 'green-1')).toBe(true);
+    });
+
+    test('不應修改原陣列', () => {
+      const originalLength = hand.length;
+      const newCard = { id: 'green-1', color: 'green', isHidden: false };
+      addCard(hand, newCard);
+      expect(hand).toHaveLength(originalLength);
+    });
+
+    test('新牌應加在陣列最後', () => {
+      const newCard = { id: 'green-1', color: 'green', isHidden: false };
+      const newHand = addCard(hand, newCard);
+      expect(newHand[newHand.length - 1].id).toBe('green-1');
+    });
+
+    test('空手牌加入牌後應有一張牌', () => {
+      const newCard = { id: 'red-1', color: 'red', isHidden: false };
+      const newHand = addCard([], newCard);
+      expect(newHand).toHaveLength(1);
+    });
+  });
+
+  describe('countCardsByColor', () => {
+    test('應正確計算指定顏色的牌數', () => {
+      expect(countCardsByColor(hand, 'red')).toBe(2);
+      expect(countCardsByColor(hand, 'yellow')).toBe(1);
+      expect(countCardsByColor(hand, 'blue')).toBe(1);
+    });
+
+    test('沒有該顏色時應返回 0', () => {
+      expect(countCardsByColor(hand, 'green')).toBe(0);
+    });
+
+    test('空手牌應返回 0', () => {
+      expect(countCardsByColor([], 'red')).toBe(0);
+    });
   });
 });
