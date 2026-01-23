@@ -27,18 +27,64 @@ import {
 
 // ==================== 遊戲狀態儲存 ====================
 
-/**
- * 遊戲狀態儲存（記憶體）
- * TODO: 可擴展點 - 未來可替換為資料庫儲存
- * @type {Map<string, Object>}
- */
-const gameStore = new Map();
+const STORAGE_KEY = 'herbalism_game_store';
 
 /**
- * 房間列表監聽器
+ * 從 localStorage 載入遊戲狀態
+ * @returns {Map<string, Object>} 遊戲狀態 Map
+ */
+function loadFromStorage() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Map(Object.entries(parsed));
+    }
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+  }
+  return new Map();
+}
+
+/**
+ * 儲存遊戲狀態到 localStorage
+ */
+function saveToStorage() {
+  try {
+    const obj = Object.fromEntries(gameStore);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+}
+
+/**
+ * 遊戲狀態儲存（使用 localStorage 持久化）
+ * @type {Map<string, Object>}
+ */
+const gameStore = loadFromStorage();
+
+/**
+ * 房間列表監聯器
  * @type {Set<Function>}
  */
 const roomListeners = new Set();
+
+/**
+ * 監聽其他分頁的 localStorage 變更
+ */
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === STORAGE_KEY) {
+      // 重新載入遊戲狀態
+      const newStore = loadFromStorage();
+      gameStore.clear();
+      newStore.forEach((value, key) => gameStore.set(key, value));
+      // 通知監聽器
+      notifyRoomListChange();
+    }
+  });
+}
 
 /**
  * 產生唯一遊戲 ID
@@ -155,6 +201,7 @@ export function joinRoom(gameId, player) {
   };
 
   gameStore.set(gameId, updatedState);
+  saveToStorage();
   notifyRoomListChange();
 
   return {
@@ -223,6 +270,7 @@ export function createGameRoom(hostPlayer, maxPlayers = 4) {
 
   // 儲存房間狀態
   gameStore.set(gameId, roomState);
+  saveToStorage();
 
   // 通知房間列表變更
   notifyRoomListChange();
@@ -278,6 +326,7 @@ export function createGame(players) {
 
   // 儲存遊戲狀態
   gameStore.set(gameId, gameState);
+  saveToStorage();
 
   return gameState;
 }
@@ -389,6 +438,7 @@ export function updateGameState(gameId, updates) {
 
   // 儲存更新後的狀態
   gameStore.set(gameId, updatedState);
+  saveToStorage();
 
   return updatedState;
 }
@@ -400,7 +450,9 @@ export function updateGameState(gameId, updates) {
  * @returns {boolean} 是否成功刪除
  */
 export function deleteGame(gameId) {
-  return gameStore.delete(gameId);
+  const result = gameStore.delete(gameId);
+  saveToStorage();
+  return result;
 }
 
 /**
@@ -408,6 +460,7 @@ export function deleteGame(gameId) {
  */
 export function clearAllGames() {
   gameStore.clear();
+  saveToStorage();
 }
 
 // ==================== 動作處理 ====================

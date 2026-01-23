@@ -23,7 +23,9 @@
 
 ### 問題二修復：可用房間列表不更新
 
-**問題原因：** 創建房間後沒有機制通知其他客戶端更新房間列表。
+**問題原因：**
+1. 創建房間後沒有機制通知其他客戶端更新房間列表
+2. 遊戲狀態儲存在記憶體中，頁面重新載入或開啟新分頁時資料會遺失
 
 **修復方式：**
 1. 新增 `roomListeners` 集合儲存監聽器
@@ -32,12 +34,16 @@
 4. 新增 `notifyRoomListChange` 函數通知所有監聽器
 5. 在 `createGameRoom` 和 `joinRoom` 中調用通知函數
 6. Lobby 組件使用 `useEffect` 訂閱房間列表更新
+7. **新增 localStorage 持久化儲存**：
+   - 遊戲狀態會自動儲存到 localStorage
+   - 頁面重新載入時會自動恢復遊戲狀態
+   - 監聽 `storage` 事件，當其他分頁更新時自動同步
 
 ### 修改檔案
 
 | 檔案 | 修改內容 |
 |------|----------|
-| `frontend/src/services/gameService.js` | 新增房間列表管理函數（subscribeToRoomList, getAvailableRooms, joinRoom, notifyRoomListChange） |
+| `frontend/src/services/gameService.js` | 新增房間列表管理函數、localStorage 持久化 |
 | `frontend/src/components/Lobby/Lobby.js` | 使用新的房間管理函數，訂閱房間列表更新 |
 | `frontend/src/components/Lobby/Lobby.test.js` | 更新測試以使用新的 mock 函數 |
 
@@ -53,6 +59,13 @@ getAvailableRooms(): Array<{id, name, playerCount, maxPlayers}>
 // 加入房間
 joinRoom(gameId: string, player: Object): {success, gameState, message}
 ```
+
+### localStorage 持久化
+
+遊戲狀態現在會自動儲存到 `localStorage`（key: `herbalism_game_store`），提供以下功能：
+- 頁面重新載入後保留房間資訊
+- 不同分頁間共享房間資料
+- 監聽 `storage` 事件自動同步更新
 
 ### 錯誤訊息
 
@@ -74,4 +87,4 @@ Lobby 組件測試：32 passed
 - [x] 輸入有效房間 ID 可以成功加入房間
 - [x] 輸入無效房間 ID 顯示適當錯誤訊息
 - [x] 創建房間後，「可用房間」列表立即顯示新房間
-- [x] 其他玩家的「可用房間」列表能即時同步更新（透過訂閱機制）
+- [x] 其他玩家的「可用房間」列表能即時同步更新（透過訂閱機制 + localStorage 同步）
