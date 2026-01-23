@@ -1,0 +1,131 @@
+/**
+ * CSS 變數定義
+ *
+ * @description 應用程式的所有 CSS 變數定義
+ * 工作單 0028
+ */
+
+:root {
+  /* ==================== 遊戲顏色 ==================== */
+  /* 對應遊戲卡牌的四種顏色 */
+  --color-red: #e74c3c;
+  --color-yellow: #f1c40f;
+  --color-green: #27ae60;
+  --color-blue: #3498db;
+
+  /* 遊戲顏色變體（深色版本，用於 hover 等效果） */
+  --color-red-dark: #c0392b;
+  --color-yellow-dark: #d4ac0d;
+  --color-green-dark: #1e8449;
+  --color-blue-dark: #2980b9;
+
+  /* 遊戲顏色變體（淺色版本，用於背景等） */
+  --color-red-light: #f5b7b1;
+  --color-yellow-light: #f9e79f;
+  --color-green-light: #a9dfbf;
+  --color-blue-light: #aed6f1;
+
+  /* ==================== 基礎顏色 ==================== */
+  --color-background: #1a1a2e;
+  --color-surface: #16213e;
+  --color-surface-light: #1f2b4a;
+  --color-primary: #0f3460;
+  --color-primary-light: #1a4a7a;
+  --color-accent: #e94560;
+  --color-accent-dark: #c13a50;
+
+  /* 文字顏色 */
+  --color-text: #eaeaea;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #6c6c6c;
+  --color-text-inverse: #1a1a2e;
+
+  /* 狀態顏色 */
+  --color-error: #e74c3c;
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
+  --color-info: #3498db;
+
+  /* 邊框顏色 */
+  --color-border: #2a3a5a;
+  --color-border-light: #3a4a6a;
+
+  /* ==================== 字型 ==================== */
+  --font-family: 'Segoe UI', 'Microsoft JhengHei', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-mono: 'Consolas', 'Monaco', monospace;
+
+  /* 字型大小 */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 40px;
+
+  /* 字重 */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* 行高 */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+  --line-height-loose: 1.8;
+
+  /* ==================== 間距 ==================== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ==================== 圓角 ==================== */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-full: 9999px;
+
+  /* ==================== 陰影 ==================== */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.5);
+
+  /* 卡片專用陰影 */
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  /* ==================== 過渡動畫 ==================== */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-slower: 0.5s ease;
+
+  /* ==================== 層級 (z-index) ==================== */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+
+  /* ==================== 響應式斷點 ==================== */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* ==================== 卡片尺寸 ==================== */
+  --card-width: 60px;
+  --card-height: 84px;
+  --card-width-sm: 40px;
+  --card-height-sm: 56px;
+  --card-width-lg: 80px;
+  --card-height-lg: 112px;
+}
