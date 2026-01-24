@@ -202,22 +202,16 @@ function formatHistoryEntry(entry, players) {
   if (entry.type === ACTION_TYPE_QUESTION) {
     const targetPlayer = players?.find(p => p.id === entry.targetPlayerId);
     const targetName = targetPlayer?.name || '未知玩家';
-    const colors = formatColors(entry.colors);
-    // 使用 cardsTransferred（後端實際記錄的欄位）
+    // 不顯示問牌顏色，避免洩漏策略資訊
     const transferredCount = entry.cardsTransferred ?? entry.result?.cardsReceived?.length ?? 0;
     const questionTypeName = QUESTION_TYPE_NAMES[entry.questionType] || '';
 
-    // 如果有選擇的顏色（questionType 2 且被要牌玩家選擇）
-    if (entry.chosenColor) {
-      const chosenColorName = COLOR_NAMES[entry.chosenColor] || entry.chosenColor;
-      return `${playerName} 向 ${targetName} 問牌 [${colors}]（${questionTypeName}），${targetName} 選擇給 ${chosenColorName} ${transferredCount} 張`;
-    }
-
+    // 不再顯示 chosenColor，避免洩漏被問牌者選擇的顏色
     if (transferredCount === 0) {
-      return `${playerName} 向 ${targetName} 問牌 [${colors}]（${questionTypeName}），沒有`;
+      return `${playerName} 向 ${targetName} 問牌（${questionTypeName}），沒有`;
     }
 
-    return `${playerName} 向 ${targetName} 問牌 [${colors}]（${questionTypeName}），收到 ${transferredCount} 張`;
+    return `${playerName} 向 ${targetName} 問牌（${questionTypeName}），收到 ${transferredCount} 張`;
   }
 
   if (entry.type === ACTION_TYPE_GUESS) {
