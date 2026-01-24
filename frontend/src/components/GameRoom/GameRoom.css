@@ -579,10 +579,104 @@
 }
 
 .waiting-others,
-.already-decided {
+.already-decided,
+.waiting-turn {
   color: var(--color-text-secondary);
   font-style: italic;
   margin-top: var(--spacing-md);
+}
+
+/* 決定順序顯示 */
+.follow-guess-order {
+  margin: var(--spacing-md) 0;
+}
+
+.follow-guess-order h4 {
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-sm);
+}
+
+.decision-order-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.decision-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  margin-bottom: var(--spacing-xs);
+  background-color: var(--color-background);
+}
+
+.decision-item.guesser {
+  background-color: rgba(233, 69, 96, 0.2);
+  border: 1px solid var(--color-accent);
+}
+
+.decision-item.current-decider {
+  background-color: rgba(241, 196, 15, 0.3);
+  border: 2px solid var(--color-yellow);
+  animation: pulse-border 1s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--color-yellow); }
+  50% { border-color: rgba(241, 196, 15, 0.5); }
+}
+
+.order-number {
+  font-weight: bold;
+  color: var(--color-text-secondary);
+  min-width: 24px;
+}
+
+.player-label {
+  flex: 1;
+  color: var(--color-text);
+}
+
+.decision-badge {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+}
+
+.decision-badge.guesser-badge {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.decision-badge.deciding {
+  background-color: var(--color-yellow);
+  color: #333;
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.decision-badge.followed {
+  background-color: var(--color-green);
+  color: white;
+}
+
+.decision-badge.declined {
+  background-color: var(--color-red);
+  color: white;
+}
+
+.decision-badge.waiting {
+  background-color: var(--color-primary);
+  color: white;
+  opacity: 0.7;
 }
 
 /* 局結束面板樣式 */

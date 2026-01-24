@@ -271,11 +271,27 @@ io.on('connection', (socket) => {
         // 進入跟猜階段
         gameState.gamePhase = 'followGuessing';
 
-        // 儲存跟猜狀態
+        // 計算決定順序：從猜牌者的下一位開始，按順位排列
+        const guesserIndex = gameState.players.findIndex(p => p.id === result.guessingPlayerId);
+        const playerCount = gameState.players.length;
+        const decisionOrder = [];
+
+        for (let i = 1; i < playerCount; i++) {
+          const idx = (guesserIndex + i) % playerCount;
+          const player = gameState.players[idx];
+          if (player.isActive && player.id !== result.guessingPlayerId) {
+            decisionOrder.push(player.id);
+          }
+        }
+
+        // 儲存跟猜狀態（包含順序資訊）
         followGuessStates.set(gameId, {
           guessingPlayerId: result.guessingPlayerId,
           guessedColors: result.guessedColors,
-          pendingPlayers: [...result.pendingPlayers],
+          decisionOrder: decisionOrder,
+          currentDeciderIndex: 0,
+          currentDeciderId: decisionOrder[0] || null,
+          decisions: {}, // { playerId: 'follow' | 'pass' }
           followingPlayers: [],
           declinedPlayers: []
         });
@@ -284,7 +300,9 @@ io.on('connection', (socket) => {
         io.to(gameId).emit('followGuessStarted', {
           guessingPlayerId: result.guessingPlayerId,
           guessedColors: result.guessedColors,
-          pendingPlayers: result.pendingPlayers
+          decisionOrder: decisionOrder,
+          currentDeciderId: decisionOrder[0] || null,
+          decisions: {}
         });
 
         broadcastGameState(gameId);
@@ -373,34 +391,39 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // 驗證是否是等待中的玩家
-    const pendingIndex = followState.pendingPlayers.indexOf(playerId);
-    if (pendingIndex === -1) {
-      socket.emit('error', { message: '不是等待中的玩家' });
+    // 驗證是否是當前應該決定的玩家
+    if (followState.currentDeciderId !== playerId) {
+      socket.emit('error', { message: '還沒輪到你決定' });
       return;
     }
 
-    // 從等待列表移除
-    followState.pendingPlayers.splice(pendingIndex, 1);
-
     // 記錄決定
+    followState.decisions[playerId] = isFollowing ? 'follow' : 'pass';
     if (isFollowing) {
       followState.followingPlayers.push(playerId);
     } else {
       followState.declinedPlayers.push(playerId);
     }
 
+    // 移到下一個決定者
+    followState.currentDeciderIndex++;
+    const hasMoreDeciders = followState.currentDeciderIndex < followState.decisionOrder.length;
+    followState.currentDeciderId = hasMoreDeciders
+      ? followState.decisionOrder[followState.currentDeciderIndex]
+      : null;
+
     // 廣播決定結果
     io.to(gameId).emit('followGuessUpdate', {
       playerId,
       isFollowing,
-      pendingPlayers: followState.pendingPlayers,
+      currentDeciderId: followState.currentDeciderId,
+      decisions: followState.decisions,
       followingPlayers: followState.followingPlayers,
       declinedPlayers: followState.declinedPlayers
     });
 
     // 檢查是否所有人都已決定
-    if (followState.pendingPlayers.length === 0) {
+    if (!hasMoreDeciders) {
       // 所有人都決定了，驗證結果
       const result = validateGuessResult(
         gameState,

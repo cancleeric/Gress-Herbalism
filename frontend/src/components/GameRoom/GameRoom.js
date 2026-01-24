@@ -184,16 +184,25 @@ function GameRoom() {
     });
 
     // 監聽跟猜開始
-    const unsubFollowGuess = onFollowGuessStarted(({ guessingPlayerId, guessedColors, pendingPlayers }) => {
-      setFollowGuessData({ guessingPlayerId, guessedColors, pendingPlayers, followingPlayers: [], declinedPlayers: [] });
+    const unsubFollowGuess = onFollowGuessStarted(({ guessingPlayerId, guessedColors, decisionOrder, currentDeciderId, decisions }) => {
+      setFollowGuessData({
+        guessingPlayerId,
+        guessedColors,
+        decisionOrder: decisionOrder || [],
+        currentDeciderId,
+        decisions: decisions || {},
+        followingPlayers: [],
+        declinedPlayers: []
+      });
       setShowFollowGuessPanel(true);
     });
 
     // 監聽跟猜更新
-    const unsubFollowUpdate = onFollowGuessUpdate(({ playerId, isFollowing, pendingPlayers, followingPlayers, declinedPlayers }) => {
+    const unsubFollowUpdate = onFollowGuessUpdate(({ playerId, isFollowing, currentDeciderId, decisions, followingPlayers, declinedPlayers }) => {
       setFollowGuessData(prev => ({
         ...prev,
-        pendingPlayers,
+        currentDeciderId,
+        decisions: decisions || prev.decisions,
         followingPlayers,
         declinedPlayers
       }));
@@ -624,35 +633,48 @@ function GameRoom() {
                 </span>
               </p>
 
-              {/* 跟猜狀態 */}
-              <div className="follow-guess-status">
-                {followGuessData.followingPlayers.length > 0 && (
-                  <p className="following-list">
-                    跟猜：{followGuessData.followingPlayers.map(id =>
-                      gameState.players.find(p => p.id === id)?.name || id
-                    ).join('、')}
-                  </p>
-                )}
-                {followGuessData.declinedPlayers.length > 0 && (
-                  <p className="declined-list">
-                    不跟：{followGuessData.declinedPlayers.map(id =>
-                      gameState.players.find(p => p.id === id)?.name || id
-                    ).join('、')}
-                  </p>
-                )}
-                {followGuessData.pendingPlayers.length > 0 && (
-                  <p className="pending-list">
-                    等待決定：{followGuessData.pendingPlayers.map(id =>
-                      gameState.players.find(p => p.id === id)?.name || id
-                    ).join('、')}
-                  </p>
-                )}
+              {/* 決定順序顯示 */}
+              <div className="follow-guess-order">
+                <h4>決定順序</h4>
+                <ul className="decision-order-list">
+                  {/* 猜牌者 */}
+                  <li className="decision-item guesser">
+                    <span className="player-label">
+                      {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}
+                    </span>
+                    <span className="decision-badge guesser-badge">猜牌者</span>
+                  </li>
+                  {/* 其他玩家按順序 */}
+                  {followGuessData.decisionOrder?.map((playerId, index) => {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    const decision = followGuessData.decisions?.[playerId];
+                    const isCurrentDecider = followGuessData.currentDeciderId === playerId;
+                    return (
+                      <li key={playerId} className={`decision-item ${isCurrentDecider ? 'current-decider' : ''}`}>
+                        <span className="order-number">{index + 1}.</span>
+                        <span className="player-label">{player?.name || playerId}</span>
+                        {isCurrentDecider && !decision && (
+                          <span className="decision-badge deciding">決定中...</span>
+                        )}
+                        {decision === 'follow' && (
+                          <span className="decision-badge followed">跟猜</span>
+                        )}
+                        {decision === 'pass' && (
+                          <span className="decision-badge declined">不跟</span>
+                        )}
+                        {!isCurrentDecider && !decision && (
+                          <span className="decision-badge waiting">等待中</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
 
-              {/* 自己需要決定時顯示按鈕 */}
-              {followGuessData.pendingPlayers.includes(myPlayer?.id) && (
+              {/* 自己需要決定時顯示按鈕（只有輪到自己時才能點） */}
+              {followGuessData.currentDeciderId === myPlayer?.id && (
                 <div className="follow-guess-buttons">
-                  <p className="decision-prompt">你要跟猜嗎？跟對 +1 分，跟錯 -1 分並退出當局</p>
+                  <p className="decision-prompt">輪到你決定！跟對 +1 分，跟錯 -1 分並退出當局</p>
                   <button
                     className="btn btn-success"
                     onClick={() => handleFollowGuess(true)}
@@ -670,13 +692,23 @@ function GameRoom() {
 
               {/* 自己是猜牌者 */}
               {followGuessData.guessingPlayerId === myPlayer?.id && (
-                <p className="waiting-others">等待其他玩家決定是否跟猜...</p>
+                <p className="waiting-others">等待其他玩家按順序決定是否跟猜...</p>
               )}
 
               {/* 自己已決定 */}
-              {!followGuessData.pendingPlayers.includes(myPlayer?.id) &&
+              {followGuessData.decisions?.[myPlayer?.id] &&
                followGuessData.guessingPlayerId !== myPlayer?.id && (
-                <p className="already-decided">你已決定，等待其他玩家...</p>
+                <p className="already-decided">
+                  你選擇了「{followGuessData.decisions[myPlayer?.id] === 'follow' ? '跟猜' : '不跟'}」，等待其他玩家...
+                </p>
+              )}
+
+              {/* 還沒輪到自己 */}
+              {!followGuessData.decisions?.[myPlayer?.id] &&
+               followGuessData.currentDeciderId !== myPlayer?.id &&
+               followGuessData.guessingPlayerId !== myPlayer?.id &&
+               followGuessData.decisionOrder?.includes(myPlayer?.id) && (
+                <p className="waiting-turn">還沒輪到你，請等待...</p>
               )}
             </div>
           </div>
