@@ -120,6 +120,33 @@ export function onHiddenCardsRevealed(callback) {
 }
 
 /**
+ * 監聽顏色選擇請求（被要牌玩家需要選擇給哪種顏色）
+ */
+export function onColorChoiceRequired(callback) {
+  const s = getSocket();
+  s.on('colorChoiceRequired', callback);
+  return () => s.off('colorChoiceRequired', callback);
+}
+
+/**
+ * 監聽等待顏色選擇（通知其他玩家正在等待選擇）
+ */
+export function onWaitingForColorChoice(callback) {
+  const s = getSocket();
+  s.on('waitingForColorChoice', callback);
+  return () => s.off('waitingForColorChoice', callback);
+}
+
+/**
+ * 監聽顏色選擇結果
+ */
+export function onColorChoiceResult(callback) {
+  const s = getSocket();
+  s.on('colorChoiceResult', callback);
+  return () => s.off('colorChoiceResult', callback);
+}
+
+/**
  * 創建房間
  */
 export function createRoom(player, maxPlayers) {
@@ -165,6 +192,14 @@ export function requestRevealHiddenCards(gameId, playerId) {
 export function leaveRoom(gameId, playerId) {
   const s = getSocket();
   s.emit('leaveRoom', { gameId, playerId });
+}
+
+/**
+ * 提交顏色選擇（被要牌玩家選擇給哪種顏色）
+ */
+export function submitColorChoice(gameId, chosenColor) {
+  const s = getSocket();
+  s.emit('colorChoiceSubmit', { gameId, chosenColor });
 }
 
 /**

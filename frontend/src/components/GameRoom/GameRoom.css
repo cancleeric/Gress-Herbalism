@@ -315,6 +315,106 @@
   background-color: #c0392b;
 }
 
+/* 顏色選擇介面 */
+.color-choice-modal {
+  max-width: 400px;
+}
+
+.color-choice-card {
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.color-choice-card h3 {
+  color: var(--color-accent);
+  margin-bottom: var(--spacing-md);
+}
+
+.color-choice-message {
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+.color-choice-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+.btn-color {
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-large);
+  font-weight: bold;
+  border-radius: var(--border-radius-md);
+  text-transform: uppercase;
+}
+
+.btn-color.color-red {
+  background: linear-gradient(135deg, var(--color-red), #c0392b);
+  color: white;
+}
+
+.btn-color.color-yellow {
+  background: linear-gradient(135deg, var(--color-yellow), #f39c12);
+  color: #333;
+}
+
+.btn-color.color-green {
+  background: linear-gradient(135deg, var(--color-green), #1e8449);
+  color: white;
+}
+
+.btn-color.color-blue {
+  background: linear-gradient(135deg, var(--color-blue), #2471a3);
+  color: white;
+}
+
+.btn-color:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 等待選擇提示 */
+.waiting-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.waiting-message {
+  background-color: var(--color-surface);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.waiting-message p {
+  color: var(--color-text);
+  font-size: var(--font-size-large);
+  margin: 0;
+}
+
+/* 等待中提示 */
+.waiting-host {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  text-align: center;
+  margin-top: var(--spacing-md);
+}
+
+.eliminated-message {
+  color: #e74c3c;
+  font-style: italic;
+}
+
 /* 響應式設計 */
 @media (max-width: 1024px) {
   .game-room-main {

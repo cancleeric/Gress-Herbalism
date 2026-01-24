@@ -48,11 +48,27 @@ const gameRooms = new Map();
 // 玩家對應的 socket
 const playerSockets = new Map();
 
+// 等待顏色選擇的狀態
+const pendingColorChoices = new Map();
+
 /**
  * 產生唯一遊戲 ID
  */
 function generateGameId() {
   return `game_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+}
+
+/**
+ * 根據玩家 ID 找到對應的 socket
+ */
+function findSocketByPlayerId(gameId, playerId) {
+  const gameState = gameRooms.get(gameId);
+  if (!gameState) return null;
+
+  const player = gameState.players.find(p => p.id === playerId);
+  if (!player || !player.socketId) return null;
+
+  return io.sockets.sockets.get(player.socketId);
 }
 
 /**
@@ -210,12 +226,87 @@ io.on('connection', (socket) => {
     const result = processGameAction(gameState, action);
 
     if (result.success) {
-      Object.assign(gameState, result.gameState);
-      broadcastGameState(gameId);
+      // 檢查是否需要等待被要牌玩家選擇顏色
+      if (result.requireColorChoice) {
+        // 儲存等待狀態
+        pendingColorChoices.set(gameId, {
+          askingPlayerId: result.askingPlayerId,
+          targetPlayerId: result.targetPlayerId,
+          colors: result.colors
+        });
 
-      if (result.gameState.gamePhase === 'finished') {
-        broadcastRoomList();
+        // 通知被要牌玩家需要選擇顏色
+        const targetSocket = findSocketByPlayerId(gameId, result.targetPlayerId);
+        if (targetSocket) {
+          targetSocket.emit('colorChoiceRequired', {
+            askingPlayerId: result.askingPlayerId,
+            colors: result.colors,
+            message: '請選擇要給哪種顏色的全部牌'
+          });
+        }
+
+        // 通知其他玩家正在等待選擇
+        io.to(gameId).emit('waitingForColorChoice', {
+          targetPlayerId: result.targetPlayerId,
+          askingPlayerId: result.askingPlayerId,
+          colors: result.colors
+        });
+      } else {
+        Object.assign(gameState, result.gameState);
+        broadcastGameState(gameId);
+
+        if (result.gameState.gamePhase === 'finished') {
+          broadcastRoomList();
+        }
       }
+    } else {
+      socket.emit('error', { message: result.message });
+    }
+  });
+
+  // 處理被要牌玩家的顏色選擇
+  socket.on('colorChoiceSubmit', ({ gameId, chosenColor }) => {
+    const gameState = gameRooms.get(gameId);
+    const pendingChoice = pendingColorChoices.get(gameId);
+
+    if (!gameState) {
+      socket.emit('error', { message: '遊戲不存在' });
+      return;
+    }
+
+    if (!pendingChoice) {
+      socket.emit('error', { message: '沒有等待中的顏色選擇' });
+      return;
+    }
+
+    // 驗證選擇的顏色是否有效
+    if (!pendingChoice.colors.includes(chosenColor)) {
+      socket.emit('error', { message: '無效的顏色選擇' });
+      return;
+    }
+
+    // 處理顏色選擇
+    const result = processColorChoice(
+      gameState,
+      pendingChoice.askingPlayerId,
+      pendingChoice.targetPlayerId,
+      chosenColor,
+      pendingChoice.colors
+    );
+
+    if (result.success) {
+      // 清除等待狀態
+      pendingColorChoices.delete(gameId);
+
+      // 廣播選擇結果
+      io.to(gameId).emit('colorChoiceResult', {
+        targetPlayerId: pendingChoice.targetPlayerId,
+        chosenColor: chosenColor,
+        cardsTransferred: result.cardsTransferred
+      });
+
+      // 廣播更新後的遊戲狀態
+      broadcastGameState(gameId);
     } else {
       socket.emit('error', { message: result.message });
     }
@@ -387,10 +478,33 @@ function processQuestionAction(gameState, action) {
     }
     player.hand.push(...cardsToGive);
   } else if (questionType === 2) {
-    // 全部
-    cardsToGive = target.hand.filter(c => c.color === selectedColor);
-    target.hand = target.hand.filter(c => c.color !== selectedColor);
-    player.hand.push(...cardsToGive);
+    // 其中一種顏色全部
+    // 檢查被要牌玩家是否兩種顏色都有
+    const hasColor0 = target.hand.some(c => c.color === colors[0]);
+    const hasColor1 = target.hand.some(c => c.color === colors[1]);
+
+    if (hasColor0 && hasColor1) {
+      // 兩種顏色都有，需要等待被要牌玩家選擇
+      return {
+        success: true,
+        requireColorChoice: true,
+        askingPlayerId: playerId,
+        targetPlayerId: targetPlayerId,
+        colors: colors,
+        message: '等待被要牌玩家選擇要給哪種顏色'
+      };
+    } else if (hasColor0) {
+      // 只有第一種顏色
+      cardsToGive = target.hand.filter(c => c.color === colors[0]);
+      target.hand = target.hand.filter(c => c.color !== colors[0]);
+      player.hand.push(...cardsToGive);
+    } else if (hasColor1) {
+      // 只有第二種顏色
+      cardsToGive = target.hand.filter(c => c.color === colors[1]);
+      target.hand = target.hand.filter(c => c.color !== colors[1]);
+      player.hand.push(...cardsToGive);
+    }
+    // 如果兩種都沒有，cardsToGive 為空
   } else if (questionType === 3) {
     // 給一張要全部
     const giveCardIndex = player.hand.findIndex(c => c.color === giveColor);
@@ -424,6 +538,48 @@ function processQuestionAction(gameState, action) {
   moveToNextPlayer(gameState);
 
   return { success: true, gameState };
+}
+
+/**
+ * 處理被要牌玩家選擇顏色後的給牌動作
+ */
+function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenColor, originalColors) {
+  const askingPlayerIndex = gameState.players.findIndex(p => p.id === askingPlayerId);
+  const targetIndex = gameState.players.findIndex(p => p.id === targetPlayerId);
+
+  if (askingPlayerIndex === -1 || targetIndex === -1) {
+    return { success: false, message: '玩家不存在' };
+  }
+
+  const askingPlayer = gameState.players[askingPlayerIndex];
+  const target = gameState.players[targetIndex];
+
+  // 給出選擇的顏色全部
+  const cardsToGive = target.hand.filter(c => c.color === chosenColor);
+  target.hand = target.hand.filter(c => c.color !== chosenColor);
+  askingPlayer.hand.push(...cardsToGive);
+
+  // 記錄歷史
+  gameState.gameHistory.push({
+    type: 'question',
+    playerId: askingPlayerId,
+    targetPlayerId,
+    colors: originalColors,
+    questionType: 2,
+    chosenColor: chosenColor,
+    cardsTransferred: cardsToGive.length,
+    timestamp: Date.now()
+  });
+
+  // 檢查玩家是否出局（手牌為空）
+  if (askingPlayer.hand.length === 0) {
+    askingPlayer.isActive = false;
+  }
+
+  // 下一位玩家
+  moveToNextPlayer(gameState);
+
+  return { success: true, gameState, cardsTransferred: cardsToGive.length };
 }
 
 function processGuessAction(gameState, action) {

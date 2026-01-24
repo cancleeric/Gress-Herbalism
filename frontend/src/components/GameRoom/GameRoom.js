@@ -16,10 +16,14 @@ import {
   onGameState,
   onError,
   onHiddenCardsRevealed,
+  onColorChoiceRequired,
+  onWaitingForColorChoice,
+  onColorChoiceResult,
   startGame as socketStartGame,
   sendGameAction,
   requestRevealHiddenCards,
-  leaveRoom
+  leaveRoom,
+  submitColorChoice
 } from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
@@ -65,6 +69,11 @@ function GameRoom() {
   const [hiddenCardsForGuess, setHiddenCardsForGuess] = useState([]);
   const [questionResult, setQuestionResult] = useState(null);
   const [guessResult, setGuessResult] = useState(null);
+  // 顏色選擇相關狀態
+  const [showColorChoice, setShowColorChoice] = useState(false);
+  const [colorChoiceData, setColorChoiceData] = useState(null);
+  const [waitingForColorChoice, setWaitingForColorChoice] = useState(false);
+  const [colorChoiceInfo, setColorChoiceInfo] = useState(null);
 
   /**
    * 取得當前回合的玩家
@@ -140,10 +149,34 @@ function GameRoom() {
       setHiddenCardsForGuess(cards);
     });
 
+    // 監聽顏色選擇請求（被要牌玩家）
+    const unsubColorChoice = onColorChoiceRequired(({ askingPlayerId, colors, message }) => {
+      setColorChoiceData({ askingPlayerId, colors, message });
+      setShowColorChoice(true);
+      setWaitingForColorChoice(false);
+    });
+
+    // 監聽等待顏色選擇（其他玩家）
+    const unsubWaiting = onWaitingForColorChoice(({ targetPlayerId, askingPlayerId, colors }) => {
+      setWaitingForColorChoice(true);
+      setColorChoiceInfo({ targetPlayerId, askingPlayerId, colors });
+    });
+
+    // 監聽顏色選擇結果
+    const unsubColorResult = onColorChoiceResult(({ targetPlayerId, chosenColor, cardsTransferred }) => {
+      setShowColorChoice(false);
+      setColorChoiceData(null);
+      setWaitingForColorChoice(false);
+      setColorChoiceInfo(null);
+    });
+
     return () => {
       unsubGameState();
       unsubError();
       unsubHidden();
+      unsubColorChoice();
+      unsubWaiting();
+      unsubColorResult();
     };
   }, [dispatch]);
 
@@ -253,6 +286,17 @@ function GameRoom() {
 
     sendGameAction(gameId, action);
     setShowGuessCard(false);
+  };
+
+  /**
+   * 處理顏色選擇（被要牌玩家選擇給哪種顏色）
+   */
+  const handleColorChoice = (chosenColor) => {
+    if (!gameId) return;
+
+    submitColorChoice(gameId, chosenColor);
+    setShowColorChoice(false);
+    setColorChoiceData(null);
   };
 
   /**
@@ -444,6 +488,45 @@ function GameRoom() {
               hiddenCards={hiddenCardsForGuess}
               canViewAnswer={true}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 顏色選擇介面 Modal（被要牌玩家選擇給哪種顏色） */}
+      {showColorChoice && colorChoiceData && (
+        <div className="modal-overlay">
+          <div className="modal-content color-choice-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="color-choice-card">
+              <h3>選擇要給的顏色</h3>
+              <p className="color-choice-message">
+                {gameState.players.find(p => p.id === colorChoiceData.askingPlayerId)?.name || '對方'}
+                使用「其中一種顏色全部」方式向你要牌
+              </p>
+              <p>你兩種顏色都有，請選擇要給哪種顏色的全部牌：</p>
+              <div className="color-choice-buttons">
+                {colorChoiceData.colors.map(color => (
+                  <button
+                    key={color}
+                    className={`btn btn-color color-${color}`}
+                    onClick={() => handleColorChoice(color)}
+                  >
+                    {color === 'red' ? '紅色' :
+                     color === 'yellow' ? '黃色' :
+                     color === 'green' ? '綠色' :
+                     color === 'blue' ? '藍色' : color}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 等待顏色選擇提示 */}
+      {waitingForColorChoice && colorChoiceInfo && (
+        <div className="waiting-overlay">
+          <div className="waiting-message">
+            <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>
           </div>
         </div>
       )}
