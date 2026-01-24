@@ -19,12 +19,13 @@ import {
   onJoinedRoom,
   onError,
   onConnectionChange,
+  onPasswordRequired,
   createRoom,
   joinRoom
 } from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
 import { savePlayerName, getPlayerName } from '../../utils/localStorage';
-import { getPlayerNameError } from '../../utils/validation';
+import { getPlayerNameError, getRoomPasswordError } from '../../utils/validation';
 import './Lobby.css';
 
 /**
@@ -45,6 +46,15 @@ function Lobby() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [playerId] = useState(`player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
+
+  // 房間密碼相關狀態
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [roomPassword, setRoomPassword] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pendingRoomId, setPendingRoomId] = useState(null);
+  const [pendingRoomName, setPendingRoomName] = useState('');
+  const [inputPassword, setInputPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
@@ -100,14 +110,26 @@ function Lobby() {
       setIsLoading(false);
     });
 
+    const unsubPassword = onPasswordRequired(({ gameId }) => {
+      // 找到對應的房間資訊
+      const room = rooms.find(r => r.id === gameId);
+      setPendingRoomId(gameId);
+      setPendingRoomName(room ? room.name : '私人房間');
+      setShowPasswordModal(true);
+      setInputPassword('');
+      setPasswordError('');
+      setIsLoading(false);
+    });
+
     return () => {
       unsubConnect();
       unsubRooms();
       unsubError();
       unsubCreated();
       unsubJoined();
+      unsubPassword();
     };
-  }, [dispatch, navigate, playerId]);
+  }, [dispatch, navigate, playerId, rooms]);
 
   /**
    * 處理玩家名稱變更
@@ -155,6 +177,15 @@ function Lobby() {
       return;
     }
 
+    // 驗證密碼（如果是私人房間）
+    if (isPrivate) {
+      const pwdError = getRoomPasswordError(roomPassword);
+      if (pwdError) {
+        setError(pwdError);
+        return;
+      }
+    }
+
     // 儲存暱稱到 localStorage
     savePlayerName(playerName.trim());
 
@@ -166,7 +197,7 @@ function Lobby() {
       name: playerName.trim()
     };
 
-    createRoom(player, playerCount);
+    createRoom(player, playerCount, isPrivate ? roomPassword : null);
   };
 
   /**
@@ -200,10 +231,20 @@ function Lobby() {
   /**
    * 快速加入房間（從列表點擊）
    */
-  const handleQuickJoin = (selectedRoomId) => {
+  const handleQuickJoin = (selectedRoomId, roomIsPrivate = false, roomName = '') => {
     if (!validatePlayerNameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
+      return;
+    }
+
+    // 如果是私人房間，顯示密碼輸入框
+    if (roomIsPrivate) {
+      setPendingRoomId(selectedRoomId);
+      setPendingRoomName(roomName);
+      setShowPasswordModal(true);
+      setInputPassword('');
+      setPasswordError('');
       return;
     }
 
@@ -219,6 +260,40 @@ function Lobby() {
     };
 
     joinRoom(selectedRoomId, player);
+  };
+
+  /**
+   * 提交密碼加入私人房間
+   */
+  const handlePasswordSubmit = () => {
+    if (!inputPassword) {
+      setPasswordError('請輸入密碼');
+      return;
+    }
+
+    // 儲存暱稱到 localStorage
+    savePlayerName(playerName.trim());
+
+    setIsLoading(true);
+    setShowPasswordModal(false);
+
+    const player = {
+      id: playerId,
+      name: playerName.trim()
+    };
+
+    joinRoom(pendingRoomId, player, inputPassword);
+  };
+
+  /**
+   * 關閉密碼輸入框
+   */
+  const handlePasswordCancel = () => {
+    setShowPasswordModal(false);
+    setPendingRoomId(null);
+    setPendingRoomName('');
+    setInputPassword('');
+    setPasswordError('');
   };
 
   return (
@@ -267,6 +342,37 @@ function Lobby() {
               <option value={4}>4 人</option>
             </select>
           </div>
+          <div className="input-group checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={isPrivate}
+                onChange={(e) => {
+                  setIsPrivate(e.target.checked);
+                  if (!e.target.checked) {
+                    setRoomPassword('');
+                  }
+                }}
+                disabled={isLoading}
+              />
+              <span>設為私人房間</span>
+            </label>
+          </div>
+          {isPrivate && (
+            <div className="input-group">
+              <label htmlFor="roomPassword">房間密碼</label>
+              <input
+                id="roomPassword"
+                type="password"
+                value={roomPassword}
+                onChange={(e) => setRoomPassword(e.target.value)}
+                placeholder="輸入 4-16 位密碼"
+                maxLength={16}
+                disabled={isLoading}
+              />
+              <span className="input-hint">密碼長度：4-16 個字元</span>
+            </div>
+          )}
           <button
             className="btn btn-primary"
             onClick={handleCreateRoom}
@@ -307,17 +413,20 @@ function Lobby() {
           ) : (
             <ul className="room-list">
               {rooms.map((room) => (
-                <li key={room.id} className="room-item">
-                  <span className="room-name">{room.name}</span>
+                <li key={room.id} className={`room-item ${room.isPrivate ? 'private' : ''}`}>
+                  <span className="room-name">
+                    {room.isPrivate && <span className="lock-icon">🔒</span>}
+                    {room.name}
+                  </span>
                   <span className="room-players">
                     {room.playerCount}/{room.maxPlayers || 4} 玩家
                   </span>
                   <button
                     className="btn btn-small"
-                    onClick={() => handleQuickJoin(room.id)}
-                    disabled={isLoading || !isConnected}
+                    onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                    disabled={isLoading || !isConnected || room.playerCount >= room.maxPlayers}
                   >
-                    加入
+                    {room.playerCount >= room.maxPlayers ? '已滿' : '加入'}
                   </button>
                 </li>
               ))}
@@ -336,6 +445,52 @@ function Lobby() {
       <footer className="lobby-footer">
         <p>遊戲規則：猜測兩張隱藏牌的顏色</p>
       </footer>
+
+      {/* 密碼輸入 Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay">
+          <div className="modal password-modal">
+            <h3>🔒 私人房間</h3>
+            <p>「{pendingRoomName}」需要密碼才能加入</p>
+
+            <input
+              type="password"
+              value={inputPassword}
+              onChange={(e) => {
+                setInputPassword(e.target.value);
+                setPasswordError('');
+              }}
+              placeholder="請輸入房間密碼"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handlePasswordSubmit();
+                }
+              }}
+            />
+
+            {passwordError && (
+              <p className="modal-error">{passwordError}</p>
+            )}
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={handlePasswordCancel}
+              >
+                取消
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handlePasswordSubmit}
+                disabled={isLoading}
+              >
+                {isLoading ? '加入中...' : '加入'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -41,6 +41,7 @@ describe('Lobby - 工作單 0014', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     eventCallbacks = {};
+    localStorage.clear();
 
     // Mock socket service functions
     socketService.initSocket.mockReturnValue({});
@@ -64,6 +65,10 @@ describe('Lobby - 工作單 0014', () => {
     });
     socketService.onError.mockImplementation((callback) => {
       eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
       return () => {};
     });
     socketService.createRoom.mockImplementation(() => {});
@@ -134,8 +139,13 @@ describe('Lobby - 工作單 0014', () => {
       await waitFor(() => {
         expect(screen.getByText('創建新房間')).toBeInTheDocument();
       });
+      await waitFor(() => {
+        expect(screen.getByText('已連線')).toBeInTheDocument();
+      });
       fireEvent.click(screen.getByText('創建新房間'));
-      expect(screen.getByText('請輸入玩家名稱')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
+      });
     });
 
     test('未輸入玩家名稱時加入房間應顯示錯誤', async () => {
@@ -143,10 +153,15 @@ describe('Lobby - 工作單 0014', () => {
       await waitFor(() => {
         expect(screen.getByLabelText('房間ID')).toBeInTheDocument();
       });
+      await waitFor(() => {
+        expect(screen.getByText('已連線')).toBeInTheDocument();
+      });
       const roomIdInput = screen.getByLabelText('房間ID');
       fireEvent.change(roomIdInput, { target: { value: 'room_123' } });
       fireEvent.click(screen.getByRole('button', { name: '加入房間' }));
-      expect(screen.getByText('請輸入玩家名稱')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
+      });
     });
 
     test('輸入玩家名稱但未輸入房間ID時加入房間應顯示錯誤', async () => {
@@ -184,20 +199,30 @@ describe('Lobby - 工作單 0014', () => {
 
     test('輸入後錯誤訊息應消失', async () => {
       renderWithProviders(<Lobby />);
+
+      // 等待連線成功
       await waitFor(() => {
         expect(screen.getByText('創建新房間')).toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(screen.getByText('已連線')).toBeInTheDocument();
       });
 
       // 觸發錯誤
       fireEvent.click(screen.getByText('創建新房間'));
-      expect(screen.getByText('請輸入玩家名稱')).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
+      });
 
       // 輸入玩家名稱
       const input = screen.getByLabelText('玩家名稱');
       fireEvent.change(input, { target: { value: '玩家' } });
 
       // 錯誤訊息應消失
-      expect(screen.queryByText('請輸入玩家名稱')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText('請輸入暱稱')).not.toBeInTheDocument();
+      });
     });
   });
 
@@ -229,6 +254,7 @@ describe('Lobby - 工作單 0015', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     eventCallbacks = {};
+    localStorage.clear();
 
     // Mock socket service functions
     socketService.initSocket.mockReturnValue({});
@@ -252,6 +278,10 @@ describe('Lobby - 工作單 0015', () => {
     });
     socketService.onError.mockImplementation((callback) => {
       eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
       return () => {};
     });
     socketService.createRoom.mockImplementation(() => {});
@@ -515,9 +545,11 @@ describe('Lobby - 工作單 0015', () => {
       // Now click the button - this should trigger validation error
       fireEvent.click(screen.getByText('創建新房間'));
 
-      // The error should appear immediately since validation is synchronous
-      expect(screen.getByRole('alert')).toBeInTheDocument();
-      expect(screen.getByRole('alert')).toHaveTextContent('請輸入玩家名稱');
+      // The error should appear after state update
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent('請輸入暱稱');
+      });
     });
   });
 });

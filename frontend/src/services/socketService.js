@@ -149,17 +149,26 @@ export function onColorChoiceResult(callback) {
 /**
  * 創建房間
  */
-export function createRoom(player, maxPlayers) {
+export function createRoom(player, maxPlayers, password = null) {
   const s = getSocket();
-  s.emit('createRoom', { player, maxPlayers });
+  s.emit('createRoom', { player, maxPlayers, password });
 }
 
 /**
  * 加入房間
  */
-export function joinRoom(gameId, player) {
+export function joinRoom(gameId, player, password = null) {
   const s = getSocket();
-  s.emit('joinRoom', { gameId, player });
+  s.emit('joinRoom', { gameId, player, password });
+}
+
+/**
+ * 監聽需要密碼
+ */
+export function onPasswordRequired(callback) {
+  const s = getSocket();
+  s.on('passwordRequired', callback);
+  return () => s.off('passwordRequired', callback);
 }
 
 /**

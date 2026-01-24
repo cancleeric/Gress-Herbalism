@@ -86,7 +86,8 @@ function broadcastRoomList() {
         id: gameId,
         name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
         playerCount: state.players.length,
-        maxPlayers: state.maxPlayers || 4
+        maxPlayers: state.maxPlayers || 4,
+        isPrivate: state.isPrivate || false
       });
     }
   });
@@ -110,7 +111,7 @@ io.on('connection', (socket) => {
   socket.emit('roomList', getAvailableRooms());
 
   // 創建房間
-  socket.on('createRoom', ({ player, maxPlayers }) => {
+  socket.on('createRoom', ({ player, maxPlayers, password }) => {
     const gameId = generateGameId();
 
     const roomState = {
@@ -134,7 +135,10 @@ io.on('connection', (socket) => {
       currentRound: 0,
       scores: {},
       winningScore: 7,
-      roundHistory: []
+      roundHistory: [],
+      // 房間密碼相關
+      password: password || null,
+      isPrivate: !!password
     };
 
     gameRooms.set(gameId, roomState);
@@ -148,12 +152,25 @@ io.on('connection', (socket) => {
   });
 
   // 加入房間
-  socket.on('joinRoom', ({ gameId, player }) => {
+  socket.on('joinRoom', ({ gameId, player, password }) => {
     const gameState = gameRooms.get(gameId);
 
     if (!gameState) {
       socket.emit('error', { message: '房間不存在' });
       return;
+    }
+
+    // 密碼驗證
+    if (gameState.isPrivate) {
+      if (!password) {
+        socket.emit('passwordRequired', { gameId });
+        return;
+      }
+
+      if (gameState.password !== password) {
+        socket.emit('error', { message: '密碼錯誤' });
+        return;
+      }
     }
 
     if (gameState.gamePhase !== 'waiting') {
@@ -582,7 +599,8 @@ function getAvailableRooms() {
         id: gameId,
         name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
         playerCount: state.players.length,
-        maxPlayers: state.maxPlayers || 4
+        maxPlayers: state.maxPlayers || 4,
+        isPrivate: state.isPrivate || false
       });
     }
   });
