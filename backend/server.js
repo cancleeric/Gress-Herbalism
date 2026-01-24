@@ -7,18 +7,36 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
+// 載入環境變數（如果有 dotenv）
+try {
+  require('dotenv').config();
+} catch (e) {
+  // dotenv 未安裝，使用預設值
+}
+
 const app = express();
 const server = http.createServer(app);
 
+// 解析允許的來源網域
+const getAllowedOrigins = () => {
+  if (process.env.ALLOWED_ORIGINS) {
+    return process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+  }
+  // 開發環境允許所有來源
+  return true;
+};
+
+const allowedOrigins = getAllowedOrigins();
+
 // CORS 設定
 app.use(cors({
-  origin: true,
+  origin: allowedOrigins,
   credentials: true
 }));
 
 const io = new Server(server, {
   cors: {
-    origin: true,
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -448,11 +466,9 @@ function processGuessAction(gameState, action) {
       // 沒有人獲勝
       gameState.winner = null;
       gameState.gamePhase = 'finished';
-    } else if (activePlayers.length === 1) {
-      // 最後一人，直接獲勝
-      gameState.winner = activePlayers[0].id;
-      gameState.gamePhase = 'finished';
     } else {
+      // 還有活躍玩家（包括只剩一人的情況）
+      // 如果只剩一人，該玩家必須強制猜牌
       moveToNextPlayer(gameState);
     }
   }

@@ -3,9 +3,10 @@
  */
 
 import { io } from 'socket.io-client';
+import config from '../config';
 
-// 從環境變數或預設值取得後端 URL
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+// 從設定檔取得後端 URL
+const SOCKET_URL = config.socketUrl;
 
 let socket = null;
 let connectionCallbacks = [];
