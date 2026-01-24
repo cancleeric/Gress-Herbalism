@@ -16,6 +16,7 @@ import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
 import Profile from './components/Profile';
 import Leaderboard from './components/Leaderboard';
+import Friends from './components/Friends';
 import './styles/App.css';
 
 /**
@@ -110,6 +111,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Leaderboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/friends"
+          element={
+            <ProtectedRoute>
+              <Friends />
             </ProtectedRoute>
           }
         />

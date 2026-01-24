@@ -452,6 +452,12 @@ function Lobby() {
           </button>
           <button
             className="nav-btn"
+            onClick={() => navigate('/friends')}
+          >
+            👥 好友
+          </button>
+          <button
+            className="nav-btn"
             onClick={() => navigate('/leaderboard')}
           >
             🏆 排行榜

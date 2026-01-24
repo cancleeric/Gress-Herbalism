@@ -25,6 +25,11 @@ const {
   getPlayerIdByFirebaseUid,
 } = require('./db/supabase');
 
+// 工單 0061 - 好友服務
+const friendService = require('./services/friendService');
+const invitationService = require('./services/invitationService');
+const presenceService = require('./services/presenceService');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -118,6 +123,189 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
     res.json({ success: true, data: history });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==================== 工單 0061 好友 API ====================
+
+// 搜尋玩家
+app.get('/api/friends/search', async (req, res) => {
+  try {
+    const { q, firebaseUid } = req.query;
+    if (!q || q.length < 2) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const results = await friendService.searchPlayers(q, playerId);
+    res.json({ success: true, data: results });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得好友列表
+app.get('/api/friends', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const friends = await friendService.getFriends(playerId);
+    res.json({ success: true, data: friends });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得好友請求列表
+app.get('/api/friends/requests', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const requests = await friendService.getFriendRequests(playerId);
+    res.json({ success: true, data: requests });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得好友請求數量
+app.get('/api/friends/requests/count', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.json({ success: true, data: { count: 0 } });
+    }
+
+    const count = await friendService.getFriendRequestCount(playerId);
+    res.json({ success: true, data: { count } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 發送好友請求
+app.post('/api/friends/requests', async (req, res) => {
+  try {
+    const { firebaseUid, toUserId, message } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const result = await friendService.sendFriendRequest(playerId, toUserId, message);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// 回應好友請求
+app.put('/api/friends/requests/:requestId', async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { firebaseUid, action } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    let result;
+    if (action === 'accept') {
+      result = await friendService.acceptFriendRequest(Number(requestId), playerId);
+    } else {
+      result = await friendService.rejectFriendRequest(Number(requestId), playerId);
+    }
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// 刪除好友
+app.delete('/api/friends/:friendId', async (req, res) => {
+  try {
+    const { friendId } = req.params;
+    const { firebaseUid } = req.query;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    await friendService.removeFriend(playerId, friendId);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// 發送遊戲邀請
+app.post('/api/friends/invitations', async (req, res) => {
+  try {
+    const { firebaseUid, toUserId, roomId } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const invitation = await invitationService.sendGameInvitation(playerId, toUserId, roomId);
+    res.json({ success: true, data: invitation });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// 取得遊戲邀請
+app.get('/api/friends/invitations', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const invitations = await invitationService.getPendingInvitations(playerId);
+    res.json({ success: true, data: invitations });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 回應遊戲邀請
+app.put('/api/friends/invitations/:invitationId', async (req, res) => {
+  try {
+    const { invitationId } = req.params;
+    const { firebaseUid, action } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const result = await invitationService.respondToInvitation(Number(invitationId), playerId, action);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
   }
 });
 
