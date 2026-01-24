@@ -95,6 +95,20 @@ export const GAME_PHASE_WAITING = 'waiting';
 export const GAME_PHASE_PLAYING = 'playing';
 
 /**
+ * 遊戲階段：跟猜中
+ * @readonly
+ * @type {string}
+ */
+export const GAME_PHASE_FOLLOW_GUESSING = 'followGuessing';
+
+/**
+ * 遊戲階段：局結束
+ * @readonly
+ * @type {string}
+ */
+export const GAME_PHASE_ROUND_END = 'roundEnd';
+
+/**
  * 遊戲階段：已結束
  * @readonly
  * @type {string}
@@ -109,6 +123,8 @@ export const GAME_PHASE_FINISHED = 'finished';
 export const GAME_PHASES = [
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END,
   GAME_PHASE_FINISHED
 ];
 

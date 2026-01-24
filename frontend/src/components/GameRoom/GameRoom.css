@@ -460,3 +460,225 @@
     max-height: 85vh;
   }
 }
+
+/* 玩家分數 */
+.player-score {
+  font-weight: bold;
+  color: var(--color-accent);
+  font-size: var(--font-size-base);
+}
+
+/* 顏色徽章 */
+.color-badge,
+.card-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+  margin: 0 var(--spacing-xs);
+}
+
+.color-badge.color-red,
+.card-badge.color-red {
+  background-color: var(--color-red);
+  color: white;
+}
+
+.color-badge.color-yellow,
+.card-badge.color-yellow {
+  background-color: var(--color-yellow);
+  color: #333;
+}
+
+.color-badge.color-green,
+.card-badge.color-green {
+  background-color: var(--color-green);
+  color: white;
+}
+
+.color-badge.color-blue,
+.card-badge.color-blue {
+  background-color: var(--color-blue);
+  color: white;
+}
+
+/* 跟猜面板樣式 */
+.follow-guess-modal {
+  max-width: 500px;
+}
+
+.follow-guess-card {
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.follow-guess-card h3 {
+  color: var(--color-accent);
+  font-size: var(--font-size-xlarge);
+  margin-bottom: var(--spacing-md);
+}
+
+.guess-info {
+  font-size: var(--font-size-large);
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+}
+
+.guessed-colors {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-sm);
+}
+
+.follow-guess-status {
+  background-color: var(--color-background);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.follow-guess-status p {
+  margin: var(--spacing-xs) 0;
+  color: var(--color-text-secondary);
+}
+
+.following-list {
+  color: var(--color-green) !important;
+}
+
+.declined-list {
+  color: var(--color-red) !important;
+}
+
+.pending-list {
+  color: var(--color-yellow) !important;
+}
+
+.follow-guess-buttons {
+  margin-top: var(--spacing-lg);
+}
+
+.decision-prompt {
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-base);
+}
+
+.follow-guess-buttons .btn {
+  margin: 0 var(--spacing-sm);
+  min-width: 100px;
+}
+
+.btn-success {
+  background-color: var(--color-green);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #1e8449;
+}
+
+.waiting-others,
+.already-decided {
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: var(--spacing-md);
+}
+
+/* 局結束面板樣式 */
+.round-end-modal {
+  max-width: 500px;
+}
+
+.round-end-card {
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.round-end-card h3 {
+  font-size: var(--font-size-xlarge);
+  margin-bottom: var(--spacing-lg);
+}
+
+.round-end-card h3:first-child {
+  color: var(--color-green);
+}
+
+.hidden-cards-reveal {
+  margin-bottom: var(--spacing-lg);
+}
+
+.hidden-cards-reveal p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.hidden-cards {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+}
+
+.hidden-cards .card-badge {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-large);
+}
+
+.score-changes,
+.current-scores {
+  background-color: var(--color-background);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.score-changes h4,
+.current-scores h4 {
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-base);
+}
+
+.score-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.score-list li {
+  padding: var(--spacing-xs) 0;
+  color: var(--color-text);
+}
+
+.score-list li.score-up {
+  color: var(--color-green);
+}
+
+.score-list li.score-down {
+  color: var(--color-red);
+}
+
+.score-change {
+  font-weight: bold;
+  margin-left: var(--spacing-xs);
+}
+
+.winner-badge {
+  background-color: var(--color-accent);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-small);
+  margin-left: var(--spacing-sm);
+}
+
+.game-finished {
+  margin-top: var(--spacing-lg);
+}
+
+.winner-announcement {
+  font-size: var(--font-size-xlarge);
+  color: var(--color-accent);
+  font-weight: bold;
+  margin-bottom: var(--spacing-lg);
+}

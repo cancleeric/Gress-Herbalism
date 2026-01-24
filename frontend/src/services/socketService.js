@@ -202,6 +202,60 @@ export function submitColorChoice(gameId, chosenColor) {
   s.emit('colorChoiceSubmit', { gameId, chosenColor });
 }
 
+// ==================== 跟猜相關 ====================
+
+/**
+ * 監聽跟猜開始
+ */
+export function onFollowGuessStarted(callback) {
+  const s = getSocket();
+  s.on('followGuessStarted', callback);
+  return () => s.off('followGuessStarted', callback);
+}
+
+/**
+ * 監聽跟猜狀態更新
+ */
+export function onFollowGuessUpdate(callback) {
+  const s = getSocket();
+  s.on('followGuessUpdate', callback);
+  return () => s.off('followGuessUpdate', callback);
+}
+
+/**
+ * 監聽猜牌結果
+ */
+export function onGuessResult(callback) {
+  const s = getSocket();
+  s.on('guessResult', callback);
+  return () => s.off('guessResult', callback);
+}
+
+/**
+ * 監聽局開始
+ */
+export function onRoundStarted(callback) {
+  const s = getSocket();
+  s.on('roundStarted', callback);
+  return () => s.off('roundStarted', callback);
+}
+
+/**
+ * 提交跟猜決定
+ */
+export function submitFollowGuessResponse(gameId, playerId, isFollowing) {
+  const s = getSocket();
+  s.emit('followGuessResponse', { gameId, playerId, isFollowing });
+}
+
+/**
+ * 開始下一局
+ */
+export function startNextRound(gameId) {
+  const s = getSocket();
+  s.emit('startNextRound', { gameId });
+}
+
 /**
  * 斷開連線
  */

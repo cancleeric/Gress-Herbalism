@@ -19,16 +19,24 @@ import {
   onColorChoiceRequired,
   onWaitingForColorChoice,
   onColorChoiceResult,
+  onFollowGuessStarted,
+  onFollowGuessUpdate,
+  onGuessResult,
+  onRoundStarted,
   startGame as socketStartGame,
   sendGameAction,
   requestRevealHiddenCards,
   leaveRoom,
-  submitColorChoice
+  submitColorChoice,
+  submitFollowGuessResponse,
+  startNextRound
 } from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
-  GAME_PHASE_FINISHED
+  GAME_PHASE_FINISHED,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END
 } from '../../shared/constants';
 import GameBoard from '../GameBoard/GameBoard';
 import PlayerHand from '../PlayerHand/PlayerHand';
@@ -74,6 +82,11 @@ function GameRoom() {
   const [colorChoiceData, setColorChoiceData] = useState(null);
   const [waitingForColorChoice, setWaitingForColorChoice] = useState(false);
   const [colorChoiceInfo, setColorChoiceInfo] = useState(null);
+  // 跟猜相關狀態
+  const [followGuessData, setFollowGuessData] = useState(null);
+  const [showFollowGuessPanel, setShowFollowGuessPanel] = useState(false);
+  const [guessResultData, setGuessResultData] = useState(null);
+  const [showRoundEnd, setShowRoundEnd] = useState(false);
 
   /**
    * 取得當前回合的玩家
@@ -170,6 +183,35 @@ function GameRoom() {
       setColorChoiceInfo(null);
     });
 
+    // 監聽跟猜開始
+    const unsubFollowGuess = onFollowGuessStarted(({ guessingPlayerId, guessedColors, pendingPlayers }) => {
+      setFollowGuessData({ guessingPlayerId, guessedColors, pendingPlayers, followingPlayers: [], declinedPlayers: [] });
+      setShowFollowGuessPanel(true);
+    });
+
+    // 監聽跟猜更新
+    const unsubFollowUpdate = onFollowGuessUpdate(({ playerId, isFollowing, pendingPlayers, followingPlayers, declinedPlayers }) => {
+      setFollowGuessData(prev => ({
+        ...prev,
+        pendingPlayers,
+        followingPlayers,
+        declinedPlayers
+      }));
+    });
+
+    // 監聽猜牌結果
+    const unsubGuessResult = onGuessResult(({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers }) => {
+      setShowFollowGuessPanel(false);
+      setGuessResultData({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers });
+      setShowRoundEnd(true);
+    });
+
+    // 監聽局開始
+    const unsubRoundStart = onRoundStarted(({ round, startPlayerIndex }) => {
+      setShowRoundEnd(false);
+      setGuessResultData(null);
+    });
+
     return () => {
       unsubGameState();
       unsubError();
@@ -177,6 +219,10 @@ function GameRoom() {
       unsubColorChoice();
       unsubWaiting();
       unsubColorResult();
+      unsubFollowGuess();
+      unsubFollowUpdate();
+      unsubGuessResult();
+      unsubRoundStart();
     };
   }, [dispatch]);
 
@@ -300,6 +346,27 @@ function GameRoom() {
   };
 
   /**
+   * 處理跟猜決定
+   */
+  const handleFollowGuess = (isFollowing) => {
+    const myPlayer = getMyPlayer();
+    if (!gameId || !myPlayer) return;
+
+    submitFollowGuessResponse(gameId, myPlayer.id, isFollowing);
+  };
+
+  /**
+   * 處理開始下一局
+   */
+  const handleStartNextRound = () => {
+    if (!gameId) return;
+
+    startNextRound(gameId);
+    setShowRoundEnd(false);
+    setGuessResultData(null);
+  };
+
+  /**
    * 取得遊戲階段顯示文字
    */
   const getGamePhaseText = () => {
@@ -308,6 +375,10 @@ function GameRoom() {
         return '等待玩家加入...';
       case GAME_PHASE_PLAYING:
         return '遊戲進行中';
+      case GAME_PHASE_FOLLOW_GUESSING:
+        return '跟猜階段';
+      case GAME_PHASE_ROUND_END:
+        return '局結束';
       case GAME_PHASE_FINISHED:
         return '遊戲結束';
       default:
@@ -397,6 +468,7 @@ function GameRoom() {
                   {player.isHost && ' (房主)'}
                   {player.id === myPlayer?.id && ' (我)'}
                 </span>
+                <span className="player-score">{player.score || 0} 分</span>
                 <span className="player-cards">
                   {player.hand ? `${player.hand.length} 張牌` : ''}
                 </span>
@@ -527,6 +599,170 @@ function GameRoom() {
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 跟猜面板 Modal */}
+      {showFollowGuessPanel && followGuessData && (
+        <div className="modal-overlay">
+          <div className="modal-content follow-guess-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="follow-guess-card">
+              <h3>跟猜階段</h3>
+              <p className="guess-info">
+                <strong>{gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}</strong>
+                {' '}猜測蓋牌是：
+                <span className="guessed-colors">
+                  {followGuessData.guessedColors.map(color => (
+                    <span key={color} className={`color-badge color-${color}`}>
+                      {color === 'red' ? '紅' :
+                       color === 'yellow' ? '黃' :
+                       color === 'green' ? '綠' :
+                       color === 'blue' ? '藍' : color}
+                    </span>
+                  ))}
+                </span>
+              </p>
+
+              {/* 跟猜狀態 */}
+              <div className="follow-guess-status">
+                {followGuessData.followingPlayers.length > 0 && (
+                  <p className="following-list">
+                    跟猜：{followGuessData.followingPlayers.map(id =>
+                      gameState.players.find(p => p.id === id)?.name || id
+                    ).join('、')}
+                  </p>
+                )}
+                {followGuessData.declinedPlayers.length > 0 && (
+                  <p className="declined-list">
+                    不跟：{followGuessData.declinedPlayers.map(id =>
+                      gameState.players.find(p => p.id === id)?.name || id
+                    ).join('、')}
+                  </p>
+                )}
+                {followGuessData.pendingPlayers.length > 0 && (
+                  <p className="pending-list">
+                    等待決定：{followGuessData.pendingPlayers.map(id =>
+                      gameState.players.find(p => p.id === id)?.name || id
+                    ).join('、')}
+                  </p>
+                )}
+              </div>
+
+              {/* 自己需要決定時顯示按鈕 */}
+              {followGuessData.pendingPlayers.includes(myPlayer?.id) && (
+                <div className="follow-guess-buttons">
+                  <p className="decision-prompt">你要跟猜嗎？跟對 +1 分，跟錯 -1 分並退出當局</p>
+                  <button
+                    className="btn btn-success"
+                    onClick={() => handleFollowGuess(true)}
+                  >
+                    跟猜
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => handleFollowGuess(false)}
+                  >
+                    不跟
+                  </button>
+                </div>
+              )}
+
+              {/* 自己是猜牌者 */}
+              {followGuessData.guessingPlayerId === myPlayer?.id && (
+                <p className="waiting-others">等待其他玩家決定是否跟猜...</p>
+              )}
+
+              {/* 自己已決定 */}
+              {!followGuessData.pendingPlayers.includes(myPlayer?.id) &&
+               followGuessData.guessingPlayerId !== myPlayer?.id && (
+                <p className="already-decided">你已決定，等待其他玩家...</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 局結束 / 猜牌結果面板 */}
+      {showRoundEnd && guessResultData && (
+        <div className="modal-overlay">
+          <div className="modal-content round-end-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="round-end-card">
+              <h3>{guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}</h3>
+
+              {/* 顯示蓋牌 */}
+              <div className="hidden-cards-reveal">
+                <p>蓋牌是：</p>
+                <div className="hidden-cards">
+                  {guessResultData.hiddenCards.map((card, index) => (
+                    <span key={index} className={`card-badge color-${card.color}`}>
+                      {card.color === 'red' ? '紅' :
+                       card.color === 'yellow' ? '黃' :
+                       card.color === 'green' ? '綠' :
+                       card.color === 'blue' ? '藍' : card.color}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 分數變化 */}
+              <div className="score-changes">
+                <h4>分數變化</h4>
+                <ul className="score-list">
+                  {Object.entries(guessResultData.scoreChanges).map(([playerId, change]) => {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    return (
+                      <li key={playerId} className={change > 0 ? 'score-up' : change < 0 ? 'score-down' : ''}>
+                        {player?.name || playerId}：
+                        <span className="score-change">
+                          {change > 0 ? `+${change}` : change}
+                        </span>
+                        {playerId === guessResultData.guessingPlayerId && ' (猜牌者)'}
+                        {guessResultData.followingPlayers.includes(playerId) && ' (跟猜)'}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {/* 目前分數 */}
+              <div className="current-scores">
+                <h4>目前分數</h4>
+                <ul className="score-list">
+                  {gameState.players.map(player => (
+                    <li key={player.id}>
+                      {player.name}：{player.score || 0} 分
+                      {(player.score || 0) >= 7 && <span className="winner-badge">勝利！</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* 下一局按鈕 */}
+              {gameState.gamePhase !== GAME_PHASE_FINISHED && (
+                <button
+                  className="btn btn-primary"
+                  onClick={handleStartNextRound}
+                >
+                  開始下一局
+                </button>
+              )}
+
+              {/* 遊戲結束 */}
+              {gameState.gamePhase === GAME_PHASE_FINISHED && (
+                <div className="game-finished">
+                  <p className="winner-announcement">
+                    恭喜 {gameState.players.find(p => p.id === gameState.winner)?.name || '獲勝者'} 獲勝！
+                  </p>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleLeaveRoom}
+                  >
+                    離開房間
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
