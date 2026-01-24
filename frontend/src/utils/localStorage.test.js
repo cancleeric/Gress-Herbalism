@@ -82,4 +82,66 @@ describe('localStorage 工具函數', () => {
       expect(getPlayerSettings()).toEqual({});
     });
   });
+
+  describe('錯誤處理', () => {
+    test('savePlayerName - localStorage 錯誤時不應拋出異常', () => {
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = jest.fn(() => {
+        throw new Error('Storage full');
+      });
+
+      expect(() => savePlayerName('測試')).not.toThrow();
+
+      localStorage.setItem = originalSetItem;
+    });
+
+    test('getPlayerName - localStorage 錯誤時應返回空字串', () => {
+      const originalGetItem = localStorage.getItem;
+      localStorage.getItem = jest.fn(() => {
+        throw new Error('Access denied');
+      });
+
+      expect(getPlayerName()).toBe('');
+
+      localStorage.getItem = originalGetItem;
+    });
+
+    test('clearPlayerName - localStorage 錯誤時不應拋出異常', () => {
+      const originalRemoveItem = localStorage.removeItem;
+      localStorage.removeItem = jest.fn(() => {
+        throw new Error('Storage error');
+      });
+
+      expect(() => clearPlayerName()).not.toThrow();
+
+      localStorage.removeItem = originalRemoveItem;
+    });
+
+    test('savePlayerSettings - localStorage 錯誤時不應拋出異常', () => {
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = jest.fn(() => {
+        throw new Error('Storage full');
+      });
+
+      expect(() => savePlayerSettings({ theme: 'dark' })).not.toThrow();
+
+      localStorage.setItem = originalSetItem;
+    });
+
+    test('getPlayerSettings - localStorage 錯誤時應返回空物件', () => {
+      const originalGetItem = localStorage.getItem;
+      localStorage.getItem = jest.fn(() => {
+        throw new Error('Access denied');
+      });
+
+      expect(getPlayerSettings()).toEqual({});
+
+      localStorage.getItem = originalGetItem;
+    });
+
+    test('getPlayerSettings - JSON 解析錯誤時應返回空物件', () => {
+      localStorage.setItem(STORAGE_KEYS.PLAYER_SETTINGS, 'invalid json');
+      expect(getPlayerSettings()).toEqual({});
+    });
+  });
 });

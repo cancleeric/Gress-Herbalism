@@ -4,16 +4,23 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { createStore } from 'redux';
 import GameRoom from './GameRoom';
 import { gameReducer, initialState } from '../../store/gameStore';
 import * as gameService from '../../services/gameService';
+import * as socketService from '../../services/socketService';
 
 // Mock gameService
 jest.mock('../../services/gameService');
+
+// Mock socketService
+jest.mock('../../services/socketService');
+
+// Socket event callbacks storage
+let socketCallbacks = {};
 
 // Mock useNavigate
 const mockNavigate = jest.fn();
@@ -39,8 +46,58 @@ const renderWithProviders = (component, { preloadedState = initialState, gameId 
 describe('GameRoom - 工作單 0023', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    socketCallbacks = {};
     gameService.getGameState.mockReturnValue(null);
     gameService.startGame.mockReturnValue({ success: true, gameState: null });
+
+    // Mock all socketService functions
+    socketService.onGameState.mockImplementation((callback) => {
+      socketCallbacks.gameState = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      socketCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onHiddenCardsRevealed.mockImplementation((callback) => {
+      socketCallbacks.hiddenCardsRevealed = callback;
+      return () => {};
+    });
+    socketService.onColorChoiceRequired.mockImplementation((callback) => {
+      socketCallbacks.colorChoiceRequired = callback;
+      return () => {};
+    });
+    socketService.onWaitingForColorChoice.mockImplementation((callback) => {
+      socketCallbacks.waitingForColorChoice = callback;
+      return () => {};
+    });
+    socketService.onColorChoiceResult.mockImplementation((callback) => {
+      socketCallbacks.colorChoiceResult = callback;
+      return () => {};
+    });
+    socketService.onFollowGuessStarted.mockImplementation((callback) => {
+      socketCallbacks.followGuessStarted = callback;
+      return () => {};
+    });
+    socketService.onFollowGuessUpdate.mockImplementation((callback) => {
+      socketCallbacks.followGuessUpdate = callback;
+      return () => {};
+    });
+    socketService.onGuessResult.mockImplementation((callback) => {
+      socketCallbacks.guessResult = callback;
+      return () => {};
+    });
+    socketService.onRoundStarted.mockImplementation((callback) => {
+      socketCallbacks.roundStarted = callback;
+      return () => {};
+    });
+    socketService.startGame.mockImplementation(() => {});
+    socketService.sendGameAction.mockImplementation(() => {});
+    socketService.requestRevealHiddenCards.mockImplementation(() => {});
+    socketService.leaveRoom.mockImplementation(() => {});
+    socketService.submitColorChoice.mockImplementation(() => {});
+    socketService.submitFollowGuessResponse.mockImplementation(() => {});
+    socketService.startNextRound.mockImplementation(() => {});
   });
 
   describe('渲染', () => {
@@ -447,6 +504,329 @@ describe('GameRoom - 工作單 0023', () => {
     test('應包含 my-hand-section 類別', () => {
       const { container } = renderWithProviders(<GameRoom />);
       expect(container.querySelector('.my-hand-section')).toBeInTheDocument();
+    });
+  });
+
+  describe('跟猜階段', () => {
+    test('跟猜階段應顯示跟猜階段文字', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'followGuessing',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+      expect(screen.getByText('跟猜階段')).toBeInTheDocument();
+    });
+  });
+
+  describe('局結束階段', () => {
+    test('局結束階段應顯示局結束文字', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'roundEnd',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, score: 3 },
+          { id: 'p2', name: '玩家2', isActive: true, score: 0 },
+          { id: 'p3', name: '玩家3', isActive: true, score: 0 }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+      expect(screen.getByText('局結束')).toBeInTheDocument();
+    });
+  });
+
+  describe('未知狀態', () => {
+    test('未知遊戲階段應顯示未知狀態', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'unknownPhase',
+        players: [{ id: 'p1', name: '玩家1' }]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+      expect(screen.getByText('未知狀態')).toBeInTheDocument();
+    });
+  });
+
+  describe('開始遊戲錯誤處理', () => {
+    test('玩家少於3人時開始按鈕應禁用', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'waiting',
+        gameId: 'test_room',
+        players: [
+          { id: 'p1', name: '玩家1', isHost: true },
+          { id: 'p2', name: '玩家2' }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      const startButton = screen.getByText(/開始遊戲/);
+      expect(startButton).toBeDisabled();
+    });
+  });
+
+  describe('玩家分數顯示', () => {
+    test('玩家列表應顯示分數', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        players: [
+          { id: 'p1', name: '玩家1', score: 5, isActive: true },
+          { id: 'p2', name: '玩家2', score: 3, isActive: true },
+          { id: 'p3', name: '玩家3', score: 0, isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+      // 分數應該顯示在玩家列表中
+      expect(screen.getAllByText(/5 分/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/3 分/).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Socket 事件處理', () => {
+    test('應處理遊戲狀態更新事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'waiting',
+        players: [{ id: 'p1', name: '玩家1', isHost: true }]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬遊戲狀態更新
+      if (socketCallbacks.gameState) {
+        socketCallbacks.gameState({
+          gameId: 'test_room',
+          players: [
+            { id: 'p1', name: '玩家1', isHost: true },
+            { id: 'p2', name: '新玩家' }
+          ],
+          currentPlayerIndex: 0,
+          gamePhase: 'waiting',
+          winner: null,
+          hiddenCards: [],
+          gameHistory: [],
+          maxPlayers: 4
+        });
+      }
+
+      await waitFor(() => {
+        expect(screen.getAllByText(/新玩家/).length).toBeGreaterThan(0);
+      });
+    });
+
+    test('應處理錯誤事件', async () => {
+      renderWithProviders(<GameRoom />);
+
+      // 模擬錯誤
+      if (socketCallbacks.error) {
+        socketCallbacks.error({ message: '測試錯誤訊息' });
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText('測試錯誤訊息')).toBeInTheDocument();
+      });
+    });
+
+    test('應處理蓋牌揭示事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerIndex: 0,
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, hand: [] },
+          { id: 'p2', name: '玩家2', isActive: true, hand: [] },
+          { id: 'p3', name: '玩家3', isActive: true, hand: [] }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 點擊猜牌打開猜牌介面
+      fireEvent.click(screen.getByText('猜牌'));
+
+      // 模擬蓋牌揭示
+      if (socketCallbacks.hiddenCardsRevealed) {
+        socketCallbacks.hiddenCardsRevealed({
+          cards: [{ id: 'h1', color: 'red' }, { id: 'h2', color: 'blue' }]
+        });
+      }
+
+      // 應該顯示 GuessCard modal
+      expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
+    });
+
+    test('應處理顏色選擇請求事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬顏色選擇請求
+      if (socketCallbacks.colorChoiceRequired) {
+        socketCallbacks.colorChoiceRequired({
+          askingPlayerId: 'p2',
+          colors: ['red', 'blue'],
+          message: '請選擇要給的顏色'
+        });
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText('選擇要給的顏色')).toBeInTheDocument();
+      });
+    });
+
+    test('應處理等待顏色選擇事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p2',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬等待顏色選擇
+      if (socketCallbacks.waitingForColorChoice) {
+        socketCallbacks.waitingForColorChoice({
+          targetPlayerId: 'p1',
+          askingPlayerId: 'p2',
+          colors: ['red', 'blue']
+        });
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText(/等待.*選擇要給哪種顏色/)).toBeInTheDocument();
+      });
+    });
+
+    test('應處理跟猜開始事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p2',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬跟猜開始
+      if (socketCallbacks.followGuessStarted) {
+        socketCallbacks.followGuessStarted({
+          guessingPlayerId: 'p1',
+          guessedColors: ['red', 'blue'],
+          decisionOrder: ['p2', 'p3'],
+          currentDeciderId: 'p2',
+          decisions: {}
+        });
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText(/輪到你決定/)).toBeInTheDocument();
+      });
+    });
+
+    test('應處理猜牌結果事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, score: 0 },
+          { id: 'p2', name: '玩家2', isActive: true, score: 0 },
+          { id: 'p3', name: '玩家3', isActive: true, score: 0 }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬猜牌結果
+      if (socketCallbacks.guessResult) {
+        socketCallbacks.guessResult({
+          isCorrect: true,
+          scoreChanges: { p1: 3 },
+          hiddenCards: [{ id: 'h1', color: 'red' }, { id: 'h2', color: 'blue' }],
+          guessingPlayerId: 'p1',
+          followingPlayers: []
+        });
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText(/猜對了/)).toBeInTheDocument();
+      });
+    });
+
+    test('應處理局開始事件', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'roundEnd',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, score: 3 },
+          { id: 'p2', name: '玩家2', isActive: true, score: 0 },
+          { id: 'p3', name: '玩家3', isActive: true, score: 0 }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬局開始
+      if (socketCallbacks.roundStarted) {
+        socketCallbacks.roundStarted({
+          round: 2,
+          startPlayerIndex: 1
+        });
+      }
+
+      // 局開始後 roundEnd 面板應該消失
+      await waitFor(() => {
+        expect(screen.queryByText(/下一局/)).not.toBeInTheDocument();
+      });
+    });
+
+    test('點擊開始遊戲按鈕應呼叫 socketService.startGame', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'waiting',
+        gameId: 'test_room',
+        players: [
+          { id: 'p1', name: '玩家1', isHost: true },
+          { id: 'p2', name: '玩家2' },
+          { id: 'p3', name: '玩家3' }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      fireEvent.click(screen.getByText(/開始遊戲/));
+
+      expect(socketService.startGame).toHaveBeenCalledWith('test_room');
+    });
+
+    test('點擊離開房間應呼叫 socketService.leaveRoom', () => {
+      const state = {
+        ...initialState,
+        gameId: 'test_room',
+        currentPlayerId: 'p1',
+        players: [{ id: 'p1', name: '玩家1' }]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      fireEvent.click(screen.getByText('離開房間'));
+
+      expect(socketService.leaveRoom).toHaveBeenCalledWith('test_room', 'p1');
     });
   });
 });
