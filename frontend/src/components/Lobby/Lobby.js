@@ -23,6 +23,8 @@ import {
   joinRoom
 } from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
+import { savePlayerName, getPlayerName } from '../../utils/localStorage';
+import { getPlayerNameError } from '../../utils/validation';
 import './Lobby.css';
 
 /**
@@ -43,6 +45,14 @@ function Lobby() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [playerId] = useState(`player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
+
+  // 載入時讀取儲存的暱稱
+  useEffect(() => {
+    const savedName = getPlayerName();
+    if (savedName) {
+      setPlayerName(savedName);
+    }
+  }, []);
 
   // 初始化 Socket 連線
   useEffect(() => {
@@ -126,13 +136,10 @@ function Lobby() {
   /**
    * 驗證玩家名稱
    */
-  const validatePlayerName = () => {
-    if (!playerName.trim()) {
-      setError('請輸入玩家名稱');
-      return false;
-    }
-    if (playerName.trim().length > 20) {
-      setError('玩家名稱不可超過20個字元');
+  const validatePlayerNameInput = () => {
+    const nameError = getPlayerNameError(playerName);
+    if (nameError) {
+      setError(nameError);
       return false;
     }
     return true;
@@ -142,11 +149,14 @@ function Lobby() {
    * 創建新房間
    */
   const handleCreateRoom = () => {
-    if (!validatePlayerName()) return;
+    if (!validatePlayerNameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
     }
+
+    // 儲存暱稱到 localStorage
+    savePlayerName(playerName.trim());
 
     setIsLoading(true);
     setError('');
@@ -163,7 +173,7 @@ function Lobby() {
    * 加入現有房間
    */
   const handleJoinRoom = () => {
-    if (!validatePlayerName()) return;
+    if (!validatePlayerNameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
@@ -172,6 +182,9 @@ function Lobby() {
       setError('請輸入房間ID');
       return;
     }
+
+    // 儲存暱稱到 localStorage
+    savePlayerName(playerName.trim());
 
     setIsLoading(true);
     setError('');
@@ -188,11 +201,14 @@ function Lobby() {
    * 快速加入房間（從列表點擊）
    */
   const handleQuickJoin = (selectedRoomId) => {
-    if (!validatePlayerName()) return;
+    if (!validatePlayerNameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
     }
+
+    // 儲存暱稱到 localStorage
+    savePlayerName(playerName.trim());
 
     setIsLoading(true);
     setError('');
@@ -226,10 +242,13 @@ function Lobby() {
               type="text"
               value={playerName}
               onChange={handlePlayerNameChange}
-              placeholder="請輸入您的名稱"
-              maxLength={20}
+              placeholder="請輸入您的名稱（2-12 字元）"
+              maxLength={12}
               disabled={isLoading}
             />
+            {playerName && getPlayerName() && playerName === getPlayerName() && (
+              <span className="welcome-message">歡迎回來，{playerName}！</span>
+            )}
           </div>
         </section>
 

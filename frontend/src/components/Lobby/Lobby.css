@@ -199,6 +199,14 @@
   cursor: not-allowed;
 }
 
+/* 歡迎訊息 */
+.welcome-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-success);
+  margin-top: var(--spacing-xs);
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* 按鈕樣式 */
 .btn {
   padding: var(--spacing-sm) var(--spacing-lg);
