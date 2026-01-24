@@ -337,6 +337,69 @@
   position: relative;
 }
 
+/* 給牌顏色選擇器（類型3用） */
+.give-color-selector {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(233, 69, 96, 0.1);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 2px dashed var(--color-accent);
+}
+
+.give-color-selector .selector-hint {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+  font-size: var(--font-size-small);
+}
+
+.give-color-options {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.give-color-options .color-option {
+  min-width: 120px;
+  padding: var(--spacing-sm);
+}
+
+.give-color-result {
+  text-align: center;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  margin-top: var(--spacing-sm);
+}
+
+.give-color-result .color-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+  margin: 0 var(--spacing-xs);
+}
+
+.give-color-result .color-badge.color-red {
+  background-color: var(--color-red);
+  color: white;
+}
+
+.give-color-result .color-badge.color-yellow {
+  background-color: var(--color-yellow);
+  color: #333;
+}
+
+.give-color-result .color-badge.color-green {
+  background-color: var(--color-green);
+  color: white;
+}
+
+.give-color-result .color-badge.color-blue {
+  background-color: var(--color-blue);
+  color: white;
+}
+
 /* 響應式設計 */
 @media (max-width: 480px) {
   .question-card {
@@ -350,5 +413,10 @@
 
   .player-options {
     justify-content: center;
+  }
+
+  .give-color-options {
+    flex-direction: column;
+    align-items: center;
   }
 }

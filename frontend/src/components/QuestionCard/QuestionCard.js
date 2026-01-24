@@ -214,6 +214,67 @@ QuestionResult.propTypes = {
 };
 
 /**
+ * 給牌顏色選擇器組件（用於類型3）
+ *
+ * @param {Object} props - 組件屬性
+ * @param {Array} props.colors - 可選顏色
+ * @param {string} props.selectedGiveColor - 已選擇的給牌顏色
+ * @param {Function} props.onSelect - 選擇回調
+ * @returns {JSX.Element} 給牌顏色選擇器
+ */
+function GiveColorSelector({ colors, selectedGiveColor, onSelect }) {
+  return (
+    <div className="give-color-selector">
+      <h4 className="selector-title">選擇要給哪種顏色的一張</h4>
+      <p className="selector-hint">你兩種顏色都有，請選擇要給對方哪種顏色的一張牌</p>
+      <div className="give-color-options">
+        {colors.map((color) => (
+          <button
+            key={color}
+            type="button"
+            className={`color-option color-${color} ${selectedGiveColor === color ? 'selected' : ''}`}
+            onClick={() => onSelect(color)}
+            aria-pressed={selectedGiveColor === color}
+          >
+            給 {color === 'red' ? '紅色' :
+                color === 'yellow' ? '黃色' :
+                color === 'green' ? '綠色' :
+                color === 'blue' ? '藍色' : color} 一張
+          </button>
+        ))}
+      </div>
+      {selectedGiveColor && (
+        <p className="give-color-result">
+          你將給對方一張
+          <span className={`color-badge color-${selectedGiveColor}`}>
+            {selectedGiveColor === 'red' ? '紅色' :
+             selectedGiveColor === 'yellow' ? '黃色' :
+             selectedGiveColor === 'green' ? '綠色' :
+             selectedGiveColor === 'blue' ? '藍色' : selectedGiveColor}
+          </span>
+          ，並要對方全部的
+          <span className={`color-badge color-${colors.find(c => c !== selectedGiveColor)}`}>
+            {(() => {
+              const getColor = colors.find(c => c !== selectedGiveColor);
+              return getColor === 'red' ? '紅色' :
+                     getColor === 'yellow' ? '黃色' :
+                     getColor === 'green' ? '綠色' :
+                     getColor === 'blue' ? '藍色' : getColor;
+            })()}
+          </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+GiveColorSelector.propTypes = {
+  colors: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selectedGiveColor: PropTypes.string,
+  onSelect: PropTypes.func.isRequired
+};
+
+/**
  * 問牌介面組件
  *
  * @param {Object} props - 組件屬性
@@ -243,7 +304,44 @@ function QuestionCard({
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
+  const [selectedGiveColor, setSelectedGiveColor] = useState(null);
   const [error, setError] = useState('');
+
+  /**
+   * 檢查要牌方（自己）是否擁有選定顏色的牌
+   */
+  const getOwnedColorsFromSelection = () => {
+    if (selectedColors.length !== 2) return [];
+    const owned = [];
+    for (const color of selectedColors) {
+      if (currentPlayerHand.some(c => c.color === color)) {
+        owned.push(color);
+      }
+    }
+    return owned;
+  };
+
+  /**
+   * 檢查是否需要讓要牌方選擇給哪種顏色（類型3）
+   */
+  const needsGiveColorChoice = () => {
+    if (selectedType !== QUESTION_TYPE_GIVE_ONE_GET_ALL) return false;
+    const ownedColors = getOwnedColorsFromSelection();
+    return ownedColors.length === 2; // 兩種顏色都有，需要選擇
+  };
+
+  /**
+   * 取得實際的給牌顏色（類型3）
+   * 如果只有一種顏色，自動使用那種顏色
+   */
+  const getEffectiveGiveColor = () => {
+    if (selectedType !== QUESTION_TYPE_GIVE_ONE_GET_ALL) return null;
+    const ownedColors = getOwnedColorsFromSelection();
+    if (ownedColors.length === 1) {
+      return ownedColors[0]; // 只有一種，自動選擇
+    }
+    return selectedGiveColor; // 兩種都有，使用選擇的
+  };
 
   /**
    * 驗證表單
@@ -269,6 +367,12 @@ function QuestionCard({
 
     if (!selectedType) {
       setError('請選擇要牌方式');
+      return false;
+    }
+
+    // 類型3特殊驗證：如果兩種顏色都有，必須選擇給哪種
+    if (needsGiveColorChoice() && !selectedGiveColor) {
+      setError('請選擇要給哪種顏色的一張');
       return false;
     }
 
@@ -298,11 +402,18 @@ function QuestionCard({
   const handleSubmit = () => {
     if (!validateForm()) return;
 
+    const effectiveGiveColor = getEffectiveGiveColor();
     const questionData = {
       colors: selectedColors,
       targetPlayerId: selectedPlayerId,
       questionType: selectedType
     };
+
+    // 類型3：添加給牌顏色資訊
+    if (selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL && effectiveGiveColor) {
+      questionData.giveColor = effectiveGiveColor;
+      questionData.getColor = selectedColors.find(c => c !== effectiveGiveColor);
+    }
 
     if (onSubmit) {
       onSubmit(questionData);
@@ -329,6 +440,7 @@ function QuestionCard({
     setSelectedColors([]);
     setSelectedPlayerId(null);
     setSelectedType(null);
+    setSelectedGiveColor(null);
     setError('');
   };
 
@@ -337,6 +449,7 @@ function QuestionCard({
    */
   const handleColorChange = (colors) => {
     setSelectedColors(colors);
+    setSelectedGiveColor(null); // 顏色改變時重置給牌選擇
     setError('');
   };
 
@@ -353,6 +466,15 @@ function QuestionCard({
    */
   const handleTypeChange = (type) => {
     setSelectedType(type);
+    setSelectedGiveColor(null); // 類型改變時重置給牌選擇
+    setError('');
+  };
+
+  /**
+   * 處理給牌顏色選擇變更（類型3）
+   */
+  const handleGiveColorChange = (color) => {
+    setSelectedGiveColor(color);
     setError('');
   };
 
@@ -360,10 +482,19 @@ function QuestionCard({
    * 檢查是否可提交
    */
   const canSubmit = () => {
-    return selectedColors.length === 2 &&
-           selectedColors[0] !== selectedColors[1] &&
-           selectedPlayerId &&
-           selectedType;
+    const basicCheck = selectedColors.length === 2 &&
+                       selectedColors[0] !== selectedColors[1] &&
+                       selectedPlayerId &&
+                       selectedType;
+
+    if (!basicCheck) return false;
+
+    // 類型3額外檢查：如果需要選擇給牌顏色，必須已選擇
+    if (needsGiveColorChoice() && !selectedGiveColor) {
+      return false;
+    }
+
+    return true;
   };
 
   if (!isOpen) return null;
@@ -420,6 +551,15 @@ function QuestionCard({
           selectedType={selectedType}
           onTypeSelect={handleTypeChange}
         />
+
+        {/* 類型3：給牌顏色選擇（當要牌方兩種顏色都有時） */}
+        {needsGiveColorChoice() && (
+          <GiveColorSelector
+            colors={selectedColors}
+            selectedGiveColor={selectedGiveColor}
+            onSelect={handleGiveColorChange}
+          />
+        )}
 
         {/* 錯誤訊息 */}
         {error && (

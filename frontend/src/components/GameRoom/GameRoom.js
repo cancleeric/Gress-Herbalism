@@ -307,8 +307,8 @@ function GameRoom() {
       colors: questionData.colors,
       questionType: questionData.questionType,
       selectedColor: questionData.colors[0], // 用於類型2
-      giveColor: questionData.colors[0], // 用於類型3
-      getColor: questionData.colors[1]  // 用於類型3
+      giveColor: questionData.giveColor || questionData.colors[0], // 用於類型3（使用選擇的或預設第一個）
+      getColor: questionData.getColor || questionData.colors[1]  // 用於類型3
     };
 
     sendGameAction(gameId, action);
