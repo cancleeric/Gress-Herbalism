@@ -1,11 +1,24 @@
 /**
  * App 組件單元測試
- * 工作單 0013
+ * 工作單 0013, 0059
  */
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
+
+// Mock Firebase Auth
+jest.mock('./firebase', () => ({
+  AuthProvider: ({ children }) => children,
+  useAuth: () => ({
+    isLoggedIn: true,
+    isLoading: false,
+    user: { uid: 'test-user', displayName: 'Test User' },
+    loginWithGoogle: jest.fn(),
+    loginAsGuest: jest.fn(),
+    logout: jest.fn(),
+  }),
+}));
 
 describe('App - 工作單 0013', () => {
   describe('應用程式渲染', () => {
@@ -66,6 +79,15 @@ describe('App - 工作單 0013', () => {
     test('應用程式應被 Redux Provider 包裹', () => {
       // 如果 Redux Provider 沒有正確設定，渲染會失敗
       expect(() => render(<App />)).not.toThrow();
+    });
+  });
+});
+
+describe('App - 工作單 0059 Firebase Auth', () => {
+  describe('登入保護路由', () => {
+    test('已登入用戶應可訪問首頁', () => {
+      render(<App />);
+      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
     });
   });
 });

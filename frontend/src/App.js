@@ -2,15 +2,39 @@
  * 主應用組件
  *
  * @module App
+ * 工單 0059 - 加入 Firebase 登入
  */
 
 import React from 'react';
 import { Provider } from 'react-redux';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import store from './store/gameStore';
+import { AuthProvider, useAuth } from './firebase';
+import Login from './components/Login';
 import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
 import './styles/App.css';
+
+/**
+ * 受保護路由組件 - 需要登入才能訪問
+ */
+function ProtectedRoute({ children }) {
+  const { isLoggedIn, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="app-loading">
+        <p>載入中...</p>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 /**
  * 錯誤邊界組件
@@ -47,6 +71,35 @@ class ErrorBoundary extends React.Component {
 }
 
 /**
+ * 應用內容組件 - 包含路由邏輯
+ */
+function AppContent() {
+  return (
+    <div className="app">
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Lobby />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/game/:gameId"
+          element={
+            <ProtectedRoute>
+              <GameRoom />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
+  );
+}
+
+/**
  * 主應用組件
  *
  * @returns {JSX.Element} 應用程式根組件
@@ -55,14 +108,11 @@ function App() {
   return (
     <Provider store={store}>
       <ErrorBoundary>
-        <Router>
-          <div className="app">
-            <Routes>
-              <Route path="/" element={<Lobby />} />
-              <Route path="/game/:gameId" element={<GameRoom />} />
-            </Routes>
-          </div>
-        </Router>
+        <AuthProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </AuthProvider>
       </ErrorBoundary>
     </Provider>
   );
