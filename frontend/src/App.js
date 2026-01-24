@@ -3,6 +3,7 @@
  *
  * @module App
  * 工單 0059 - 加入 Firebase 登入
+ * 工單 0060 - 加入個人資料和排行榜
  */
 
 import React from 'react';
@@ -13,6 +14,8 @@ import { AuthProvider, useAuth } from './firebase';
 import Login from './components/Login';
 import Lobby from './components/Lobby';
 import GameRoom from './components/GameRoom';
+import Profile from './components/Profile';
+import Leaderboard from './components/Leaderboard';
 import './styles/App.css';
 
 /**
@@ -91,6 +94,22 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <GameRoom />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute>
+              <Leaderboard />
             </ProtectedRoute>
           }
         />

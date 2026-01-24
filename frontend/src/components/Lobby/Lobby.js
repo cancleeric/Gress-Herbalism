@@ -443,6 +443,20 @@ function Lobby() {
       </main>
 
       <footer className="lobby-footer">
+        <nav className="lobby-nav">
+          <button
+            className="nav-btn"
+            onClick={() => navigate('/profile')}
+          >
+            👤 個人資料
+          </button>
+          <button
+            className="nav-btn"
+            onClick={() => navigate('/leaderboard')}
+          >
+            🏆 排行榜
+          </button>
+        </nav>
         <p>遊戲規則：猜測兩張隱藏牌的顏色</p>
       </footer>
 

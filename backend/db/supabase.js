@@ -1,6 +1,6 @@
 /**
  * Supabase 資料庫連線設定
- * 工單 0055
+ * 工單 0055, 0060
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -165,7 +165,7 @@ async function saveGameParticipants(gameHistoryId, participants) {
 
 /**
  * 取得排行榜
- * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'games_played')
+ * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'win_rate')
  * @param {number} limit - 限制筆數
  * @returns {Promise<Array>} 排行榜資料
  */
@@ -173,7 +173,8 @@ async function getLeaderboard(orderBy = 'total_score', limit = 10) {
   try {
     const { data, error } = await supabase
       .from('players')
-      .select('id, display_name, total_score, games_played, games_won')
+      .select('id, display_name, avatar_url, total_score, games_played, games_won, win_rate, highest_score')
+      .gt('games_played', 0) // 至少玩過一場
       .order(orderBy, { ascending: false })
       .limit(limit);
 
@@ -182,10 +183,144 @@ async function getLeaderboard(orderBy = 'total_score', limit = 10) {
       return [];
     }
 
-    return data || [];
+    // 加上排名
+    return (data || []).map((player, index) => ({
+      rank: index + 1,
+      ...player,
+    }));
   } catch (err) {
     console.error('getLeaderboard 錯誤:', err.message);
     return [];
+  }
+}
+
+// ==================== 工單 0060 新增功能 ====================
+
+/**
+ * 取得玩家統計資料
+ * @param {string} firebaseUid - Firebase UID
+ * @returns {Promise<object|null>} 玩家統計資料
+ */
+async function getPlayerStats(firebaseUid) {
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('games_played, games_won, total_score, highest_score, win_rate')
+      .eq('firebase_uid', firebaseUid)
+      .single();
+
+    if (error) {
+      console.error('取得玩家統計失敗:', error.message);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('getPlayerStats 錯誤:', err.message);
+    return null;
+  }
+}
+
+/**
+ * 取得玩家遊戲歷史
+ * @param {string} playerId - 玩家 ID (UUID)
+ * @param {number} limit - 限制筆數
+ * @returns {Promise<Array>} 遊戲歷史記錄
+ */
+async function getPlayerHistory(playerId, limit = 20) {
+  try {
+    const { data, error } = await supabase
+      .from('game_participants')
+      .select(`
+        final_score,
+        is_winner,
+        created_at,
+        game_history (
+          game_id,
+          player_count,
+          rounds_played,
+          winner_name
+        )
+      `)
+      .eq('player_id', playerId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('取得玩家歷史失敗:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('getPlayerHistory 錯誤:', err.message);
+    return [];
+  }
+}
+
+/**
+ * 完整更新玩家遊戲統計（遊戲結束時呼叫）
+ * @param {string} playerId - 玩家 ID (UUID)
+ * @param {object} gameResult - 遊戲結果 { score, isWinner }
+ */
+async function updatePlayerGameStats(playerId, gameResult) {
+  try {
+    // 先取得目前統計
+    const { data: player, error: fetchError } = await supabase
+      .from('players')
+      .select('games_played, games_won, total_score, highest_score')
+      .eq('id', playerId)
+      .single();
+
+    if (fetchError || !player) {
+      console.error('取得玩家資料失敗:', fetchError?.message);
+      return;
+    }
+
+    // 計算新統計
+    const newStats = {
+      games_played: player.games_played + 1,
+      games_won: player.games_won + (gameResult.isWinner ? 1 : 0),
+      total_score: player.total_score + gameResult.score,
+      highest_score: Math.max(player.highest_score, gameResult.score),
+      last_played_at: new Date().toISOString(),
+    };
+
+    // 更新資料
+    const { error: updateError } = await supabase
+      .from('players')
+      .update(newStats)
+      .eq('id', playerId);
+
+    if (updateError) {
+      console.error('更新玩家統計失敗:', updateError.message);
+    }
+  } catch (err) {
+    console.error('updatePlayerGameStats 錯誤:', err.message);
+  }
+}
+
+/**
+ * 根據 Firebase UID 取得玩家 ID
+ * @param {string} firebaseUid - Firebase UID
+ * @returns {Promise<string|null>} 玩家 ID (UUID)
+ */
+async function getPlayerIdByFirebaseUid(firebaseUid) {
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('id')
+      .eq('firebase_uid', firebaseUid)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data.id;
+  } catch (err) {
+    console.error('getPlayerIdByFirebaseUid 錯誤:', err.message);
+    return null;
   }
 }
 
@@ -197,4 +332,9 @@ module.exports = {
   saveGameRecord,
   saveGameParticipants,
   getLeaderboard,
+  // 工單 0060 新增
+  getPlayerStats,
+  getPlayerHistory,
+  updatePlayerGameStats,
+  getPlayerIdByFirebaseUid,
 };

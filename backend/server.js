@@ -15,7 +15,15 @@ try {
 }
 
 // Supabase 資料庫
-const { saveGameRecord, saveGameParticipants, getLeaderboard } = require('./db/supabase');
+const {
+  saveGameRecord,
+  saveGameParticipants,
+  getLeaderboard,
+  getOrCreatePlayer,
+  getPlayerStats,
+  getPlayerHistory,
+  getPlayerIdByFirebaseUid,
+} = require('./db/supabase');
 
 const app = express();
 const server = http.createServer(app);
@@ -57,6 +65,60 @@ app.get('/api/leaderboard', async (req, res) => {
 // 健康檢查
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ==================== 工單 0060 API ====================
+
+// 同步玩家資料（登入時呼叫）
+app.post('/api/players/sync', async (req, res) => {
+  try {
+    const { firebaseUid, displayName, email, avatarUrl } = req.body;
+
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: '缺少 Firebase UID' });
+    }
+
+    const player = await getOrCreatePlayer(displayName || '玩家', firebaseUid);
+    res.json({ success: true, data: player });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家統計
+app.get('/api/players/:firebaseUid/stats', async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const stats = await getPlayerStats(firebaseUid);
+
+    if (!stats) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    res.json({ success: true, data: stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家遊戲歷史
+app.get('/api/players/:firebaseUid/history', async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const limit = parseInt(req.query.limit) || 20;
+
+    // 先取得玩家 ID
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const history = await getPlayerHistory(playerId, limit);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 const io = new Server(server, {
