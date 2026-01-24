@@ -118,14 +118,20 @@ io.on('connection', (socket) => {
         hand: [],
         isActive: true,
         isCurrentTurn: false,
-        isHost: true
+        isHost: true,
+        score: 0
       }],
       hiddenCards: [],
       currentPlayerIndex: 0,
       gamePhase: 'waiting',
       winner: null,
       gameHistory: [],
-      maxPlayers: maxPlayers || 4
+      maxPlayers: maxPlayers || 4,
+      // 計分系統相關
+      currentRound: 0,
+      scores: {},
+      winningScore: 7,
+      roundHistory: []
     };
 
     gameRooms.set(gameId, roomState);
@@ -164,7 +170,8 @@ io.on('connection', (socket) => {
       hand: [],
       isActive: true,
       isCurrentTurn: false,
-      isHost: false
+      isHost: false,
+      score: 0
     });
 
     playerSockets.set(socket.id, { gameId, playerId: player.id });
@@ -196,21 +203,27 @@ io.on('connection', (socket) => {
     const shuffledDeck = shuffleDeck(deck);
     const { hiddenCards, playerHands } = dealCards(shuffledDeck, gameState.players.length);
 
-    // 更新玩家手牌
-    gameState.players = gameState.players.map((player, index) => ({
-      ...player,
-      hand: playerHands[index],
-      isActive: true,
-      isCurrentTurn: index === 0
-    }));
+    // 更新玩家手牌和初始化分數
+    const scores = {};
+    gameState.players = gameState.players.map((player, index) => {
+      scores[player.id] = player.score || 0;
+      return {
+        ...player,
+        hand: playerHands[index],
+        isActive: true,
+        isCurrentTurn: index === 0
+      };
+    });
 
     gameState.hiddenCards = hiddenCards;
     gameState.currentPlayerIndex = 0;
     gameState.gamePhase = 'playing';
+    gameState.currentRound = 1;
+    gameState.scores = scores;
 
     broadcastGameState(gameId);
     broadcastRoomList();
-    console.log(`遊戲開始: ${gameId}`);
+    console.log(`遊戲開始: ${gameId}, 第 ${gameState.currentRound} 局`);
   });
 
   // 處理遊戲動作

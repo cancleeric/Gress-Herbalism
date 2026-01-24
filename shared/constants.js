@@ -78,6 +78,43 @@ export const MAX_PLAYERS = 4;
  */
 export const HIDDEN_CARDS_COUNT = 2;
 
+// ==================== 計分相關常數 ====================
+
+/**
+ * 勝利分數
+ * @readonly
+ * @type {number}
+ */
+export const WINNING_SCORE = 7;
+
+/**
+ * 猜對得分
+ * @readonly
+ * @type {number}
+ */
+export const GUESS_CORRECT_POINTS = 3;
+
+/**
+ * 跟猜正確得分
+ * @readonly
+ * @type {number}
+ */
+export const FOLLOW_CORRECT_POINTS = 1;
+
+/**
+ * 跟猜錯誤扣分
+ * @readonly
+ * @type {number}
+ */
+export const FOLLOW_WRONG_POINTS = -1;
+
+/**
+ * 最低分數（分數不會低於此值）
+ * @readonly
+ * @type {number}
+ */
+export const MIN_SCORE = 0;
+
 // ==================== 遊戲階段常數 ====================
 
 /**
@@ -95,6 +132,20 @@ export const GAME_PHASE_WAITING = 'waiting';
 export const GAME_PHASE_PLAYING = 'playing';
 
 /**
+ * 遊戲階段：跟猜中
+ * @readonly
+ * @type {string}
+ */
+export const GAME_PHASE_FOLLOW_GUESSING = 'followGuessing';
+
+/**
+ * 遊戲階段：局結束
+ * @readonly
+ * @type {string}
+ */
+export const GAME_PHASE_ROUND_END = 'roundEnd';
+
+/**
  * 遊戲階段：已結束
  * @readonly
  * @type {string}
@@ -109,6 +160,8 @@ export const GAME_PHASE_FINISHED = 'finished';
 export const GAME_PHASES = [
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END,
   GAME_PHASE_FINISHED
 ];
 
