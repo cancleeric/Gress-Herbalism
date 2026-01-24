@@ -163,16 +163,16 @@ function GameRoom() {
     });
 
     // 監聽顏色選擇請求（被要牌玩家）
-    const unsubColorChoice = onColorChoiceRequired(({ askingPlayerId, colors, message }) => {
-      setColorChoiceData({ askingPlayerId, colors, message });
+    const unsubColorChoice = onColorChoiceRequired(({ askingPlayerId, colors, availableColors, message }) => {
+      setColorChoiceData({ askingPlayerId, colors, availableColors, message });
       setShowColorChoice(true);
       setWaitingForColorChoice(false);
     });
 
-    // 監聽等待顏色選擇（其他玩家）
-    const unsubWaiting = onWaitingForColorChoice(({ targetPlayerId, askingPlayerId, colors }) => {
+    // 監聽等待顏色選擇（其他玩家，不包含顏色資訊避免洩漏）
+    const unsubWaiting = onWaitingForColorChoice(({ targetPlayerId, askingPlayerId }) => {
       setWaitingForColorChoice(true);
-      setColorChoiceInfo({ targetPlayerId, askingPlayerId, colors });
+      setColorChoiceInfo({ targetPlayerId, askingPlayerId });
     });
 
     // 監聽顏色選擇結果
@@ -583,21 +583,61 @@ function GameRoom() {
                 {gameState.players.find(p => p.id === colorChoiceData.askingPlayerId)?.name || '對方'}
                 使用「其中一種顏色全部」方式向你要牌
               </p>
-              <p>你兩種顏色都有，請選擇要給哪種顏色的全部牌：</p>
-              <div className="color-choice-buttons">
-                {colorChoiceData.colors.map(color => (
-                  <button
-                    key={color}
-                    className={`btn btn-color color-${color}`}
-                    onClick={() => handleColorChoice(color)}
-                  >
-                    {color === 'red' ? '紅色' :
-                     color === 'yellow' ? '黃色' :
-                     color === 'green' ? '綠色' :
-                     color === 'blue' ? '藍色' : color}
-                  </button>
-                ))}
-              </div>
+              {/* 根據可選顏色數量顯示不同訊息 */}
+              {colorChoiceData.availableColors?.length === 0 ? (
+                <>
+                  <p>你沒有這兩種顏色的牌。</p>
+                  <div className="color-choice-buttons">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleColorChoice('none')}
+                    >
+                      確認（無牌可給）
+                    </button>
+                  </div>
+                </>
+              ) : colorChoiceData.availableColors?.length === 1 ? (
+                <>
+                  <p>請確認給出你有的顏色：</p>
+                  <div className="color-choice-buttons">
+                    {colorChoiceData.colors.map(color => {
+                      const isAvailable = colorChoiceData.availableColors?.includes(color);
+                      return (
+                        <button
+                          key={color}
+                          className={`btn btn-color color-${color} ${!isAvailable ? 'disabled' : ''}`}
+                          onClick={() => isAvailable && handleColorChoice(color)}
+                          disabled={!isAvailable}
+                        >
+                          {color === 'red' ? '紅色' :
+                           color === 'yellow' ? '黃色' :
+                           color === 'green' ? '綠色' :
+                           color === 'blue' ? '藍色' : color}
+                          {!isAvailable && ' (無)'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p>請選擇要給哪種顏色的全部牌：</p>
+                  <div className="color-choice-buttons">
+                    {colorChoiceData.colors.map(color => (
+                      <button
+                        key={color}
+                        className={`btn btn-color color-${color}`}
+                        onClick={() => handleColorChoice(color)}
+                      >
+                        {color === 'red' ? '紅色' :
+                         color === 'yellow' ? '黃色' :
+                         color === 'green' ? '綠色' :
+                         color === 'blue' ? '藍色' : color}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

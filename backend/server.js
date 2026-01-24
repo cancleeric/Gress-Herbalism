@@ -550,24 +550,28 @@ io.on('connection', (socket) => {
         pendingColorChoices.set(gameId, {
           askingPlayerId: result.askingPlayerId,
           targetPlayerId: result.targetPlayerId,
-          colors: result.colors
+          colors: result.colors,
+          availableColors: result.availableColors
         });
 
-        // 通知被要牌玩家需要選擇顏色
+        // 通知被要牌玩家需要選擇顏色（包含可選顏色資訊）
         const targetSocket = findSocketByPlayerId(gameId, result.targetPlayerId);
         if (targetSocket) {
           targetSocket.emit('colorChoiceRequired', {
             askingPlayerId: result.askingPlayerId,
             colors: result.colors,
-            message: '請選擇要給哪種顏色的全部牌'
+            availableColors: result.availableColors, // 告訴被問牌玩家哪些可選
+            message: result.availableColors.length === 0
+              ? '你沒有這兩種顏色的牌'
+              : '請選擇要給哪種顏色的全部牌'
           });
         }
 
-        // 通知其他玩家正在等待選擇
+        // 通知其他玩家正在等待選擇（不包含 availableColors，避免洩漏）
         io.to(gameId).emit('waitingForColorChoice', {
           targetPlayerId: result.targetPlayerId,
-          askingPlayerId: result.askingPlayerId,
-          colors: result.colors
+          askingPlayerId: result.askingPlayerId
+          // 注意：不傳 colors 和 availableColors，避免洩漏資訊
         });
       } else if (result.requireFollowGuess) {
         // 進入跟猜階段
@@ -976,32 +980,25 @@ function processQuestionAction(gameState, action) {
     player.hand.push(...cardsToGive);
   } else if (questionType === 2) {
     // 其中一種顏色全部
-    // 檢查被要牌玩家是否兩種顏色都有
+    // 檢查被要牌玩家有哪些顏色
     const hasColor0 = target.hand.some(c => c.color === colors[0]);
     const hasColor1 = target.hand.some(c => c.color === colors[1]);
 
-    if (hasColor0 && hasColor1) {
-      // 兩種顏色都有，需要等待被要牌玩家選擇
-      return {
-        success: true,
-        requireColorChoice: true,
-        askingPlayerId: playerId,
-        targetPlayerId: targetPlayerId,
-        colors: colors,
-        message: '等待被要牌玩家選擇要給哪種顏色'
-      };
-    } else if (hasColor0) {
-      // 只有第一種顏色
-      cardsToGive = target.hand.filter(c => c.color === colors[0]);
-      target.hand = target.hand.filter(c => c.color !== colors[0]);
-      player.hand.push(...cardsToGive);
-    } else if (hasColor1) {
-      // 只有第二種顏色
-      cardsToGive = target.hand.filter(c => c.color === colors[1]);
-      target.hand = target.hand.filter(c => c.color !== colors[1]);
-      player.hand.push(...cardsToGive);
-    }
-    // 如果兩種都沒有，cardsToGive 為空
+    // 計算可選的顏色
+    const availableColors = [];
+    if (hasColor0) availableColors.push(colors[0]);
+    if (hasColor1) availableColors.push(colors[1]);
+
+    // 無論有幾種顏色，都觸發選擇流程（避免洩漏手牌資訊）
+    return {
+      success: true,
+      requireColorChoice: true,
+      askingPlayerId: playerId,
+      targetPlayerId: targetPlayerId,
+      colors: colors,
+      availableColors: availableColors, // 告訴前端哪些顏色可選
+      message: '等待被要牌玩家選擇要給哪種顏色'
+    };
   } else if (questionType === 3) {
     // 給一張要全部
     const giveCardIndex = player.hand.findIndex(c => c.color === giveColor);
@@ -1051,10 +1048,17 @@ function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenCol
   const askingPlayer = gameState.players[askingPlayerIndex];
   const target = gameState.players[targetIndex];
 
-  // 給出選擇的顏色全部
-  const cardsToGive = target.hand.filter(c => c.color === chosenColor);
-  target.hand = target.hand.filter(c => c.color !== chosenColor);
-  askingPlayer.hand.push(...cardsToGive);
+  let cardsToGive = [];
+
+  // 處理無牌可給的情況
+  if (chosenColor === 'none' || chosenColor === null) {
+    // 無牌可給，cardsToGive 保持為空
+  } else {
+    // 給出選擇的顏色全部
+    cardsToGive = target.hand.filter(c => c.color === chosenColor);
+    target.hand = target.hand.filter(c => c.color !== chosenColor);
+    askingPlayer.hand.push(...cardsToGive);
+  }
 
   // 記錄歷史
   gameState.gameHistory.push({
