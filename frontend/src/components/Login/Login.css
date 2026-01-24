@@ -140,8 +140,43 @@
   border-radius: var(--border-radius-md);
   padding: var(--spacing-md);
   color: var(--color-error);
-  text-align: center;
   margin-top: var(--spacing-md);
+}
+
+.login-error .error-message {
+  text-align: center;
+  margin: 0;
+}
+
+.login-error .config-help {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(231, 76, 60, 0.3);
+  text-align: left;
+  font-size: var(--font-size-sm);
+}
+
+.login-error .config-help-title {
+  font-weight: 600;
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.login-error .config-help ol {
+  margin: 0;
+  padding-left: var(--spacing-lg);
+}
+
+.login-error .config-help li {
+  margin-bottom: var(--spacing-xs);
+}
+
+.login-error .config-help a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.login-error .config-help a:hover {
+  color: var(--color-accent-light);
 }
 
 .login-footer {
