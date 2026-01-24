@@ -1,0 +1,36 @@
+# Node modules - 非常重要！
+node_modules/
+
+# Build output
+build/
+dist/
+
+# Test files
+*.test.js
+__tests__/
+coverage/
+
+# Environment files
+.env
+.env.local
+.env.development
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md

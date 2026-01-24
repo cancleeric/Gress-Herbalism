@@ -1,5 +1,6 @@
 /**
  * Socket.io 連線服務
+ * 加強版 - 改善 Cloud Run 連線穩定性
  */
 
 import { io } from 'socket.io-client';
@@ -10,6 +11,7 @@ const SOCKET_URL = config.socketUrl;
 
 let socket = null;
 let connectionCallbacks = [];
+let heartbeatInterval = null;
 
 /**
  * 初始化 Socket 連線
@@ -20,25 +22,72 @@ export function initSocket() {
   socket = io(SOCKET_URL, {
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
+    reconnectionAttempts: Infinity,  // 無限重連
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,      // 最大重連延遲 5 秒
+    timeout: 20000,                   // 連線超時 20 秒
+    pingInterval: 25000,              // 心跳間隔 25 秒
+    pingTimeout: 20000,               // 心跳超時 20 秒
   });
 
   socket.on('connect', () => {
     console.log('已連線到伺服器');
     connectionCallbacks.forEach(cb => cb(true));
+    startHeartbeat();
   });
 
-  socket.on('disconnect', () => {
-    console.log('與伺服器斷線');
+  socket.on('disconnect', (reason) => {
+    console.log('與伺服器斷線，原因:', reason);
     connectionCallbacks.forEach(cb => cb(false));
+    stopHeartbeat();
+
+    // 如果是伺服器斷開，嘗試重連
+    if (reason === 'io server disconnect') {
+      socket.connect();
+    }
   });
 
   socket.on('connect_error', (error) => {
     console.error('連線錯誤:', error.message);
+    // 連線錯誤時會自動重試
+  });
+
+  socket.on('reconnect', (attemptNumber) => {
+    console.log('重新連線成功，嘗試次數:', attemptNumber);
+  });
+
+  socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log('嘗試重新連線，第', attemptNumber, '次');
+  });
+
+  // 接收伺服器心跳回應
+  socket.on('pong', () => {
+    // 心跳正常
   });
 
   return socket;
+}
+
+/**
+ * 啟動心跳機制
+ */
+function startHeartbeat() {
+  stopHeartbeat();
+  heartbeatInterval = setInterval(() => {
+    if (socket && socket.connected) {
+      socket.emit('ping');
+    }
+  }, 30000); // 每 30 秒發送心跳
+}
+
+/**
+ * 停止心跳機制
+ */
+function stopHeartbeat() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
 }
 
 /**

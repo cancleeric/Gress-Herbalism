@@ -314,7 +314,12 @@ const io = new Server(server, {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
-  }
+  },
+  // Cloud Run 連線穩定性設定
+  pingTimeout: 60000,      // 60 秒無回應視為斷線
+  pingInterval: 25000,     // 每 25 秒發送心跳
+  transports: ['websocket', 'polling'],
+  allowUpgrades: true,
 });
 
 // 遊戲房間狀態
@@ -384,6 +389,11 @@ io.on('connection', (socket) => {
 
   // 發送目前房間列表
   socket.emit('roomList', getAvailableRooms());
+
+  // 心跳回應 - 保持連線活躍
+  socket.on('ping', () => {
+    socket.emit('pong');
+  });
 
   // 創建房間
   socket.on('createRoom', ({ player, maxPlayers, password }) => {
