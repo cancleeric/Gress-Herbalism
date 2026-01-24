@@ -14,6 +14,9 @@ try {
   // dotenv 未安裝，使用預設值
 }
 
+// Supabase 資料庫
+const { saveGameRecord, saveGameParticipants, getLeaderboard } = require('./db/supabase');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -33,6 +36,28 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true
 }));
+
+// JSON 解析
+app.use(express.json());
+
+// ==================== API 路由 ====================
+
+// 取得排行榜
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const orderBy = req.query.orderBy || 'total_score';
+    const limit = parseInt(req.query.limit) || 10;
+    const leaderboard = await getLeaderboard(orderBy, limit);
+    res.json({ success: true, data: leaderboard });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 健康檢查
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 const io = new Server(server, {
   cors: {
@@ -867,6 +892,10 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     if (winner) {
       gameState.winner = winner;
       gameState.gamePhase = 'finished';
+
+      // 保存遊戲記錄到 Supabase
+      const winnerPlayer = gameState.players.find(p => p.id === winner);
+      saveGameToDatabase(gameState, winnerPlayer);
     } else {
       // 進入局結束，準備下一局
       gameState.gamePhase = 'roundEnd';
@@ -906,6 +935,41 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     scoreChanges,
     hiddenCards: gameState.hiddenCards
   };
+}
+
+/**
+ * 保存遊戲記錄到資料庫
+ */
+async function saveGameToDatabase(gameState, winnerPlayer) {
+  try {
+    // 計算遊戲時長（如果有記錄開始時間）
+    const durationSeconds = gameState.startTime
+      ? Math.floor((Date.now() - gameState.startTime) / 1000)
+      : null;
+
+    // 保存遊戲記錄
+    const gameHistoryId = await saveGameRecord({
+      gameId: gameState.gameId,
+      winnerName: winnerPlayer ? winnerPlayer.name : null,
+      playerCount: gameState.players.length,
+      roundsPlayed: gameState.currentRound || 1,
+      durationSeconds,
+    });
+
+    if (gameHistoryId) {
+      // 保存參與者記錄
+      const participants = gameState.players.map(p => ({
+        name: p.name,
+        score: gameState.scores[p.id] || 0,
+        isWinner: p.id === gameState.winner,
+      }));
+
+      await saveGameParticipants(gameHistoryId, participants);
+      console.log(`遊戲記錄已保存: ${gameState.gameId}`);
+    }
+  } catch (err) {
+    console.error('保存遊戲記錄失敗:', err.message);
+  }
 }
 
 /**
