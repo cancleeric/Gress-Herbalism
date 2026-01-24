@@ -453,6 +453,56 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 開始下一局
+  socket.on('startNextRound', ({ gameId }) => {
+    const gameState = gameRooms.get(gameId);
+
+    if (!gameState) {
+      socket.emit('error', { message: '遊戲不存在' });
+      return;
+    }
+
+    if (gameState.gamePhase !== 'roundEnd') {
+      socket.emit('error', { message: '目前不在局結束階段' });
+      return;
+    }
+
+    // 計算下一局的起始玩家（上一局最後行動者的下一位）
+    const lastActionPlayer = gameState.currentPlayerIndex;
+    let nextStartPlayer = (lastActionPlayer + 1) % gameState.players.length;
+
+    // 準備下一局
+    gameState.currentRound += 1;
+
+    // 重新洗牌和發牌
+    const deck = createDeck();
+    const shuffledDeck = shuffleDeck(deck);
+    const { hiddenCards, playerHands } = dealCards(shuffledDeck, gameState.players.length);
+
+    // 更新玩家狀態
+    gameState.players = gameState.players.map((player, index) => ({
+      ...player,
+      hand: playerHands[index],
+      isActive: true,
+      isCurrentTurn: index === nextStartPlayer
+    }));
+
+    gameState.hiddenCards = hiddenCards;
+    gameState.currentPlayerIndex = nextStartPlayer;
+    gameState.gamePhase = 'playing';
+    gameState.gameHistory = []; // 清空當局歷史
+    gameState.winner = null;
+
+    // 廣播下一局開始
+    io.to(gameId).emit('roundStarted', {
+      round: gameState.currentRound,
+      startPlayerIndex: nextStartPlayer
+    });
+
+    broadcastGameState(gameId);
+    console.log(`第 ${gameState.currentRound} 局開始: ${gameId}`);
+  });
+
   // 離開房間
   socket.on('leaveRoom', ({ gameId, playerId }) => {
     handlePlayerLeave(socket, gameId, playerId);
