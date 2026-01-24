@@ -51,6 +51,9 @@ const playerSockets = new Map();
 // 等待顏色選擇的狀態
 const pendingColorChoices = new Map();
 
+// 跟猜狀態
+const followGuessStates = new Map();
+
 /**
  * 產生唯一遊戲 ID
  */
@@ -264,12 +267,42 @@ io.on('connection', (socket) => {
           askingPlayerId: result.askingPlayerId,
           colors: result.colors
         });
+      } else if (result.requireFollowGuess) {
+        // 進入跟猜階段
+        gameState.gamePhase = 'followGuessing';
+
+        // 儲存跟猜狀態
+        followGuessStates.set(gameId, {
+          guessingPlayerId: result.guessingPlayerId,
+          guessedColors: result.guessedColors,
+          pendingPlayers: [...result.pendingPlayers],
+          followingPlayers: [],
+          declinedPlayers: []
+        });
+
+        // 廣播進入跟猜階段
+        io.to(gameId).emit('followGuessStarted', {
+          guessingPlayerId: result.guessingPlayerId,
+          guessedColors: result.guessedColors,
+          pendingPlayers: result.pendingPlayers
+        });
+
+        broadcastGameState(gameId);
       } else {
         Object.assign(gameState, result.gameState);
         broadcastGameState(gameId);
 
-        if (result.gameState.gamePhase === 'finished') {
+        if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
           broadcastRoomList();
+
+          // 如果是局結束，廣播結果
+          if (result.isCorrect !== undefined) {
+            io.to(gameId).emit('guessResult', {
+              isCorrect: result.isCorrect,
+              scoreChanges: result.scoreChanges,
+              hiddenCards: result.hiddenCards
+            });
+          }
         }
       }
     } else {
@@ -322,6 +355,81 @@ io.on('connection', (socket) => {
       broadcastGameState(gameId);
     } else {
       socket.emit('error', { message: result.message });
+    }
+  });
+
+  // 處理跟猜回應
+  socket.on('followGuessResponse', ({ gameId, playerId, isFollowing }) => {
+    const gameState = gameRooms.get(gameId);
+    const followState = followGuessStates.get(gameId);
+
+    if (!gameState) {
+      socket.emit('error', { message: '遊戲不存在' });
+      return;
+    }
+
+    if (!followState) {
+      socket.emit('error', { message: '沒有進行中的跟猜' });
+      return;
+    }
+
+    // 驗證是否是等待中的玩家
+    const pendingIndex = followState.pendingPlayers.indexOf(playerId);
+    if (pendingIndex === -1) {
+      socket.emit('error', { message: '不是等待中的玩家' });
+      return;
+    }
+
+    // 從等待列表移除
+    followState.pendingPlayers.splice(pendingIndex, 1);
+
+    // 記錄決定
+    if (isFollowing) {
+      followState.followingPlayers.push(playerId);
+    } else {
+      followState.declinedPlayers.push(playerId);
+    }
+
+    // 廣播決定結果
+    io.to(gameId).emit('followGuessUpdate', {
+      playerId,
+      isFollowing,
+      pendingPlayers: followState.pendingPlayers,
+      followingPlayers: followState.followingPlayers,
+      declinedPlayers: followState.declinedPlayers
+    });
+
+    // 檢查是否所有人都已決定
+    if (followState.pendingPlayers.length === 0) {
+      // 所有人都決定了，驗證結果
+      const result = validateGuessResult(
+        gameState,
+        followState.guessingPlayerId,
+        followState.guessedColors,
+        followState.followingPlayers
+      );
+
+      // 清除跟猜狀態
+      followGuessStates.delete(gameId);
+
+      // 更新遊戲狀態
+      Object.assign(gameState, result.gameState);
+
+      // 廣播猜牌結果
+      io.to(gameId).emit('guessResult', {
+        isCorrect: result.isCorrect,
+        scoreChanges: result.scoreChanges,
+        hiddenCards: result.hiddenCards,
+        guessingPlayerId: followState.guessingPlayerId,
+        followingPlayers: followState.followingPlayers
+      });
+
+      // 廣播更新後的遊戲狀態
+      broadcastGameState(gameId);
+
+      if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
+        broadcastRoomList();
+      }
     }
   });
 
@@ -608,41 +716,117 @@ function processGuessAction(gameState, action) {
     return { success: false, message: '不是你的回合' };
   }
 
+  // 檢查是否有其他活躍玩家可以跟猜
+  const otherActivePlayers = gameState.players.filter(p => p.isActive && p.id !== playerId);
+
+  if (otherActivePlayers.length > 0) {
+    // 有其他玩家，進入跟猜階段
+    return {
+      success: true,
+      requireFollowGuess: true,
+      guessingPlayerId: playerId,
+      guessedColors: guessedColors,
+      pendingPlayers: otherActivePlayers.map(p => p.id),
+      message: '等待其他玩家決定是否跟猜'
+    };
+  }
+
+  // 只剩猜牌者，直接驗證結果
+  return validateGuessResult(gameState, playerId, guessedColors, []);
+}
+
+/**
+ * 驗證猜測結果並計算分數
+ */
+function validateGuessResult(gameState, guessingPlayerId, guessedColors, followingPlayers) {
   const hiddenColors = gameState.hiddenCards.map(c => c.color).sort();
   const guessedSorted = [...guessedColors].sort();
-
   const isCorrect = hiddenColors[0] === guessedSorted[0] && hiddenColors[1] === guessedSorted[1];
 
+  const playerIndex = gameState.players.findIndex(p => p.id === guessingPlayerId);
+  const scoreChanges = {};
+
+  // 記錄歷史
   gameState.gameHistory.push({
     type: 'guess',
-    playerId,
+    playerId: guessingPlayerId,
     guessedColors,
     isCorrect,
+    followingPlayers,
     timestamp: Date.now()
   });
 
   if (isCorrect) {
-    // 猜對，遊戲結束，該玩家獲勝
-    gameState.winner = playerId;
-    gameState.gamePhase = 'finished';
+    // 猜對：猜牌者 +3 分，跟猜者 +1 分
+    scoreChanges[guessingPlayerId] = 3;
+    gameState.scores[guessingPlayerId] = (gameState.scores[guessingPlayerId] || 0) + 3;
+    gameState.players[playerIndex].score = gameState.scores[guessingPlayerId];
+
+    followingPlayers.forEach(fpId => {
+      scoreChanges[fpId] = 1;
+      gameState.scores[fpId] = (gameState.scores[fpId] || 0) + 1;
+      const fpIndex = gameState.players.findIndex(p => p.id === fpId);
+      if (fpIndex !== -1) {
+        gameState.players[fpIndex].score = gameState.scores[fpId];
+      }
+    });
+
+    // 檢查是否有人達到勝利分數
+    const winner = checkWinCondition(gameState.scores);
+    if (winner) {
+      gameState.winner = winner;
+      gameState.gamePhase = 'finished';
+    } else {
+      // 進入局結束，準備下一局
+      gameState.gamePhase = 'roundEnd';
+    }
   } else {
-    // 猜錯，玩家出局
+    // 猜錯：猜牌者不扣分但退出，跟猜者 -1 分並退出
+    scoreChanges[guessingPlayerId] = 0;
     gameState.players[playerIndex].isActive = false;
+
+    followingPlayers.forEach(fpId => {
+      const currentScore = gameState.scores[fpId] || 0;
+      const newScore = Math.max(0, currentScore - 1);
+      scoreChanges[fpId] = newScore - currentScore;
+      gameState.scores[fpId] = newScore;
+      const fpIndex = gameState.players.findIndex(p => p.id === fpId);
+      if (fpIndex !== -1) {
+        gameState.players[fpIndex].score = newScore;
+        gameState.players[fpIndex].isActive = false;
+      }
+    });
 
     // 檢查是否還有活躍玩家
     const activePlayers = gameState.players.filter(p => p.isActive);
     if (activePlayers.length === 0) {
-      // 沒有人獲勝
-      gameState.winner = null;
-      gameState.gamePhase = 'finished';
+      // 所有人都退出，局結束
+      gameState.gamePhase = 'roundEnd';
     } else {
-      // 還有活躍玩家（包括只剩一人的情況）
-      // 如果只剩一人，該玩家必須強制猜牌
+      // 還有活躍玩家，繼續遊戲
       moveToNextPlayer(gameState);
     }
   }
 
-  return { success: true, gameState };
+  return {
+    success: true,
+    gameState,
+    isCorrect,
+    scoreChanges,
+    hiddenCards: gameState.hiddenCards
+  };
+}
+
+/**
+ * 檢查是否有人達到勝利分數
+ */
+function checkWinCondition(scores, winningScore = 7) {
+  for (const [playerId, score] of Object.entries(scores)) {
+    if (score >= winningScore) {
+      return playerId;
+    }
+  }
+  return null;
 }
 
 function moveToNextPlayer(gameState) {
