@@ -160,6 +160,35 @@ GamePhaseDisplay.propTypes = {
 };
 
 /**
+ * 顏色名稱對照
+ */
+const COLOR_NAMES = {
+  red: '紅色',
+  yellow: '黃色',
+  green: '綠色',
+  blue: '藍色'
+};
+
+/**
+ * 問牌類型描述
+ */
+const QUESTION_TYPE_NAMES = {
+  1: '各一張',
+  2: '其中一種全部',
+  3: '給一張要全部'
+};
+
+/**
+ * 格式化顏色列表
+ * @param {Array} colors - 顏色陣列
+ * @returns {string} 格式化後的顏色名稱
+ */
+function formatColors(colors) {
+  if (!colors || colors.length === 0) return '未知顏色';
+  return colors.map(c => COLOR_NAMES[c] || c).join('、');
+}
+
+/**
  * 格式化歷史記錄條目
  *
  * @param {Object} entry - 歷史記錄條目
@@ -173,15 +202,27 @@ function formatHistoryEntry(entry, players) {
   if (entry.type === ACTION_TYPE_QUESTION) {
     const targetPlayer = players?.find(p => p.id === entry.targetPlayerId);
     const targetName = targetPlayer?.name || '未知玩家';
-    const colors = entry.colors?.join(', ') || '未知顏色';
-    const receivedCount = entry.result?.cardsReceived?.length || 0;
+    const colors = formatColors(entry.colors);
+    // 使用 cardsTransferred（後端實際記錄的欄位）
+    const transferredCount = entry.cardsTransferred ?? entry.result?.cardsReceived?.length ?? 0;
+    const questionTypeName = QUESTION_TYPE_NAMES[entry.questionType] || '';
 
-    return `${playerName} 向 ${targetName} 問牌 [${colors}]，收到 ${receivedCount} 張`;
+    // 如果有選擇的顏色（questionType 2 且被要牌玩家選擇）
+    if (entry.chosenColor) {
+      const chosenColorName = COLOR_NAMES[entry.chosenColor] || entry.chosenColor;
+      return `${playerName} 向 ${targetName} 問牌 [${colors}]（${questionTypeName}），${targetName} 選擇給 ${chosenColorName} ${transferredCount} 張`;
+    }
+
+    if (transferredCount === 0) {
+      return `${playerName} 向 ${targetName} 問牌 [${colors}]（${questionTypeName}），沒有`;
+    }
+
+    return `${playerName} 向 ${targetName} 問牌 [${colors}]（${questionTypeName}），收到 ${transferredCount} 張`;
   }
 
   if (entry.type === ACTION_TYPE_GUESS) {
-    const colors = entry.guessedColors?.join(', ') || '未知顏色';
-    const result = entry.isCorrect ? '猜對了！🎉' : '猜錯了';
+    const colors = formatColors(entry.guessedColors);
+    const result = entry.isCorrect ? '猜對了！' : '猜錯了';
     return `${playerName} 猜牌 [${colors}] - ${result}`;
   }
 
