@@ -91,6 +91,15 @@ describe('GameRoom - 工作單 0023', () => {
       socketCallbacks.roundStarted = callback;
       return () => {};
     });
+    // 工單 0071：預測功能相關 mock
+    socketService.onPostQuestionPhase.mockImplementation((callback) => {
+      socketCallbacks.postQuestionPhase = callback;
+      return () => {};
+    });
+    socketService.onTurnEnded.mockImplementation((callback) => {
+      socketCallbacks.turnEnded = callback;
+      return () => {};
+    });
     socketService.startGame.mockImplementation(() => {});
     socketService.sendGameAction.mockImplementation(() => {});
     socketService.requestRevealHiddenCards.mockImplementation(() => {});
@@ -98,6 +107,7 @@ describe('GameRoom - 工作單 0023', () => {
     socketService.submitColorChoice.mockImplementation(() => {});
     socketService.submitFollowGuessResponse.mockImplementation(() => {});
     socketService.startNextRound.mockImplementation(() => {});
+    socketService.endTurn.mockImplementation(() => {});
   });
 
   describe('渲染', () => {

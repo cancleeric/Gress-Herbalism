@@ -23,26 +23,32 @@ import {
   onFollowGuessUpdate,
   onGuessResult,
   onRoundStarted,
+  onPostQuestionPhase,
+  onTurnEnded,
   startGame as socketStartGame,
   sendGameAction,
   requestRevealHiddenCards,
   leaveRoom,
   submitColorChoice,
   submitFollowGuessResponse,
-  startNextRound
+  startNextRound,
+  endTurn
 } from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED,
   GAME_PHASE_FOLLOW_GUESSING,
-  GAME_PHASE_ROUND_END
+  GAME_PHASE_ROUND_END,
+  GAME_PHASE_POST_QUESTION
 } from '../../shared/constants';
 import GameBoard from '../GameBoard/GameBoard';
 import PlayerHand from '../PlayerHand/PlayerHand';
 import QuestionCard from '../QuestionCard/QuestionCard';
 import GuessCard from '../GuessCard/GuessCard';
 import { GameStatusContainer } from '../GameStatus/GameStatus';
+import Prediction from '../Prediction/Prediction';
+import { PredictionResult } from '../Prediction';
 import './GameRoom.css';
 
 /**
@@ -87,6 +93,9 @@ function GameRoom() {
   const [showFollowGuessPanel, setShowFollowGuessPanel] = useState(false);
   const [guessResultData, setGuessResultData] = useState(null);
   const [showRoundEnd, setShowRoundEnd] = useState(false);
+  // 預測相關狀態（工單 0071）
+  const [showPrediction, setShowPrediction] = useState(false);
+  const [predictionLoading, setPredictionLoading] = useState(false);
 
   /**
    * 取得當前回合的玩家
@@ -209,9 +218,9 @@ function GameRoom() {
     });
 
     // 監聽猜牌結果
-    const unsubGuessResult = onGuessResult(({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers }) => {
+    const unsubGuessResult = onGuessResult(({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults }) => {
       setShowFollowGuessPanel(false);
-      setGuessResultData({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers });
+      setGuessResultData({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults });
       setShowRoundEnd(true);
     });
 
@@ -219,6 +228,19 @@ function GameRoom() {
     const unsubRoundStart = onRoundStarted(({ round, startPlayerIndex }) => {
       setShowRoundEnd(false);
       setGuessResultData(null);
+      setShowPrediction(false);
+    });
+
+    // 監聽進入問牌後階段（工單 0071）
+    const unsubPostQuestion = onPostQuestionPhase(({ playerId, message }) => {
+      setShowPrediction(true);
+      setPredictionLoading(false);
+    });
+
+    // 監聽回合結束（工單 0071）
+    const unsubTurnEnded = onTurnEnded(({ playerId, prediction, playerName }) => {
+      setShowPrediction(false);
+      setPredictionLoading(false);
     });
 
     return () => {
@@ -232,6 +254,8 @@ function GameRoom() {
       unsubFollowUpdate();
       unsubGuessResult();
       unsubRoundStart();
+      unsubPostQuestion();
+      unsubTurnEnded();
     };
   }, [dispatch]);
 
@@ -376,6 +400,17 @@ function GameRoom() {
   };
 
   /**
+   * 處理結束回合（工單 0071：可附帶預測）
+   */
+  const handleEndTurn = (prediction) => {
+    const myPlayer = getMyPlayer();
+    if (!gameId || !myPlayer) return;
+
+    setPredictionLoading(true);
+    endTurn(gameId, myPlayer.id, prediction);
+  };
+
+  /**
    * 取得遊戲階段顯示文字
    */
   const getGamePhaseText = () => {
@@ -384,6 +419,8 @@ function GameRoom() {
         return '等待玩家加入...';
       case GAME_PHASE_PLAYING:
         return '遊戲進行中';
+      case GAME_PHASE_POST_QUESTION:
+        return '問牌後階段';
       case GAME_PHASE_FOLLOW_GUESSING:
         return '跟猜階段';
       case GAME_PHASE_ROUND_END:
@@ -569,6 +606,27 @@ function GameRoom() {
               hiddenCards={hiddenCardsForGuess}
               canViewAnswer={true}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 預測介面 Modal（工單 0071：問牌後選擇預測） */}
+      {showPrediction && isMyTurn() && (
+        <div className="modal-overlay">
+          <div className="modal-content prediction-modal" onClick={(e) => e.stopPropagation()}>
+            <Prediction
+              onEndTurn={handleEndTurn}
+              isLoading={predictionLoading}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 等待問牌玩家結束回合 */}
+      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && (
+        <div className="waiting-overlay">
+          <div className="waiting-message">
+            <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>
           </div>
         </div>
       )}
@@ -796,6 +854,15 @@ function GameRoom() {
                   })}
                 </ul>
               </div>
+
+              {/* 預測結算（工單 0071） */}
+              {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (
+                <PredictionResult
+                  predictionResults={guessResultData.predictionResults}
+                  players={gameState.players}
+                  hiddenCards={guessResultData.hiddenCards}
+                />
+              )}
 
               {/* 目前分數 */}
               <div className="current-scores">

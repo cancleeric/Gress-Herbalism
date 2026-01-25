@@ -1,0 +1,185 @@
+/**
+ * 預測組件樣式
+ */
+
+.prediction-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  min-width: 300px;
+}
+
+.prediction-card h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.prediction-prompt {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.prediction-colors {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.prediction-colors .btn-color {
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.prediction-colors .btn-color.selected {
+  border-color: #333;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.prediction-colors .btn-color:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.prediction-hint {
+  color: #28a745;
+  font-weight: bold;
+  margin-bottom: 12px;
+  min-height: 24px;
+}
+
+.prediction-rules {
+  color: #888;
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+}
+
+.end-turn-btn {
+  padding: 14px 32px;
+  font-size: 1.125rem;
+  font-weight: bold;
+}
+
+/* 預測列表樣式 */
+.prediction-list {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.prediction-list h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.prediction-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prediction-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.prediction-list li:last-child {
+  border-bottom: none;
+}
+
+.prediction-list .player-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.prediction-list .prediction-color {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #fff;
+}
+
+.prediction-list .prediction-color.color-red {
+  background-color: #dc3545;
+}
+
+.prediction-list .prediction-color.color-yellow {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.prediction-list .prediction-color.color-green {
+  background-color: #28a745;
+}
+
+.prediction-list .prediction-color.color-blue {
+  background-color: #007bff;
+}
+
+.prediction-list .no-prediction {
+  color: #999;
+  font-style: italic;
+}
+
+/* 預測結果樣式 */
+.prediction-results {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.prediction-results h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.prediction-results ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prediction-results li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.prediction-results li:last-child {
+  border-bottom: none;
+}
+
+.prediction-results .result-correct {
+  color: #28a745;
+}
+
+.prediction-results .result-wrong {
+  color: #dc3545;
+}
+
+.prediction-results .score-change {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.prediction-results .score-change.positive {
+  color: #28a745;
+}
+
+.prediction-results .score-change.negative {
+  color: #dc3545;
+}

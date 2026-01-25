@@ -116,6 +116,13 @@ export const GAME_PHASE_ROUND_END = 'roundEnd';
 export const GAME_PHASE_FINISHED = 'finished';
 
 /**
+ * 遊戲階段：問牌後預測
+ * @readonly
+ * @type {string}
+ */
+export const GAME_PHASE_POST_QUESTION = 'postQuestion';
+
+/**
  * 所有遊戲階段
  * @readonly
  * @type {string[]}
@@ -123,6 +130,7 @@ export const GAME_PHASE_FINISHED = 'finished';
 export const GAME_PHASES = [
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
+  GAME_PHASE_POST_QUESTION,
   GAME_PHASE_FOLLOW_GUESSING,
   GAME_PHASE_ROUND_END,
   GAME_PHASE_FINISHED

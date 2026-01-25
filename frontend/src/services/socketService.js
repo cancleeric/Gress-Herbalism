@@ -314,6 +314,46 @@ export function startNextRound(gameId) {
   s.emit('startNextRound', { gameId });
 }
 
+// ==================== 預測相關（工單 0071）====================
+
+/**
+ * 監聽進入問牌後階段（顯示預測選項）
+ */
+export function onPostQuestionPhase(callback) {
+  const s = getSocket();
+  s.on('postQuestionPhase', callback);
+  return () => s.off('postQuestionPhase', callback);
+}
+
+/**
+ * 監聽回合結束（玩家結束回合並可能有預測）
+ */
+export function onTurnEnded(callback) {
+  const s = getSocket();
+  s.on('turnEnded', callback);
+  return () => s.off('turnEnded', callback);
+}
+
+/**
+ * 監聯預測結算（答案揭曉時）
+ */
+export function onPredictionsSettled(callback) {
+  const s = getSocket();
+  s.on('predictionsSettled', callback);
+  return () => s.off('predictionsSettled', callback);
+}
+
+/**
+ * 結束回合（可附帶預測）
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string|null} prediction - 預測的顏色，null 表示不預測
+ */
+export function endTurn(gameId, playerId, prediction) {
+  const s = getSocket();
+  s.emit('endTurn', { gameId, playerId, prediction });
+}
+
 /**
  * 斷開連線
  */

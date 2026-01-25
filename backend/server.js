@@ -334,6 +334,9 @@ const pendingColorChoices = new Map();
 // 跟猜狀態
 const followGuessStates = new Map();
 
+// 問牌後狀態（等待結束回合）
+const postQuestionStates = new Map();
+
 /**
  * 產生唯一遊戲 ID
  */
@@ -423,7 +426,9 @@ io.on('connection', (socket) => {
       roundHistory: [],
       // 房間密碼相關
       password: password || null,
-      isPrivate: !!password
+      isPrivate: !!password,
+      // 預測相關（工單 0071）
+      predictions: []
     };
 
     gameRooms.set(gameId, roomState);
@@ -612,6 +617,30 @@ io.on('connection', (socket) => {
         });
 
         broadcastGameState(gameId);
+      } else if (result.enterPostQuestionPhase) {
+        // 進入問牌後階段（工單 0071：預測功能）
+        gameState.gamePhase = 'postQuestion';
+
+        // 儲存問牌後狀態
+        postQuestionStates.set(gameId, {
+          playerId: result.currentPlayerId
+        });
+
+        // 通知當前玩家進入問牌後階段
+        const playerSocket = findSocketByPlayerId(gameId, result.currentPlayerId);
+        if (playerSocket) {
+          playerSocket.emit('postQuestionPhase', {
+            playerId: result.currentPlayerId,
+            message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
+          });
+        }
+
+        // 通知其他玩家等待
+        socket.to(gameId).emit('waitingForTurnEnd', {
+          playerId: result.currentPlayerId
+        });
+
+        broadcastGameState(gameId);
       } else {
         Object.assign(gameState, result.gameState);
         broadcastGameState(gameId);
@@ -619,12 +648,13 @@ io.on('connection', (socket) => {
         if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
           broadcastRoomList();
 
-          // 如果是局結束，廣播結果
+          // 如果是局結束，廣播結果（包含預測結算）
           if (result.isCorrect !== undefined) {
             io.to(gameId).emit('guessResult', {
               isCorrect: result.isCorrect,
               scoreChanges: result.scoreChanges,
-              hiddenCards: result.hiddenCards
+              hiddenCards: result.hiddenCards,
+              predictionResults: result.predictionResults || []
             });
           }
         }
@@ -675,11 +705,94 @@ io.on('connection', (socket) => {
         cardsTransferred: result.cardsTransferred
       });
 
+      // 進入問牌後階段（工單 0071：預測功能）
+      if (result.enterPostQuestionPhase) {
+        gameState.gamePhase = 'postQuestion';
+
+        // 儲存問牌後狀態
+        postQuestionStates.set(gameId, {
+          playerId: result.currentPlayerId
+        });
+
+        // 通知當前玩家進入問牌後階段
+        const playerSocket = findSocketByPlayerId(gameId, result.currentPlayerId);
+        if (playerSocket) {
+          playerSocket.emit('postQuestionPhase', {
+            playerId: result.currentPlayerId,
+            message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
+          });
+        }
+
+        // 通知其他玩家等待
+        socket.to(gameId).emit('waitingForTurnEnd', {
+          playerId: result.currentPlayerId
+        });
+      }
+
       // 廣播更新後的遊戲狀態
       broadcastGameState(gameId);
     } else {
       socket.emit('error', { message: result.message });
     }
+  });
+
+  // 處理結束回合（工單 0071：預測功能）
+  socket.on('endTurn', ({ gameId, playerId, prediction }) => {
+    const gameState = gameRooms.get(gameId);
+    const postQuestionState = postQuestionStates.get(gameId);
+
+    if (!gameState) {
+      socket.emit('error', { message: '遊戲不存在' });
+      return;
+    }
+
+    if (!postQuestionState) {
+      socket.emit('error', { message: '目前不在問牌後階段' });
+      return;
+    }
+
+    // 驗證是否是當前玩家
+    if (postQuestionState.playerId !== playerId) {
+      socket.emit('error', { message: '不是你的回合' });
+      return;
+    }
+
+    const player = gameState.players.find(p => p.id === playerId);
+
+    // 記錄預測（如果有）
+    if (prediction) {
+      gameState.predictions.push({
+        playerId: playerId,
+        playerName: player?.name || '未知玩家',
+        color: prediction,
+        round: gameState.currentRound,
+        isCorrect: null // 答案揭曉後填入
+      });
+
+      // 記錄到遊戲歷史
+      gameState.gameHistory.push({
+        type: 'prediction',
+        playerId: playerId,
+        color: prediction,
+        timestamp: Date.now()
+      });
+    }
+
+    // 清除問牌後狀態
+    postQuestionStates.delete(gameId);
+
+    // 廣播回合結束
+    io.to(gameId).emit('turnEnded', {
+      playerId: playerId,
+      prediction: prediction,
+      playerName: player?.name || '未知玩家'
+    });
+
+    // 移到下一位玩家
+    moveToNextPlayer(gameState);
+    gameState.gamePhase = 'playing';
+
+    broadcastGameState(gameId);
   });
 
   // 處理跟猜回應
@@ -744,13 +857,14 @@ io.on('connection', (socket) => {
       // 更新遊戲狀態
       Object.assign(gameState, result.gameState);
 
-      // 廣播猜牌結果
+      // 廣播猜牌結果（包含預測結算）
       io.to(gameId).emit('guessResult', {
         isCorrect: result.isCorrect,
         scoreChanges: result.scoreChanges,
         hiddenCards: result.hiddenCards,
         guessingPlayerId: followState.guessingPlayerId,
-        followingPlayers: followState.followingPlayers
+        followingPlayers: followState.followingPlayers,
+        predictionResults: result.predictionResults || []
       });
 
       // 廣播更新後的遊戲狀態
@@ -1028,10 +1142,14 @@ function processQuestionAction(gameState, action) {
     player.isActive = false;
   }
 
-  // 下一位玩家
-  moveToNextPlayer(gameState);
-
-  return { success: true, gameState };
+  // 進入問牌後階段（工單 0071：預測功能）
+  // 不再直接換人，而是等待玩家按「結束回合」
+  return {
+    success: true,
+    gameState,
+    enterPostQuestionPhase: true,
+    currentPlayerId: playerId
+  };
 }
 
 /**
@@ -1077,10 +1195,15 @@ function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenCol
     askingPlayer.isActive = false;
   }
 
-  // 下一位玩家
-  moveToNextPlayer(gameState);
-
-  return { success: true, gameState, cardsTransferred: cardsToGive.length };
+  // 進入問牌後階段（工單 0071：預測功能）
+  // 不再直接換人，而是等待玩家按「結束回合」
+  return {
+    success: true,
+    gameState,
+    cardsTransferred: cardsToGive.length,
+    enterPostQuestionPhase: true,
+    currentPlayerId: askingPlayerId
+  };
 }
 
 function processGuessAction(gameState, action) {
@@ -1192,13 +1315,63 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     }
   }
 
+  // 工單 0071：預測結算
+  const predictionResults = settlePredictions(gameState, scoreChanges);
+
   return {
     success: true,
     gameState,
     isCorrect,
     scoreChanges,
-    hiddenCards: gameState.hiddenCards
+    hiddenCards: gameState.hiddenCards,
+    predictionResults
   };
+}
+
+/**
+ * 結算本局所有預測（工單 0071）
+ */
+function settlePredictions(gameState, scoreChanges) {
+  const predictions = gameState.predictions || [];
+  const currentRound = gameState.currentRound;
+  const hiddenColors = gameState.hiddenCards.map(c => c.color);
+  const results = [];
+
+  // 只結算當局的預測
+  const roundPredictions = predictions.filter(p => p.round === currentRound);
+
+  for (const pred of roundPredictions) {
+    // 檢查預測是否正確
+    const isPredictionCorrect = hiddenColors.includes(pred.color);
+    pred.isCorrect = isPredictionCorrect;
+
+    // 計算分數變化
+    const change = isPredictionCorrect ? 1 : -1;
+    const playerId = pred.playerId;
+    const currentScore = gameState.scores[playerId] || 0;
+    const newScore = Math.max(0, currentScore + change);
+    const actualChange = newScore - currentScore;
+
+    // 更新分數
+    gameState.scores[playerId] = newScore;
+    const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+    if (playerIndex !== -1) {
+      gameState.players[playerIndex].score = newScore;
+    }
+
+    // 累計到 scoreChanges（可能已有猜牌/跟猜的分數）
+    scoreChanges[playerId] = (scoreChanges[playerId] || 0) + actualChange;
+
+    results.push({
+      playerId: playerId,
+      playerName: pred.playerName,
+      color: pred.color,
+      isCorrect: isPredictionCorrect,
+      scoreChange: actualChange
+    });
+  }
+
+  return results;
 }
 
 /**
