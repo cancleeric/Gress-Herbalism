@@ -1,0 +1,262 @@
+/**
+ * AI 玩家選擇器樣式
+ */
+
+.ai-player-selector {
+  background: #ffffff;
+  border: 2px solid #4a7c59;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ai-selector-title {
+  margin: 0 0 24px;
+  font-size: 1.5rem;
+  color: #2c5f3e;
+  text-align: center;
+  border-bottom: 2px solid #4a7c59;
+  padding-bottom: 12px;
+}
+
+/* AI 數量選擇區 */
+.ai-count-section {
+  margin-bottom: 24px;
+}
+
+.ai-count-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c5f3e;
+  margin-bottom: 8px;
+}
+
+.ai-count-select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid #4a7c59;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ai-count-select:hover {
+  border-color: #5d9b6e;
+  background: #f0f7f3;
+}
+
+.ai-count-select:focus {
+  outline: none;
+  border-color: #5d9b6e;
+  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.2);
+}
+
+.ai-count-hint {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* AI 難度設定區 */
+.ai-difficulty-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8faf9;
+  border-radius: 8px;
+}
+
+.difficulty-section-title {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  color: #2c5f3e;
+  font-weight: 600;
+}
+
+.ai-difficulty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #d0e3d7;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.ai-difficulty-row:hover {
+  background: #f0f7f3;
+  border-color: #4a7c59;
+}
+
+.ai-difficulty-row:last-child {
+  margin-bottom: 0;
+}
+
+.ai-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c5f3e;
+  min-width: 80px;
+}
+
+.difficulty-select {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  border: 1px solid #4a7c59;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.difficulty-select:hover {
+  border-color: #5d9b6e;
+  background: #f0f7f3;
+}
+
+.difficulty-select:focus {
+  outline: none;
+  border-color: #5d9b6e;
+  box-shadow: 0 0 0 2px rgba(74, 124, 89, 0.2);
+}
+
+/* 難度說明區 */
+.difficulty-info {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f0f7f3;
+  border-radius: 8px;
+  border: 1px solid #d0e3d7;
+}
+
+.info-title {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  color: #2c5f3e;
+  font-weight: 600;
+}
+
+.difficulty-descriptions {
+  margin: 0;
+  padding: 0;
+}
+
+.difficulty-item {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border-radius: 6px;
+  border-left: 4px solid #4a7c59;
+}
+
+.difficulty-item:last-child {
+  margin-bottom: 0;
+}
+
+.difficulty-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0 0 4px;
+  display: block;
+}
+
+.difficulty-name.difficulty-easy {
+  color: #5d9b6e;
+}
+
+.difficulty-name.difficulty-medium {
+  color: #f59e0b;
+}
+
+.difficulty-name.difficulty-hard {
+  color: #dc2626;
+}
+
+.difficulty-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 設定摘要 */
+.config-summary {
+  text-align: center;
+  padding: 16px;
+  background: #e8f4ed;
+  border-radius: 8px;
+  border: 2px dashed #4a7c59;
+}
+
+.summary-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #2c5f3e;
+}
+
+.summary-text strong {
+  color: #1e4d2b;
+  font-weight: 700;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .ai-player-selector {
+    padding: 16px;
+    max-width: 100%;
+  }
+
+  .ai-selector-title {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+
+  .ai-difficulty-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ai-name {
+    text-align: center;
+  }
+
+  .difficulty-select {
+    width: 100%;
+  }
+
+  .difficulty-item {
+    padding: 8px 10px;
+  }
+}
+
+/* 無障礙設計 */
+.difficulty-select:focus-visible,
+.ai-count-select:focus-visible {
+  outline: 3px solid #5d9b6e;
+  outline-offset: 2px;
+}
+
+/* 動畫效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-player-selector {
+  animation: fadeIn 0.3s ease-out;
+}
