@@ -20,11 +20,20 @@ import {
   onError,
   onConnectionChange,
   onPasswordRequired,
+  onReconnected,
+  onReconnectFailed,
   createRoom,
-  joinRoom
+  joinRoom,
+  attemptReconnect
 } from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
-import { savePlayerName, getPlayerName } from '../../utils/localStorage';
+import {
+  savePlayerName,
+  getPlayerName,
+  getCurrentRoom,
+  clearCurrentRoom,
+  saveCurrentRoom
+} from '../../utils/localStorage';
 import { getPlayerNameError, getRoomPasswordError } from '../../utils/validation';
 import './Lobby.css';
 
@@ -55,6 +64,10 @@ function Lobby() {
   const [pendingRoomName, setPendingRoomName] = useState('');
   const [inputPassword, setInputPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  // 工單 0079：重連相關狀態
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempted, setReconnectAttempted] = useState(false);
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
@@ -87,6 +100,13 @@ function Lobby() {
     });
 
     const unsubCreated = onRoomCreated(({ gameId, gameState }) => {
+      // 工單 0079：儲存房間資訊以便重連
+      saveCurrentRoom({
+        roomId: gameId,
+        playerId: playerId,
+        playerName: playerName.trim()
+      });
+
       dispatch(updateGameState({
         gameId,
         players: gameState.players,
@@ -99,6 +119,13 @@ function Lobby() {
     });
 
     const unsubJoined = onJoinedRoom(({ gameId, gameState }) => {
+      // 工單 0079：儲存房間資訊以便重連
+      saveCurrentRoom({
+        roomId: gameId,
+        playerId: playerId,
+        playerName: playerName.trim()
+      });
+
       dispatch(updateGameState({
         gameId,
         players: gameState.players,
@@ -121,6 +148,28 @@ function Lobby() {
       setIsLoading(false);
     });
 
+    // 工單 0079：重連成功
+    const unsubReconnected = onReconnected(({ gameId, playerId: reconnectedPlayerId, gameState }) => {
+      console.log('[重連] 重連成功:', gameId);
+      setIsReconnecting(false);
+      dispatch(updateGameState({
+        gameId,
+        players: gameState.players,
+        maxPlayers: gameState.maxPlayers,
+        gamePhase: gameState.gamePhase,
+        currentPlayerId: reconnectedPlayerId
+      }));
+      navigate(`/game/${gameId}`);
+    });
+
+    // 工單 0079：重連失敗
+    const unsubReconnectFailed = onReconnectFailed(({ reason, message }) => {
+      console.log('[重連] 重連失敗:', reason, message);
+      setIsReconnecting(false);
+      clearCurrentRoom();
+      setError(`重連失敗：${message}`);
+    });
+
     return () => {
       unsubConnect();
       unsubRooms();
@@ -128,8 +177,24 @@ function Lobby() {
       unsubCreated();
       unsubJoined();
       unsubPassword();
+      unsubReconnected();
+      unsubReconnectFailed();
     };
   }, [dispatch, navigate, playerId, rooms]);
+
+  // 工單 0079：嘗試重連
+  useEffect(() => {
+    if (isConnected && !reconnectAttempted) {
+      setReconnectAttempted(true);
+
+      const savedRoom = getCurrentRoom();
+      if (savedRoom && savedRoom.roomId && savedRoom.playerId) {
+        console.log('[重連] 發現儲存的房間資訊，嘗試重連:', savedRoom);
+        setIsReconnecting(true);
+        attemptReconnect(savedRoom.roomId, savedRoom.playerId, savedRoom.playerName);
+      }
+    }
+  }, [isConnected, reconnectAttempted]);
 
   /**
    * 處理玩家名稱變更
@@ -298,6 +363,16 @@ function Lobby() {
 
   return (
     <div className="lobby">
+      {/* 工單 0079：重連中覆蓋層 */}
+      {isReconnecting && (
+        <div className="modal-overlay">
+          <div className="modal reconnecting-modal">
+            <div className="reconnecting-spinner"></div>
+            <p>正在嘗試重新連線...</p>
+          </div>
+        </div>
+      )}
+
       <header className="lobby-header">
         <h1>本草 Herbalism</h1>
         <p className="lobby-subtitle">3-4 人推理卡牌遊戲</p>

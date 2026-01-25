@@ -71,6 +71,16 @@ describe('Lobby - 工作單 0014', () => {
       eventCallbacks.passwordRequired = callback;
       return () => {};
     });
+    // 工單 0079：重連 mock
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
     socketService.createRoom.mockImplementation(() => {});
     socketService.joinRoom.mockImplementation(() => {});
   });
@@ -284,6 +294,16 @@ describe('Lobby - 工作單 0015', () => {
       eventCallbacks.passwordRequired = callback;
       return () => {};
     });
+    // 工單 0079：重連 mock
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
     socketService.createRoom.mockImplementation(() => {});
     socketService.joinRoom.mockImplementation(() => {});
   });
@@ -551,5 +571,147 @@ describe('Lobby - 工作單 0015', () => {
         expect(screen.getByRole('alert')).toHaveTextContent('請輸入暱稱');
       });
     });
+  });
+});
+
+// ==================== 工單 0079：重連測試 ====================
+describe('Lobby - 工作單 0079 重連功能', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    // Mock socket service functions
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+  });
+
+  test('有儲存的房間資訊時應嘗試重連', async () => {
+    // 設定 localStorage 中有房間資訊
+    localStorage.setItem('gress_current_room', JSON.stringify({
+      roomId: 'test-room',
+      playerId: 'test-player',
+      playerName: '測試玩家',
+      timestamp: Date.now()
+    }));
+
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(socketService.attemptReconnect).toHaveBeenCalledWith(
+        'test-room',
+        'test-player',
+        '測試玩家'
+      );
+    });
+  });
+
+  test('重連成功時應導航到遊戲頁面', async () => {
+    localStorage.setItem('gress_current_room', JSON.stringify({
+      roomId: 'test-room',
+      playerId: 'test-player',
+      playerName: '測試玩家',
+      timestamp: Date.now()
+    }));
+
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(socketService.attemptReconnect).toHaveBeenCalled();
+    });
+
+    // 模擬重連成功
+    eventCallbacks.reconnected({
+      gameId: 'test-room',
+      playerId: 'test-player',
+      gameState: {
+        players: [{ id: 'test-player', name: '測試玩家' }],
+        maxPlayers: 3,
+        gamePhase: 'playing'
+      }
+    });
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/game/test-room');
+    });
+  });
+
+  test('重連失敗時應顯示錯誤訊息', async () => {
+    localStorage.setItem('gress_current_room', JSON.stringify({
+      roomId: 'test-room',
+      playerId: 'test-player',
+      playerName: '測試玩家',
+      timestamp: Date.now()
+    }));
+
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(socketService.attemptReconnect).toHaveBeenCalled();
+    });
+
+    // 模擬重連失敗
+    eventCallbacks.reconnectFailed({
+      reason: 'room_not_found',
+      message: '房間已不存在'
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('重連失敗：房間已不存在');
+    });
+  });
+
+  test('房間資訊過期時不應嘗試重連', async () => {
+    // 設定過期的房間資訊（超過 5 分鐘）
+    localStorage.setItem('gress_current_room', JSON.stringify({
+      roomId: 'test-room',
+      playerId: 'test-player',
+      playerName: '測試玩家',
+      timestamp: Date.now() - 6 * 60 * 1000 // 6 分鐘前
+    }));
+
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(screen.getByText('已連線')).toBeInTheDocument();
+    });
+
+    // 不應嘗試重連
+    expect(socketService.attemptReconnect).not.toHaveBeenCalled();
   });
 });

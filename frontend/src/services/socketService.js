@@ -132,6 +132,37 @@ export function onGameState(callback) {
   return () => s.off('gameState', callback);
 }
 
+// ==================== 工單 0079：重連功能 ====================
+
+/**
+ * 嘗試重新連線到房間
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string} playerName - 玩家名稱
+ */
+export function attemptReconnect(roomId, playerId, playerName) {
+  const s = getSocket();
+  s.emit('reconnect', { roomId, playerId, playerName });
+}
+
+/**
+ * 監聽重連成功
+ */
+export function onReconnected(callback) {
+  const s = getSocket();
+  s.on('reconnected', callback);
+  return () => s.off('reconnected', callback);
+}
+
+/**
+ * 監聽重連失敗
+ */
+export function onReconnectFailed(callback) {
+  const s = getSocket();
+  s.on('reconnectFailed', callback);
+  return () => s.off('reconnectFailed', callback);
+}
+
 /**
  * 監聽錯誤訊息
  */

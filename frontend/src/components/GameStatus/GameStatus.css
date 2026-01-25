@@ -204,6 +204,16 @@
   color: var(--color-error);
 }
 
+/* 工單 0079：斷線中狀態 */
+.player-item.disconnected {
+  opacity: 0.7;
+}
+
+.player-status.disconnected {
+  background-color: rgba(241, 196, 15, 0.2);
+  color: var(--color-warning);
+}
+
 .turn-indicator {
   color: var(--color-success);
   font-size: var(--font-size-small);

@@ -90,14 +90,15 @@ function PlayerStatusList({ players, currentPlayerIndex, myPlayerId }) {
         {players.map((player, index) => (
           <li
             key={player.id}
-            className={`player-item ${!player.isActive ? 'eliminated' : ''} ${index === currentPlayerIndex ? 'current' : ''} ${player.id === myPlayerId ? 'is-me' : ''}`}
+            className={`player-item ${!player.isActive ? 'eliminated' : ''} ${player.isDisconnected ? 'disconnected' : ''} ${index === currentPlayerIndex ? 'current' : ''} ${player.id === myPlayerId ? 'is-me' : ''}`}
           >
             <span className="player-name">
               {player.name}
               {player.id === myPlayerId && <span className="me-badge">(我)</span>}
             </span>
-            <span className={`player-status ${player.isActive ? 'active' : 'inactive'}`}>
-              {player.isActive ? '活躍' : '已退出'}
+            <span className={`player-status ${player.isActive ? (player.isDisconnected ? 'disconnected' : 'active') : 'inactive'}`}>
+              {/* 工單 0079：顯示斷線狀態 */}
+              {!player.isActive ? '已退出' : (player.isDisconnected ? '斷線中' : '活躍')}
             </span>
             {index === currentPlayerIndex && player.isActive && (
               <span className="turn-indicator">●</span>

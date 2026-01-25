@@ -337,6 +337,10 @@ const followGuessStates = new Map();
 // 問牌後狀態（等待結束回合）
 const postQuestionStates = new Map();
 
+// 工單 0079：斷線重連計時器
+const disconnectTimeouts = new Map();
+const DISCONNECT_TIMEOUT = 60000; // 60 秒
+
 /**
  * 產生唯一遊戲 ID
  */
@@ -984,9 +988,14 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
-      handlePlayerLeave(socket, playerInfo.gameId, playerInfo.playerId);
+      handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
     }
     console.log('玩家斷線:', socket.id);
+  });
+
+  // 工單 0079：重連處理
+  socket.on('reconnect', ({ roomId, playerId, playerName }) => {
+    handlePlayerReconnect(socket, roomId, playerId, playerName);
   });
 });
 
@@ -1020,6 +1029,117 @@ function handlePlayerLeave(socket, gameId, playerId) {
 
   broadcastGameState(gameId);
   broadcastRoomList();
+}
+
+// ==================== 工單 0079：斷線重連處理 ====================
+
+/**
+ * 處理玩家斷線（區分等待中和遊戲中）
+ */
+function handlePlayerDisconnect(socket, gameId, playerId) {
+  const gameState = gameRooms.get(gameId);
+  if (!gameState) {
+    playerSockets.delete(socket.id);
+    return;
+  }
+
+  const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+  if (playerIndex === -1) {
+    playerSockets.delete(socket.id);
+    return;
+  }
+
+  const player = gameState.players[playerIndex];
+
+  if (gameState.gamePhase === 'waiting') {
+    // 等待中，直接移除玩家（使用原本的邏輯）
+    handlePlayerLeave(socket, gameId, playerId);
+    return;
+  }
+
+  // 遊戲進行中，標記為斷線狀態但保留位置
+  player.isDisconnected = true;
+  player.disconnectedAt = Date.now();
+  console.log(`玩家 ${player.name} 斷線，保留位置 60 秒等待重連`);
+
+  socket.leave(gameId);
+  playerSockets.delete(socket.id);
+
+  // 設定計時器，60 秒後若未重連則移除
+  const timeoutKey = `${gameId}:${playerId}`;
+
+  // 清除舊的計時器（如果有）
+  if (disconnectTimeouts.has(timeoutKey)) {
+    clearTimeout(disconnectTimeouts.get(timeoutKey));
+  }
+
+  const timeout = setTimeout(() => {
+    const currentState = gameRooms.get(gameId);
+    if (currentState) {
+      const currentPlayerIndex = currentState.players.findIndex(p => p.id === playerId);
+      if (currentPlayerIndex !== -1 && currentState.players[currentPlayerIndex].isDisconnected) {
+        console.log(`玩家 ${playerId} 重連超時，標記為不活躍`);
+        currentState.players[currentPlayerIndex].isActive = false;
+        currentState.players[currentPlayerIndex].isDisconnected = false;
+        broadcastGameState(gameId);
+      }
+    }
+    disconnectTimeouts.delete(timeoutKey);
+  }, DISCONNECT_TIMEOUT);
+
+  disconnectTimeouts.set(timeoutKey, timeout);
+
+  broadcastGameState(gameId);
+}
+
+/**
+ * 處理玩家重連
+ */
+function handlePlayerReconnect(socket, roomId, playerId, playerName) {
+  const gameState = gameRooms.get(roomId);
+
+  if (!gameState) {
+    console.log(`重連失敗：房間 ${roomId} 不存在`);
+    socket.emit('reconnectFailed', { reason: 'room_not_found', message: '房間已不存在' });
+    return;
+  }
+
+  const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+
+  if (playerIndex === -1) {
+    console.log(`重連失敗：玩家 ${playerId} 不在房間中`);
+    socket.emit('reconnectFailed', { reason: 'player_not_found', message: '你已不在此房間中' });
+    return;
+  }
+
+  const player = gameState.players[playerIndex];
+
+  // 清除斷線計時器
+  const timeoutKey = `${roomId}:${playerId}`;
+  if (disconnectTimeouts.has(timeoutKey)) {
+    clearTimeout(disconnectTimeouts.get(timeoutKey));
+    disconnectTimeouts.delete(timeoutKey);
+  }
+
+  // 恢復玩家狀態
+  player.isDisconnected = false;
+  player.disconnectedAt = null;
+
+  // 更新 socket 對應
+  playerSockets.set(socket.id, { gameId: roomId, playerId });
+  socket.join(roomId);
+
+  console.log(`玩家 ${player.name} 重連成功`);
+
+  // 發送重連成功事件
+  socket.emit('reconnected', {
+    gameId: roomId,
+    playerId: playerId,
+    gameState: getClientGameState(gameState, playerId)
+  });
+
+  // 廣播狀態更新
+  broadcastGameState(roomId);
 }
 
 function getAvailableRooms() {

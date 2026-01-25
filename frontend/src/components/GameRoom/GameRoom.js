@@ -52,6 +52,7 @@ import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
+import { clearCurrentRoom } from '../../utils/localStorage';
 import './GameRoom.css';
 
 /**
@@ -289,6 +290,8 @@ function GameRoom() {
     if (myPlayer && gameId) {
       leaveRoom(gameId, myPlayer.id);
     }
+    // 工單 0079：清除房間資訊（正常離開不需要重連）
+    clearCurrentRoom();
     dispatch(resetGame());
     navigate('/');
   };
