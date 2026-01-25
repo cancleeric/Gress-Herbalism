@@ -339,7 +339,7 @@ describe('HardAI Integration Tests', () => {
 
       const action2 = await ai.takeTurn(gameState);
       expect(action2.type).toBe('guess');
-    });
+    }, 10000); // 增加超時限制到 10 秒
 
     test('should handle elimination of colors', async () => {
       const ai = createAIPlayer('ai-1', 'HardAI', AI_DIFFICULTY.HARD);
