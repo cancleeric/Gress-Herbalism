@@ -283,6 +283,17 @@ function GameRoom() {
   }, [dispatch]);
 
   /**
+   * 工單 0093：重連時恢復預測 UI 狀態
+   * 當 gamePhase 變為 postQuestion 且是自己的回合時，顯示預測介面
+   */
+  useEffect(() => {
+    if (gameState.gamePhase === GAME_PHASE_POST_QUESTION && isMyTurn()) {
+      setShowPrediction(true);
+      setPredictionLoading(false);
+    }
+  }, [gameState.gamePhase, isMyTurn]);
+
+  /**
    * 離開房間
    */
   const handleLeaveRoom = () => {

@@ -967,6 +967,7 @@ io.on('connection', (socket) => {
     gameState.currentPlayerIndex = nextStartPlayer;
     gameState.gamePhase = 'playing';
     gameState.gameHistory = []; // 清空當局歷史
+    gameState.predictions = []; // 清空當局預測（工單 0091）
     gameState.winner = null;
 
     // 廣播下一局開始
@@ -1137,6 +1138,16 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
     playerId: playerId,
     gameState: getClientGameState(gameState, playerId)
   });
+
+  // 工單 0093：如果玩家在預測階段，重新發送 postQuestionPhase 事件
+  const postQuestionState = postQuestionStates.get(roomId);
+  if (postQuestionState && postQuestionState.playerId === playerId) {
+    socket.emit('postQuestionPhase', {
+      playerId: playerId,
+      message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
+    });
+    console.log(`[重連] 恢復玩家 ${player.name} 的預測階段`);
+  }
 
   // 廣播狀態更新
   broadcastGameState(roomId);
@@ -1538,8 +1549,10 @@ function settlePredictions(gameState, scoreChanges) {
   const hiddenColors = gameState.hiddenCards.map(c => c.color);
   const results = [];
 
-  // 只結算當局的預測
-  const roundPredictions = predictions.filter(p => p.round === currentRound);
+  // 只結算當局尚未結算的預測（工單 0092：防重複結算）
+  const roundPredictions = predictions.filter(
+    p => p.round === currentRound && p.isCorrect === null
+  );
 
   for (const pred of roundPredictions) {
     // 檢查預測是否正確

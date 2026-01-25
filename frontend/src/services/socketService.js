@@ -366,15 +366,6 @@ export function onTurnEnded(callback) {
 }
 
 /**
- * 監聯預測結算（答案揭曉時）
- */
-export function onPredictionsSettled(callback) {
-  const s = getSocket();
-  s.on('predictionsSettled', callback);
-  return () => s.off('predictionsSettled', callback);
-}
-
-/**
  * 結束回合（可附帶預測）
  * @param {string} gameId - 遊戲 ID
  * @param {string} playerId - 玩家 ID
