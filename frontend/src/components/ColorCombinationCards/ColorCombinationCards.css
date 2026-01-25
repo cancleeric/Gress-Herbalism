@@ -152,13 +152,7 @@
   text-overflow: ellipsis;
 }
 
-/* 自己的標記 */
-.player-marker.my-marker {
-  background: var(--color-accent-light, #e3f2fd);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  font-weight: 600;
-}
+/* 工單 0077：移除「你」的標記，自己禁用的牌只用遮罩表示 */
 
 .marker-name {
   display: block;

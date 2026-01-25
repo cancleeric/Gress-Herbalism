@@ -110,11 +110,11 @@ function ColorCard({
         {COLOR_ICONS[color2]}
       </span>
 
-      {/* 玩家標記（工單 0075） */}
-      {markedByPlayer && (
-        <div className={`player-marker ${isMyMark ? 'my-marker' : ''}`}>
+      {/* 玩家標記（工單 0075，工單 0077：移除「你」字樣） */}
+      {markedByPlayer && !isMyMark && (
+        <div className="player-marker">
           <span className="marker-name">
-            {isMyMark ? '你' : markedByPlayer}
+            {markedByPlayer}
           </span>
         </div>
       )}
