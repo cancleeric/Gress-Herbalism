@@ -107,8 +107,9 @@ export function getCurrentRoom() {
 
     const roomInfo = JSON.parse(data);
 
-    // 檢查是否過期（5 分鐘）
-    const EXPIRY_TIME = 5 * 60 * 1000;
+    // 工單 0116：檢查是否過期（2 小時）
+    // 原本 5 分鐘太短，一場遊戲可能持續 30-60 分鐘
+    const EXPIRY_TIME = 2 * 60 * 60 * 1000;
     if (Date.now() - roomInfo.timestamp > EXPIRY_TIME) {
       clearCurrentRoom();
       return null;

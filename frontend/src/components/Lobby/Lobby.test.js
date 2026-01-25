@@ -697,12 +697,12 @@ describe('Lobby - 工作單 0079 重連功能', () => {
   });
 
   test('房間資訊過期時不應嘗試重連', async () => {
-    // 設定過期的房間資訊（超過 5 分鐘）
+    // 工單 0116：設定過期的房間資訊（超過 2 小時）
     localStorage.setItem('gress_current_room', JSON.stringify({
       roomId: 'test-room',
       playerId: 'test-player',
       playerName: '測試玩家',
-      timestamp: Date.now() - 6 * 60 * 1000 // 6 分鐘前
+      timestamp: Date.now() - 3 * 60 * 60 * 1000 // 3 小時前
     }));
 
     renderWithProviders(<Lobby />);

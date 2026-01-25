@@ -339,7 +339,10 @@ const postQuestionStates = new Map();
 
 // 工單 0079：斷線重連計時器
 const disconnectTimeouts = new Map();
-const DISCONNECT_TIMEOUT = 60000; // 60 秒
+const DISCONNECT_TIMEOUT = 60000; // 60 秒（遊戲中）
+
+// 工單 0115：等待階段寬限期
+const WAITING_PHASE_DISCONNECT_TIMEOUT = 15000; // 15 秒（等待階段）
 
 /**
  * 產生唯一遊戲 ID
@@ -1043,6 +1046,7 @@ function handlePlayerLeave(socket, gameId, playerId) {
 
 /**
  * 處理玩家斷線（區分等待中和遊戲中）
+ * 工單 0115：等待階段也新增寬限期（15 秒）
  */
 function handlePlayerDisconnect(socket, gameId, playerId) {
   const gameState = gameRooms.get(gameId);
@@ -1058,22 +1062,22 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
   }
 
   const player = gameState.players[playerIndex];
+  const isWaitingPhase = gameState.gamePhase === 'waiting';
 
-  if (gameState.gamePhase === 'waiting') {
-    // 等待中，直接移除玩家（使用原本的邏輯）
-    handlePlayerLeave(socket, gameId, playerId);
-    return;
-  }
+  // 判斷寬限期時間
+  const timeout_duration = isWaitingPhase
+    ? WAITING_PHASE_DISCONNECT_TIMEOUT  // 等待階段：15 秒
+    : DISCONNECT_TIMEOUT;                // 遊戲中：60 秒
 
-  // 遊戲進行中，標記為斷線狀態但保留位置
+  // 標記為斷線狀態
   player.isDisconnected = true;
   player.disconnectedAt = Date.now();
-  console.log(`玩家 ${player.name} 斷線，保留位置 60 秒等待重連`);
+  console.log(`[${isWaitingPhase ? '等待階段' : '遊戲中'}] 玩家 ${player.name} 斷線，保留位置 ${timeout_duration / 1000} 秒等待重連`);
 
   socket.leave(gameId);
   playerSockets.delete(socket.id);
 
-  // 設定計時器，60 秒後若未重連則移除
+  // 設定計時器
   const timeoutKey = `${gameId}:${playerId}`;
 
   // 清除舊的計時器（如果有）
@@ -1081,21 +1085,45 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
     clearTimeout(disconnectTimeouts.get(timeoutKey));
   }
 
-  const timeout = setTimeout(() => {
+  const disconnectTimer = setTimeout(() => {
     const currentState = gameRooms.get(gameId);
     if (currentState) {
       const currentPlayerIndex = currentState.players.findIndex(p => p.id === playerId);
       if (currentPlayerIndex !== -1 && currentState.players[currentPlayerIndex].isDisconnected) {
-        console.log(`玩家 ${playerId} 重連超時，標記為不活躍`);
-        currentState.players[currentPlayerIndex].isActive = false;
-        currentState.players[currentPlayerIndex].isDisconnected = false;
-        broadcastGameState(gameId);
+        const currentPlayer = currentState.players[currentPlayerIndex];
+
+        if (isWaitingPhase) {
+          // 工單 0115：等待階段超時後移除玩家
+          console.log(`[等待階段] 玩家 ${playerId} 重連超時，移除玩家`);
+          currentState.players.splice(currentPlayerIndex, 1);
+
+          if (currentState.players.length === 0) {
+            // 房間空了，刪除房間
+            console.log(`房間 ${gameId} 已空，刪除房間`);
+            gameRooms.delete(gameId);
+            broadcastRoomList();
+          } else {
+            // 如果移除的是房主，轉移房主
+            if (currentPlayer.isHost && currentState.players.length > 0) {
+              currentState.players[0].isHost = true;
+              console.log(`房主轉移給 ${currentState.players[0].name}`);
+            }
+            broadcastGameState(gameId);
+            broadcastRoomList();
+          }
+        } else {
+          // 遊戲中：標記為不活躍
+          console.log(`[遊戲中] 玩家 ${playerId} 重連超時，標記為不活躍`);
+          currentState.players[currentPlayerIndex].isActive = false;
+          currentState.players[currentPlayerIndex].isDisconnected = false;
+          broadcastGameState(gameId);
+        }
       }
     }
     disconnectTimeouts.delete(timeoutKey);
-  }, DISCONNECT_TIMEOUT);
+  }, timeout_duration);
 
-  disconnectTimeouts.set(timeoutKey, timeout);
+  disconnectTimeouts.set(timeoutKey, disconnectTimer);
 
   broadcastGameState(gameId);
 }
