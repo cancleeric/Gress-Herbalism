@@ -5,7 +5,7 @@
  * @description 遊戲進行時的主要介面，整合 GameBoard、PlayerHand、QuestionCard、GuessCard、GameStatus 等子組件
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -13,6 +13,7 @@ import {
   resetGame
 } from '../../store/gameStore';
 import useAIPlayers from '../../hooks/useAIPlayers';
+import LocalGameController from '../../controllers/LocalGameController';
 import {
   onGameState,
   onError,
@@ -65,6 +66,11 @@ function GameRoom() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { gameId } = useParams();
+  const location = useLocation();
+
+  // 檢查是否為本地模式（單人 + AI）
+  const aiConfig = location.state?.aiConfig || null;
+  const isLocalMode = aiConfig !== null;
 
   // 從 Redux store 取得遊戲狀態
   const gameState = useSelector((state) => ({
@@ -78,6 +84,30 @@ function GameRoom() {
     currentPlayerId: state.currentPlayerId,
     maxPlayers: state.maxPlayers
   }));
+
+  // 本地遊戲控制器（單人模式專用）
+  const localControllerRef = useRef(null);
+
+  // AI 玩家管理（本地模式專用）
+  const {
+    aiPlayers,
+    aiThinking,
+    currentAIId,
+    isAIPlayer,
+    getAIInstance,
+    handleAITurn,
+    handleAIFollowGuess,
+    handleGameEvent,
+    resetAIPlayers
+  } = useAIPlayers({
+    aiConfig: isLocalMode ? aiConfig : null,
+    gameState,
+    onAIAction: useCallback((action, aiInstance) => {
+      if (localControllerRef.current) {
+        localControllerRef.current.handleAction(action);
+      }
+    }, [])
+  });
 
   // 本地狀態
   const [isLoading, setIsLoading] = useState(false);
@@ -156,9 +186,149 @@ function GameRoom() {
   }, [getActivePlayerCount]);
 
   /**
-   * 訂閱 Socket 事件
+   * 初始化本地遊戲控制器（單人模式）
    */
   useEffect(() => {
+    // 只在本地模式且尚未初始化時執行
+    if (!isLocalMode) return;
+    if (localControllerRef.current) return;
+    if (aiPlayers.length === 0) return; // 等待 AI 玩家初始化完成
+
+    console.log('[GameRoom] 初始化本地遊戲控制器');
+
+    // 創建人類玩家
+    const humanPlayer = {
+      id: 'human-1',
+      name: location.state?.playerName || '玩家1',
+      isAI: false,
+      isHost: true
+    };
+
+    // 創建 AI 玩家實例（使用 aiPlayers 中的實例）
+    const allPlayers = [humanPlayer, ...aiPlayers];
+
+    // 創建本地控制器
+    const controller = new LocalGameController({
+      players: allPlayers,
+      onStateChange: (newState) => {
+        console.log('[GameRoom] 本地狀態變更:', newState.gamePhase);
+        dispatch(updateGameState({
+          ...newState,
+          currentPlayerId: humanPlayer.id
+        }));
+      },
+      onEvent: (event) => {
+        console.log('[GameRoom] 本地事件:', event.type);
+
+        // 傳遞事件給 AI 玩家
+        handleGameEvent(event);
+
+        // 更新 UI 狀態
+        if (event.type === 'followGuessStarted') {
+          setFollowGuessData({
+            guessingPlayerId: event.guessingPlayerId,
+            guessedColors: event.guessedColors,
+            decisionOrder: event.decisionOrder || [],
+            currentDeciderId: event.currentDeciderId,
+            decisions: event.decisions || {},
+            followingPlayers: [],
+            declinedPlayers: []
+          });
+          setShowFollowGuessPanel(true);
+        } else if (event.type === 'followGuessUpdate') {
+          setFollowGuessData(prev => ({
+            ...prev,
+            currentDeciderId: event.currentDeciderId,
+            decisions: event.decisions || prev.decisions,
+            followingPlayers: event.followingPlayers,
+            declinedPlayers: event.declinedPlayers
+          }));
+        } else if (event.type === 'guessResult') {
+          setShowFollowGuessPanel(false);
+          setGuessResultData({
+            isCorrect: event.isCorrect,
+            scoreChanges: event.scoreChanges,
+            hiddenCards: event.hiddenCards,
+            guessingPlayerId: event.guessingPlayerId,
+            followingPlayers: event.followingPlayers,
+            predictionResults: event.predictionResults || []
+          });
+          setShowRoundEnd(true);
+        } else if (event.type === 'roundStarted') {
+          setShowRoundEnd(false);
+          setGuessResultData(null);
+          setShowPrediction(false);
+          setColorCardMarkers({});
+          setMyLastColorCardId(null);
+        } else if (event.type === 'turnEnded') {
+          setShowPrediction(false);
+          setPredictionLoading(false);
+        }
+      }
+    });
+
+    localControllerRef.current = controller;
+    console.log('[GameRoom] 本地控制器創建完成，玩家數:', allPlayers.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocalMode, aiPlayers.length]);
+
+  /**
+   * 自動觸發 AI 回合（本地模式）
+   */
+  useEffect(() => {
+    if (!isLocalMode || !localControllerRef.current) return;
+
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer || !isAIPlayer(currentPlayer)) return;
+
+    // 檢查遊戲階段
+    if (gameState.gamePhase !== GAME_PHASE_PLAYING) return;
+
+    // 延遲執行 AI 決策（避免立即執行）
+    const timerId = setTimeout(() => {
+      console.log('[GameRoom] 觸發 AI 回合:', currentPlayer.name);
+      handleAITurn(currentPlayer);
+    }, 500);
+
+    return () => clearTimeout(timerId);
+  }, [isLocalMode, gameState.currentPlayerIndex, gameState.gamePhase, getCurrentPlayer, isAIPlayer, handleAITurn]);
+
+  /**
+   * 自動處理 AI 跟猜決策（本地模式）
+   */
+  useEffect(() => {
+    if (!isLocalMode || !localControllerRef.current) return;
+    if (gameState.gamePhase !== GAME_PHASE_FOLLOW_GUESSING) return;
+    if (!followGuessData) return;
+
+    const currentDeciderId = followGuessData.currentDeciderId;
+    if (!currentDeciderId) return;
+
+    const decidingPlayer = gameState.players.find(p => p.id === currentDeciderId);
+    if (!decidingPlayer || !isAIPlayer(decidingPlayer)) return;
+
+    // 延遲執行 AI 跟猜決策
+    const timerId = setTimeout(async () => {
+      console.log('[GameRoom] 觸發 AI 跟猜決策:', decidingPlayer.name);
+      const decision = await handleAIFollowGuess(decidingPlayer, followGuessData.guessedColors);
+
+      if (decision !== null && localControllerRef.current) {
+        localControllerRef.current.handleFollowGuessResponse({
+          playerId: decidingPlayer.id,
+          isFollowing: decision
+        });
+      }
+    }, 800);
+
+    return () => clearTimeout(timerId);
+  }, [isLocalMode, gameState.gamePhase, followGuessData, gameState.players, isAIPlayer, handleAIFollowGuess]);
+
+  /**
+   * 訂閱 Socket 事件（多人模式）
+   */
+  useEffect(() => {
+    // 本地模式不需要 Socket 事件
+    if (isLocalMode) return;
     // 監聽遊戲狀態更新
     const unsubGameState = onGameState((newState) => {
       dispatch(updateGameState({
@@ -281,7 +451,7 @@ function GameRoom() {
       unsubTurnEnded();
       unsubCardGive();
     };
-  }, [dispatch]);
+  }, [dispatch, isLocalMode]);
 
   /**
    * 離開房間
@@ -301,11 +471,22 @@ function GameRoom() {
    * 開始遊戲
    */
   const handleStartGame = () => {
-    if (gameState.players.length >= 3 && gameId) {
-      setIsLoading(true);
-      socketStartGame(gameId);
+    if (isLocalMode) {
+      // 本地模式
+      if (localControllerRef.current) {
+        console.log('[GameRoom] 本地模式開始遊戲');
+        setIsLoading(true);
+        localControllerRef.current.startGame();
+        setIsLoading(false);
+      }
     } else {
-      setError('需要至少 3 位玩家才能開始遊戲');
+      // 多人模式
+      if (gameState.players.length >= 3 && gameId) {
+        setIsLoading(true);
+        socketStartGame(gameId);
+      } else {
+        setError('需要至少 3 位玩家才能開始遊戲');
+      }
     }
   };
 
@@ -333,10 +514,17 @@ function GameRoom() {
     setShowGuessCard(true);
     setIsGuessing(true);
     setGuessResult(null);
-    // 請求查看蓋牌
-    const myPlayer = getMyPlayer();
-    if (myPlayer && gameId) {
-      requestRevealHiddenCards(gameId, myPlayer.id);
+
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式：直接顯示蓋牌
+      const state = localControllerRef.current.getState();
+      setHiddenCardsForGuess(state.hiddenCards);
+    } else {
+      // 多人模式：請求查看蓋牌
+      const myPlayer = getMyPlayer();
+      if (myPlayer && gameId) {
+        requestRevealHiddenCards(gameId, myPlayer.id);
+      }
     }
   };
 
@@ -355,7 +543,7 @@ function GameRoom() {
    */
   const handleQuestionSubmit = (questionData) => {
     const myPlayer = getMyPlayer();
-    if (!myPlayer || !gameId) return;
+    if (!myPlayer) return;
 
     setIsLoading(true);
 
@@ -370,7 +558,15 @@ function GameRoom() {
       getColor: questionData.getColor || questionData.colors[1]  // 用於類型3
     };
 
-    sendGameAction(gameId, action);
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式
+      localControllerRef.current.handleAction(action);
+      setIsLoading(false);
+    } else if (gameId) {
+      // 多人模式
+      sendGameAction(gameId, action);
+    }
+
     setShowQuestionCard(false);
   };
 
@@ -379,7 +575,7 @@ function GameRoom() {
    */
   const handleGuessSubmit = (guessData) => {
     const myPlayer = getMyPlayer();
-    if (!myPlayer || !gameId) return;
+    if (!myPlayer) return;
 
     setIsLoading(true);
 
@@ -389,7 +585,15 @@ function GameRoom() {
       guessedColors: guessData.guessedColors
     };
 
-    sendGameAction(gameId, action);
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式
+      localControllerRef.current.handleAction(action);
+      setIsLoading(false);
+    } else if (gameId) {
+      // 多人模式
+      sendGameAction(gameId, action);
+    }
+
     setShowGuessCard(false);
   };
 
@@ -409,20 +613,35 @@ function GameRoom() {
    */
   const handleFollowGuess = (isFollowing) => {
     const myPlayer = getMyPlayer();
-    if (!gameId || !myPlayer) return;
+    if (!myPlayer) return;
 
-    submitFollowGuessResponse(gameId, myPlayer.id, isFollowing);
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式
+      localControllerRef.current.handleFollowGuessResponse({
+        playerId: myPlayer.id,
+        isFollowing
+      });
+    } else if (gameId) {
+      // 多人模式
+      submitFollowGuessResponse(gameId, myPlayer.id, isFollowing);
+    }
   };
 
   /**
    * 處理開始下一局
    */
   const handleStartNextRound = () => {
-    if (!gameId) return;
-
-    startNextRound(gameId);
-    setShowRoundEnd(false);
-    setGuessResultData(null);
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式
+      localControllerRef.current.startNextRound();
+      setShowRoundEnd(false);
+      setGuessResultData(null);
+    } else if (gameId) {
+      // 多人模式
+      startNextRound(gameId);
+      setShowRoundEnd(false);
+      setGuessResultData(null);
+    }
   };
 
   /**
@@ -430,10 +649,21 @@ function GameRoom() {
    */
   const handleEndTurn = (prediction) => {
     const myPlayer = getMyPlayer();
-    if (!gameId || !myPlayer) return;
+    if (!myPlayer) return;
 
     setPredictionLoading(true);
-    endTurn(gameId, myPlayer.id, prediction);
+
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式
+      localControllerRef.current.endTurn({
+        playerId: myPlayer.id,
+        prediction
+      });
+      setPredictionLoading(false);
+    } else if (gameId) {
+      // 多人模式
+      endTurn(gameId, myPlayer.id, prediction);
+    }
   };
 
   /**
@@ -456,7 +686,7 @@ function GameRoom() {
    */
   const handleQuestionFlowSubmit = (questionData) => {
     const myPlayer = getMyPlayer();
-    if (!myPlayer || !gameId) return;
+    if (!myPlayer) return;
 
     setIsLoading(true);
 
@@ -472,7 +702,15 @@ function GameRoom() {
       getColor: questionData.getColor || questionData.colors[1]
     };
 
-    sendGameAction(gameId, action);
+    if (isLocalMode && localControllerRef.current) {
+      // 本地模式
+      localControllerRef.current.handleAction(action);
+      setIsLoading(false);
+    } else if (gameId) {
+      // 多人模式
+      sendGameAction(gameId, action);
+    }
+
     setShowQuestionFlow(false);
     setSelectedColorCard(null);
     // 記錄使用的顏色牌（下回合禁用）（工單 0075）
