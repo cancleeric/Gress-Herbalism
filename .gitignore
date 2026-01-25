@@ -1,46 +1,67 @@
+# ===================
 # Dependencies
+# ===================
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-yarn.lock
+.pnp/
+.pnp.js
 
-# Production builds
+# ===================
+# Build & Production
+# ===================
 frontend/build/
 frontend/dist/
 backend/dist/
+*.map
 
-# Environment variables
+# ===================
+# Environment Variables
+# ===================
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# IDE and editor files
+# ===================
+# Logs
+# ===================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===================
+# Testing & Coverage
+# ===================
+coverage/
+.nyc_output/
+
+# ===================
+# IDE & Editor
+# ===================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# ===================
+# OS Files
+# ===================
 .DS_Store
-
-# Testing
-coverage/
-.nyc_output/
-
-# Logs
-logs/
-*.log
-
-# OS files
 Thumbs.db
-.DS_Store
+desktop.ini
 
-# Temporary files
+# ===================
+# Temporary Files
+# ===================
 *.tmp
 *.temp
+*.bak
 
-# Build artifacts
-*.map
+# ===================
+# Firebase & Supabase
+# ===================
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
