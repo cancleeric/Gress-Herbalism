@@ -342,7 +342,7 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('操作按鈕', () => {
-    test('遊戲進行中且輪到自己時應顯示問牌和猜牌按鈕', () => {
+    test('遊戲進行中且輪到自己時應顯示操作提示和猜牌按鈕（工單 0074 新流程）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -355,7 +355,9 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('問牌')).toBeInTheDocument();
+      // 新流程：顯示點擊顏色牌的提示（兩處：GameBoard 和 action-buttons）
+      const hints = screen.getAllByText(/點擊.*顏色牌/);
+      expect(hints.length).toBeGreaterThan(0);
       expect(screen.getByText('猜牌')).toBeInTheDocument();
     });
 
@@ -388,8 +390,8 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      // 不應該有問牌按鈕
-      expect(screen.queryByText('問牌')).not.toBeInTheDocument();
+      // 不應該有問牌提示
+      expect(screen.queryByText(/點擊.*顏色牌開始問牌/)).not.toBeInTheDocument();
       // 應該有猜牌按鈕
       expect(screen.getByText('猜牌')).toBeInTheDocument();
       // 應該有必須猜牌提示
@@ -398,7 +400,7 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('Modal 介面', () => {
-    test('點擊問牌按鈕應打開問牌 Modal', () => {
+    test('點擊顏色組合牌應打開問牌流程（工單 0074 新流程）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -412,10 +414,11 @@ describe('GameRoom - 工作單 0023', () => {
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
 
-      fireEvent.click(screen.getByText('問牌'));
+      // 點擊一張顏色組合牌（例如紅綠）
+      fireEvent.click(screen.getByText('紅綠'));
 
-      // 應該顯示 Modal overlay
-      expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
+      // 應該顯示問牌流程 overlay
+      expect(document.querySelector('.question-flow-overlay')).toBeInTheDocument();
     });
 
     test('點擊猜牌按鈕應打開猜牌 Modal', () => {
@@ -439,7 +442,7 @@ describe('GameRoom - 工作單 0023', () => {
       expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
     });
 
-    test('點擊 Modal overlay 應關閉 Modal', () => {
+    test('點擊取消應關閉問牌流程 Modal（工單 0074 新流程）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -453,13 +456,13 @@ describe('GameRoom - 工作單 0023', () => {
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
 
-      // 打開 Modal
-      fireEvent.click(screen.getByText('問牌'));
-      expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
+      // 打開問牌流程
+      fireEvent.click(screen.getByText('紅綠'));
+      expect(document.querySelector('.question-flow-overlay')).toBeInTheDocument();
 
-      // 點擊 overlay 關閉
-      fireEvent.click(document.querySelector('.modal-overlay'));
-      expect(document.querySelector('.modal-overlay')).not.toBeInTheDocument();
+      // 點擊取消按鈕關閉
+      fireEvent.click(screen.getByText('取消'));
+      expect(document.querySelector('.question-flow-overlay')).not.toBeInTheDocument();
     });
   });
 

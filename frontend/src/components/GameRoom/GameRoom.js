@@ -51,6 +51,7 @@ import { GameStatusContainer } from '../GameStatus/GameStatus';
 import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
+import QuestionFlow from '../QuestionFlow/QuestionFlow';
 import './GameRoom.css';
 
 /**
@@ -100,6 +101,10 @@ function GameRoom() {
   const [predictionLoading, setPredictionLoading] = useState(false);
   // 給牌通知相關狀態（工單 0072）
   const [cardGiveNotification, setCardGiveNotification] = useState(null);
+  // 新版問牌流程狀態（工單 0074）
+  const [selectedColorCard, setSelectedColorCard] = useState(null);
+  const [showQuestionFlow, setShowQuestionFlow] = useState(false);
+  const [lastUsedColorCardId, setLastUsedColorCardId] = useState(null);
 
   /**
    * 取得當前回合的玩家
@@ -428,6 +433,50 @@ function GameRoom() {
   };
 
   /**
+   * 處理選擇顏色組合牌（工單 0074）
+   */
+  const handleColorCardSelect = (card) => {
+    setSelectedColorCard(card);
+    setShowQuestionFlow(true);
+  };
+
+  /**
+   * 處理新版問牌提交（工單 0074）
+   */
+  const handleQuestionFlowSubmit = (questionData) => {
+    const myPlayer = getMyPlayer();
+    if (!myPlayer || !gameId) return;
+
+    setIsLoading(true);
+
+    const action = {
+      type: 'question',
+      playerId: myPlayer.id,
+      targetPlayerId: questionData.targetPlayerId,
+      colors: questionData.colors,
+      questionType: questionData.questionType,
+      colorCardId: questionData.colorCardId,
+      selectedColor: questionData.colors[0],
+      giveColor: questionData.giveColor || questionData.colors[0],
+      getColor: questionData.getColor || questionData.colors[1]
+    };
+
+    sendGameAction(gameId, action);
+    setShowQuestionFlow(false);
+    setSelectedColorCard(null);
+    // 記錄使用的顏色牌（下回合禁用）
+    setLastUsedColorCardId(questionData.colorCardId);
+  };
+
+  /**
+   * 處理取消新版問牌流程（工單 0074）
+   */
+  const handleQuestionFlowCancel = () => {
+    setShowQuestionFlow(false);
+    setSelectedColorCard(null);
+  };
+
+  /**
    * 取得遊戲階段顯示文字
    */
   const getGamePhaseText = () => {
@@ -501,6 +550,9 @@ function GameRoom() {
           <GameBoard
             currentPlayerId={myPlayer?.id}
             isGuessing={isGuessing}
+            canSelectColorCard={canAct && !onlyGuess && !showQuestionFlow}
+            disabledColorCardId={lastUsedColorCardId}
+            onColorCardSelect={handleColorCardSelect}
           />
 
           {/* 遊戲結束資訊 */}
@@ -562,13 +614,7 @@ function GameRoom() {
         {gameState.gamePhase === GAME_PHASE_PLAYING && (
           <div className="action-buttons">
             {canAct && !onlyGuess && (
-              <button
-                className="btn btn-primary"
-                onClick={handleOpenQuestion}
-                disabled={isLoading}
-              >
-                問牌
-              </button>
+              <p className="action-hint">點擊上方顏色牌開始問牌，或直接猜牌</p>
             )}
             {canAct && (
               <button
@@ -590,7 +636,7 @@ function GameRoom() {
         )}
       </footer>
 
-      {/* 問牌介面 Modal */}
+      {/* 舊版問牌介面 Modal（保留作為備用） */}
       {showQuestionCard && (
         <div className="modal-overlay" onClick={handleCloseQuestion}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -607,6 +653,19 @@ function GameRoom() {
             />
           </div>
         </div>
+      )}
+
+      {/* 新版問牌流程 Modal（工單 0074：先選顏色牌） */}
+      {showQuestionFlow && selectedColorCard && (
+        <QuestionFlow
+          selectedCard={selectedColorCard}
+          players={gameState.players.filter(p => p.isActive !== false)}
+          currentPlayerId={myPlayer?.id}
+          currentPlayerHand={myPlayer?.hand || []}
+          onSubmit={handleQuestionFlowSubmit}
+          onCancel={handleQuestionFlowCancel}
+          isLoading={isLoading}
+        />
       )}
 
       {/* 猜牌介面 Modal */}

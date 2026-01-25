@@ -225,6 +225,12 @@
   gap: var(--spacing-md);
 }
 
+.action-hint {
+  color: var(--color-accent);
+  font-size: var(--font-size-small);
+  margin: 0;
+}
+
 .waiting-turn {
   color: var(--color-text-secondary);
   font-style: italic;

@@ -56,9 +56,18 @@ function HiddenCard({ card, isRevealed, index }) {
  * @param {Object} props - 組件屬性
  * @param {string} props.currentPlayerId - 當前玩家ID（用於判斷是否為猜牌者）
  * @param {boolean} props.isGuessing - 是否正在猜牌
+ * @param {boolean} props.canSelectColorCard - 是否可以選擇顏色組合牌
+ * @param {string|null} props.disabledColorCardId - 禁用的顏色牌ID（上回合選過的）
+ * @param {Function} props.onColorCardSelect - 選擇顏色組合牌的回調
  * @returns {JSX.Element} 遊戲桌面組件
  */
-function GameBoard({ currentPlayerId, isGuessing = false }) {
+function GameBoard({
+  currentPlayerId,
+  isGuessing = false,
+  canSelectColorCard = false,
+  disabledColorCardId = null,
+  onColorCardSelect
+}) {
   // 從 Redux store 取得遊戲狀態（使用 shallowEqual 避免不必要的重新渲染）
   const hiddenCards = useSelector(state => state.hiddenCards);
   const gamePhase = useSelector(state => state.gamePhase);
@@ -187,7 +196,14 @@ function GameBoard({ currentPlayerId, isGuessing = false }) {
       {/* 顏色組合牌區域 */}
       {gamePhase !== GAME_PHASE_WAITING && (
         <section className="color-cards-section">
-          <ColorCombinationCards interactive={false} />
+          <ColorCombinationCards
+            interactive={canSelectColorCard}
+            disabledCardIds={disabledColorCardId ? [disabledColorCardId] : []}
+            onCardSelect={onColorCardSelect}
+          />
+          {canSelectColorCard && (
+            <p className="select-card-hint">點擊顏色牌開始問牌</p>
+          )}
         </section>
       )}
 
