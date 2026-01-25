@@ -344,6 +344,10 @@ const DISCONNECT_TIMEOUT = 60000; // 60 秒（遊戲中）
 // 工單 0115：等待階段寬限期
 const WAITING_PHASE_DISCONNECT_TIMEOUT = 15000; // 15 秒（等待階段）
 
+// 工單 0118：追蹤正在重整的玩家（給予更長寬限期）
+const refreshingPlayers = new Set();
+const REFRESH_GRACE_PERIOD = 10000; // 10 秒重整寬限期
+
 /**
  * 產生唯一遊戲 ID
  */
@@ -995,6 +999,18 @@ io.on('connection', (socket) => {
     handlePlayerLeave(socket, gameId, playerId);
   });
 
+  // 工單 0118：玩家正在重整頁面
+  socket.on('playerRefreshing', ({ gameId, playerId }) => {
+    const refreshKey = `${gameId}:${playerId}`;
+    refreshingPlayers.add(refreshKey);
+    console.log(`[重整] 玩家 ${playerId} 正在重整頁面，加入寬限列表`);
+
+    // 10 秒後自動移除（避免記憶體洩漏）
+    setTimeout(() => {
+      refreshingPlayers.delete(refreshKey);
+    }, REFRESH_GRACE_PERIOD);
+  });
+
   // 斷線處理
   socket.on('disconnect', () => {
     const playerInfo = playerSockets.get(socket.id);
@@ -1063,16 +1079,26 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
 
   const player = gameState.players[playerIndex];
   const isWaitingPhase = gameState.gamePhase === 'waiting';
+  const refreshKey = `${gameId}:${playerId}`;
+  const isRefreshing = refreshingPlayers.has(refreshKey);
 
-  // 判斷寬限期時間
-  const timeout_duration = isWaitingPhase
-    ? WAITING_PHASE_DISCONNECT_TIMEOUT  // 等待階段：15 秒
-    : DISCONNECT_TIMEOUT;                // 遊戲中：60 秒
+  // 工單 0118：判斷寬限期時間
+  // 如果玩家是在重整頁面，使用重整寬限期
+  let timeout_duration;
+  if (isRefreshing) {
+    timeout_duration = REFRESH_GRACE_PERIOD;  // 重整中：10 秒
+    player.isRefreshing = true;
+  } else if (isWaitingPhase) {
+    timeout_duration = WAITING_PHASE_DISCONNECT_TIMEOUT;  // 等待階段：15 秒
+  } else {
+    timeout_duration = DISCONNECT_TIMEOUT;  // 遊戲中：60 秒
+  }
 
   // 標記為斷線狀態
   player.isDisconnected = true;
   player.disconnectedAt = Date.now();
-  console.log(`[${isWaitingPhase ? '等待階段' : '遊戲中'}] 玩家 ${player.name} 斷線，保留位置 ${timeout_duration / 1000} 秒等待重連`);
+  const stateLabel = isRefreshing ? '重整中' : (isWaitingPhase ? '等待階段' : '遊戲中');
+  console.log(`[${stateLabel}] 玩家 ${player.name} 斷線，保留位置 ${timeout_duration / 1000} 秒等待重連`);
 
   socket.leave(gameId);
   playerSockets.delete(socket.id);
@@ -1086,16 +1112,23 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
   }
 
   const disconnectTimer = setTimeout(() => {
+    // 工單 0118：清理重整狀態
+    refreshingPlayers.delete(refreshKey);
+
     const currentState = gameRooms.get(gameId);
     if (currentState) {
       const currentPlayerIndex = currentState.players.findIndex(p => p.id === playerId);
       if (currentPlayerIndex !== -1 && currentState.players[currentPlayerIndex].isDisconnected) {
         const currentPlayer = currentState.players[currentPlayerIndex];
 
-        if (isWaitingPhase) {
-          // 工單 0115：等待階段超時後移除玩家
-          console.log(`[等待階段] 玩家 ${playerId} 重連超時，移除玩家`);
+        // 工單 0118：重整中或等待階段超時後移除玩家
+        if (isWaitingPhase || isRefreshing) {
+          const reason = isRefreshing ? '重整' : '等待階段';
+          console.log(`[${reason}] 玩家 ${playerId} 重連超時，移除玩家`);
           currentState.players.splice(currentPlayerIndex, 1);
+
+          // 清除 isRefreshing 標記
+          delete currentPlayer.isRefreshing;
 
           if (currentState.players.length === 0) {
             // 房間空了，刪除房間
@@ -1157,9 +1190,13 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
     disconnectTimeouts.delete(timeoutKey);
   }
 
+  // 工單 0118：清除重整狀態
+  refreshingPlayers.delete(timeoutKey);
+
   // 恢復玩家狀態
   player.isDisconnected = false;
   player.disconnectedAt = null;
+  delete player.isRefreshing;
 
   // 更新 socket 對應
   playerSockets.set(socket.id, { gameId: roomId, playerId });

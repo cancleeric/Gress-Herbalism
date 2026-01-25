@@ -24,7 +24,8 @@ import {
   onReconnectFailed,
   createRoom,
   joinRoom,
-  attemptReconnect
+  attemptReconnect,
+  emitPlayerRefreshing
 } from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
 import {
@@ -195,6 +196,19 @@ function Lobby() {
       }
     }
   }, [isConnected, reconnectAttempted]);
+
+  // 工單 0118：頁面重整前通知後端
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const savedRoom = getCurrentRoom();
+      if (savedRoom && savedRoom.roomId && savedRoom.playerId) {
+        emitPlayerRefreshing(savedRoom.roomId, savedRoom.playerId);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   /**
    * 處理玩家名稱變更

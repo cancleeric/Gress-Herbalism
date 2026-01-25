@@ -387,6 +387,20 @@ export function onCardGiveNotification(callback) {
   return () => s.off('cardGiveNotification', callback);
 }
 
+// ==================== 工單 0118：重連時序優化 ====================
+
+/**
+ * 通知後端玩家正在重整頁面
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} playerId - 玩家 ID
+ */
+export function emitPlayerRefreshing(gameId, playerId) {
+  const s = getSocket();
+  if (s && s.connected) {
+    s.emit('playerRefreshing', { gameId, playerId });
+  }
+}
+
 /**
  * 斷開連線
  */

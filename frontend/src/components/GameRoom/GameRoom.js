@@ -33,7 +33,8 @@ import {
   submitColorChoice,
   submitFollowGuessResponse,
   startNextRound,
-  endTurn
+  endTurn,
+  emitPlayerRefreshing  // 工單 0118
 } from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
@@ -292,6 +293,29 @@ function GameRoom() {
       setPredictionLoading(false);
     }
   }, [gameState.gamePhase, isMyTurn]);
+
+  /**
+   * 工單 0118：頁面重整前通知後端
+   * 使用 beforeunload 事件通知後端這是預期的重整，給予更長的寬限期
+   */
+  useEffect(() => {
+    const myPlayer = getMyPlayer();
+    const currentGameId = gameState.storeGameId || gameId;
+    const currentPlayerId = myPlayer?.id;
+
+    const handleBeforeUnload = () => {
+      if (currentGameId && currentPlayerId) {
+        // 通知後端玩家正在重整
+        emitPlayerRefreshing(currentGameId, currentPlayerId);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [gameState.storeGameId, gameId, getMyPlayer]);
 
   /**
    * 離開房間
