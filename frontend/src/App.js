@@ -18,6 +18,7 @@ import GameRoom from './components/GameRoom';
 import Profile from './components/Profile';
 import Leaderboard from './components/Leaderboard';
 import Friends from './components/Friends';
+import ConnectionStatus from './components/ConnectionStatus';
 import './styles/App.css';
 
 /**
@@ -77,10 +78,12 @@ class ErrorBoundary extends React.Component {
 
 /**
  * 應用內容組件 - 包含路由邏輯
+ * 工單 0119：新增 ConnectionStatus 組件
  */
 function AppContent() {
   return (
     <div className="app">
+      <ConnectionStatus />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
