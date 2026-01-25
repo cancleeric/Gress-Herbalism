@@ -676,6 +676,8 @@ io.on('connection', (socket) => {
               isCorrect: result.isCorrect,
               scoreChanges: result.scoreChanges,
               hiddenCards: result.hiddenCards,
+              guessingPlayerId: action.playerId,
+              followingPlayers: [],
               predictionResults: result.predictionResults || []
             });
           }
@@ -891,6 +893,11 @@ io.on('connection', (socket) => {
       Object.assign(gameState, result.gameState);
 
       // 廣播猜牌結果（包含預測結算）
+      console.log('[guessResult] 發送結果:', JSON.stringify({
+        isCorrect: result.isCorrect,
+        scoreChanges: result.scoreChanges,
+        predictionResults: result.predictionResults
+      }));
       io.to(gameId).emit('guessResult', {
         isCorrect: result.isCorrect,
         scoreChanges: result.scoreChanges,
@@ -1527,8 +1534,11 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     }
   }
 
-  // 工單 0071：預測結算
-  const predictionResults = settlePredictions(gameState, scoreChanges);
+  // 工單 0071、0113：預測結算（只在局結束時結算）
+  let predictionResults = [];
+  if (isCorrect || gameState.gamePhase === 'roundEnd' || gameState.gamePhase === 'finished') {
+    predictionResults = settlePredictions(gameState, scoreChanges);
+  }
 
   return {
     success: true,
@@ -1549,10 +1559,16 @@ function settlePredictions(gameState, scoreChanges) {
   const hiddenColors = gameState.hiddenCards.map(c => c.color);
   const results = [];
 
+  console.log(`[預測結算] 開始結算，當前回合: ${currentRound}`);
+  console.log(`[預測結算] 蓋牌顏色: ${hiddenColors.join(', ')}`);
+  console.log(`[預測結算] 所有預測: ${JSON.stringify(predictions)}`);
+
   // 只結算當局尚未結算的預測（工單 0092：防重複結算）
   const roundPredictions = predictions.filter(
     p => p.round === currentRound && p.isCorrect === null
   );
+
+  console.log(`[預測結算] 本局待結算預測數: ${roundPredictions.length}`);
 
   for (const pred of roundPredictions) {
     // 檢查預測是否正確
@@ -1566,11 +1582,15 @@ function settlePredictions(gameState, scoreChanges) {
     const newScore = Math.max(0, currentScore + change);
     const actualChange = newScore - currentScore;
 
+    console.log(`[預測結算] 玩家: ${pred.playerName}, 預測: ${pred.color}, 正確: ${isPredictionCorrect}`);
+    console.log(`[預測結算] 分數: ${currentScore} + (${change}) = ${newScore}, 實際變化: ${actualChange}`);
+
     // 更新分數
     gameState.scores[playerId] = newScore;
     const playerIndex = gameState.players.findIndex(p => p.id === playerId);
     if (playerIndex !== -1) {
       gameState.players[playerIndex].score = newScore;
+      console.log(`[預測結算] 已更新 players[${playerIndex}].score = ${newScore}`);
     }
 
     // 累計到 scoreChanges（可能已有猜牌/跟猜的分數）
@@ -1585,6 +1605,7 @@ function settlePredictions(gameState, scoreChanges) {
     });
   }
 
+  console.log(`[預測結算] 結算完成，結果: ${JSON.stringify(results)}`);
   return results;
 }
 

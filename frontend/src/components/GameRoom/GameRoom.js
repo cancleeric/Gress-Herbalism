@@ -976,7 +976,7 @@ function GameRoom() {
                           {change > 0 ? `+${change}` : change}
                         </span>
                         {playerId === guessResultData.guessingPlayerId && ' (猜牌者)'}
-                        {guessResultData.followingPlayers.includes(playerId) && ' (跟猜)'}
+                        {guessResultData.followingPlayers?.includes(playerId) && ' (跟猜)'}
                       </li>
                     );
                   })}
