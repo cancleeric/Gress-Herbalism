@@ -10,6 +10,7 @@
 import BaseStrategy, { ACTION_TYPE } from './BaseStrategy';
 import { AI_DIFFICULTY, QUESTION_TYPE_ALL_ONE_COLOR, ALL_COLORS } from '../../shared/constants';
 import { AI_PARAMS } from '../config/aiConfig';
+import ProbabilityCalculator from '../ProbabilityCalculator';
 
 /**
  * 困難難度策略類別
@@ -54,6 +55,12 @@ class HardStrategy extends BaseStrategy {
      * @type {number}
      */
     this.informationEntropyWeight = params.informationEntropyWeight || 0.2;
+
+    /**
+     * 概率計算器（用於信息熵、信息增益等計算）
+     * @type {ProbabilityCalculator}
+     */
+    this.calculator = new ProbabilityCalculator();
   }
 
   /**
@@ -140,31 +147,11 @@ class HardStrategy extends BaseStrategy {
     }
 
     // 計算當前的信息熵（不確定性）
-    const currentEntropy = this.calculateEntropy(knowledge.hiddenCardProbability);
+    const currentEntropy = this.calculator.calculateEntropy(knowledge.hiddenCardProbability);
 
     // 預期問牌後的熵減少量
     // 使用配置的權重參數
     return currentEntropy * this.informationEntropyWeight;
-  }
-
-  /**
-   * 計算信息熵
-   *
-   * H = -Σ(p_i × log2(p_i))
-   *
-   * @param {Object} probabilities - 顏色概率分布
-   * @returns {number} 信息熵
-   */
-  calculateEntropy(probabilities) {
-    let entropy = 0;
-
-    for (const prob of Object.values(probabilities)) {
-      if (prob > 0) {
-        entropy -= prob * Math.log2(prob);
-      }
-    }
-
-    return entropy;
   }
 
   /**

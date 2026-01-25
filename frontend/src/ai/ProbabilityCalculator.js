@@ -284,6 +284,111 @@ class ProbabilityCalculator {
       visibleTotal: this.getVisibleCount()
     };
   }
+
+  /**
+   * 計算信息熵（Shannon Entropy）
+   *
+   * H = -Σ(p_i × log2(p_i))
+   *
+   * 用途：衡量概率分布的不確定性
+   * - 熵值越高，不確定性越大
+   * - 均勻分布時熵值最大
+   * - 確定分布時熵值為 0
+   *
+   * @param {Object<string, number>} probabilities - 顏色概率分布 {color: probability}
+   * @returns {number} 信息熵（0 到 2 之間，2 表示 4 個顏色均勻分布）
+   *
+   * @example
+   * // 均勻分布（最大不確定性）
+   * calculateEntropy({ red: 0.25, yellow: 0.25, green: 0.25, blue: 0.25 })
+   * // 返回：2.0
+   *
+   * // 確定分布（無不確定性）
+   * calculateEntropy({ red: 1.0, yellow: 0, green: 0, blue: 0 })
+   * // 返回：0.0
+   */
+  calculateEntropy(probabilities) {
+    let entropy = 0;
+
+    for (const prob of Object.values(probabilities)) {
+      if (prob > 0) {
+        entropy -= prob * Math.log2(prob);
+      }
+    }
+
+    return entropy;
+  }
+
+  /**
+   * 計算信息增益（Information Gain）
+   *
+   * IG = H(before) - H(after)
+   *
+   * 用途：評估某個問牌動作能獲得多少信息
+   * - 增益越大，該動作越有價值
+   * - 用於決策最佳問牌策略
+   *
+   * @param {Object<string, number>} beforeProb - 動作前的概率分布
+   * @param {Object<string, number>} afterProb - 動作後的概率分布
+   * @returns {number} 信息增益（0 到 2 之間）
+   *
+   * @example
+   * const before = { red: 0.25, yellow: 0.25, green: 0.25, blue: 0.25 };
+   * const after = { red: 0.5, yellow: 0.5, green: 0, blue: 0 };
+   * calculateInformationGain(before, after)
+   * // 返回：1.0（獲得 1 bit 信息）
+   */
+  calculateInformationGain(beforeProb, afterProb) {
+    const entropyBefore = this.calculateEntropy(beforeProb);
+    const entropyAfter = this.calculateEntropy(afterProb);
+
+    return entropyBefore - entropyAfter;
+  }
+
+  /**
+   * 計算條件概率（Conditional Probability）
+   *
+   * P(A|B) = P(A ∩ B) / P(B)
+   *
+   * 用途：已知事件 B 發生，計算事件 A 發生的概率
+   *
+   * 簡化模型：假設兩張蓋牌獨立選擇
+   * 在已知顏色 B 在蓋牌中的前提下，計算顏色 A 也在蓋牌中的概率
+   * 透過歸一化（排除 B 後重新計算概率）來近似條件概率
+   *
+   * @param {string} colorA - 事件 A（某顏色在蓋牌中）
+   * @param {string} colorB - 事件 B（某顏色在蓋牌中）
+   * @param {Object<string, number>} probabilities - 當前概率分布
+   * @returns {number} 條件概率 P(A|B)
+   *
+   * @example
+   * // 已知紅色在蓋牌中，藍色也在的概率
+   * const probs = { red: 0.4, yellow: 0.1, green: 0.1, blue: 0.4 };
+   * calculateConditionalProbability('blue', 'red', probs)
+   * // 排除紅色後：yellow(0.1) + green(0.1) + blue(0.4) = 0.6
+   * // P(blue | red) = 0.4 / 0.6 = 0.667
+   */
+  calculateConditionalProbability(colorA, colorB, probabilities) {
+    const pB = probabilities[colorB] || 0;
+
+    if (pB === 0) {
+      return 0;
+    }
+
+    // 簡化模型：假設兩張蓋牌獨立
+    // P(A|B) ≈ P(A) （在剩餘顏色中的歸一化概率）
+    const pA = probabilities[colorA] || 0;
+
+    // 歸一化：排除 colorB 後重新計算概率
+    const remainingColors = Object.keys(probabilities).filter(c => c !== colorB);
+    const totalRemaining = remainingColors.reduce((sum, c) => sum + probabilities[c], 0);
+
+    if (totalRemaining === 0) {
+      return 0;
+    }
+
+    return pA / totalRemaining;
+  }
 }
 
 /**
