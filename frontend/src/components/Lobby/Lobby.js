@@ -1,5 +1,6 @@
 /**
  * 遊戲大廳組件
+ * 重新設計：中國風草藥主題（基於 Google Stitch 設計）
  *
  * @module Lobby
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
@@ -9,7 +10,6 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
-  joinGame,
   updateGameState
 } from '../../store/gameStore';
 import {
@@ -50,7 +50,6 @@ function Lobby() {
   // 本地狀態
   const [playerName, setPlayerName] = useState('');
   const [playerCount, setPlayerCount] = useState(MIN_PLAYERS);
-  const [roomId, setRoomId] = useState('');
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -66,9 +65,15 @@ function Lobby() {
   const [inputPassword, setInputPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // 工單 0079：重連相關狀態
+  // 創建房間 Modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // 重連相關狀態
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempted, setReconnectAttempted] = useState(false);
+
+  // 當前分頁
+  const [activeTab, setActiveTab] = useState('rooms');
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
@@ -101,7 +106,6 @@ function Lobby() {
     });
 
     const unsubCreated = onRoomCreated(({ gameId, gameState }) => {
-      // 工單 0079：儲存房間資訊以便重連
       saveCurrentRoom({
         roomId: gameId,
         playerId: playerId,
@@ -117,10 +121,10 @@ function Lobby() {
       }));
       navigate(`/game/${gameId}`);
       setIsLoading(false);
+      setShowCreateModal(false);
     });
 
     const unsubJoined = onJoinedRoom(({ gameId, gameState }) => {
-      // 工單 0079：儲存房間資訊以便重連
       saveCurrentRoom({
         roomId: gameId,
         playerId: playerId,
@@ -139,7 +143,6 @@ function Lobby() {
     });
 
     const unsubPassword = onPasswordRequired(({ gameId }) => {
-      // 找到對應的房間資訊
       const room = rooms.find(r => r.id === gameId);
       setPendingRoomId(gameId);
       setPendingRoomName(room ? room.name : '私人房間');
@@ -149,7 +152,6 @@ function Lobby() {
       setIsLoading(false);
     });
 
-    // 工單 0079：重連成功
     const unsubReconnected = onReconnected(({ gameId, playerId: reconnectedPlayerId, gameState }) => {
       console.log('[重連] 重連成功:', gameId);
       setIsReconnecting(false);
@@ -163,7 +165,6 @@ function Lobby() {
       navigate(`/game/${gameId}`);
     });
 
-    // 工單 0079：重連失敗
     const unsubReconnectFailed = onReconnectFailed(({ reason, message }) => {
       console.log('[重連] 重連失敗:', reason, message);
       setIsReconnecting(false);
@@ -181,9 +182,9 @@ function Lobby() {
       unsubReconnected();
       unsubReconnectFailed();
     };
-  }, [dispatch, navigate, playerId, rooms]);
+  }, [dispatch, navigate, playerId, rooms, playerName]);
 
-  // 工單 0079：嘗試重連
+  // 嘗試重連
   useEffect(() => {
     if (isConnected && !reconnectAttempted) {
       setReconnectAttempted(true);
@@ -197,7 +198,7 @@ function Lobby() {
     }
   }, [isConnected, reconnectAttempted]);
 
-  // 工單 0118：頁面重整前通知後端
+  // 頁面重整前通知後端
   useEffect(() => {
     const handleBeforeUnload = () => {
       const savedRoom = getCurrentRoom();
@@ -209,30 +210,6 @@ function Lobby() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
-
-  /**
-   * 處理玩家名稱變更
-   */
-  const handlePlayerNameChange = (e) => {
-    setPlayerName(e.target.value);
-    setError('');
-  };
-
-  /**
-   * 處理玩家數量變更
-   */
-  const handlePlayerCountChange = (e) => {
-    setPlayerCount(parseInt(e.target.value, 10));
-    setError('');
-  };
-
-  /**
-   * 處理房間ID變更
-   */
-  const handleRoomIdChange = (e) => {
-    setRoomId(e.target.value);
-    setError('');
-  };
 
   /**
    * 驗證玩家名稱
@@ -256,7 +233,6 @@ function Lobby() {
       return;
     }
 
-    // 驗證密碼（如果是私人房間）
     if (isPrivate) {
       const pwdError = getRoomPasswordError(roomPassword);
       if (pwdError) {
@@ -265,7 +241,6 @@ function Lobby() {
       }
     }
 
-    // 儲存暱稱到 localStorage
     savePlayerName(playerName.trim());
 
     setIsLoading(true);
@@ -280,35 +255,7 @@ function Lobby() {
   };
 
   /**
-   * 加入現有房間
-   */
-  const handleJoinRoom = () => {
-    if (!validatePlayerNameInput()) return;
-    if (!isConnected) {
-      setError('尚未連線到伺服器');
-      return;
-    }
-    if (!roomId.trim()) {
-      setError('請輸入房間ID');
-      return;
-    }
-
-    // 儲存暱稱到 localStorage
-    savePlayerName(playerName.trim());
-
-    setIsLoading(true);
-    setError('');
-
-    const player = {
-      id: playerId,
-      name: playerName.trim()
-    };
-
-    joinRoom(roomId.trim(), player);
-  };
-
-  /**
-   * 快速加入房間（從列表點擊）
+   * 快速加入房間
    */
   const handleQuickJoin = (selectedRoomId, roomIsPrivate = false, roomName = '') => {
     if (!validatePlayerNameInput()) return;
@@ -317,7 +264,6 @@ function Lobby() {
       return;
     }
 
-    // 如果是私人房間，顯示密碼輸入框
     if (roomIsPrivate) {
       setPendingRoomId(selectedRoomId);
       setPendingRoomName(roomName);
@@ -327,7 +273,6 @@ function Lobby() {
       return;
     }
 
-    // 儲存暱稱到 localStorage
     savePlayerName(playerName.trim());
 
     setIsLoading(true);
@@ -342,6 +287,28 @@ function Lobby() {
   };
 
   /**
+   * 快速加入任意房間
+   */
+  const handleQuickJoinAny = () => {
+    if (!validatePlayerNameInput()) return;
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
+      return;
+    }
+
+    // 找到第一個可加入的房間
+    const availableRoom = rooms.find(room =>
+      room.playerCount < (room.maxPlayers || 4) && !room.isPrivate
+    );
+
+    if (availableRoom) {
+      handleQuickJoin(availableRoom.id, false, availableRoom.name);
+    } else {
+      setError('目前沒有可加入的房間，請創建新房間');
+    }
+  };
+
+  /**
    * 提交密碼加入私人房間
    */
   const handlePasswordSubmit = () => {
@@ -350,7 +317,6 @@ function Lobby() {
       return;
     }
 
-    // 儲存暱稱到 localStorage
     savePlayerName(playerName.trim());
 
     setIsLoading(true);
@@ -375,9 +341,16 @@ function Lobby() {
     setPasswordError('');
   };
 
+  /**
+   * 獲取玩家名稱首字母
+   */
+  const getInitial = (name) => {
+    return name ? name.charAt(0).toUpperCase() : '?';
+  };
+
   return (
     <div className="lobby">
-      {/* 工單 0079：重連中覆蓋層 */}
+      {/* 重連中覆蓋層 */}
       {isReconnecting && (
         <div className="modal-overlay">
           <div className="modal reconnecting-modal">
@@ -387,141 +360,114 @@ function Lobby() {
         </div>
       )}
 
+      {/* 頂部導航欄 */}
       <header className="lobby-header">
-        <h1>本草 Herbalism</h1>
-        <p className="lobby-subtitle">3-4 人推理卡牌遊戲</p>
-        <p className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? '已連線' : '未連線'}
-        </p>
+        <div className="lobby-header-inner">
+          <div className="lobby-brand">
+            <div className="lobby-logo">
+              <span className="material-symbols-outlined">eco</span>
+            </div>
+            <div className="lobby-brand-text">
+              <h1 className="lobby-brand-title">Herbalism</h1>
+              <span className="lobby-brand-subtitle">本草</span>
+            </div>
+          </div>
+
+          <div className="lobby-user-area">
+            <div className="lobby-score">
+              <span className="material-symbols-outlined">stars</span>
+              <span>Score: 0</span>
+            </div>
+            <div className="lobby-user">
+              <div className="lobby-user-info">
+                <p className="lobby-user-name">{playerName || '訪客'}</p>
+{!isConnected && (
+                  <p className="lobby-user-rank">
+                    <span className="connection-status disconnected">
+                      未連線
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div className="lobby-avatar">
+                {getInitial(playerName)}
+              </div>
+            </div>
+          </div>
+        </div>
       </header>
 
+      {/* 主內容區 */}
       <main className="lobby-content">
-        {/* 玩家資訊區 */}
-        <section className="lobby-section player-section">
-          <h2>玩家資訊</h2>
-          <div className="input-group">
-            <label htmlFor="playerName">玩家名稱</label>
-            <input
-              id="playerName"
-              type="text"
-              value={playerName}
-              onChange={handlePlayerNameChange}
-              placeholder="請輸入您的名稱（2-12 字元）"
-              maxLength={12}
-              disabled={isLoading}
-            />
-            {playerName && getPlayerName() && playerName === getPlayerName() && (
-              <span className="welcome-message">歡迎回來，{playerName}！</span>
-            )}
-          </div>
-        </section>
-
-        {/* 創建房間區 */}
-        <section className="lobby-section create-section">
-          <h2>創建房間</h2>
-          <div className="input-group">
-            <label htmlFor="playerCount">玩家數量</label>
-            <select
-              id="playerCount"
-              value={playerCount}
-              onChange={handlePlayerCountChange}
-              disabled={isLoading}
+        {/* 分頁導航 */}
+        <div className="lobby-tabs">
+          <div className="lobby-tabs-inner">
+            <button
+              className={`lobby-tab ${activeTab === 'rooms' ? 'active' : ''}`}
+              onClick={() => setActiveTab('rooms')}
             >
-              <option value={3}>3 人</option>
-              <option value={4}>4 人</option>
-            </select>
+              <span className="material-symbols-outlined">meeting_room</span>
+              房間
+            </button>
+            <button
+              className={`lobby-tab ${activeTab === 'friends' ? 'active' : ''}`}
+              onClick={() => navigate('/friends')}
+            >
+              <span className="material-symbols-outlined">group</span>
+              好友
+            </button>
+            <button
+              className={`lobby-tab ${activeTab === 'leaderboard' ? 'active' : ''}`}
+              onClick={() => navigate('/leaderboard')}
+            >
+              <span className="material-symbols-outlined">leaderboard</span>
+              排行榜
+            </button>
+            <button
+              className={`lobby-tab ${activeTab === 'profile' ? 'active' : ''}`}
+              onClick={() => navigate('/profile')}
+            >
+              <span className="material-symbols-outlined">person</span>
+              個人資料
+            </button>
           </div>
-          <div className="input-group checkbox-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={isPrivate}
-                onChange={(e) => {
-                  setIsPrivate(e.target.checked);
-                  if (!e.target.checked) {
-                    setRoomPassword('');
-                  }
-                }}
-                disabled={isLoading}
-              />
-              <span>設為私人房間</span>
-            </label>
+        </div>
+
+        {/* 標題區域 */}
+        <div className="lobby-title-area">
+          <div>
+            <h2 className="lobby-title">遊戲大廳</h2>
+            <p className="lobby-subtitle">加入房間開始遊戲，或創建自己的房間...</p>
           </div>
-          {isPrivate && (
-            <div className="input-group">
-              <label htmlFor="roomPassword">房間密碼</label>
-              <input
-                id="roomPassword"
-                type="password"
-                value={roomPassword}
-                onChange={(e) => setRoomPassword(e.target.value)}
-                placeholder="輸入 4-16 位密碼"
-                maxLength={16}
-                disabled={isLoading}
-              />
-              <span className="input-hint">密碼長度：4-16 個字元</span>
-            </div>
-          )}
           <button
             className="btn btn-primary"
-            onClick={handleCreateRoom}
+            onClick={handleQuickJoinAny}
             disabled={isLoading || !isConnected}
           >
-            {isLoading ? '創建中...' : '創建新房間'}
+            <span className="material-symbols-outlined">bolt</span>
+            快速加入
           </button>
-        </section>
+        </div>
 
-        {/* 加入房間區 */}
-        <section className="lobby-section join-section">
-          <h2>加入房間</h2>
-          <div className="input-group">
-            <label htmlFor="roomId">房間ID</label>
-            <input
-              id="roomId"
-              type="text"
-              value={roomId}
-              onChange={handleRoomIdChange}
-              placeholder="請輸入房間ID"
-              disabled={isLoading}
-            />
-          </div>
-          <button
-            className="btn btn-secondary"
-            onClick={handleJoinRoom}
-            disabled={isLoading || !isConnected}
-          >
-            {isLoading ? '加入中...' : '加入房間'}
-          </button>
-        </section>
-
-        {/* 房間列表區 */}
-        <section className="lobby-section rooms-section">
-          <h2>可用房間</h2>
-          {rooms.length === 0 ? (
-            <p className="no-rooms">目前沒有可用的房間</p>
-          ) : (
-            <ul className="room-list">
-              {rooms.map((room) => (
-                <li key={room.id} className={`room-item ${room.isPrivate ? 'private' : ''}`}>
-                  <span className="room-name">
-                    {room.isPrivate && <span className="lock-icon">🔒</span>}
-                    {room.name}
-                  </span>
-                  <span className="room-players">
-                    {room.playerCount}/{room.maxPlayers || 4} 玩家
-                  </span>
-                  <button
-                    className="btn btn-small"
-                    onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                    disabled={isLoading || !isConnected || room.playerCount >= room.maxPlayers}
-                  >
-                    {room.playerCount >= room.maxPlayers ? '已滿' : '加入'}
-                  </button>
-                </li>
-              ))}
-            </ul>
+        {/* 玩家名稱輸入 */}
+        <div className="input-group" style={{ maxWidth: '400px', marginBottom: '24px' }}>
+          <label htmlFor="playerName">玩家名稱</label>
+          <input
+            id="playerName"
+            type="text"
+            value={playerName}
+            onChange={(e) => {
+              setPlayerName(e.target.value);
+              setError('');
+            }}
+            placeholder="請輸入您的名稱（2-12 字元）"
+            maxLength={12}
+            disabled={isLoading}
+          />
+          {playerName && getPlayerName() && playerName === getPlayerName() && (
+            <span className="welcome-message">歡迎回來，{playerName}！</span>
           )}
-        </section>
+        </div>
 
         {/* 錯誤訊息 */}
         {error && (
@@ -529,31 +475,159 @@ function Lobby() {
             {error}
           </div>
         )}
+
+        {/* 房間網格 */}
+        <div className="room-grid">
+          {rooms.length === 0 ? (
+            <p className="no-rooms">目前沒有可用的房間，點擊右下角按鈕創建新房間</p>
+          ) : (
+            rooms.map((room) => (
+              <div key={room.id} className="room-card">
+                <div className="room-card-image">
+                  <div className="room-card-image-bg"></div>
+                  <span className={`room-card-status ${room.playerCount >= (room.maxPlayers || 4) ? 'in-game' : 'waiting'} ${room.isPrivate ? 'private' : ''}`}>
+                    {room.playerCount >= (room.maxPlayers || 4) ? '已滿' : '等待中'}
+                  </span>
+                </div>
+                <div className="room-card-body">
+                  <div className="room-card-info">
+                    <div>
+                      <h3 className="room-card-name">{room.name}</h3>
+                      <p className="room-card-id">ID: {room.id}</p>
+                    </div>
+                    <div className="room-card-players">
+                      <p className={`room-card-players-count ${room.playerCount >= (room.maxPlayers || 4) ? 'full' : ''}`}>
+                        {room.playerCount}/{room.maxPlayers || 4}
+                      </p>
+                      <p className="room-card-players-label">玩家</p>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                    disabled={isLoading || !isConnected || room.playerCount >= (room.maxPlayers || 4)}
+                  >
+                    <span className="material-symbols-outlined">
+                      {room.playerCount >= (room.maxPlayers || 4) ? 'visibility' : 'door_open'}
+                    </span>
+                    {room.playerCount >= (room.maxPlayers || 4) ? '已滿' : '加入房間'}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </main>
 
+      {/* 創建房間浮動按鈕 */}
+      <div className="fab-container">
+        <button
+          className="fab"
+          onClick={() => setShowCreateModal(true)}
+          disabled={!isConnected}
+          title="創建新房間"
+        >
+          <span className="material-symbols-outlined">add</span>
+        </button>
+      </div>
+
+      {/* 頁尾 */}
       <footer className="lobby-footer">
-        <nav className="lobby-nav">
-          <button
-            className="nav-btn"
-            onClick={() => navigate('/profile')}
-          >
-            👤 個人資料
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => navigate('/friends')}
-          >
-            👥 好友
-          </button>
-          <button
-            className="nav-btn"
-            onClick={() => navigate('/leaderboard')}
-          >
-            🏆 排行榜
-          </button>
-        </nav>
-        <p>遊戲規則：猜測兩張隱藏牌的顏色</p>
+        <div className="lobby-footer-inner">
+          <div className="lobby-footer-links">
+            <p>© 2024 本草 Herbalism. All rights reserved.</p>
+            <a href="#">隱私政策</a>
+            <a href="#">服務條款</a>
+          </div>
+          <div className="lobby-footer-status">
+            <span>
+              <span className="online-indicator"></span>
+              {rooms.length} 個房間
+            </span>
+{!isConnected && (
+              <span>
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>wifi_off</span>
+                伺服器: 離線
+              </span>
+            )}
+          </div>
+        </div>
       </footer>
+
+      {/* 創建房間 Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal create-room-modal" onClick={e => e.stopPropagation()}>
+            <h3>
+              <span className="material-symbols-outlined">add_circle</span>
+              創建新房間
+            </h3>
+            <p>設定房間參數後開始遊戲</p>
+
+            <div className="input-group">
+              <label htmlFor="createPlayerCount">玩家數量</label>
+              <select
+                id="createPlayerCount"
+                value={playerCount}
+                onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
+                disabled={isLoading}
+              >
+                <option value={3}>3 人</option>
+                <option value={4}>4 人</option>
+              </select>
+            </div>
+
+            <div className="checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={isPrivate}
+                  onChange={(e) => {
+                    setIsPrivate(e.target.checked);
+                    if (!e.target.checked) {
+                      setRoomPassword('');
+                    }
+                  }}
+                  disabled={isLoading}
+                />
+                <span>設為私人房間</span>
+              </label>
+            </div>
+
+            {isPrivate && (
+              <div className="input-group">
+                <label htmlFor="createRoomPassword">房間密碼</label>
+                <input
+                  id="createRoomPassword"
+                  type="password"
+                  value={roomPassword}
+                  onChange={(e) => setRoomPassword(e.target.value)}
+                  placeholder="輸入 4-16 位密碼"
+                  maxLength={16}
+                  disabled={isLoading}
+                />
+                <span className="input-hint">密碼長度：4-16 個字元</span>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowCreateModal(false)}
+              >
+                取消
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleCreateRoom}
+                disabled={isLoading || !isConnected}
+              >
+                {isLoading ? '創建中...' : '創建房間'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 密碼輸入 Modal */}
       {showPasswordModal && (

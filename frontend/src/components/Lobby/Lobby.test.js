@@ -1,10 +1,10 @@
 /**
  * Lobby 組件單元測試
- * 工作單 0014, 0015
+ * 重新設計：配合新版 Stitch UI 設計
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { createStore } from 'redux';
@@ -37,7 +37,7 @@ const renderWithProviders = (component) => {
   );
 };
 
-describe('Lobby - 工作單 0014', () => {
+describe('Lobby - 頁面渲染', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     eventCallbacks = {};
@@ -47,230 +47,6 @@ describe('Lobby - 工作單 0014', () => {
     socketService.initSocket.mockReturnValue({});
     socketService.onConnectionChange.mockImplementation((callback) => {
       eventCallbacks.connectionChange = callback;
-      // 預設連線成功
-      setTimeout(() => callback(true), 0);
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    // 工單 0079：重連 mock
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
-  });
-
-  describe('渲染', () => {
-    test('應顯示遊戲標題', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示副標題', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('3-4 人推理卡牌遊戲')).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示玩家名稱輸入框', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示創建房間按鈕', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('創建新房間')).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示房間ID輸入框', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('房間ID')).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示加入房間按鈕', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: '加入房間' })).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示可用房間區域', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('可用房間')).toBeInTheDocument();
-      });
-    });
-
-    test('應顯示無可用房間訊息', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('目前沒有可用的房間')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('輸入驗證', () => {
-    test('未輸入玩家名稱時創建房間應顯示錯誤', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('創建新房間')).toBeInTheDocument();
-      });
-      await waitFor(() => {
-        expect(screen.getByText('已連線')).toBeInTheDocument();
-      });
-      fireEvent.click(screen.getByText('創建新房間'));
-      await waitFor(() => {
-        expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
-      });
-    });
-
-    test('未輸入玩家名稱時加入房間應顯示錯誤', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('房間ID')).toBeInTheDocument();
-      });
-      await waitFor(() => {
-        expect(screen.getByText('已連線')).toBeInTheDocument();
-      });
-      const roomIdInput = screen.getByLabelText('房間ID');
-      fireEvent.change(roomIdInput, { target: { value: 'room_123' } });
-      fireEvent.click(screen.getByRole('button', { name: '加入房間' }));
-      await waitFor(() => {
-        expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
-      });
-    });
-
-    test('輸入玩家名稱但未輸入房間ID時加入房間應顯示錯誤', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
-      fireEvent.click(screen.getByRole('button', { name: '加入房間' }));
-      expect(screen.getByText('請輸入房間ID')).toBeInTheDocument();
-    });
-  });
-
-  describe('互動', () => {
-    test('輸入玩家名稱應更新輸入值', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
-      const input = screen.getByLabelText('玩家名稱');
-      fireEvent.change(input, { target: { value: '測試玩家' } });
-      expect(input.value).toBe('測試玩家');
-    });
-
-    test('輸入房間ID應更新輸入值', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('房間ID')).toBeInTheDocument();
-      });
-      const input = screen.getByLabelText('房間ID');
-      fireEvent.change(input, { target: { value: 'room_456' } });
-      expect(input.value).toBe('room_456');
-    });
-
-    test('輸入後錯誤訊息應消失', async () => {
-      renderWithProviders(<Lobby />);
-
-      // 等待連線成功
-      await waitFor(() => {
-        expect(screen.getByText('創建新房間')).toBeInTheDocument();
-      });
-      await waitFor(() => {
-        expect(screen.getByText('已連線')).toBeInTheDocument();
-      });
-
-      // 觸發錯誤
-      fireEvent.click(screen.getByText('創建新房間'));
-
-      await waitFor(() => {
-        expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
-      });
-
-      // 輸入玩家名稱
-      const input = screen.getByLabelText('玩家名稱');
-      fireEvent.change(input, { target: { value: '玩家' } });
-
-      // 錯誤訊息應消失
-      await waitFor(() => {
-        expect(screen.queryByText('請輸入暱稱')).not.toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('樣式', () => {
-    test('應包含 lobby 容器類別', async () => {
-      const { container } = renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(container.querySelector('.lobby')).toBeInTheDocument();
-      });
-    });
-
-    test('應包含 lobby-header 類別', async () => {
-      const { container } = renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(container.querySelector('.lobby-header')).toBeInTheDocument();
-      });
-    });
-
-    test('應包含 lobby-content 類別', async () => {
-      const { container } = renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(container.querySelector('.lobby-content')).toBeInTheDocument();
-      });
-    });
-  });
-});
-
-describe('Lobby - 工作單 0015', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    eventCallbacks = {};
-    localStorage.clear();
-
-    // Mock socket service functions
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      // Use queueMicrotask for faster callback but still async
       queueMicrotask(() => callback(true));
       return () => {};
     });
@@ -294,7 +70,6 @@ describe('Lobby - 工作單 0015', () => {
       eventCallbacks.passwordRequired = callback;
       return () => {};
     });
-    // 工單 0079：重連 mock
     socketService.onReconnected.mockImplementation((callback) => {
       eventCallbacks.reconnected = callback;
       return () => {};
@@ -308,66 +83,331 @@ describe('Lobby - 工作單 0015', () => {
     socketService.joinRoom.mockImplementation(() => {});
   });
 
-  describe('玩家數量選擇器', () => {
-    test('應顯示玩家數量選擇器', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家數量')).toBeInTheDocument();
-      });
+  test('應顯示品牌標題', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('Herbalism')).toBeInTheDocument();
+    });
+  });
+
+  test('應顯示品牌副標題', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('本草')).toBeInTheDocument();
+    });
+  });
+
+  test('應顯示遊戲大廳標題', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('遊戲大廳')).toBeInTheDocument();
+    });
+  });
+
+  test('應顯示玩家名稱輸入框', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+    });
+  });
+
+  test('應顯示快速加入按鈕', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('快速加入')).toBeInTheDocument();
+    });
+  });
+
+  test('應顯示創建房間 FAB 按鈕', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByTitle('創建新房間')).toBeInTheDocument();
+    });
+  });
+
+  test('無房間時應顯示提示訊息', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText(/目前沒有可用的房間/)).toBeInTheDocument();
+    });
+  });
+
+  test('應包含 lobby 容器類別', async () => {
+    const { container } = renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(container.querySelector('.lobby')).toBeInTheDocument();
+    });
+  });
+
+  test('應包含 lobby-header 類別', async () => {
+    const { container } = renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(container.querySelector('.lobby-header')).toBeInTheDocument();
+    });
+  });
+
+  test('應包含 lobby-content 類別', async () => {
+    const { container } = renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(container.querySelector('.lobby-content')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('Lobby - 輸入驗證', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+  });
+
+  test('輸入玩家名稱應更新輸入值', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+    });
+    const input = screen.getByLabelText('玩家名稱');
+    fireEvent.change(input, { target: { value: '測試玩家' } });
+    expect(input.value).toBe('測試玩家');
+  });
+
+  test('未輸入玩家名稱時快速加入應顯示錯誤', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
     });
 
-    test('預設應選擇 3 人', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        const select = screen.getByLabelText('玩家數量');
-        expect(select.value).toBe('3');
-      });
+    // 模擬有可用房間
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '測試房間', playerCount: 1, maxPlayers: 3 }
+      ]);
     });
 
-    test('應可以選擇 4 人', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家數量')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.getByText('測試房間')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('快速加入'));
+    await waitFor(() => {
+      expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
+    });
+  });
+
+  test('輸入後錯誤訊息應消失', async () => {
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    // 模擬有可用房間
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '測試房間', playerCount: 1, maxPlayers: 3 }
+      ]);
+    });
+
+    // 觸發錯誤
+    fireEvent.click(screen.getByText('快速加入'));
+
+    await waitFor(() => {
+      expect(screen.getByText('請輸入暱稱')).toBeInTheDocument();
+    });
+
+    // 輸入玩家名稱
+    const input = screen.getByLabelText('玩家名稱');
+    fireEvent.change(input, { target: { value: '玩家' } });
+
+    // 錯誤訊息應消失
+    await waitFor(() => {
+      expect(screen.queryByText('請輸入暱稱')).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('Lobby - 創建房間功能', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+  });
+
+  test('點擊 FAB 應開啟創建房間對話框', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByTitle('創建新房間')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('創建新房間'));
+
+    await waitFor(() => {
+      expect(screen.getByText('創建新房間')).toBeInTheDocument();
+      expect(screen.getByLabelText('玩家數量')).toBeInTheDocument();
+    });
+  });
+
+  test('預設應選擇 3 人', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByTitle('創建新房間')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('創建新房間'));
+
+    await waitFor(() => {
+      const select = screen.getByLabelText('玩家數量');
+      expect(select.value).toBe('3');
+    });
+  });
+
+  test('應可以選擇 4 人', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByTitle('創建新房間')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('創建新房間'));
+
+    await waitFor(() => {
       const select = screen.getByLabelText('玩家數量');
       fireEvent.change(select, { target: { value: '4' } });
       expect(select.value).toBe('4');
     });
+  });
 
-    test('應有 3 人和 4 人選項', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: '3 人' })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: '4 人' })).toBeInTheDocument();
-      });
+  test('應有 3 人和 4 人選項', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByTitle('創建新房間')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByTitle('創建新房間'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: '3 人' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4 人' })).toBeInTheDocument();
     });
   });
 
-  describe('創建房間功能', () => {
-    test('創建房間成功應調用 socketService.createRoom', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
-
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
-      fireEvent.click(screen.getByText('創建新房間'));
-
-      expect(socketService.createRoom).toHaveBeenCalled();
+  test('創建房間成功應調用 socketService.createRoom', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
     });
 
-    test('創建房間成功後應導航到遊戲房間', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
+    const playerNameInput = screen.getByLabelText('玩家名稱');
+    fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
-      fireEvent.click(screen.getByText('創建新房間'));
+    fireEvent.click(screen.getByTitle('創建新房間'));
 
-      // 模擬後端回應
+    await waitFor(() => {
+      expect(screen.getByText('創建新房間')).toBeInTheDocument();
+    });
+
+    // 點擊 Modal 內的確認按鈕
+    const createButton = screen.getByRole('button', { name: /創建房間/ });
+    fireEvent.click(createButton);
+
+    expect(socketService.createRoom).toHaveBeenCalled();
+  });
+
+  test('創建房間成功後應導航到遊戲房間', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+    });
+
+    const playerNameInput = screen.getByLabelText('玩家名稱');
+    fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
+
+    fireEvent.click(screen.getByTitle('創建新房間'));
+
+    await waitFor(() => {
+      expect(screen.getByText('創建新房間')).toBeInTheDocument();
+    });
+
+    const createButton = screen.getByRole('button', { name: /創建房間/ });
+    fireEvent.click(createButton);
+
+    // 模擬後端回應
+    await act(async () => {
       eventCallbacks.roomCreated({
         gameId: 'test_game_123',
         gameState: {
@@ -376,64 +416,162 @@ describe('Lobby - 工作單 0015', () => {
           gamePhase: 'waiting'
         }
       });
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/game/test_game_123');
-      });
     });
 
-    test('創建房間錯誤應顯示錯誤訊息', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
-
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
-      fireEvent.click(screen.getByText('創建新房間'));
-
-      // 模擬後端錯誤回應
-      eventCallbacks.error({ message: '創建房間失敗' });
-
-      await waitFor(() => {
-        expect(screen.getByText('創建房間失敗')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/game/test_game_123');
     });
   });
 
-  describe('加入房間功能', () => {
-    test('加入房間成功應調用 socketService.joinRoom', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
-
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      const roomIdInput = screen.getByLabelText('房間ID');
-
-      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
-      fireEvent.change(roomIdInput, { target: { value: 'valid_room' } });
-      fireEvent.click(screen.getByRole('button', { name: '加入房間' }));
-
-      expect(socketService.joinRoom).toHaveBeenCalledWith('valid_room', expect.objectContaining({
-        name: '玩家1'
-      }));
+  test('創建房間錯誤應顯示錯誤訊息', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
     });
 
-    test('加入房間成功應導航到遊戲房間', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
+    const playerNameInput = screen.getByLabelText('玩家名稱');
+    fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      const roomIdInput = screen.getByLabelText('房間ID');
+    fireEvent.click(screen.getByTitle('創建新房間'));
 
-      fireEvent.change(playerNameInput, { target: { value: '玩家2' } });
-      fireEvent.change(roomIdInput, { target: { value: 'valid_room' } });
-      fireEvent.click(screen.getByRole('button', { name: '加入房間' }));
+    await waitFor(() => {
+      expect(screen.getByText('創建新房間')).toBeInTheDocument();
+    });
 
-      // 模擬後端回應
+    const createButton = screen.getByRole('button', { name: /創建房間/ });
+    fireEvent.click(createButton);
+
+    // 模擬後端錯誤回應
+    await act(async () => {
+      eventCallbacks.error({ message: '創建房間失敗' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('創建房間失敗')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('Lobby - 房間列表功能', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+  });
+
+  test('顯示房間列表', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('遊戲大廳')).toBeInTheDocument();
+    });
+
+    // 模擬收到房間列表
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '玩家A的房間', playerCount: 1, maxPlayers: 3 },
+        { id: 'room2', name: '玩家B的房間', playerCount: 2, maxPlayers: 4 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('玩家A的房間')).toBeInTheDocument();
+      expect(screen.getByText('玩家B的房間')).toBeInTheDocument();
+    });
+  });
+
+  test('點擊房間卡片加入按鈕應加入該房間', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('遊戲大廳')).toBeInTheDocument();
+    });
+
+    // 先輸入玩家名稱
+    const playerNameInput = screen.getByLabelText('玩家名稱');
+    fireEvent.change(playerNameInput, { target: { value: '玩家X' } });
+
+    // 模擬收到房間列表
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '玩家A的房間', playerCount: 1, maxPlayers: 3 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('玩家A的房間')).toBeInTheDocument();
+    });
+
+    // 點擊加入按鈕
+    const joinButton = screen.getByText('加入房間');
+    fireEvent.click(joinButton);
+
+    expect(socketService.joinRoom).toHaveBeenCalledWith('room1', expect.objectContaining({
+      name: '玩家X'
+    }));
+  });
+
+  test('加入房間成功應導航到遊戲房間', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+    });
+
+    const playerNameInput = screen.getByLabelText('玩家名稱');
+    fireEvent.change(playerNameInput, { target: { value: '玩家2' } });
+
+    // 模擬收到房間列表
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'valid_room', name: '測試房間', playerCount: 1, maxPlayers: 4 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('測試房間')).toBeInTheDocument();
+    });
+
+    const joinButton = screen.getByText('加入房間');
+    fireEvent.click(joinButton);
+
+    // 模擬後端回應
+    await act(async () => {
       eventCallbacks.joinedRoom({
         gameId: 'valid_room',
         gameState: {
@@ -445,143 +583,194 @@ describe('Lobby - 工作單 0015', () => {
           gamePhase: 'waiting'
         }
       });
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/game/valid_room');
-      });
     });
 
-    test('加入房間錯誤應顯示錯誤訊息', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/game/valid_room');
+    });
+  });
 
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      const roomIdInput = screen.getByLabelText('房間ID');
+  test('加入房間錯誤應顯示錯誤訊息', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+    });
 
-      fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
-      fireEvent.change(roomIdInput, { target: { value: 'nonexistent_room' } });
-      fireEvent.click(screen.getByRole('button', { name: '加入房間' }));
+    const playerNameInput = screen.getByLabelText('玩家名稱');
+    fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
-      // 模擬後端錯誤回應
+    // 模擬收到房間列表
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'some_room', name: '測試房間', playerCount: 1, maxPlayers: 3 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('測試房間')).toBeInTheDocument();
+    });
+
+    const joinButton = screen.getByText('加入房間');
+    fireEvent.click(joinButton);
+
+    // 模擬後端錯誤回應
+    await act(async () => {
       eventCallbacks.error({ message: '房間不存在' });
-
-      await waitFor(() => {
-        expect(screen.getByText('房間不存在')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('房間列表功能', () => {
-    test('顯示房間列表', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('可用房間')).toBeInTheDocument();
-      });
-
-      // 模擬收到房間列表
-      eventCallbacks.roomList([
-        { id: 'room1', name: '玩家A的房間', playerCount: 1, maxPlayers: 3 },
-        { id: 'room2', name: '玩家B的房間', playerCount: 2, maxPlayers: 4 }
-      ]);
-
-      await waitFor(() => {
-        expect(screen.getByText('玩家A的房間')).toBeInTheDocument();
-        expect(screen.getByText('玩家B的房間')).toBeInTheDocument();
-      });
     });
 
-    test('點擊房間列表中的加入按鈕應加入該房間', async () => {
-      renderWithProviders(<Lobby />);
-      await waitFor(() => {
-        expect(screen.getByText('可用房間')).toBeInTheDocument();
-      });
-
-      // 先輸入玩家名稱
-      const playerNameInput = screen.getByLabelText('玩家名稱');
-      fireEvent.change(playerNameInput, { target: { value: '玩家X' } });
-
-      // 模擬收到房間列表
-      eventCallbacks.roomList([
-        { id: 'room1', name: '玩家A的房間', playerCount: 1, maxPlayers: 3 }
-      ]);
-
-      await waitFor(() => {
-        expect(screen.getByText('玩家A的房間')).toBeInTheDocument();
-      });
-
-      // 點擊加入按鈕
-      const joinButtons = screen.getAllByText('加入');
-      fireEvent.click(joinButtons[0]);
-
-      expect(socketService.joinRoom).toHaveBeenCalledWith('room1', expect.objectContaining({
-        name: '玩家X'
-      }));
-    });
-  });
-
-  describe('連線狀態', () => {
-    test('未連線時應顯示未連線狀態', async () => {
-      socketService.onConnectionChange.mockImplementation((callback) => {
-        eventCallbacks.connectionChange = callback;
-        setTimeout(() => callback(false), 0);
-        return () => {};
-      });
-
-      renderWithProviders(<Lobby />);
-
-      await waitFor(() => {
-        expect(screen.getByText('未連線')).toBeInTheDocument();
-      });
-    });
-
-    test('連線後應顯示已連線狀態', async () => {
-      renderWithProviders(<Lobby />);
-
-      await waitFor(() => {
-        expect(screen.getByText('已連線')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('錯誤訊息', () => {
-    test('錯誤訊息應有 role="alert"', async () => {
-      // Override the connection callback for this specific test to not auto-connect
-      socketService.onConnectionChange.mockImplementation((callback) => {
-        eventCallbacks.connectionChange = callback;
-        // Don't auto-connect, but manually trigger connection once
-        Promise.resolve().then(() => callback(true));
-        return () => {};
-      });
-
-      renderWithProviders(<Lobby />);
-
-      // Wait for connection to be established
-      await waitFor(() => {
-        expect(screen.getByText('已連線')).toBeInTheDocument();
-      });
-
-      // Now click the button - this should trigger validation error
-      fireEvent.click(screen.getByText('創建新房間'));
-
-      // The error should appear after state update
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-        expect(screen.getByRole('alert')).toHaveTextContent('請輸入暱稱');
-      });
+    await waitFor(() => {
+      expect(screen.getByText('房間不存在')).toBeInTheDocument();
     });
   });
 });
 
-// ==================== 工單 0079：重連測試 ====================
-describe('Lobby - 工作單 0079 重連功能', () => {
+describe('Lobby - 連線狀態', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
 
-    // Mock socket service functions
+    socketService.initSocket.mockReturnValue({});
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+  });
+
+  test('未連線時應顯示未連線狀態', async () => {
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      setTimeout(() => callback(false), 0);
+      return () => {};
+    });
+
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(screen.getByText('未連線')).toBeInTheDocument();
+    });
+  });
+
+  test('連線後不應顯示連線狀態', async () => {
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      // 已連線時不顯示狀態文字
+      expect(screen.queryByText('已連線')).not.toBeInTheDocument();
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('Lobby - 錯誤訊息', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+  });
+
+  test('錯誤訊息應有 role="alert"', async () => {
+    renderWithProviders(<Lobby />);
+
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    // 模擬有可用房間
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '測試房間', playerCount: 1, maxPlayers: 3 }
+      ]);
+    });
+
+    // 點擊快速加入（沒輸入名稱）
+    fireEvent.click(screen.getByText('快速加入'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('請輸入暱稱');
+    });
+  });
+});
+
+// ==================== 重連測試 ====================
+describe('Lobby - 重連功能', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
     socketService.initSocket.mockReturnValue({});
     socketService.onConnectionChange.mockImplementation((callback) => {
       eventCallbacks.connectionChange = callback;
@@ -622,7 +811,6 @@ describe('Lobby - 工作單 0079 重連功能', () => {
   });
 
   test('有儲存的房間資訊時應嘗試重連', async () => {
-    // 設定 localStorage 中有房間資訊
     localStorage.setItem('gress_current_room', JSON.stringify({
       roomId: 'test-room',
       playerId: 'test-player',
@@ -656,14 +844,16 @@ describe('Lobby - 工作單 0079 重連功能', () => {
     });
 
     // 模擬重連成功
-    eventCallbacks.reconnected({
-      gameId: 'test-room',
-      playerId: 'test-player',
-      gameState: {
-        players: [{ id: 'test-player', name: '測試玩家' }],
-        maxPlayers: 3,
-        gamePhase: 'playing'
-      }
+    await act(async () => {
+      eventCallbacks.reconnected({
+        gameId: 'test-room',
+        playerId: 'test-player',
+        gameState: {
+          players: [{ id: 'test-player', name: '測試玩家' }],
+          maxPlayers: 3,
+          gamePhase: 'playing'
+        }
+      });
     });
 
     await waitFor(() => {
@@ -686,9 +876,11 @@ describe('Lobby - 工作單 0079 重連功能', () => {
     });
 
     // 模擬重連失敗
-    eventCallbacks.reconnectFailed({
-      reason: 'room_not_found',
-      message: '房間已不存在'
+    await act(async () => {
+      eventCallbacks.reconnectFailed({
+        reason: 'room_not_found',
+        message: '房間已不存在'
+      });
     });
 
     await waitFor(() => {
@@ -697,7 +889,7 @@ describe('Lobby - 工作單 0079 重連功能', () => {
   });
 
   test('房間資訊過期時不應嘗試重連', async () => {
-    // 工單 0116：設定過期的房間資訊（超過 2 小時）
+    // 設定過期的房間資訊（超過 2 小時）
     localStorage.setItem('gress_current_room', JSON.stringify({
       roomId: 'test-room',
       playerId: 'test-player',
@@ -708,7 +900,7 @@ describe('Lobby - 工作單 0079 重連功能', () => {
     renderWithProviders(<Lobby />);
 
     await waitFor(() => {
-      expect(screen.getByText('已連線')).toBeInTheDocument();
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
     });
 
     // 不應嘗試重連

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Herbalism Game Lobby</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2f7f34",
+                        "accent-gold": "#C5A059",
+                        "background-light": "#FFF8E1",
+                        "background-dark": "#141e15",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bamboo-pattern {
+            background-image: radial-gradient(#2f7f3411 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .chinese-border {
+            border-image: linear-gradient(to right, #C5A059, #E6D5B8, #C5A059) 1;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen text-[#131613] dark:text-[#f1f3f1]">
+<!-- Bamboo Pattern Overlay -->
+<div class="fixed inset-0 bamboo-pattern pointer-events-none opacity-40"></div>
+<div class="relative flex min-h-screen flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full border-b border-[#2f7f3422] bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-6 lg:px-20 py-3">
+<div class="max-w-[1200px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-2xl">eco</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-[#131613] dark:text-white text-lg font-bold leading-none tracking-tight">Herbalism</h1>
+<span class="text-primary text-[10px] font-bold uppercase tracking-widest">本草纲目</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-2">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-lg">
+<span class="material-symbols-outlined text-primary text-sm">stars</span>
+<span class="text-primary font-bold text-sm">Score: 1200</span>
+</div>
+</div>
+<div class="flex items-center gap-3 border-l border-[#2f7f3422] pl-6">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-bold leading-none text-[#131613] dark:text-white">MedicinalSage</p>
+<p class="text-xs text-[#6b806c]">Grandmaster</p>
+</div>
+<div class="size-10 rounded-full bg-cover bg-center border-2 border-primary" data-alt="User avatar of a Chinese herbalist" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAIGvBC2eARx7NzpiVmKsvO3uCel6drKVEdm20ZG_L3j0iVOVhpefTQvuFMXRBXLTZY1RSOyZq7MNnZ1Zp9GMkz-z_gnth_yMsumcSCy48Yzrw6d9S21Ab0Uf3rlLBl_4JAEo3is9iDJWA4_qZAVaxBFQG7r-foIZ8wGIdmgs_FE4RMUjcfNT99_mpFyJ-V0k3q8xZAqBzhNJMmzCLjPu47zwkNVk6ND-E0iQMYGAcVePDuK_bV954DOPjmg7B8zKgHsp-MAaaJXJU");'></div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Container -->
+<main class="flex-1 flex flex-col max-w-[1200px] mx-auto w-full px-6 lg:px-20 py-8">
+<!-- Tabs Navigation -->
+<div class="mb-8">
+<div class="flex border-b border-[#2f7f3422] gap-8">
+<a class="flex flex-col items-center justify-center border-b-[3px] border-primary text-primary pb-3 pt-2" href="#">
+<p class="text-sm font-bold tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">meeting_room</span> Rooms
+                        </p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-[#6b806c] hover:text-primary pb-3 pt-2 transition-colors" href="#">
+<p class="text-sm font-bold tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">group</span> Friends
+                        </p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-[#6b806c] hover:text-primary pb-3 pt-2 transition-colors" href="#">
+<p class="text-sm font-bold tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">leaderboard</span> Leaderboard
+                        </p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-[#6b806c] hover:text-primary pb-3 pt-2 transition-colors" href="#">
+<p class="text-sm font-bold tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">person</span> Profile
+                        </p>
+</a>
+</div>
+</div>
+<!-- Header Actions -->
+<div class="flex items-center justify-between mb-6">
+<div>
+<h2 class="text-2xl font-bold text-[#131613] dark:text-white">Active Lobby</h2>
+<p class="text-[#6b806c] text-sm italic">Join a garden to start identifying rare specimens...</p>
+</div>
+<button class="flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary text-white gap-2 shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 text-sm font-bold tracking-wide">
+<span class="material-symbols-outlined text-lg">bolt</span>
+<span class="truncate">Quick Join</span>
+</button>
+</div>
+<!-- Room Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
+<!-- Room Card 1 -->
+<div class="group relative flex flex-col gap-0 rounded-xl bg-white dark:bg-[#1c2a1d] overflow-hidden border border-[#2f7f3411] shadow-md hover:shadow-xl transition-all duration-300">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Traditional Chinese garden with stone bridges" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqGGNI74pIULuzt-aAIm187My2yzHWbLOnAArdx8yMlQxAap118tpgilG81zYZdxmPOmxLcR6Sl9SYZu34kYqYWQNTzGPxutaVCZVUHdGJmIebvr4PVMmqmlxQduwNrR2MKBGEfhPKcyzUumZWaNLTV0qVJBxLUjuAxtnFM6hmnFpD1VraRh6kh-Mdt5xLNGdJ6ofBHXy3265xtsIuNIS5iUb-FIFDwxZrgxx57XCMIIj5cvyLIFsGGD4asO58ueYb0RpdzU-1HfA");'></div>
+<div class="absolute top-3 left-3">
+<span class="flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-widest shadow-lg">
+<span class="size-1.5 bg-white rounded-full animate-pulse"></span>
+                                Waiting
+                            </span>
+</div>
+</div>
+<div class="p-5 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[#131613] dark:text-white text-lg font-bold leading-tight">Shennong Garden</h3>
+<p class="text-[#6b806c] text-xs font-medium">Map: Ancient Valley</p>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-primary text-sm font-bold">2/4</p>
+<p class="text-[#6b806c] text-[10px] uppercase font-bold tracking-tighter">Players</p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 h-10 border-2 border-accent-gold/40 hover:border-accent-gold text-[#131613] dark:text-white rounded-lg text-sm font-bold transition-all bg-accent-gold/5">
+<span class="material-symbols-outlined text-lg text-accent-gold">door_open</span>
+                            Join Room
+                        </button>
+</div>
+</div>
+<!-- Room Card 2 -->
+<div class="group relative flex flex-col gap-0 rounded-xl bg-white dark:bg-[#1c2a1d] overflow-hidden border border-[#2f7f3411] shadow-md hover:shadow-xl transition-all duration-300">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Imperial pharmacy with drawers" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD36lN9EIzGfrhGP_PSvDb1YNtt2nT41EIXIYskwmBZw6KGNanWrzGXbBcYIt2G1oMTSoL-s3KUt60BhiMjnFWlspaIH-8Jo-ISI4XOW914A6KcFcpUWoG0U09NI_huNDLG0USpq71p7eEZeYuSMoqL6tpAMVksRgkIyeBi7THQuDFcbCr522_o1Qwd6C3mFW4I4f1GQ8KO6a0tIuSUAuZYonEAGI3Hlt6GeanmKUFgGCw2VsY3RnhKymXi0OCwiPYrxgiSMfXVz_A");'></div>
+<div class="absolute top-3 left-3">
+<span class="flex items-center gap-1.5 px-3 py-1 bg-[#6b806c] text-white text-[10px] font-bold rounded-full uppercase tracking-widest">
+                                In Game
+                            </span>
+</div>
+</div>
+<div class="p-5 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[#131613] dark:text-white text-lg font-bold leading-tight">Imperial Apothecary</h3>
+<p class="text-[#6b806c] text-xs font-medium">Map: Forbidden City</p>
+</div>
+<div class="flex flex-col items-end opacity-50">
+<p class="text-[#131613] dark:text-white text-sm font-bold">4/4</p>
+<p class="text-[#6b806c] text-[10px] uppercase font-bold tracking-tighter">Players</p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 h-10 border-2 border-gray-200 dark:border-gray-700 text-gray-400 rounded-lg text-sm font-bold cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-lg">visibility</span>
+                            Spectate
+                        </button>
+</div>
+</div>
+<!-- Room Card 3 -->
+<div class="group relative flex flex-col gap-0 rounded-xl bg-white dark:bg-[#1c2a1d] overflow-hidden border border-[#2f7f3411] shadow-md hover:shadow-xl transition-all duration-300">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Mist-covered mountain peaks" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDvoH5vQwTByuv0ASsPV-dLRqhz-ez4Bkf6YA4jmk5e9ijG9IRuveL5fqnUhpzSQyp72w9HU_zg0csG2IHg4gNJdE7t9uRKj_W2bMIBBTSV8xnTO5up_PvEFpF2qfKtQyeBaoc35u9Uhi5w4Rb1FgK3Ejg-N40Pye9aDxp-2Mq3Di21FTgjxTrtkvB2ZN6Emslh1Co1L5vI5ebB8hl7BD2nt1Ivo-3KoDQbigOy9L0pM1g48JQXkThqr0U1Gqt0a-Z53rYcReGrjeA");'></div>
+<div class="absolute top-3 left-3">
+<span class="flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-widest shadow-lg">
+<span class="size-1.5 bg-white rounded-full animate-pulse"></span>
+                                Waiting
+                            </span>
+</div>
+</div>
+<div class="p-5 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[#131613] dark:text-white text-lg font-bold leading-tight">Misty Peaks</h3>
+<p class="text-[#6b806c] text-xs font-medium">Map: Cloud Pass</p>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-primary text-sm font-bold">1/4</p>
+<p class="text-[#6b806c] text-[10px] uppercase font-bold tracking-tighter">Players</p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 h-10 border-2 border-accent-gold/40 hover:border-accent-gold text-[#131613] dark:text-white rounded-lg text-sm font-bold transition-all bg-accent-gold/5">
+<span class="material-symbols-outlined text-lg text-accent-gold">door_open</span>
+                            Join Room
+                        </button>
+</div>
+</div>
+<!-- Room Card 4 -->
+<div class="group relative flex flex-col gap-0 rounded-xl bg-white dark:bg-[#1c2a1d] overflow-hidden border border-[#2f7f3411] shadow-md hover:shadow-xl transition-all duration-300">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Traditional study with bamboo scrolls" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBdxo2YebDR0JfCCGZAWsnai_L5Nlvk_tUc04l3TTlVa6V1msDjGN0kfRl9niL23dUpI5Z0pyJfUnjyztbY_SaI6d45zu_ILGDbZPqtA6EzBPYg_l8Nq0fskDLwuJAfB1RTGhFgrnznIeyrSwuthOdQIVEl948unRq4fJNJxF-sav-QzkOWIZX7SsxaQb3ZxGRmyEKDf0Kt3kQdc_lTlNF8Ed4oKQcNNxBijYmj8xD2w5SloyJlUXJUbpHNH_zM701O2T23BBxULTA");'></div>
+<div class="absolute top-3 left-3">
+<span class="flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-widest shadow-lg">
+<span class="size-1.5 bg-white rounded-full animate-pulse"></span>
+                                Waiting
+                            </span>
+</div>
+</div>
+<div class="p-5 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[#131613] dark:text-white text-lg font-bold leading-tight">Master's Study</h3>
+<p class="text-[#6b806c] text-xs font-medium">Map: Jade Pavilion</p>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-primary text-sm font-bold">3/4</p>
+<p class="text-[#6b806c] text-[10px] uppercase font-bold tracking-tighter">Players</p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 h-10 border-2 border-accent-gold/40 hover:border-accent-gold text-[#131613] dark:text-white rounded-lg text-sm font-bold transition-all bg-accent-gold/5">
+<span class="material-symbols-outlined text-lg text-accent-gold">door_open</span>
+                            Join Room
+                        </button>
+</div>
+</div>
+<!-- Room Card 5 -->
+<div class="group relative flex flex-col gap-0 rounded-xl bg-white dark:bg-[#1c2a1d] overflow-hidden border border-[#2f7f3411] shadow-md hover:shadow-xl transition-all duration-300">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Old brick building pharmacy" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCDWGiVCpaN9j_1wcsttKZr2pL7aI0dlXI0x2oO8d69XvoioZdsu4knyz4fIS4KjsYcBnE6dJZnFaRm2TnuAzT5wKrbMcysoavrKNH7pxQRtCAdDGOyKYKRDCcXjNgBjGvBp611qe1Ph8WEX4h7SfJenaahiVs0y4GyE_ssmdO1_kOvSiOCdrJKqkgunEjbib7Gx9baq9r34YefwaR4nnTlBkTWbu2aDWSTxgBpSJcKFANiq4a7gTTtyDr8mnsc0Ay7T4WCa4zPYEY");'></div>
+<div class="absolute top-3 left-3">
+<span class="flex items-center gap-1.5 px-3 py-1 bg-[#6b806c] text-white text-[10px] font-bold rounded-full uppercase tracking-widest">
+                                In Game
+                            </span>
+</div>
+</div>
+<div class="p-5 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[#131613] dark:text-white text-lg font-bold leading-tight">Ancient Pharmacy</h3>
+<p class="text-[#6b806c] text-xs font-medium">Map: Old Town</p>
+</div>
+<div class="flex flex-col items-end opacity-50">
+<p class="text-[#131613] dark:text-white text-sm font-bold">4/4</p>
+<p class="text-[#6b806c] text-[10px] uppercase font-bold tracking-tighter">Players</p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 h-10 border-2 border-gray-200 dark:border-gray-700 text-gray-400 rounded-lg text-sm font-bold cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-lg">visibility</span>
+                            Spectate
+                        </button>
+</div>
+</div>
+<!-- Room Card 6 -->
+<div class="group relative flex flex-col gap-0 rounded-xl bg-white dark:bg-[#1c2a1d] overflow-hidden border border-[#2f7f3411] shadow-md hover:shadow-xl transition-all duration-300">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover transition-transform duration-500 group-hover:scale-110" data-alt="Calm lake with lotus flowers" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2o-qx_RmIL632u7uwyAqKmRjeJtiM27-pcZcDL4Umwky5EA9ST71D0q6Qog3mVbYDzxTgtfGbCGajnxLfs8jZ0prItxEq4TqDaJU-ypxUjTvYts0hFY0BD5gCSWSBEYOuzN_RS7U4jlwtHl7V5NObfGEYUHZEUAVbM7pskARD_DEWvdvOM_Pi0nP1qasRNdo6Jrht4obolY1JemHeU3Pu-_C3g9OvfFKcldZxg-AG4QBfGnE29ab1_J0CVMCoTtBUnosHlCwx7tk");'></div>
+<div class="absolute top-3 left-3">
+<span class="flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-widest shadow-lg">
+<span class="size-1.5 bg-white rounded-full animate-pulse"></span>
+                                Waiting
+                            </span>
+</div>
+</div>
+<div class="p-5 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[#131613] dark:text-white text-lg font-bold leading-tight">Lotus Pond</h3>
+<p class="text-[#6b806c] text-xs font-medium">Map: Water Pavilion</p>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-primary text-sm font-bold">0/4</p>
+<p class="text-[#6b806c] text-[10px] uppercase font-bold tracking-tighter">Players</p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 h-10 border-2 border-accent-gold/40 hover:border-accent-gold text-[#131613] dark:text-white rounded-lg text-sm font-bold transition-all bg-accent-gold/5">
+<span class="material-symbols-outlined text-lg text-accent-gold">door_open</span>
+                            Join Room
+                        </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-8 right-8 z-[100]">
+<button class="group flex items-center justify-center size-16 bg-primary rounded-full shadow-[0_8px_30px_rgb(47,127,52,0.4)] hover:shadow-[0_8px_30px_rgb(47,127,52,0.6)] transition-all hover:scale-110 active:scale-90 border-4 border-accent-gold/20">
+<span class="material-symbols-outlined text-accent-gold text-3xl font-bold">add</span>
+<span class="absolute right-full mr-4 bg-[#131613] text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Create New Garden</span>
+</button>
+</div>
+<!-- Footer -->
+<footer class="w-full py-6 px-6 lg:px-20 border-t border-[#2f7f3411] bg-white/30 dark:bg-black/20 mt-auto">
+<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[#6b806c] text-xs">
+<div class="flex items-center gap-4">
+<p>© 2024 Herbalism (本草). All rights reserved.</p>
+<div class="size-1 bg-[#6b806c]/30 rounded-full"></div>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<div class="size-1 bg-[#6b806c]/30 rounded-full"></div>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1.5">
+<span class="size-2 bg-green-500 rounded-full"></span>
+                        1,402 Sages Online
+                    </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">wifi</span>
+                        Server: East-Asia 1
+                    </span>
+</div>
+</div>
+</footer>
+</div>
+</body></html>
