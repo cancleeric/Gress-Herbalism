@@ -1,0 +1,168 @@
+/**
+ * 顏色組合牌樣式
+ *
+ * @description ColorCombinationCards 組件的 CSS 樣式
+ */
+
+.color-combination-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md);
+}
+
+.cards-title {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+/* 卡牌網格 - 3x2 排列 */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  max-width: 300px;
+}
+
+/* 單張顏色組合牌 */
+.color-card {
+  position: relative;
+  width: 80px;
+  height: 110px;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  cursor: default;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* 可互動時的樣式 */
+.color-card:not(.disabled) {
+  cursor: pointer;
+}
+
+.color-card:not(.disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+}
+
+.color-card:not(.disabled):active {
+  transform: translateY(-1px);
+}
+
+/* 選中狀態 */
+.color-card.selected {
+  border-color: var(--color-accent);
+  background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+/* 禁用狀態 */
+.color-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 顏色圖示 */
+.color-icon {
+  position: absolute;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.color-icon.top-left {
+  top: 6px;
+  left: 6px;
+}
+
+.color-icon.bottom-right {
+  bottom: 6px;
+  right: 6px;
+}
+
+/* 卡牌中央圖案區域 */
+.card-illustration {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  display: flex;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.color-stripe {
+  flex: 1;
+  transition: all 0.2s ease;
+}
+
+.color-stripe.color-red {
+  background: linear-gradient(180deg, var(--color-red), #c0392b);
+}
+
+.color-stripe.color-yellow {
+  background: linear-gradient(180deg, var(--color-yellow), #f39c12);
+}
+
+.color-stripe.color-green {
+  background: linear-gradient(180deg, var(--color-green), #1e8449);
+}
+
+.color-stripe.color-blue {
+  background: linear-gradient(180deg, var(--color-blue), #2471a3);
+}
+
+/* 卡牌名稱 */
+.card-name {
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xs);
+    max-width: 240px;
+  }
+
+  .color-card {
+    width: 65px;
+    height: 90px;
+  }
+
+  .card-illustration {
+    width: 40px;
+    height: 40px;
+  }
+
+  .color-icon {
+    font-size: 12px;
+  }
+
+  .card-name {
+    font-size: 10px;
+  }
+}
+
+/* 更小螢幕 */
+@media (max-width: 320px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 160px;
+  }
+
+  .color-card {
+    width: 60px;
+    height: 85px;
+  }
+}

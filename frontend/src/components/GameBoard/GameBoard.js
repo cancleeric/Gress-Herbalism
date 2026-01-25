@@ -12,6 +12,7 @@ import {
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
 } from '../../shared/constants';
+import ColorCombinationCards from '../ColorCombinationCards';
 import './GameBoard.css';
 
 /**
@@ -183,6 +184,13 @@ function GameBoard({ currentPlayerId, isGuessing = false }) {
 
   return (
     <div className="game-board">
+      {/* 顏色組合牌區域 */}
+      {gamePhase !== GAME_PHASE_WAITING && (
+        <section className="color-cards-section">
+          <ColorCombinationCards interactive={false} />
+        </section>
+      )}
+
       {/* 蓋牌區域 */}
       <section className="hidden-cards-section">
         <h3 className="section-title">蓋牌</h3>

@@ -284,4 +284,55 @@ describe('GameBoard - 工作單 0017', () => {
       expect(container.querySelector('.game-status-section')).toBeInTheDocument();
     });
   });
+
+  describe('顏色組合牌 - 工作單 0073', () => {
+    test('等待階段不應顯示顏色組合牌', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'waiting',
+        players: []
+      };
+      const { container } = renderWithProviders(<GameBoard />, { preloadedState: state });
+      expect(container.querySelector('.color-cards-section')).not.toBeInTheDocument();
+    });
+
+    test('遊戲進行中應顯示顏色組合牌區塊', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerIndex: 0,
+        players: [{ id: 'p1', name: '玩家1' }]
+      };
+      const { container } = renderWithProviders(<GameBoard />, { preloadedState: state });
+      expect(container.querySelector('.color-cards-section')).toBeInTheDocument();
+    });
+
+    test('應顯示六張顏色組合牌', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerIndex: 0,
+        players: [{ id: 'p1', name: '玩家1' }]
+      };
+      renderWithProviders(<GameBoard />, { preloadedState: state });
+      expect(screen.getByText('顏色組合牌')).toBeInTheDocument();
+      expect(screen.getByText('紅綠')).toBeInTheDocument();
+      expect(screen.getByText('綠藍')).toBeInTheDocument();
+      expect(screen.getByText('綠黃')).toBeInTheDocument();
+      expect(screen.getByText('紅藍')).toBeInTheDocument();
+      expect(screen.getByText('黃紅')).toBeInTheDocument();
+      expect(screen.getByText('黃藍')).toBeInTheDocument();
+    });
+
+    test('遊戲結束時仍應顯示顏色組合牌', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'finished',
+        winner: 'p1',
+        players: [{ id: 'p1', name: '玩家1' }]
+      };
+      const { container } = renderWithProviders(<GameBoard />, { preloadedState: state });
+      expect(container.querySelector('.color-cards-section')).toBeInTheDocument();
+    });
+  });
 });

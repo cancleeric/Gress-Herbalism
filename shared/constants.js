@@ -258,6 +258,23 @@ export const ACTION_TYPES = [
   ACTION_TYPE_GUESS
 ];
 
+// ==================== 顏色組合牌常數 ====================
+
+/**
+ * 六張顏色組合牌定義
+ * 從四種顏色中選兩種的所有組合
+ * @readonly
+ * @type {Array<{id: string, colors: string[], name: string}>}
+ */
+export const COLOR_COMBINATION_CARDS = [
+  { id: 'red-green', colors: ['red', 'green'], name: '紅綠' },
+  { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍' },
+  { id: 'green-yellow', colors: ['green', 'yellow'], name: '綠黃' },
+  { id: 'red-blue', colors: ['red', 'blue'], name: '紅藍' },
+  { id: 'yellow-red', colors: ['yellow', 'red'], name: '黃紅' },
+  { id: 'yellow-blue', colors: ['yellow', 'blue'], name: '黃藍' },
+];
+
 // ==================== 預設值 ====================
 
 /**

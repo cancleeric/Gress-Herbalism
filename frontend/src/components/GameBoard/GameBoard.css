@@ -21,6 +21,13 @@
   text-align: center;
 }
 
+/* 顏色組合牌區域 */
+.color-cards-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
 /* 蓋牌區域 */
 .hidden-cards-section {
   display: flex;
