@@ -354,6 +354,17 @@ export function endTurn(gameId, playerId, prediction) {
   s.emit('endTurn', { gameId, playerId, prediction });
 }
 
+// ==================== 給牌通知相關（工單 0072）====================
+
+/**
+ * 監聽給牌通知（私密訊息給被要牌玩家）
+ */
+export function onCardGiveNotification(callback) {
+  const s = getSocket();
+  s.on('cardGiveNotification', callback);
+  return () => s.off('cardGiveNotification', callback);
+}
+
 /**
  * 斷開連線
  */

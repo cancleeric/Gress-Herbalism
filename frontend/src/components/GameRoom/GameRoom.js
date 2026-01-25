@@ -25,6 +25,7 @@ import {
   onRoundStarted,
   onPostQuestionPhase,
   onTurnEnded,
+  onCardGiveNotification,
   startGame as socketStartGame,
   sendGameAction,
   requestRevealHiddenCards,
@@ -49,6 +50,7 @@ import GuessCard from '../GuessCard/GuessCard';
 import { GameStatusContainer } from '../GameStatus/GameStatus';
 import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
+import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import './GameRoom.css';
 
 /**
@@ -96,6 +98,8 @@ function GameRoom() {
   // 預測相關狀態（工單 0071）
   const [showPrediction, setShowPrediction] = useState(false);
   const [predictionLoading, setPredictionLoading] = useState(false);
+  // 給牌通知相關狀態（工單 0072）
+  const [cardGiveNotification, setCardGiveNotification] = useState(null);
 
   /**
    * 取得當前回合的玩家
@@ -243,6 +247,11 @@ function GameRoom() {
       setPredictionLoading(false);
     });
 
+    // 監聽給牌通知（工單 0072）
+    const unsubCardGive = onCardGiveNotification((notification) => {
+      setCardGiveNotification(notification);
+    });
+
     return () => {
       unsubGameState();
       unsubError();
@@ -256,6 +265,7 @@ function GameRoom() {
       unsubRoundStart();
       unsubPostQuestion();
       unsubTurnEnded();
+      unsubCardGive();
     };
   }, [dispatch]);
 
@@ -408,6 +418,13 @@ function GameRoom() {
 
     setPredictionLoading(true);
     endTurn(gameId, myPlayer.id, prediction);
+  };
+
+  /**
+   * 處理關閉給牌通知（工單 0072）
+   */
+  const handleCloseCardGiveNotification = () => {
+    setCardGiveNotification(null);
   };
 
   /**
@@ -623,10 +640,22 @@ function GameRoom() {
       )}
 
       {/* 等待問牌玩家結束回合 */}
-      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && (
+      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && (
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 給牌通知 Modal（工單 0072：私密訊息給被要牌玩家） */}
+      {cardGiveNotification && (
+        <div className="modal-overlay">
+          <div className="modal-content card-give-notification-modal" onClick={(e) => e.stopPropagation()}>
+            <CardGiveNotification
+              notification={cardGiveNotification}
+              onConfirm={handleCloseCardGiveNotification}
+            />
           </div>
         </div>
       )}

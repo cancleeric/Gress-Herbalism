@@ -626,6 +626,14 @@ io.on('connection', (socket) => {
           playerId: result.currentPlayerId
         });
 
+        // 工單 0072：發送給牌通知給被要牌玩家（私密）
+        if (result.cardGiveNotification && result.targetPlayerId) {
+          const targetSocket = findSocketByPlayerId(gameId, result.targetPlayerId);
+          if (targetSocket) {
+            targetSocket.emit('cardGiveNotification', result.cardGiveNotification);
+          }
+        }
+
         // 通知當前玩家進入問牌後階段
         const playerSocket = findSocketByPlayerId(gameId, result.currentPlayerId);
         if (playerSocket) {
@@ -713,6 +721,14 @@ io.on('connection', (socket) => {
         postQuestionStates.set(gameId, {
           playerId: result.currentPlayerId
         });
+
+        // 工單 0072：發送給牌通知給被要牌玩家（私密）
+        if (result.cardGiveNotification && result.targetPlayerId) {
+          const targetSocket = findSocketByPlayerId(gameId, result.targetPlayerId);
+          if (targetSocket) {
+            targetSocket.emit('cardGiveNotification', result.cardGiveNotification);
+          }
+        }
 
         // 通知當前玩家進入問牌後階段
         const playerSocket = findSocketByPlayerId(gameId, result.currentPlayerId);
@@ -1142,13 +1158,48 @@ function processQuestionAction(gameState, action) {
     player.isActive = false;
   }
 
+  // 工單 0072：建立給牌通知資料
+  let cardGiveNotification = null;
+  if (questionType === 1) {
+    // 各一張
+    const cardCounts = {};
+    cardsToGive.forEach(card => {
+      cardCounts[card.color] = (cardCounts[card.color] || 0) + 1;
+    });
+    cardGiveNotification = {
+      fromPlayer: player.name,
+      askType: 'oneEach',
+      selectedColors: colors,
+      chosenColor: null,
+      cardsGiven: Object.entries(cardCounts).map(([color, count]) => ({ color, count })),
+      totalCount: cardsToGive.length
+    };
+  } else if (questionType === 3) {
+    // 給一張要全部
+    const cardCounts = {};
+    cardsToReceive.forEach(card => {
+      cardCounts[card.color] = (cardCounts[card.color] || 0) + 1;
+    });
+    cardGiveNotification = {
+      fromPlayer: player.name,
+      askType: 'oneColorAll', // 從被要牌者角度看，是給出一種顏色全部
+      selectedColors: [getColor],
+      chosenColor: null,
+      cardsGiven: Object.entries(cardCounts).map(([color, count]) => ({ color, count })),
+      totalCount: cardsToReceive.length
+    };
+  }
+
   // 進入問牌後階段（工單 0071：預測功能）
   // 不再直接換人，而是等待玩家按「結束回合」
   return {
     success: true,
     gameState,
     enterPostQuestionPhase: true,
-    currentPlayerId: playerId
+    currentPlayerId: playerId,
+    // 工單 0072
+    cardGiveNotification,
+    targetPlayerId
   };
 }
 
@@ -1195,6 +1246,20 @@ function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenCol
     askingPlayer.isActive = false;
   }
 
+  // 工單 0072：建立給牌通知資料
+  const cardCounts = {};
+  cardsToGive.forEach(card => {
+    cardCounts[card.color] = (cardCounts[card.color] || 0) + 1;
+  });
+  const cardGiveNotification = {
+    fromPlayer: askingPlayer.name,
+    askType: 'oneColorAll',
+    selectedColors: originalColors,
+    chosenColor: chosenColor,
+    cardsGiven: Object.entries(cardCounts).map(([color, count]) => ({ color, count })),
+    totalCount: cardsToGive.length
+  };
+
   // 進入問牌後階段（工單 0071：預測功能）
   // 不再直接換人，而是等待玩家按「結束回合」
   return {
@@ -1202,7 +1267,10 @@ function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenCol
     gameState,
     cardsTransferred: cardsToGive.length,
     enterPostQuestionPhase: true,
-    currentPlayerId: askingPlayerId
+    currentPlayerId: askingPlayerId,
+    // 工單 0072
+    cardGiveNotification,
+    targetPlayerId
   };
 }
 

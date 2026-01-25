@@ -100,6 +100,11 @@ describe('GameRoom - 工作單 0023', () => {
       socketCallbacks.turnEnded = callback;
       return () => {};
     });
+    // 工單 0072：給牌通知 mock
+    socketService.onCardGiveNotification.mockImplementation((callback) => {
+      socketCallbacks.cardGiveNotification = callback;
+      return () => {};
+    });
     socketService.startGame.mockImplementation(() => {});
     socketService.sendGameAction.mockImplementation(() => {});
     socketService.requestRevealHiddenCards.mockImplementation(() => {});

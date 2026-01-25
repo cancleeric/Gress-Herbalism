@@ -1,0 +1,157 @@
+/**
+ * 給牌通知組件樣式
+ */
+
+.card-give-notification {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.notification-header .notification-icon {
+  font-size: 1.5rem;
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.notification-body {
+  padding: 20px;
+}
+
+.from-player {
+  font-size: 1.125rem;
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.from-player strong {
+  color: #667eea;
+}
+
+.ask-info {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.info-row .label {
+  color: #666;
+}
+
+.info-row .value {
+  font-weight: 500;
+  color: #333;
+}
+
+.section-title {
+  color: #666;
+  font-size: 0.875rem;
+  margin: 0 0 12px 0;
+}
+
+.cards-given {
+  margin-top: 16px;
+}
+
+.cards-list {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.card-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.card-item:last-of-type {
+  border-bottom: none;
+}
+
+.card-item .color-icon {
+  font-size: 1.25rem;
+}
+
+.card-item .color-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.card-item .card-count {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.card-item.color-red .color-name {
+  color: #dc3545;
+}
+
+.card-item.color-yellow .color-name {
+  color: #ffc107;
+}
+
+.card-item.color-green .color-name {
+  color: #28a745;
+}
+
+.card-item.color-blue .color-name {
+  color: #007bff;
+}
+
+.total-count {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid #dee2e6;
+  text-align: right;
+  font-weight: 600;
+  color: #333;
+}
+
+.no-cards {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  color: #856404;
+  font-style: italic;
+}
+
+.notification-footer {
+  padding: 16px 20px;
+  background: #f8f9fa;
+  text-align: center;
+}
+
+.notification-footer .btn {
+  min-width: 120px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+}
