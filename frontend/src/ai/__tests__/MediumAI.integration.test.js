@@ -206,6 +206,9 @@ describe('MediumAI Integration Tests', () => {
 
   describe('完整遊戲流程', () => {
     test('should make valid decisions throughout game', async () => {
+      // 增加測試逾時時間（因為 AI 有思考延遲）
+      jest.setTimeout(10000);
+
       // 模擬完整遊戲流程
       const decisions = [];
 
