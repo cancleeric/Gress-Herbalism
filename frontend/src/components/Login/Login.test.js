@@ -1,6 +1,7 @@
 /**
  * Login 組件單元測試
  * 工單 0059
+ * 重新設計：配合新版 Stitch UI 設計
  */
 
 import React from 'react';
@@ -48,7 +49,7 @@ describe('Login - 工單 0059', () => {
           <Login />
         </MemoryRouter>
       );
-      expect(screen.getByText('3-4 人推理卡牌遊戲')).toBeInTheDocument();
+      expect(screen.getByText('3-4人線上推理桌遊')).toBeInTheDocument();
     });
 
     test('應顯示 Google 登入按鈕', () => {
@@ -66,25 +67,25 @@ describe('Login - 工單 0059', () => {
           <Login />
         </MemoryRouter>
       );
-      expect(screen.getByText('訪客模式')).toBeInTheDocument();
+      expect(screen.getByText('訪客登入')).toBeInTheDocument();
     });
 
-    test('應顯示訪客說明文字', () => {
+    test('應顯示新朋友提示文字', () => {
       render(
         <MemoryRouter>
           <Login />
         </MemoryRouter>
       );
-      expect(screen.getByText(/訪客模式可以直接遊玩/)).toBeInTheDocument();
+      expect(screen.getByText('新朋友？')).toBeInTheDocument();
     });
 
-    test('應顯示服務條款文字', () => {
+    test('應顯示遊戲介紹', () => {
       render(
         <MemoryRouter>
           <Login />
         </MemoryRouter>
       );
-      expect(screen.getByText(/登入即表示您同意我們的服務條款/)).toBeInTheDocument();
+      expect(screen.getByText(/找出神秘藥方.*桌遊/)).toBeInTheDocument();
     });
   });
 
@@ -148,7 +149,7 @@ describe('Login - 工單 0059', () => {
         </MemoryRouter>
       );
 
-      fireEvent.click(screen.getByText('訪客模式'));
+      fireEvent.click(screen.getByText('訪客登入'));
 
       await waitFor(() => {
         expect(mockLoginAsGuest).toHaveBeenCalledTimes(1);
@@ -164,7 +165,7 @@ describe('Login - 工單 0059', () => {
         </MemoryRouter>
       );
 
-      fireEvent.click(screen.getByText('訪客模式'));
+      fireEvent.click(screen.getByText('訪客登入'));
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/');
@@ -180,7 +181,7 @@ describe('Login - 工單 0059', () => {
         </MemoryRouter>
       );
 
-      fireEvent.click(screen.getByText('訪客模式'));
+      fireEvent.click(screen.getByText('訪客登入'));
 
       await waitFor(() => {
         expect(screen.getByRole('alert')).toHaveTextContent('訪客登入失敗');
@@ -202,7 +203,7 @@ describe('Login - 工單 0059', () => {
       );
 
       const googleBtn = screen.getByText('使用 Google 帳號登入').closest('button');
-      const guestBtn = screen.getByText('訪客模式').closest('button');
+      const guestBtn = screen.getByText('訪客登入').closest('button');
 
       // 初始狀態按鈕應可用
       expect(googleBtn).not.toBeDisabled();

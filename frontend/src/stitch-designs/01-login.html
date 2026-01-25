@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html class="" lang="zh-Hant"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#2f7f33",
+            "background-light": "#FFF8E1",
+            "background-dark": "#141e15",
+            "gold-accent": "#FFB300",
+            "deep-green": "#2E7D32",
+          },
+          fontFamily: {
+            "display": ["Be Vietnam Pro", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #FFF8E1;
+    }
+    .watercolor-bg {
+      background-image: radial-gradient(circle at top left, rgba(47, 127, 51, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at bottom right, rgba(255, 179, 0, 0.05) 0%, transparent 40%);
+    }
+    .brush-style {
+      font-family: serif;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen relative overflow-x-hidden watercolor-bg">
+<!-- Background Illustrations -->
+<div class="absolute top-0 left-0 w-64 h-64 opacity-20 pointer-events-none">
+<img alt="Botanical watercolor illustration" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWUKbcaDQPnNP3aVj1XAP3FRCgm-eFxpas_JfRg2tOjiUF62raH_u6j0x4yAdRXFKNCMGYWD3KUFERVa0v5NG8M-0s8m03Ih28kXlEqLhEDQNut0fZO5Wh_Ov7OHq1vCiePd7seQUsmpKgcVWGxZXqukqUDJ12sX1daZHf_so_PK7RMYWnqZUn5exKM5rtFArFIteH1DffF2eeuvnXAhfqnz-UgRVuCP6M5WVxW12JLboKamzMl_hVMjZpucIDMv3bG4A1sF6YXpU"/>
+</div>
+<div class="absolute bottom-0 right-0 w-80 h-80 opacity-20 pointer-events-none transform rotate-180">
+<img alt="Botanical watercolor illustration" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnLsa7kEC4M5Mxj3paJEn0zPEXByj7y2dv9bNaC50vYbGhehCV5RqaRXLcgTlwD_sly4JKsN1qUMVchFM22k9TBH1a_LG1zCRvjon3GiIWFsLGiHnnzasZWKd503dBaDTaetwZroCI0sFWsBewTB90ghuNINDeC-Urar3sDv9hbMJCzMPBSGu9t0-HVZF63n-z0IMLRHsDU9DR_pyvyeixOrPoxDW2vzAjuk0vQqJFD0F5ku3HKFHJyMKSdGd0YZcUl9g2WYbVHLY"/>
+</div>
+
+<div class="layout-container flex h-full grow flex-col relative z-10">
+<!-- Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-black/5 px-10 py-4">
+<div class="flex items-center gap-3 text-deep-green">
+<div class="size-6">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-tight brush-style uppercase">Herbalism</h2>
+</div>
+<nav class="hidden md:flex items-center gap-9">
+<a class="text-deep-green/70 hover:text-deep-green text-sm font-medium transition-colors" href="#">Rulebook</a>
+<a class="text-deep-green/70 hover:text-deep-green text-sm font-medium transition-colors" href="#">Cards</a>
+<a class="text-deep-green/70 hover:text-deep-green text-sm font-medium transition-colors" href="#">About</a>
+</nav>
+</header>
+
+<main class="flex-1 flex flex-col items-center justify-center px-4 py-12">
+<!-- Branding -->
+<div class="mb-12 text-center">
+<h1 class="text-deep-green text-6xl font-bold leading-tight brush-style mb-4">本草 Herbalism</h1>
+<div class="inline-block px-4 py-1 border-y border-gold-accent/40">
+<h2 class="text-deep-green/80 text-lg font-medium tracking-[0.2em]">3-4人線上推理桌遊</h2>
+</div>
+</div>
+
+<!-- Login Card -->
+<div class="w-full max-w-[420px] bg-white/40 backdrop-blur-sm border border-white/60 p-10 rounded-xl shadow-xl shadow-green-900/5">
+<div class="flex flex-col gap-5">
+<button class="flex items-center justify-center gap-3 w-full h-14 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md">
+<svg class="w-5 h-5" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="text-base font-semibold">Sign in with Google</span>
+</button>
+<button class="flex items-center justify-center w-full h-14 rounded-lg border-2 border-gold-accent bg-transparent text-gold-accent hover:bg-gold-accent/5 transition-all text-base font-bold tracking-wide">
+<span class="material-symbols-outlined mr-2">person_outline</span>
+<span>Guest Login</span>
+</button>
+</div>
+<div class="mt-8 flex items-center gap-4">
+<div class="h-[1px] flex-1 bg-deep-green/10"></div>
+<span class="text-xs uppercase tracking-widest text-deep-green/40 font-bold">New Recruit?</span>
+<div class="h-[1px] flex-1 bg-deep-green/10"></div>
+</div>
+<button class="mt-6 w-full text-center text-deep-green/60 hover:text-deep-green text-sm font-medium transition-colors">
+Create an Account
+</button>
+</div>
+
+<!-- Game Introduction -->
+<div class="max-w-[600px] mt-16 text-center">
+<p class="text-deep-green/80 text-base leading-relaxed italic brush-style">
+"Identify the mystery cure before your rivals. A game of deduction, ancient botanical wisdom, and sharp strategy. Master the art of Herbalism."
+</p>
+<div class="mt-8 flex justify-center gap-6">
+<div class="flex items-center gap-2 text-deep-green/50 text-xs font-bold uppercase tracking-tighter">
+<span class="material-symbols-outlined text-sm">groups</span>
+3-4 Players
+</div>
+<div class="flex items-center gap-2 text-deep-green/50 text-xs font-bold uppercase tracking-tighter">
+<span class="material-symbols-outlined text-sm">schedule</span>
+20-30 Mins
+</div>
+<div class="flex items-center gap-2 text-deep-green/50 text-xs font-bold uppercase tracking-tighter">
+<span class="material-symbols-outlined text-sm">psychology</span>
+Logic &amp; Deduction
+</div>
+</div>
+</div>
+</main>
+
+<footer class="p-8 text-center">
+<div class="text-[10px] text-deep-green/40 uppercase tracking-[0.3em] font-medium">
+© 2024 本草 Herbalism Online. All Rights Reserved.
+</div>
+</footer>
+</div>
+</body></html>
