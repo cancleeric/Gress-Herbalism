@@ -138,3 +138,4 @@ npm test -- --coverage --watchAll=false
 ## 授權
 
 本專案為個人專案。
+# Auto-deploy enabled
