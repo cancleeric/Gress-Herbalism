@@ -538,6 +538,7 @@ io.on('connection', (socket) => {
 
   // 處理遊戲動作
   socket.on('gameAction', ({ gameId, action }) => {
+    console.log(`[gameAction] 收到動作:`, action.type, action.playerId);
     const gameState = gameRooms.get(gameId);
 
     if (!gameState) {
@@ -547,6 +548,12 @@ io.on('connection', (socket) => {
 
     // 處理問牌或猜牌
     const result = processGameAction(gameState, action);
+    console.log(`[gameAction] 處理結果:`, {
+      success: result.success,
+      requireColorChoice: result.requireColorChoice,
+      requireFollowGuess: result.requireFollowGuess,
+      enterPostQuestionPhase: result.enterPostQuestionPhase
+    });
 
     if (result.success) {
       // 檢查是否需要等待被要牌玩家選擇顏色
@@ -637,10 +644,13 @@ io.on('connection', (socket) => {
         // 通知當前玩家進入問牌後階段
         const playerSocket = findSocketByPlayerId(gameId, result.currentPlayerId);
         if (playerSocket) {
+          console.log(`[問牌] 發送 postQuestionPhase 給玩家 ${result.currentPlayerId}`);
           playerSocket.emit('postQuestionPhase', {
             playerId: result.currentPlayerId,
             message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
           });
+        } else {
+          console.warn(`[問牌] 找不到玩家 ${result.currentPlayerId} 的 socket，無法發送 postQuestionPhase`);
         }
 
         // 通知其他玩家等待
@@ -733,10 +743,13 @@ io.on('connection', (socket) => {
         // 通知當前玩家進入問牌後階段
         const playerSocket = findSocketByPlayerId(gameId, result.currentPlayerId);
         if (playerSocket) {
+          console.log(`[顏色選擇] 發送 postQuestionPhase 給玩家 ${result.currentPlayerId}`);
           playerSocket.emit('postQuestionPhase', {
             playerId: result.currentPlayerId,
             message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
           });
+        } else {
+          console.warn(`[顏色選擇] 找不到玩家 ${result.currentPlayerId} 的 socket，無法發送 postQuestionPhase`);
         }
 
         // 通知其他玩家等待

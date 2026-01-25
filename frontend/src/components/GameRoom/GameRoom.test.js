@@ -815,6 +815,36 @@ describe('GameRoom - 工作單 0023', () => {
       });
     });
 
+    test('postQuestionPhase 事件應顯示預測選項（工單 0076）', async () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'postQuestion',
+        gameId: 'test_room',
+        currentPlayerId: 'p1',
+        currentPlayerIndex: 0,
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, hand: [{ id: 'c1', color: 'red' }] },
+          { id: 'p2', name: '玩家2', isActive: true, hand: [{ id: 'c2', color: 'blue' }] },
+          { id: 'p3', name: '玩家3', isActive: true, hand: [{ id: 'c3', color: 'green' }] }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 模擬 postQuestionPhase 事件
+      if (socketCallbacks.postQuestionPhase) {
+        socketCallbacks.postQuestionPhase({
+          playerId: 'p1',
+          message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
+        });
+      }
+
+      // 預測選項應該顯示（檢查 Prediction 組件的標題）
+      await waitFor(() => {
+        expect(screen.getByText('問牌完成！')).toBeInTheDocument();
+        expect(screen.getByText('結束回合')).toBeInTheDocument();
+      });
+    });
+
     test('點擊開始遊戲按鈕應呼叫 socketService.startGame', () => {
       const state = {
         ...initialState,

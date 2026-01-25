@@ -248,6 +248,7 @@ function GameRoom() {
 
     // 監聽進入問牌後階段（工單 0071）
     const unsubPostQuestion = onPostQuestionPhase(({ playerId, message }) => {
+      console.log('[工單 0076] 收到 postQuestionPhase 事件:', { playerId, message });
       setShowPrediction(true);
       setPredictionLoading(false);
     });
