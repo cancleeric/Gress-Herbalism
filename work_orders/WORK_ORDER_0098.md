@@ -38,13 +38,13 @@
 
 ### 2. 檢查項目
 
-- [ ] 問牌完成後 gamePhase 設為 'postQuestion'
-- [ ] postQuestionPhase 事件正確發送給當前玩家
-- [ ] 前端收到事件後顯示 Prediction 組件
-- [ ] 玩家必須點擊「結束回合」才會換人
-- [ ] endTurn 事件正確處理預測記錄
-- [ ] turnEnded 事件廣播給所有玩家
-- [ ] moveToNextPlayer 在 endTurn 後執行
+- [x] 問牌完成後 gamePhase 設為 'postQuestion'
+- [x] postQuestionPhase 事件正確發送給當前玩家
+- [x] 前端收到事件後顯示 Prediction 組件
+- [x] 玩家必須點擊「結束回合」才會換人
+- [x] endTurn 事件正確處理預測記錄
+- [x] turnEnded 事件廣播給所有玩家
+- [x] moveToNextPlayer 在 endTurn 後執行
 
 ### 3. 後端關鍵程式碼位置
 
@@ -60,6 +60,6 @@
 
 ## 驗收標準
 
-- [ ] 流程符合計畫書描述
-- [ ] 不點擊「結束回合」不會換人
-- [ ] 預測記錄正確儲存
+- [x] 流程符合計畫書描述
+- [x] 不點擊「結束回合」不會換人
+- [x] 預測記錄正確儲存
