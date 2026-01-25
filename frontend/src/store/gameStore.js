@@ -2,16 +2,35 @@
  * Redux Store - 遊戲狀態管理
  *
  * 此檔案包含 Redux store 的設定、action types、action creators 和 reducer
+ * 工單 0117：新增 redux-persist 狀態持久化
  *
  * @module gameStore
  */
 
 import { createStore } from 'redux';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
 } from '../shared/constants';
+
+// ==================== Redux Persist 設定 ====================
+
+/**
+ * 持久化設定
+ * - key: localStorage 中的 key 名稱
+ * - storage: 使用 localStorage
+ * - whitelist: 只持久化這些欄位（避免儲存暫時性狀態）
+ */
+const persistConfig = {
+  key: 'gress_game',
+  storage,
+  version: 1,
+  // 只持久化重連所需的關鍵資訊
+  whitelist: ['gameId', 'currentPlayerId', 'players', 'gamePhase', 'currentPlayerIndex']
+};
 
 // ==================== Action Types ====================
 
@@ -235,8 +254,26 @@ export function gameReducer(state = initialState, action) {
 // ==================== Store ====================
 
 /**
- * Redux Store
+ * 建立持久化 reducer
  */
-const store = createStore(gameReducer);
+const persistedReducer = persistReducer(persistConfig, gameReducer);
+
+/**
+ * Redux Store（使用持久化 reducer）
+ */
+const store = createStore(persistedReducer);
+
+/**
+ * Persistor（用於 PersistGate）
+ */
+export const persistor = persistStore(store);
+
+/**
+ * 清除持久化狀態
+ * 用於玩家主動離開房間時
+ */
+export function clearPersistedState() {
+  persistor.purge();
+}
 
 export default store;

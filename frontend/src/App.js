@@ -8,8 +8,9 @@
 
 import React from 'react';
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import store from './store/gameStore';
+import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import Login from './components/Login';
 import Lobby from './components/Lobby';
@@ -128,20 +129,34 @@ function AppContent() {
 }
 
 /**
+ * 載入中顯示組件（工單 0117）
+ */
+function LoadingView() {
+  return (
+    <div className="app-loading">
+      <p>載入中...</p>
+    </div>
+  );
+}
+
+/**
  * 主應用組件
+ * 工單 0117：新增 PersistGate 進行狀態恢復
  *
  * @returns {JSX.Element} 應用程式根組件
  */
 function App() {
   return (
     <Provider store={store}>
-      <ErrorBoundary>
-        <AuthProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </AuthProvider>
-      </ErrorBoundary>
+      <PersistGate loading={<LoadingView />} persistor={persistor}>
+        <ErrorBoundary>
+          <AuthProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </AuthProvider>
+        </ErrorBoundary>
+      </PersistGate>
     </Provider>
   );
 }
