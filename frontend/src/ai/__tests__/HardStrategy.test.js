@@ -37,53 +37,8 @@ describe('HardStrategy', () => {
     });
   });
 
-  describe('calculateEntropy', () => {
-    test('should calculate entropy correctly for uniform distribution', () => {
-      const strategy = new HardStrategy();
-      const probabilities = {
-        red: 0.25,
-        yellow: 0.25,
-        green: 0.25,
-        blue: 0.25
-      };
-
-      const entropy = strategy.calculateEntropy(probabilities);
-
-      // 均勻分布的熵應該為 log2(4) = 2
-      expect(entropy).toBeCloseTo(2, 2);
-    });
-
-    test('should calculate entropy correctly for skewed distribution', () => {
-      const strategy = new HardStrategy();
-      const probabilities = {
-        red: 0.7,
-        yellow: 0.1,
-        green: 0.1,
-        blue: 0.1
-      };
-
-      const entropy = strategy.calculateEntropy(probabilities);
-
-      // 偏斜分布的熵應該小於 2
-      expect(entropy).toBeLessThan(2);
-      expect(entropy).toBeGreaterThan(0);
-    });
-
-    test('should return 0 for certain distribution', () => {
-      const strategy = new HardStrategy();
-      const probabilities = {
-        red: 1,
-        yellow: 0,
-        green: 0,
-        blue: 0
-      };
-
-      const entropy = strategy.calculateEntropy(probabilities);
-
-      // 確定性分布的熵應該接近 0
-      expect(entropy).toBeCloseTo(0, 5);
-    });
-  });
+  // calculateEntropy 已移至 ProbabilityCalculator (REF: 202601250050)
+  // 相關測試請參考 ProbabilityCalculator.test.js
 
   describe('calculateSuccessProbability', () => {
     test('should calculate success probability correctly', () => {
