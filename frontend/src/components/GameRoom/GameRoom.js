@@ -104,7 +104,10 @@ function GameRoom() {
   // 新版問牌流程狀態（工單 0074）
   const [selectedColorCard, setSelectedColorCard] = useState(null);
   const [showQuestionFlow, setShowQuestionFlow] = useState(false);
-  const [lastUsedColorCardId, setLastUsedColorCardId] = useState(null);
+  // 顏色牌選擇記錄（工單 0075）
+  const [myLastColorCardId, setMyLastColorCardId] = useState(null);
+  const [colorCardMarkers, setColorCardMarkers] = useState({});
+  const [disabledCardWarning, setDisabledCardWarning] = useState(null);
 
   /**
    * 取得當前回合的玩家
@@ -238,6 +241,9 @@ function GameRoom() {
       setShowRoundEnd(false);
       setGuessResultData(null);
       setShowPrediction(false);
+      // 新局開始時清除顏色牌標記（工單 0075）
+      setColorCardMarkers({});
+      setMyLastColorCardId(null);
     });
 
     // 監聽進入問牌後階段（工單 0071）
@@ -464,8 +470,16 @@ function GameRoom() {
     sendGameAction(gameId, action);
     setShowQuestionFlow(false);
     setSelectedColorCard(null);
-    // 記錄使用的顏色牌（下回合禁用）
-    setLastUsedColorCardId(questionData.colorCardId);
+    // 記錄使用的顏色牌（下回合禁用）（工單 0075）
+    setMyLastColorCardId(questionData.colorCardId);
+    // 更新標記（工單 0075）
+    setColorCardMarkers(prev => ({
+      ...prev,
+      [questionData.colorCardId]: {
+        playerId: myPlayer.id,
+        playerName: myPlayer.name
+      }
+    }));
   };
 
   /**
@@ -474,6 +488,15 @@ function GameRoom() {
   const handleQuestionFlowCancel = () => {
     setShowQuestionFlow(false);
     setSelectedColorCard(null);
+  };
+
+  /**
+   * 處理點擊禁用的顏色牌（工單 0075）
+   */
+  const handleDisabledCardClick = () => {
+    setDisabledCardWarning('你上回合已選過這張牌，請選擇其他顏色組合');
+    // 3秒後自動關閉警告
+    setTimeout(() => setDisabledCardWarning(null), 3000);
   };
 
   /**
@@ -551,8 +574,10 @@ function GameRoom() {
             currentPlayerId={myPlayer?.id}
             isGuessing={isGuessing}
             canSelectColorCard={canAct && !onlyGuess && !showQuestionFlow}
-            disabledColorCardId={lastUsedColorCardId}
+            myDisabledCardId={myLastColorCardId}
+            cardMarkers={colorCardMarkers}
             onColorCardSelect={handleColorCardSelect}
+            onDisabledCardClick={handleDisabledCardClick}
           />
 
           {/* 遊戲結束資訊 */}
@@ -991,6 +1016,14 @@ function GameRoom() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 禁用牌警告（工單 0075） */}
+      {disabledCardWarning && (
+        <div className="warning-message" role="alert">
+          {disabledCardWarning}
+          <button onClick={() => setDisabledCardWarning(null)} className="close-warning">×</button>
         </div>
       )}
 

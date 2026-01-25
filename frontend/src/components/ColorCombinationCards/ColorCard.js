@@ -37,13 +37,30 @@ const COLOR_NAMES = {
  * @param {string} props.card.name - 卡牌名稱
  * @param {boolean} props.selected - 是否被選中
  * @param {boolean} props.disabled - 是否禁用
+ * @param {boolean} props.disabledBySelf - 是否因自己上回合選過而禁用
+ * @param {string|null} props.markedByPlayer - 標記的玩家名稱
+ * @param {boolean} props.isMyMark - 是否是自己的標記
  * @param {Function} props.onClick - 點擊事件處理函數
+ * @param {Function} props.onDisabledClick - 點擊禁用牌時的回調
  * @returns {JSX.Element} 顏色組合牌組件
  */
-function ColorCard({ card, selected = false, disabled = false, onClick }) {
+function ColorCard({
+  card,
+  selected = false,
+  disabled = false,
+  disabledBySelf = false,
+  markedByPlayer = null,
+  isMyMark = false,
+  onClick,
+  onDisabledClick
+}) {
   const [color1, color2] = card.colors;
 
   const handleClick = () => {
+    if (disabledBySelf && onDisabledClick) {
+      onDisabledClick(card);
+      return;
+    }
     if (!disabled && onClick) {
       onClick(card);
     }
@@ -52,7 +69,9 @@ function ColorCard({ card, selected = false, disabled = false, onClick }) {
   const cardClassName = [
     'color-card',
     selected ? 'selected' : '',
-    disabled ? 'disabled' : ''
+    disabled ? 'disabled' : '',
+    disabledBySelf ? 'disabled-by-self' : '',
+    markedByPlayer ? 'has-marker' : ''
   ].filter(Boolean).join(' ');
 
   return (
@@ -90,6 +109,22 @@ function ColorCard({ card, selected = false, disabled = false, onClick }) {
       <span className="color-icon bottom-right">
         {COLOR_ICONS[color2]}
       </span>
+
+      {/* 玩家標記（工單 0075） */}
+      {markedByPlayer && (
+        <div className={`player-marker ${isMyMark ? 'my-marker' : ''}`}>
+          <span className="marker-name">
+            {isMyMark ? '你' : markedByPlayer}
+          </span>
+        </div>
+      )}
+
+      {/* 禁用遮罩（自己上回合選過） */}
+      {disabledBySelf && (
+        <div className="disabled-overlay">
+          <span className="disabled-icon">🚫</span>
+        </div>
+      )}
     </div>
   );
 }

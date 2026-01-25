@@ -127,6 +127,76 @@
   margin-top: var(--spacing-xs);
 }
 
+/* ==================== 工單 0075：玩家標記與禁用樣式 ==================== */
+
+/* 有玩家標記的牌 */
+.color-card.has-marker {
+  padding-bottom: 20px;
+}
+
+/* 玩家標記 */
+.player-marker {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  padding: 1px 6px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 自己的標記 */
+.player-marker.my-marker {
+  background: var(--color-accent-light, #e3f2fd);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.marker-name {
+  display: block;
+  text-align: center;
+}
+
+/* 因自己上回合選過而禁用的牌 */
+.color-card.disabled-by-self {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.color-card.disabled-by-self:hover {
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* 禁用遮罩 */
+.disabled-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.disabled-icon {
+  font-size: 24px;
+  opacity: 0.8;
+}
+
 /* 響應式設計 */
 @media (max-width: 480px) {
   .cards-grid {

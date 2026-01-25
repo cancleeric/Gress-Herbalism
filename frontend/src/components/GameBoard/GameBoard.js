@@ -57,16 +57,20 @@ function HiddenCard({ card, isRevealed, index }) {
  * @param {string} props.currentPlayerId - 當前玩家ID（用於判斷是否為猜牌者）
  * @param {boolean} props.isGuessing - 是否正在猜牌
  * @param {boolean} props.canSelectColorCard - 是否可以選擇顏色組合牌
- * @param {string|null} props.disabledColorCardId - 禁用的顏色牌ID（上回合選過的）
+ * @param {string|null} props.myDisabledCardId - 自己上回合選過的牌ID
+ * @param {Object} props.cardMarkers - 卡牌上的玩家標記
  * @param {Function} props.onColorCardSelect - 選擇顏色組合牌的回調
+ * @param {Function} props.onDisabledCardClick - 點擊禁用牌的回調
  * @returns {JSX.Element} 遊戲桌面組件
  */
 function GameBoard({
   currentPlayerId,
   isGuessing = false,
   canSelectColorCard = false,
-  disabledColorCardId = null,
-  onColorCardSelect
+  myDisabledCardId = null,
+  cardMarkers = {},
+  onColorCardSelect,
+  onDisabledCardClick
 }) {
   // 從 Redux store 取得遊戲狀態（使用 shallowEqual 避免不必要的重新渲染）
   const hiddenCards = useSelector(state => state.hiddenCards);
@@ -198,8 +202,11 @@ function GameBoard({
         <section className="color-cards-section">
           <ColorCombinationCards
             interactive={canSelectColorCard}
-            disabledCardIds={disabledColorCardId ? [disabledColorCardId] : []}
+            myDisabledCardId={myDisabledCardId}
+            cardMarkers={cardMarkers}
+            currentPlayerId={currentPlayerId}
             onCardSelect={onColorCardSelect}
+            onDisabledCardClick={onDisabledCardClick}
           />
           {canSelectColorCard && (
             <p className="select-card-hint">點擊顏色牌開始問牌</p>
