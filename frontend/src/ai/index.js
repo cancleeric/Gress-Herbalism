@@ -19,12 +19,12 @@ export { default as EasyStrategy } from './strategies/EasyStrategy';
 export { default as MediumStrategy } from './strategies/MediumStrategy';
 export { default as HardStrategy } from './strategies/HardStrategy';
 
-// 決策模組
-export { default as QuestionDecision } from './decisions/QuestionDecision';
-export { default as GuessDecision } from './decisions/GuessDecision';
-export { default as FollowGuessDecision } from './decisions/FollowGuessDecision';
-export { default as PredictionDecision } from './decisions/PredictionDecision';
-export { default as ExpectedValueCalculator } from './decisions/ExpectedValueCalculator';
+// 決策模組（暫時註解，待實作）
+// export { default as QuestionDecision } from './decisions/QuestionDecision';
+// export { default as GuessDecision } from './decisions/GuessDecision';
+// export { default as FollowGuessDecision } from './decisions/FollowGuessDecision';
+// export { default as PredictionDecision } from './decisions/PredictionDecision';
+// export { default as ExpectedValueCalculator } from './decisions/ExpectedValueCalculator';
 
 // 工廠函數
 export { createAIPlayer } from './AIPlayer';

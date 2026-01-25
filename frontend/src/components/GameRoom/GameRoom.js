@@ -7,11 +7,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   updateGameState,
   resetGame
 } from '../../store/gameStore';
+import useAIPlayers from '../../hooks/useAIPlayers';
 import {
   onGameState,
   onError,
