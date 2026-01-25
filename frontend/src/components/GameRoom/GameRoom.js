@@ -55,6 +55,7 @@ import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
 import { clearCurrentRoom } from '../../utils/localStorage';
+import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
 import './GameRoom.css';
 
 /**
@@ -841,28 +842,41 @@ function GameRoom() {
         <aside className="players-sidebar">
           <h2>玩家列表</h2>
           <ul className="player-list">
-            {gameState.players.map((player, index) => (
-              <li
-                key={player.id}
-                className={`player-item ${index === gameState.currentPlayerIndex ? 'current-turn' : ''} ${player.isActive === false ? 'eliminated' : ''}`}
-              >
-                <span className="player-name">
-                  {player.name}
-                  {player.isHost && ' (房主)'}
-                  {player.id === myPlayer?.id && ' (我)'}
-                </span>
-                <span className="player-score">{player.score || 0} 分</span>
-                <span className="player-cards">
-                  {player.hand ? `${player.hand.length} 張牌` : ''}
-                </span>
-                {index === gameState.currentPlayerIndex && player.isActive !== false && (
-                  <span className="turn-indicator">輪到此玩家</span>
-                )}
-                {player.isActive === false && (
-                  <span className="eliminated-badge">已退出</span>
-                )}
-              </li>
-            ))}
+            {gameState.players.map((player, index) => {
+              const isAI = isAIPlayer(player);
+              const isAIThinking = isAI && currentAIId === player.id && aiThinking;
+              const isCurrentTurn = index === gameState.currentPlayerIndex;
+
+              return (
+                <li
+                  key={player.id}
+                  className={`player-item ${isCurrentTurn ? 'current-turn' : ''} ${player.isActive === false ? 'eliminated' : ''} ${isAI ? 'ai-player' : ''} ${isAIThinking ? 'ai-turn' : ''}`}
+                >
+                  <span className="player-name">
+                    {player.name}
+                    {player.isHost && ' (房主)'}
+                    {player.id === myPlayer?.id && ' (我)'}
+                    {isAI && <span className="ai-badge">🤖 AI</span>}
+                  </span>
+                  <span className="player-score">{player.score || 0} 分</span>
+                  <span className="player-cards">
+                    {player.hand ? `${player.hand.length} 張牌` : ''}
+                  </span>
+                  {isCurrentTurn && player.isActive !== false && (
+                    <span className="turn-indicator">輪到此玩家</span>
+                  )}
+                  {player.isActive === false && (
+                    <span className="eliminated-badge">已退出</span>
+                  )}
+                  {isAIThinking && (
+                    <AIThinkingIndicator
+                      isThinking={true}
+                      size="small"
+                    />
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </aside>
       </main>

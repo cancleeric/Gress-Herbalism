@@ -141,6 +141,33 @@
   font-weight: 600;
 }
 
+/* AI 玩家樣式 */
+.ai-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.player-item.ai-player {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.player-item.ai-turn {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  animation: ai-thinking-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ai-thinking-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(0, 123, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+  }
+}
+
 .start-game-btn {
   width: 100%;
   margin-top: var(--spacing-md);
