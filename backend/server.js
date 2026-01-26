@@ -357,15 +357,40 @@ function generateGameId() {
 
 /**
  * 根據玩家 ID 找到對應的 socket
+ * 工單 0105：增強容錯機制，新增 fallback 邏輯
  */
 function findSocketByPlayerId(gameId, playerId) {
   const gameState = gameRooms.get(gameId);
   if (!gameState) return null;
 
   const player = gameState.players.find(p => p.id === playerId);
-  if (!player || !player.socketId) return null;
+  if (!player) return null;
 
-  return io.sockets.sockets.get(player.socketId);
+  // 優先使用 player.socketId
+  if (player.socketId) {
+    const socket = io.sockets.sockets.get(player.socketId);
+    if (socket && socket.connected) {
+      return socket;
+    }
+    // socketId 無效，記錄警告
+    console.warn(`[Socket] 玩家 ${player.name} (${playerId}) 的 socketId ${player.socketId} 無效或已斷線`);
+  }
+
+  // Fallback: 從 playerSockets Map 反查
+  for (const [socketId, info] of playerSockets.entries()) {
+    if (info.gameId === gameId && info.playerId === playerId) {
+      const socket = io.sockets.sockets.get(socketId);
+      if (socket && socket.connected) {
+        // 自動修復 player.socketId
+        player.socketId = socketId;
+        console.log(`[Socket] 自動修復玩家 ${player.name} 的 socketId: ${socketId}`);
+        return socket;
+      }
+    }
+  }
+
+  console.warn(`[Socket] 找不到玩家 ${player.name} (${playerId}) 的有效 socket`);
+  return null;
 }
 
 /**
@@ -1197,6 +1222,11 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
   player.isDisconnected = false;
   player.disconnectedAt = null;
   delete player.isRefreshing;
+
+  // 工單 0104：更新 player.socketId
+  const oldSocketId = player.socketId;
+  player.socketId = socket.id;
+  console.log(`[重連] 玩家 ${player.name} socketId 更新: ${oldSocketId} → ${socket.id}`);
 
   // 更新 socket 對應
   playerSockets.set(socket.id, { gameId: roomId, playerId });
