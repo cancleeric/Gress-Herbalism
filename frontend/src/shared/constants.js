@@ -357,3 +357,31 @@ export function getAIPlayerName(index, difficulty) {
   };
   return `AI ${difficultyNames[difficulty] || ''} ${index + 1}`;
 }
+
+/**
+ * 所有 AI 難度等級的陣列
+ * @readonly
+ * @type {string[]}
+ */
+export const ALL_AI_DIFFICULTIES = Object.values(AI_DIFFICULTY);
+
+/**
+ * AI 玩家名稱列表
+ * @readonly
+ * @type {string[]}
+ */
+export const AI_PLAYER_NAMES = ['小草', '小花', '小樹'];
+
+/**
+ * 取得 AI 難度描述
+ * @param {string} difficulty - 難度值
+ * @returns {string} 難度描述
+ */
+export function getAIDifficultyDescription(difficulty) {
+  const descriptions = {
+    [AI_DIFFICULTY.EASY]: '簡單 - 適合新手',
+    [AI_DIFFICULTY.MEDIUM]: '中等 - 平衡挑戰',
+    [AI_DIFFICULTY.HARD]: '困難 - 高級玩家'
+  };
+  return descriptions[difficulty] || '未知難度';
+}
