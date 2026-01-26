@@ -546,6 +546,66 @@ function GameRoom() {
   };
 
   /**
+   * 格式化遊戲紀錄顯示（工單 0126）
+   * 將後端的紀錄格式轉換為前端顯示格式
+   */
+  const formatHistoryRecord = useCallback((record) => {
+    const player = gameState.players.find(p => p.id === record.playerId);
+    const playerName = record.playerName || player?.name || '玩家';
+
+    // 如果已經有 action 或 message 欄位，直接使用
+    if (record.action || record.message) {
+      return {
+        playerName,
+        action: record.action || record.message
+      };
+    }
+
+    // 根據 type 欄位生成顯示文字
+    const colorNames = {
+      red: '紅',
+      yellow: '黃',
+      green: '綠',
+      blue: '藍'
+    };
+
+    switch (record.type) {
+      case 'question': {
+        const targetPlayer = gameState.players.find(p => p.id === record.targetPlayerId);
+        const colors = record.colors?.map(c => colorNames[c] || c).join('') || '';
+        const questionTypes = {
+          1: '各一張',
+          2: '其中一種全部',
+          3: '給一張要全部'
+        };
+        const typeText = questionTypes[record.questionType] || '';
+        return {
+          playerName,
+          action: `向 ${targetPlayer?.name || '玩家'} 問了 ${colors} 牌（${typeText}）`
+        };
+      }
+      case 'prediction': {
+        const colorName = colorNames[record.color] || record.color;
+        return {
+          playerName,
+          action: `預測蓋牌有 ${colorName} 色`
+        };
+      }
+      case 'guess': {
+        return {
+          playerName,
+          action: record.isCorrect ? '猜牌成功！' : '猜牌失敗'
+        };
+      }
+      default:
+        return {
+          playerName,
+          action: '進行了操作'
+        };
+    }
+  }, [gameState.players]);
+
+  /**
    * 取得遊戲階段顯示文字
    */
   const getGamePhaseText = () => {
@@ -777,7 +837,535 @@ function GameRoom() {
     );
   }
 
-  // 遊戲進行中：渲染原有 UI
+  // 顏色組合牌定義（工單 0124）
+  const colorCombinations = [
+    { id: 'red-yellow', colors: ['red', 'yellow'], icons: ['eco', 'energy_savings_leaf'] },
+    { id: 'red-green', colors: ['red', 'green'], icons: ['eco', 'spa'] },
+    { id: 'red-blue', colors: ['red', 'blue'], icons: ['eco', 'water_drop'] },
+    { id: 'yellow-green', colors: ['yellow', 'green'], icons: ['energy_savings_leaf', 'spa'] },
+    { id: 'yellow-blue', colors: ['yellow', 'blue'], icons: ['energy_savings_leaf', 'water_drop'] },
+    { id: 'green-blue', colors: ['green', 'blue'], icons: ['spa', 'water_drop'] },
+  ];
+
+  // 遊戲進行中階段：渲染新的三欄式 UI（工單 0124）
+  if (gameState.gamePhase === GAME_PHASE_PLAYING ||
+      gameState.gamePhase === GAME_PHASE_POST_QUESTION ||
+      gameState.gamePhase === GAME_PHASE_FOLLOW_GUESSING ||
+      gameState.gamePhase === GAME_PHASE_ROUND_END) {
+    return (
+      <div className="game-room playing-stage">
+        {/* 遊戲進行中 Header */}
+        <header className="playing-header">
+          <div className="playing-header-left">
+            <div className="playing-brand">
+              <div className="playing-brand-icon">
+                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                  <path clipRule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fillRule="evenodd"></path>
+                  <path clipRule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fillRule="evenodd"></path>
+                </svg>
+              </div>
+              <span className="playing-brand-text">Herbalism 本草</span>
+            </div>
+            <div className="playing-status">
+              <span className="playing-status-dot"></span>
+              <span>遊戲進行中</span>
+            </div>
+          </div>
+          <div className="playing-header-right">
+            <button className="playing-leave-btn" onClick={handleLeaveRoom}>
+              離開
+            </button>
+          </div>
+        </header>
+
+        {/* 主內容 - 三欄佈局 */}
+        <main className="playing-main">
+          {/* 左欄 */}
+          <aside className="playing-left-column">
+            {/* 自己的玩家卡片 */}
+            <div className="playing-my-card">
+              <div className="playing-my-avatar-wrapper">
+                {authUser?.photoURL ? (
+                  <img
+                    className="playing-my-avatar-img"
+                    src={authUser.photoURL}
+                    alt={myPlayer?.name || '玩家'}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="playing-my-avatar">
+                    {getPlayerInitial(myPlayer?.name)}
+                  </div>
+                )}
+                <span className="playing-my-badge">ME</span>
+              </div>
+              <div className="playing-my-info">
+                <h3>{myPlayer?.name || '載入中...'}</h3>
+              </div>
+              <div className="playing-my-stats">
+                <div className="playing-my-stat">
+                  <span className="playing-my-stat-label">分數</span>
+                  <span className="playing-my-stat-value">{myPlayer?.score || 0}</span>
+                </div>
+                <div className="playing-my-stat">
+                  <span className="playing-my-stat-label">手牌</span>
+                  <span className="playing-my-stat-value">{myPlayer?.hand?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 遊戲紀錄 */}
+            <div className="playing-history">
+              <div className="playing-history-header">
+                <span className="material-symbols-outlined">history_edu</span>
+                <h3>遊戲紀錄</h3>
+              </div>
+              <div className="playing-history-list">
+                {gameState.gameHistory && gameState.gameHistory.slice(-10).reverse().map((record, index) => {
+                  const formatted = formatHistoryRecord(record);
+                  return (
+                    <div
+                      key={index}
+                      className={`playing-history-item ${record.playerId === myPlayer?.id ? 'is-me' : ''}`}
+                    >
+                      <p className="playing-history-item-player">
+                        {formatted.playerName}
+                        {record.playerId === myPlayer?.id && ' (我)'}
+                      </p>
+                      <p className="playing-history-item-action">{formatted.action}</p>
+                    </div>
+                  );
+                })}
+                {(!gameState.gameHistory || gameState.gameHistory.length === 0) && (
+                  <p style={{ color: '#7f786c', fontSize: '12px', textAlign: 'center' }}>暫無紀錄</p>
+                )}
+              </div>
+            </div>
+          </aside>
+
+          {/* 中央區域 */}
+          <section className="playing-center-column">
+            {/* 蓋牌區 */}
+            <div className="playing-hidden-area">
+              <h2 className="playing-hidden-title">
+                <span className="material-symbols-outlined">help</span>
+                蓋牌
+              </h2>
+              <div className="playing-hidden-cards">
+                <div className="playing-hidden-card"></div>
+                <div className="playing-hidden-card"></div>
+              </div>
+            </div>
+
+            {/* 顏色組合牌 */}
+            <div className="playing-inquiry-area">
+              <h3 className="playing-inquiry-title">
+                <span className="material-symbols-outlined">view_module</span>
+                問牌選擇
+              </h3>
+              <div className="playing-inquiry-grid">
+                {colorCombinations.map((combo) => {
+                  const isDisabledBySelf = combo.id === myLastColorCardId;
+                  const marker = colorCardMarkers[combo.id];
+                  const isDisabled = !canAct || onlyGuess || isDisabledBySelf;
+
+                  return (
+                    <div
+                      key={combo.id}
+                      className={`playing-inquiry-card ${isDisabled ? 'disabled' : ''} ${isDisabledBySelf ? 'disabled-by-self' : ''}`}
+                      onClick={() => {
+                        if (isDisabledBySelf) {
+                          handleDisabledCardClick();
+                        } else if (canAct && !onlyGuess) {
+                          handleColorCardSelect({ id: combo.id, colors: combo.colors });
+                        }
+                      }}
+                    >
+                      <div className={`playing-inquiry-card-half color-${combo.colors[0]}`}>
+                        <span className="material-symbols-outlined">{combo.icons[0]}</span>
+                      </div>
+                      <div className={`playing-inquiry-card-half color-${combo.colors[1]}`}>
+                        <span className="material-symbols-outlined">{combo.icons[1]}</span>
+                      </div>
+                      {isDisabledBySelf && (
+                        <div className="playing-inquiry-card-disabled-overlay">
+                          <span className="material-symbols-outlined">block</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* 右欄 - 玩家列表 */}
+          <aside className="playing-right-column">
+            <h3 className="playing-players-title">玩家</h3>
+            {gameState.players.map((player, index) => (
+              <div
+                key={player.id}
+                className={`playing-player-card ${index === gameState.currentPlayerIndex ? 'is-current-turn' : ''} ${player.isActive === false ? 'is-eliminated' : ''}`}
+              >
+                {index === gameState.currentPlayerIndex && player.isActive !== false && (
+                  <span className="playing-turn-badge">回合</span>
+                )}
+                {player.isActive === false && (
+                  <span className="playing-eliminated-badge">已退出</span>
+                )}
+                {player.id === myPlayer?.id && authUser?.photoURL ? (
+                  <img
+                    className="playing-player-avatar-img"
+                    src={authUser.photoURL}
+                    alt={player.name}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="playing-player-avatar">
+                    {getPlayerInitial(player.name)}
+                  </div>
+                )}
+                <div className="playing-player-info">
+                  <h4>
+                    {player.name}
+                    {player.id === myPlayer?.id && ' (我)'}
+                  </h4>
+                  <p>分數: {player.score || 0} | 手牌: {player.hand?.length || 0}</p>
+                </div>
+              </div>
+            ))}
+
+            <div className="playing-round-info">
+              <p>目前回合</p>
+              <p>輪到 {currentPlayer?.name || '...'} 行動</p>
+            </div>
+          </aside>
+        </main>
+
+        {/* 底部手牌區 */}
+        <footer className="playing-footer">
+          <div className="playing-footer-content">
+            <div className="playing-hand-label">
+              <h4>我的手牌</h4>
+              <div className="playing-hand-count">
+                <span>{myPlayer?.hand?.length || 0} 張</span>
+              </div>
+            </div>
+
+            <div className="playing-hand-cards">
+              {myPlayer?.hand?.map((card, index) => (
+                <div
+                  key={card.id || index}
+                  className={`playing-hand-card color-${card.color}`}
+                >
+                  <div className="playing-hand-card-inner">
+                    <span className="material-symbols-outlined">
+                      {card.color === 'red' ? 'eco' :
+                       card.color === 'yellow' ? 'energy_savings_leaf' :
+                       card.color === 'green' ? 'spa' : 'water_drop'}
+                    </span>
+                    <div className="playing-hand-card-circle"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="playing-action-buttons">
+              <button
+                className="playing-action-btn"
+                disabled={!canAct}
+                onClick={handleOpenGuess}
+              >
+                <span className="material-symbols-outlined">search_check</span>
+                <span>猜牌</span>
+              </button>
+            </div>
+          </div>
+        </footer>
+
+        {/* 新版問牌流程 Modal */}
+        {showQuestionFlow && selectedColorCard && (
+          <QuestionFlow
+            selectedCard={selectedColorCard}
+            players={gameState.players.filter(p => p.isActive !== false)}
+            currentPlayerId={myPlayer?.id}
+            currentPlayerHand={myPlayer?.hand || []}
+            onSubmit={handleQuestionFlowSubmit}
+            onCancel={handleQuestionFlowCancel}
+            isLoading={isLoading}
+          />
+        )}
+
+        {/* 猜牌介面 Modal */}
+        {showGuessCard && (
+          <div className="modal-overlay" onClick={handleCloseGuess}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <GuessCard
+                onSubmit={handleGuessSubmit}
+                onCancel={handleCloseGuess}
+                isOpen={showGuessCard}
+                isLoading={isLoading}
+                guessResult={guessResult}
+                onResultClose={handleCloseGuess}
+                hiddenCards={hiddenCardsForGuess}
+                canViewAnswer={true}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 預測介面 Modal */}
+        {showPrediction && isMyTurn() && (
+          <div className="modal-overlay">
+            <div className="modal-content prediction-modal" onClick={(e) => e.stopPropagation()}>
+              <Prediction
+                onEndTurn={handleEndTurn}
+                isLoading={predictionLoading}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 等待問牌玩家結束回合 */}
+        {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && (
+          <div className="waiting-overlay">
+            <div className="waiting-message">
+              <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>
+            </div>
+          </div>
+        )}
+
+        {/* 給牌通知 Modal */}
+        {cardGiveNotification && (
+          <div className="modal-overlay">
+            <div className="modal-content card-give-notification-modal" onClick={(e) => e.stopPropagation()}>
+              <CardGiveNotification
+                notification={cardGiveNotification}
+                onConfirm={handleCloseCardGiveNotification}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 顏色選擇介面 Modal */}
+        {showColorChoice && colorChoiceData && (
+          <div className="modal-overlay">
+            <div className="modal-content color-choice-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="color-choice-card">
+                <h3>選擇要給的顏色</h3>
+                <p className="color-choice-message">
+                  {gameState.players.find(p => p.id === colorChoiceData.askingPlayerId)?.name || '對方'}
+                  使用「其中一種顏色全部」方式向你要牌
+                </p>
+                {colorChoiceData.availableColors?.length === 0 ? (
+                  <>
+                    <p>你沒有這兩種顏色的牌。</p>
+                    <div className="color-choice-buttons">
+                      <button className="btn btn-secondary" onClick={() => handleColorChoice('none')}>
+                        確認（無牌可給）
+                      </button>
+                    </div>
+                  </>
+                ) : colorChoiceData.availableColors?.length === 1 ? (
+                  <>
+                    <p>請確認給出你有的顏色：</p>
+                    <div className="color-choice-buttons">
+                      {colorChoiceData.colors.map(color => {
+                        const isAvailable = colorChoiceData.availableColors?.includes(color);
+                        return (
+                          <button
+                            key={color}
+                            className={`btn btn-color color-${color} ${!isAvailable ? 'disabled' : ''}`}
+                            onClick={() => isAvailable && handleColorChoice(color)}
+                            disabled={!isAvailable}
+                          >
+                            {color === 'red' ? '紅色' : color === 'yellow' ? '黃色' : color === 'green' ? '綠色' : '藍色'}
+                            {!isAvailable && ' (無)'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>請選擇要給哪種顏色的全部牌：</p>
+                    <div className="color-choice-buttons">
+                      {colorChoiceData.colors.map(color => (
+                        <button
+                          key={color}
+                          className={`btn btn-color color-${color}`}
+                          onClick={() => handleColorChoice(color)}
+                        >
+                          {color === 'red' ? '紅色' : color === 'yellow' ? '黃色' : color === 'green' ? '綠色' : '藍色'}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 等待顏色選擇提示 */}
+        {waitingForColorChoice && colorChoiceInfo && (
+          <div className="waiting-overlay">
+            <div className="waiting-message">
+              <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>
+            </div>
+          </div>
+        )}
+
+        {/* 跟猜面板 Modal */}
+        {showFollowGuessPanel && followGuessData && (
+          <div className="modal-overlay">
+            <div className="modal-content follow-guess-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="follow-guess-card">
+                <h3>跟猜階段</h3>
+                <p className="guess-info">
+                  <strong>{gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}</strong>
+                  {' '}猜測蓋牌是：
+                  <span className="guessed-colors">
+                    {followGuessData.guessedColors.map(color => (
+                      <span key={color} className={`color-badge color-${color}`}>
+                        {color === 'red' ? '紅' : color === 'yellow' ? '黃' : color === 'green' ? '綠' : '藍'}
+                      </span>
+                    ))}
+                  </span>
+                </p>
+                <div className="follow-guess-order">
+                  <h4>決定順序</h4>
+                  <ul className="decision-order-list">
+                    <li className="decision-item guesser">
+                      <span className="player-label">
+                        {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}
+                      </span>
+                      <span className="decision-badge guesser-badge">猜牌者</span>
+                    </li>
+                    {followGuessData.decisionOrder?.map((playerId, index) => {
+                      const player = gameState.players.find(p => p.id === playerId);
+                      const decision = followGuessData.decisions?.[playerId];
+                      const isCurrentDecider = followGuessData.currentDeciderId === playerId;
+                      return (
+                        <li key={playerId} className={`decision-item ${isCurrentDecider ? 'current-decider' : ''}`}>
+                          <span className="order-number">{index + 1}.</span>
+                          <span className="player-label">{player?.name || playerId}</span>
+                          {isCurrentDecider && !decision && <span className="decision-badge deciding">決定中...</span>}
+                          {decision === 'follow' && <span className="decision-badge followed">跟猜</span>}
+                          {decision === 'pass' && <span className="decision-badge declined">不跟</span>}
+                          {!isCurrentDecider && !decision && <span className="decision-badge waiting">等待中</span>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                {followGuessData.currentDeciderId === myPlayer?.id && (
+                  <div className="follow-guess-buttons">
+                    <p className="decision-prompt">輪到你決定！跟對 +1 分，跟錯 -1 分並退出當局</p>
+                    <button className="btn btn-success" onClick={() => handleFollowGuess(true)}>跟猜</button>
+                    <button className="btn btn-secondary" onClick={() => handleFollowGuess(false)}>不跟</button>
+                  </div>
+                )}
+                {followGuessData.guessingPlayerId === myPlayer?.id && (
+                  <p className="waiting-others">等待其他玩家按順序決定是否跟猜...</p>
+                )}
+                {followGuessData.decisions?.[myPlayer?.id] && followGuessData.guessingPlayerId !== myPlayer?.id && (
+                  <p className="already-decided">
+                    你選擇了「{followGuessData.decisions[myPlayer?.id] === 'follow' ? '跟猜' : '不跟'}」，等待其他玩家...
+                  </p>
+                )}
+                {!followGuessData.decisions?.[myPlayer?.id] &&
+                 followGuessData.currentDeciderId !== myPlayer?.id &&
+                 followGuessData.guessingPlayerId !== myPlayer?.id &&
+                 followGuessData.decisionOrder?.includes(myPlayer?.id) && (
+                  <p className="waiting-turn">還沒輪到你，請等待...</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 局結束 / 猜牌結果面板 */}
+        {showRoundEnd && guessResultData && (
+          <div className="modal-overlay">
+            <div className="modal-content round-end-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="round-end-card">
+                <h3>{guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}</h3>
+                <div className="hidden-cards-reveal">
+                  <p>蓋牌是：</p>
+                  <div className="hidden-cards">
+                    {guessResultData.hiddenCards.map((card, index) => (
+                      <span key={index} className={`card-badge color-${card.color}`}>
+                        {card.color === 'red' ? '紅' : card.color === 'yellow' ? '黃' : card.color === 'green' ? '綠' : '藍'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="score-changes">
+                  <h4>分數變化</h4>
+                  <ul className="score-list">
+                    {Object.entries(guessResultData.scoreChanges).map(([playerId, change]) => {
+                      const player = gameState.players.find(p => p.id === playerId);
+                      return (
+                        <li key={playerId} className={change > 0 ? 'score-up' : change < 0 ? 'score-down' : ''}>
+                          {player?.name || playerId}：
+                          <span className="score-change">{change > 0 ? `+${change}` : change}</span>
+                          {playerId === guessResultData.guessingPlayerId && ' (猜牌者)'}
+                          {guessResultData.followingPlayers?.includes(playerId) && ' (跟猜)'}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (
+                  <PredictionResult
+                    predictionResults={guessResultData.predictionResults}
+                    players={gameState.players}
+                    hiddenCards={guessResultData.hiddenCards}
+                  />
+                )}
+                <div className="current-scores">
+                  <h4>目前分數</h4>
+                  <ul className="score-list">
+                    {gameState.players.map(player => (
+                      <li key={player.id}>
+                        {player.name}：{player.score || 0} 分
+                        {(player.score || 0) >= 7 && <span className="winner-badge">勝利！</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {gameState.gamePhase !== GAME_PHASE_FINISHED && (
+                  <button className="btn btn-primary" onClick={handleStartNextRound}>開始下一局</button>
+                )}
+                {gameState.gamePhase === GAME_PHASE_FINISHED && (
+                  <div className="game-finished">
+                    <p className="winner-announcement">
+                      恭喜 {gameState.players.find(p => p.id === gameState.winner)?.name || '獲勝者'} 獲勝！
+                    </p>
+                    <button className="btn btn-secondary" onClick={handleLeaveRoom}>離開房間</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 錯誤訊息 */}
+        {error && (
+          <div className="error-message" role="alert">
+            {error}
+            <button onClick={() => setError('')} className="close-error">×</button>
+          </div>
+        )}
+
+        {/* 版本資訊 */}
+        <VersionInfo />
+      </div>
+    );
+  }
+
+  // 其他階段（如 finished）：渲染原有 UI
   return (
     <div className="game-room">
       {/* 頂部區域：遊戲資訊 */}

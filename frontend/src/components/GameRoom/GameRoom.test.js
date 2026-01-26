@@ -127,7 +127,7 @@ describe('GameRoom - 工作單 0023', () => {
       expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應顯示遊戲房間標題', () => {
+    test('遊戲進行中應顯示品牌名稱（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -138,7 +138,7 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('遊戲房間')).toBeInTheDocument();
+      expect(screen.getByText('Herbalism 本草')).toBeInTheDocument();
     });
 
     test('應顯示房間ID', () => {
@@ -158,7 +158,7 @@ describe('GameRoom - 工作單 0023', () => {
       expect(screen.getByText('玩家')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應顯示玩家列表區域', () => {
+    test('遊戲進行中應顯示玩家區域（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -169,10 +169,11 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('玩家列表')).toBeInTheDocument();
+      // 工單 0124：新 UI 顯示「玩家」作為標題
+      expect(screen.getByText('玩家')).toBeInTheDocument();
     });
 
-    test('應整合 GameStatusContainer 組件', () => {
+    test('應顯示遊戲紀錄區域（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -183,20 +184,22 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      // GameStatusContainer 應該顯示遊戲狀態
-      expect(screen.getByText('遊戲狀態')).toBeInTheDocument();
+      // 工單 0124：新 UI 顯示「遊戲紀錄」在左欄
+      expect(screen.getByText('遊戲紀錄')).toBeInTheDocument();
     });
 
-    test('應整合 PlayerHand 組件顯示手牌', () => {
+    test('應顯示我的手牌區域（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
         players: [
-          { id: 'p1', name: '玩家1', isHost: true, hand: [{ id: 'c1', color: 'red' }], isActive: true }
+          { id: 'p1', name: '玩家1', isHost: true, hand: [{ id: 'c1', color: 'red' }], isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      // PlayerHand 應該顯示「我的手牌」
+      // 工單 0124：底部 footer 顯示「我的手牌」
       expect(screen.getByText('我的手牌')).toBeInTheDocument();
     });
   });
@@ -265,18 +268,20 @@ describe('GameRoom - 工作單 0023', () => {
       expect(screen.getAllByText('房主').length).toBeGreaterThan(0);
     });
 
-    test('當前回合玩家應顯示標記', () => {
+    test('當前回合玩家應顯示標記（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
         currentPlayerIndex: 0,
         players: [
           { id: 'p1', name: '玩家1', isActive: true },
-          { id: 'p2', name: '玩家2', isActive: true }
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('輪到此玩家')).toBeInTheDocument();
+      // 工單 0124：新 UI 使用「回合」標籤
+      expect(screen.getByText('回合')).toBeInTheDocument();
     });
 
     test('已退出玩家應顯示退出標記', () => {
@@ -380,7 +385,7 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('操作按鈕', () => {
-    test('遊戲進行中且輪到自己時應顯示操作提示和猜牌按鈕（工單 0074 新流程）', () => {
+    test('遊戲進行中且輪到自己時應顯示問牌選擇和猜牌按鈕（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -393,13 +398,12 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      // 新流程：顯示點擊顏色牌的提示（兩處：GameBoard 和 action-buttons）
-      const hints = screen.getAllByText(/點擊.*顏色牌/);
-      expect(hints.length).toBeGreaterThan(0);
+      // 工單 0124：顯示「問牌選擇」區域標題
+      expect(screen.getByText('問牌選擇')).toBeInTheDocument();
       expect(screen.getByText('猜牌')).toBeInTheDocument();
     });
 
-    test('不是自己回合時應顯示等待訊息', () => {
+    test('不是自己回合時應顯示輪到提示（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -412,10 +416,11 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText(/等待.*的回合/)).toBeInTheDocument();
+      // 工單 0124：顯示「輪到 XX 行動」
+      expect(screen.getByText(/輪到.*行動/)).toBeInTheDocument();
     });
 
-    test('只剩一個活躍玩家時只顯示猜牌按鈕', () => {
+    test('只剩一個活躍玩家時顏色牌應禁用（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -427,18 +432,17 @@ describe('GameRoom - 工作單 0023', () => {
           { id: 'p3', name: '玩家3', isActive: false }
         ]
       };
-      renderWithProviders(<GameRoom />, { preloadedState: state });
-      // 不應該有問牌提示
-      expect(screen.queryByText(/點擊.*顏色牌開始問牌/)).not.toBeInTheDocument();
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
       // 應該有猜牌按鈕
       expect(screen.getByText('猜牌')).toBeInTheDocument();
-      // 應該有必須猜牌提示
-      expect(screen.getByText(/必須猜牌/)).toBeInTheDocument();
+      // 工單 0124：顏色組合牌應該有 disabled class
+      const inquiryCards = container.querySelectorAll('.playing-inquiry-card.disabled');
+      expect(inquiryCards.length).toBeGreaterThan(0);
     });
   });
 
   describe('Modal 介面', () => {
-    test('點擊顏色組合牌應打開問牌流程（工單 0074 新流程）', () => {
+    test('點擊顏色組合牌應打開問牌流程（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -450,10 +454,12 @@ describe('GameRoom - 工作單 0023', () => {
           { id: 'p3', name: '玩家3', isActive: true, hand: [] }
         ]
       };
-      renderWithProviders(<GameRoom />, { preloadedState: state });
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
 
-      // 點擊一張顏色組合牌（例如紅綠）
-      fireEvent.click(screen.getByText('紅綠'));
+      // 工單 0124：點擊第一張顏色組合牌
+      const inquiryCards = container.querySelectorAll('.playing-inquiry-card');
+      expect(inquiryCards.length).toBeGreaterThan(0);
+      fireEvent.click(inquiryCards[0]);
 
       // 應該顯示問牌流程 overlay
       expect(document.querySelector('.question-flow-overlay')).toBeInTheDocument();
@@ -480,7 +486,7 @@ describe('GameRoom - 工作單 0023', () => {
       expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
     });
 
-    test('點擊取消應關閉問牌流程 Modal（工單 0074 新流程）', () => {
+    test('點擊取消應關閉問牌流程 Modal（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -492,10 +498,11 @@ describe('GameRoom - 工作單 0023', () => {
           { id: 'p3', name: '玩家3', isActive: true, hand: [] }
         ]
       };
-      renderWithProviders(<GameRoom />, { preloadedState: state });
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
 
-      // 打開問牌流程
-      fireEvent.click(screen.getByText('紅綠'));
+      // 工單 0124：打開問牌流程
+      const inquiryCards = container.querySelectorAll('.playing-inquiry-card');
+      fireEvent.click(inquiryCards[0]);
       expect(document.querySelector('.question-flow-overlay')).toBeInTheDocument();
 
       // 點擊取消按鈕關閉
@@ -538,7 +545,7 @@ describe('GameRoom - 工作單 0023', () => {
       expect(container.querySelector('.waiting-main')).toBeInTheDocument();
     });
 
-    // 遊戲進行中樣式測試（需要 playing 階段）
+    // 遊戲進行中樣式測試（需要 playing 階段）- 工單 0124 更新
     const playingState = {
       ...initialState,
       gamePhase: 'playing',
@@ -549,49 +556,49 @@ describe('GameRoom - 工作單 0023', () => {
       ]
     };
 
-    test('遊戲進行中應包含 game-room 容器類別', () => {
+    test('遊戲進行中應包含 playing-stage 容器類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.game-room')).toBeInTheDocument();
+      expect(container.querySelector('.playing-stage')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 game-room-header 類別', () => {
+    test('遊戲進行中應包含 playing-header 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.game-room-header')).toBeInTheDocument();
+      expect(container.querySelector('.playing-header')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 game-room-main 類別', () => {
+    test('遊戲進行中應包含 playing-main 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.game-room-main')).toBeInTheDocument();
+      expect(container.querySelector('.playing-main')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 game-room-footer 類別', () => {
+    test('遊戲進行中應包含 playing-footer 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.game-room-footer')).toBeInTheDocument();
+      expect(container.querySelector('.playing-footer')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 status-sidebar 類別', () => {
+    test('遊戲進行中應包含 playing-left-column 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.status-sidebar')).toBeInTheDocument();
+      expect(container.querySelector('.playing-left-column')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 players-sidebar 類別', () => {
+    test('遊戲進行中應包含 playing-right-column 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.players-sidebar')).toBeInTheDocument();
+      expect(container.querySelector('.playing-right-column')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 game-board-area 類別', () => {
+    test('遊戲進行中應包含 playing-center-column 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.game-board-area')).toBeInTheDocument();
+      expect(container.querySelector('.playing-center-column')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 my-hand-section 類別', () => {
+    test('遊戲進行中應包含 playing-hand-cards 類別（工單 0124）', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.my-hand-section')).toBeInTheDocument();
+      expect(container.querySelector('.playing-hand-cards')).toBeInTheDocument();
     });
   });
 
   describe('跟猜階段', () => {
-    test('跟猜階段應顯示跟猜階段文字', () => {
+    test('跟猜階段應渲染遊戲進行中 UI（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'followGuessing',
@@ -601,13 +608,15 @@ describe('GameRoom - 工作單 0023', () => {
           { id: 'p3', name: '玩家3', isActive: true }
         ]
       };
-      renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('跟猜階段')).toBeInTheDocument();
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+      // 工單 0124：跟猜階段使用相同的 playing-stage UI
+      expect(container.querySelector('.playing-stage')).toBeInTheDocument();
+      expect(screen.getByText('遊戲進行中')).toBeInTheDocument();
     });
   });
 
   describe('局結束階段', () => {
-    test('局結束階段應顯示局結束文字', () => {
+    test('局結束階段應渲染遊戲進行中 UI（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'roundEnd',
@@ -617,8 +626,10 @@ describe('GameRoom - 工作單 0023', () => {
           { id: 'p3', name: '玩家3', isActive: true, score: 0 }
         ]
       };
-      renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('局結束')).toBeInTheDocument();
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+      // 工單 0124：局結束階段使用相同的 playing-stage UI
+      expect(container.querySelector('.playing-stage')).toBeInTheDocument();
+      expect(screen.getByText('遊戲進行中')).toBeInTheDocument();
     });
   });
 
@@ -653,7 +664,7 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('玩家分數顯示', () => {
-    test('玩家列表應顯示分數', () => {
+    test('玩家列表應顯示分數（工單 0124）', () => {
       const state = {
         ...initialState,
         gamePhase: 'playing',
@@ -664,9 +675,9 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      // 分數應該顯示在玩家列表中
-      expect(screen.getAllByText(/5 分/).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/3 分/).length).toBeGreaterThan(0);
+      // 工單 0124：新 UI 使用「分數: X | 手牌: Y」格式
+      expect(screen.getAllByText(/分數: 5/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/分數: 3/).length).toBeGreaterThan(0);
     });
   });
 
@@ -940,6 +951,136 @@ describe('GameRoom - 工作單 0023', () => {
       fireEvent.click(screen.getByText('離開房間'));
 
       expect(socketService.leaveRoom).toHaveBeenCalledWith('test_room', 'p1');
+    });
+  });
+
+  // BUG 測試 - 工單 0126：遊戲紀錄顯示
+  describe('BUG 修復: 遊戲紀錄顯示（工單 0126）', () => {
+    test('應正確顯示帶有 action 欄位的紀錄', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ],
+        gameHistory: [
+          { playerId: 'p1', playerName: '玩家1', action: '問了紅黃牌' },
+          { playerId: 'p2', playerName: '玩家2', action: '猜牌成功' }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      expect(screen.getByText('遊戲紀錄')).toBeInTheDocument();
+      expect(screen.getByText('問了紅黃牌')).toBeInTheDocument();
+      expect(screen.getByText('猜牌成功')).toBeInTheDocument();
+    });
+
+    test('應正確格式化後端的 question 類型紀錄', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ],
+        gameHistory: [
+          { type: 'question', playerId: 'p1', targetPlayerId: 'p2', colors: ['red', 'yellow'], questionType: 1 }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 應該顯示格式化後的問牌紀錄
+      expect(screen.getByText(/向.*玩家2.*問了.*紅黃.*牌/)).toBeInTheDocument();
+    });
+
+    test('應正確格式化後端的 prediction 類型紀錄', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ],
+        gameHistory: [
+          { type: 'prediction', playerId: 'p1', color: 'red' }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 應該顯示格式化後的預測紀錄
+      expect(screen.getByText(/預測蓋牌有.*紅.*色/)).toBeInTheDocument();
+    });
+  });
+
+  // BUG 測試 - 工單 0125：顏色牌禁用邏輯
+  describe('BUG 修復: 顏色牌禁用邏輯（工單 0125）', () => {
+    test('初始狀態應有 6 張可選的顏色組合牌', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerIndex: 0,
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, hand: [] },
+          { id: 'p2', name: '玩家2', isActive: true, hand: [] },
+          { id: 'p3', name: '玩家3', isActive: true, hand: [] }
+        ]
+      };
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      const inquiryCards = container.querySelectorAll('.playing-inquiry-card');
+      expect(inquiryCards.length).toBe(6);
+
+      // 初始狀態沒有被自己禁用的牌
+      const disabledBySelfCards = container.querySelectorAll('.playing-inquiry-card.disabled-by-self');
+      expect(disabledBySelfCards.length).toBe(0);
+    });
+
+    test('非自己回合時所有顏色牌應該被禁用', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerIndex: 1, // 不是自己的回合
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, hand: [] },
+          { id: 'p2', name: '玩家2', isActive: true, hand: [] },
+          { id: 'p3', name: '玩家3', isActive: true, hand: [] }
+        ]
+      };
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      // 所有牌都應該有 disabled class
+      const disabledCards = container.querySelectorAll('.playing-inquiry-card.disabled');
+      expect(disabledCards.length).toBe(6);
+    });
+
+    test('顏色牌應該可以點擊打開問牌流程', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        currentPlayerIndex: 0,
+        currentPlayerId: 'p1',
+        players: [
+          { id: 'p1', name: '玩家1', isActive: true, hand: [] },
+          { id: 'p2', name: '玩家2', isActive: true, hand: [] },
+          { id: 'p3', name: '玩家3', isActive: true, hand: [] }
+        ]
+      };
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+
+      const inquiryCards = container.querySelectorAll('.playing-inquiry-card');
+      fireEvent.click(inquiryCards[0]);
+
+      // 應該顯示問牌流程
+      expect(document.querySelector('.question-flow-overlay')).toBeInTheDocument();
     });
   });
 });
