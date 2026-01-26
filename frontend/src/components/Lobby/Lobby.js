@@ -30,8 +30,8 @@ import {
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
 import VersionInfo from '../VersionInfo';
 import {
-  savePlayerName,
-  getPlayerName,
+  saveNickname,
+  getNickname,
   getCurrentRoom,
   clearCurrentRoom,
   saveCurrentRoom
@@ -49,7 +49,9 @@ function Lobby() {
   const navigate = useNavigate();
 
   // 本地狀態
-  const [playerName, setPlayerName] = useState('');
+  // 工單 0122：分離玩家名稱與暱稱
+  const [displayName] = useState('訪客');  // 玩家名稱（登入身份，目前固定為訪客）
+  const [nickname, setNickname] = useState('');  // 遊戲暱稱（可編輯）
   const [playerCount, setPlayerCount] = useState(MIN_PLAYERS);
   const [rooms, setRooms] = useState([]);
   const [error, setError] = useState('');
@@ -81,9 +83,9 @@ function Lobby() {
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
-    const savedName = getPlayerName();
-    if (savedName) {
-      setPlayerName(savedName);
+    const savedNickname = getNickname();
+    if (savedNickname) {
+      setNickname(savedNickname);
     }
   }, []);
 
@@ -113,7 +115,7 @@ function Lobby() {
       saveCurrentRoom({
         roomId: gameId,
         playerId: playerId,
-        playerName: playerName.trim()
+        playerName: nickname.trim()
       });
 
       dispatch(updateGameState({
@@ -132,7 +134,7 @@ function Lobby() {
       saveCurrentRoom({
         roomId: gameId,
         playerId: playerId,
-        playerName: playerName.trim()
+        playerName: nickname.trim()
       });
 
       dispatch(updateGameState({
@@ -186,7 +188,7 @@ function Lobby() {
       unsubReconnected();
       unsubReconnectFailed();
     };
-  }, [dispatch, navigate, playerId, rooms, playerName]);
+  }, [dispatch, navigate, playerId, rooms, nickname]);
 
   // 嘗試重連
   useEffect(() => {
@@ -216,10 +218,10 @@ function Lobby() {
   }, []);
 
   /**
-   * 驗證玩家名稱
+   * 驗證遊戲暱稱
    */
-  const validatePlayerNameInput = () => {
-    const nameError = getPlayerNameError(playerName);
+  const validateNicknameInput = () => {
+    const nameError = getPlayerNameError(nickname);
     if (nameError) {
       setError(nameError);
       return false;
@@ -231,7 +233,7 @@ function Lobby() {
    * 創建新房間
    */
   const handleCreateRoom = () => {
-    if (!validatePlayerNameInput()) return;
+    if (!validateNicknameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
@@ -245,14 +247,14 @@ function Lobby() {
       }
     }
 
-    savePlayerName(playerName.trim());
+    saveNickname(nickname.trim());
 
     setIsLoading(true);
     setError('');
 
     const player = {
       id: playerId,
-      name: playerName.trim()
+      name: nickname.trim()
     };
 
     createRoom(player, playerCount, isPrivate ? roomPassword : null);
@@ -262,7 +264,7 @@ function Lobby() {
    * 快速加入房間
    */
   const handleQuickJoin = (selectedRoomId, roomIsPrivate = false, roomName = '') => {
-    if (!validatePlayerNameInput()) return;
+    if (!validateNicknameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
@@ -277,14 +279,14 @@ function Lobby() {
       return;
     }
 
-    savePlayerName(playerName.trim());
+    saveNickname(nickname.trim());
 
     setIsLoading(true);
     setError('');
 
     const player = {
       id: playerId,
-      name: playerName.trim()
+      name: nickname.trim()
     };
 
     joinRoom(selectedRoomId, player);
@@ -298,7 +300,7 @@ function Lobby() {
       setError('請輸入房間 ID');
       return;
     }
-    if (!validatePlayerNameInput()) return;
+    if (!validateNicknameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
@@ -314,14 +316,14 @@ function Lobby() {
       return;
     }
 
-    savePlayerName(playerName.trim());
+    saveNickname(nickname.trim());
 
     setIsLoading(true);
     setError('');
 
     const player = {
       id: playerId,
-      name: playerName.trim()
+      name: nickname.trim()
     };
 
     joinRoom(joinRoomId.trim(), player);
@@ -336,14 +338,14 @@ function Lobby() {
       return;
     }
 
-    savePlayerName(playerName.trim());
+    saveNickname(nickname.trim());
 
     setIsLoading(true);
     setShowPasswordModal(false);
 
     const player = {
       id: playerId,
-      name: playerName.trim()
+      name: nickname.trim()
     };
 
     joinRoom(pendingRoomId, player, inputPassword);
@@ -435,9 +437,9 @@ function Lobby() {
         <header className="lobby-header">
           <div className="lobby-user-area">
             <div className="lobby-avatar">
-              {getInitial(playerName)}
+              {getInitial(displayName)}
             </div>
-            <p className="lobby-user-name">{playerName || '訪客'}</p>
+            <p className="lobby-user-name">{displayName}</p>
           </div>
 {!isConnected && (
             <span className="connection-status disconnected">
@@ -448,24 +450,24 @@ function Lobby() {
 
         {/* 主內容 */}
         <main className="lobby-content">
-          {/* 玩家名稱輸入 */}
-          <div className="player-name-section">
-            <label className="player-name-label" htmlFor="playerName">玩家名稱</label>
+          {/* 遊戲暱稱輸入 */}
+          <div className="nickname-section">
+            <label className="nickname-label" htmlFor="nickname">遊戲暱稱</label>
             <input
-              id="playerName"
-              className="player-name-input"
+              id="nickname"
+              className="nickname-input"
               type="text"
-              value={playerName}
+              value={nickname}
               onChange={(e) => {
-                setPlayerName(e.target.value);
+                setNickname(e.target.value);
                 setError('');
               }}
-              placeholder="請輸入您的名稱（2-12 字元）"
+              placeholder="請輸入遊戲中顯示的暱稱（2-12 字元）"
               maxLength={12}
               disabled={isLoading}
             />
-            {playerName && getPlayerName() && playerName === getPlayerName() && (
-              <span className="welcome-message">歡迎回來，{playerName}！</span>
+            {nickname && getNickname() && nickname === getNickname() && (
+              <span className="welcome-message">歡迎回來，{nickname}！</span>
             )}
           </div>
 

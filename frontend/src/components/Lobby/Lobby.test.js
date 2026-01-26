@@ -100,10 +100,17 @@ describe('Lobby - 頁面渲染', () => {
     });
   });
 
-  test('應顯示玩家名稱輸入框', async () => {
+  test('應顯示遊戲暱稱輸入框', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
+    });
+  });
+
+  test('Header 應顯示玩家名稱「訪客」', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('訪客')).toBeInTheDocument();
     });
   });
 
@@ -205,9 +212,9 @@ describe('Lobby - 輸入驗證', () => {
   test('輸入玩家名稱應更新輸入值', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
-    const input = screen.getByLabelText('玩家名稱');
+    const input = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(input, { target: { value: '測試玩家' } });
     expect(input.value).toBe('測試玩家');
   });
@@ -249,7 +256,7 @@ describe('Lobby - 輸入驗證', () => {
     });
 
     // 輸入玩家名稱
-    const input = screen.getByLabelText('玩家名稱');
+    const input = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(input, { target: { value: '玩家' } });
 
     // 錯誤訊息應消失
@@ -363,10 +370,10 @@ describe('Lobby - 創建房間功能', () => {
   test('創建房間成功應調用 socketService.createRoom', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
     fireEvent.click(screen.getByText('創建新房間'));
@@ -385,10 +392,10 @@ describe('Lobby - 創建房間功能', () => {
   test('創建房間成功後應導航到遊戲房間', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
     fireEvent.click(screen.getByText('創建新房間'));
@@ -420,10 +427,10 @@ describe('Lobby - 創建房間功能', () => {
   test('創建房間錯誤應顯示錯誤訊息', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
     fireEvent.click(screen.getByText('創建新房間'));
@@ -518,7 +525,7 @@ describe('Lobby - 房間列表功能', () => {
     });
 
     // 先輸入玩家名稱
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家X' } });
 
     // 模擬收到房間列表
@@ -545,10 +552,10 @@ describe('Lobby - 房間列表功能', () => {
   test('加入房間成功應導航到遊戲房間', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家2' } });
 
     // 模擬收到房間列表
@@ -589,10 +596,10 @@ describe('Lobby - 房間列表功能', () => {
   test('加入房間錯誤應顯示錯誤訊息', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家1' } });
 
     // 模擬收到房間列表
@@ -949,11 +956,11 @@ describe('Lobby - Room ID 加入功能', () => {
   test('輸入 Room ID 並點擊加入應加入房間', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
     // 輸入玩家名稱
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家測試' } });
 
     // 輸入 Room ID
@@ -972,11 +979,11 @@ describe('Lobby - Room ID 加入功能', () => {
   test('未輸入 Room ID 時點擊加入應顯示錯誤', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByLabelText('玩家名稱')).toBeInTheDocument();
+      expect(screen.getByLabelText('遊戲暱稱')).toBeInTheDocument();
     });
 
     // 輸入玩家名稱
-    const playerNameInput = screen.getByLabelText('玩家名稱');
+    const playerNameInput = screen.getByLabelText('遊戲暱稱');
     fireEvent.change(playerNameInput, { target: { value: '玩家測試' } });
 
     // 加入按鈕應該是禁用的（因為沒有輸入 Room ID）

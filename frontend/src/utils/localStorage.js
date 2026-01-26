@@ -6,7 +6,8 @@
  */
 
 const STORAGE_KEYS = {
-  PLAYER_NAME: 'gress_player_name',
+  PLAYER_NAME: 'gress_player_name',  // 保留向後相容（舊版暱稱）
+  NICKNAME: 'gress_nickname',        // 工單 0122：遊戲暱稱
   PLAYER_SETTINGS: 'gress_player_settings',
   CURRENT_ROOM: 'gress_current_room',  // 工單 0079：重連資訊
 };
@@ -46,6 +47,50 @@ export function clearPlayerName() {
     localStorage.removeItem(STORAGE_KEYS.PLAYER_NAME);
   } catch (e) {
     console.warn('無法從 localStorage 清除玩家暱稱:', e);
+  }
+}
+
+// ==================== 工單 0122：遊戲暱稱 ====================
+
+/**
+ * 儲存遊戲暱稱
+ * @param {string} nickname - 遊戲暱稱
+ */
+export function saveNickname(nickname) {
+  if (nickname && nickname.trim()) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.NICKNAME, nickname.trim());
+      // 同時更新舊的 key 以保持向後相容
+      localStorage.setItem(STORAGE_KEYS.PLAYER_NAME, nickname.trim());
+    } catch (e) {
+      console.warn('無法儲存遊戲暱稱到 localStorage:', e);
+    }
+  }
+}
+
+/**
+ * 取得儲存的遊戲暱稱
+ * @returns {string} 遊戲暱稱，如果沒有則返回空字串
+ */
+export function getNickname() {
+  try {
+    // 優先使用新的 key，如果沒有則嘗試舊的 key（向後相容）
+    return localStorage.getItem(STORAGE_KEYS.NICKNAME) ||
+           localStorage.getItem(STORAGE_KEYS.PLAYER_NAME) || '';
+  } catch (e) {
+    console.warn('無法從 localStorage 讀取遊戲暱稱:', e);
+    return '';
+  }
+}
+
+/**
+ * 清除遊戲暱稱
+ */
+export function clearNickname() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.NICKNAME);
+  } catch (e) {
+    console.warn('無法從 localStorage 清除遊戲暱稱:', e);
   }
 }
 
