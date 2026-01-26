@@ -1,6 +1,6 @@
 /**
  * 遊戲大廳組件
- * 重新設計：中國風草藥主題（基於 Google Stitch 設計）
+ * 重新設計：側邊欄佈局（基於 Google Stitch 設計 - 提示詞 2）
  *
  * @module Lobby
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
@@ -73,8 +73,11 @@ function Lobby() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempted, setReconnectAttempted] = useState(false);
 
-  // 當前分頁
-  const [activeTab, setActiveTab] = useState('rooms');
+  // 用 Room ID 加入
+  const [joinRoomId, setJoinRoomId] = useState('');
+
+  // 當前導航
+  const [activeNav, setActiveNav] = useState('rooms');
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
@@ -288,25 +291,40 @@ function Lobby() {
   };
 
   /**
-   * 快速加入任意房間
+   * 用 Room ID 加入房間
    */
-  const handleQuickJoinAny = () => {
+  const handleJoinByRoomId = () => {
+    if (!joinRoomId.trim()) {
+      setError('請輸入房間 ID');
+      return;
+    }
     if (!validatePlayerNameInput()) return;
     if (!isConnected) {
       setError('尚未連線到伺服器');
       return;
     }
 
-    // 找到第一個可加入的房間
-    const availableRoom = rooms.find(room =>
-      room.playerCount < (room.maxPlayers || 4) && !room.isPrivate
-    );
-
-    if (availableRoom) {
-      handleQuickJoin(availableRoom.id, false, availableRoom.name);
-    } else {
-      setError('目前沒有可加入的房間，請創建新房間');
+    const room = rooms.find(r => r.id === joinRoomId.trim());
+    if (room && room.isPrivate) {
+      setPendingRoomId(joinRoomId.trim());
+      setPendingRoomName(room.name);
+      setShowPasswordModal(true);
+      setInputPassword('');
+      setPasswordError('');
+      return;
     }
+
+    savePlayerName(playerName.trim());
+
+    setIsLoading(true);
+    setError('');
+
+    const player = {
+      id: playerId,
+      name: playerName.trim()
+    };
+
+    joinRoom(joinRoomId.trim(), player);
   };
 
   /**
@@ -349,6 +367,13 @@ function Lobby() {
     return name ? name.charAt(0).toUpperCase() : '?';
   };
 
+  /**
+   * 判斷房間是否可加入
+   */
+  const canJoinRoom = (room) => {
+    return room.playerCount < (room.maxPlayers || 4);
+  };
+
   return (
     <div className="lobby">
       {/* 重連中覆蓋層 */}
@@ -361,199 +386,236 @@ function Lobby() {
         </div>
       )}
 
-      {/* 頂部導航欄 */}
-      <header className="lobby-header">
-        <div className="lobby-header-inner">
-          <div className="lobby-brand">
-            <div className="lobby-logo">
-              <span className="material-symbols-outlined">eco</span>
-            </div>
-            <div className="lobby-brand-text">
-              <h1 className="lobby-brand-title">Herbalism</h1>
-              <span className="lobby-brand-subtitle">本草</span>
-            </div>
-          </div>
-
-          <div className="lobby-user-area">
-            <div className="lobby-score">
-              <span className="material-symbols-outlined">stars</span>
-              <span>Score: 0</span>
-            </div>
-            <div className="lobby-user">
-              <div className="lobby-user-info">
-                <p className="lobby-user-name">{playerName || '訪客'}</p>
-{!isConnected && (
-                  <p className="lobby-user-rank">
-                    <span className="connection-status disconnected">
-                      未連線
-                    </span>
-                  </p>
-                )}
-              </div>
-              <div className="lobby-avatar">
-                {getInitial(playerName)}
-              </div>
-            </div>
-          </div>
+      {/* 側邊欄 */}
+      <aside className="lobby-sidebar">
+        <div className="sidebar-logo">
+          <span className="material-symbols-outlined">eco</span>
         </div>
-      </header>
+        <h1 className="sidebar-title">本草</h1>
+
+        <nav className="sidebar-nav">
+          <button
+            className={`sidebar-nav-item ${activeNav === 'rooms' ? 'active' : ''}`}
+            onClick={() => setActiveNav('rooms')}
+            title="遊戲大廳"
+          >
+            <span className="material-symbols-outlined">meeting_room</span>
+          </button>
+          <button
+            className={`sidebar-nav-item ${activeNav === 'profile' ? 'active' : ''}`}
+            onClick={() => navigate('/profile')}
+            title="個人資料"
+          >
+            <span className="material-symbols-outlined">person</span>
+          </button>
+          <button
+            className={`sidebar-nav-item ${activeNav === 'friends' ? 'active' : ''}`}
+            onClick={() => navigate('/friends')}
+            title="好友"
+          >
+            <span className="material-symbols-outlined">group</span>
+          </button>
+          <button
+            className={`sidebar-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
+            onClick={() => navigate('/leaderboard')}
+            title="排行榜"
+          >
+            <span className="material-symbols-outlined">leaderboard</span>
+          </button>
+        </nav>
+
+        <div className="sidebar-decoration">
+          <span className="material-symbols-outlined">spa</span>
+        </div>
+      </aside>
 
       {/* 主內容區 */}
-      <main className="lobby-content">
-        {/* 分頁導航 */}
-        <div className="lobby-tabs">
-          <div className="lobby-tabs-inner">
-            <button
-              className={`lobby-tab ${activeTab === 'rooms' ? 'active' : ''}`}
-              onClick={() => setActiveTab('rooms')}
-            >
-              <span className="material-symbols-outlined">meeting_room</span>
-              房間
-            </button>
-            <button
-              className={`lobby-tab ${activeTab === 'friends' ? 'active' : ''}`}
-              onClick={() => navigate('/friends')}
-            >
-              <span className="material-symbols-outlined">group</span>
-              好友
-            </button>
-            <button
-              className={`lobby-tab ${activeTab === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => navigate('/leaderboard')}
-            >
-              <span className="material-symbols-outlined">leaderboard</span>
-              排行榜
-            </button>
-            <button
-              className={`lobby-tab ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => navigate('/profile')}
-            >
-              <span className="material-symbols-outlined">person</span>
-              個人資料
-            </button>
-          </div>
-        </div>
-
-        {/* 標題區域 */}
-        <div className="lobby-title-area">
-          <div>
-            <h2 className="lobby-title">遊戲大廳</h2>
-            <p className="lobby-subtitle">加入房間開始遊戲，或創建自己的房間...</p>
-          </div>
-          <button
-            className="btn btn-primary"
-            onClick={handleQuickJoinAny}
-            disabled={isLoading || !isConnected}
-          >
-            <span className="material-symbols-outlined">bolt</span>
-            快速加入
-          </button>
-        </div>
-
-        {/* 玩家名稱輸入 */}
-        <div className="input-group" style={{ maxWidth: '400px', marginBottom: '24px' }}>
-          <label htmlFor="playerName">玩家名稱</label>
-          <input
-            id="playerName"
-            type="text"
-            value={playerName}
-            onChange={(e) => {
-              setPlayerName(e.target.value);
-              setError('');
-            }}
-            placeholder="請輸入您的名稱（2-12 字元）"
-            maxLength={12}
-            disabled={isLoading}
-          />
-          {playerName && getPlayerName() && playerName === getPlayerName() && (
-            <span className="welcome-message">歡迎回來，{playerName}！</span>
-          )}
-        </div>
-
-        {/* 錯誤訊息 */}
-        {error && (
-          <div className="error-message" role="alert">
-            {error}
-          </div>
-        )}
-
-        {/* 房間網格 */}
-        <div className="room-grid">
-          {rooms.length === 0 ? (
-            <p className="no-rooms">目前沒有可用的房間，點擊右下角按鈕創建新房間</p>
-          ) : (
-            rooms.map((room) => (
-              <div key={room.id} className="room-card">
-                <div className="room-card-image">
-                  <div className="room-card-image-bg"></div>
-                  <span className={`room-card-status ${room.playerCount >= (room.maxPlayers || 4) ? 'in-game' : 'waiting'} ${room.isPrivate ? 'private' : ''}`}>
-                    {room.playerCount >= (room.maxPlayers || 4) ? '已滿' : '等待中'}
-                  </span>
-                </div>
-                <div className="room-card-body">
-                  <div className="room-card-info">
-                    <div>
-                      <h3 className="room-card-name">{room.name}</h3>
-                      <p className="room-card-id">ID: {room.id}</p>
-                    </div>
-                    <div className="room-card-players">
-                      <p className={`room-card-players-count ${room.playerCount >= (room.maxPlayers || 4) ? 'full' : ''}`}>
-                        {room.playerCount}/{room.maxPlayers || 4}
-                      </p>
-                      <p className="room-card-players-label">玩家</p>
-                    </div>
-                  </div>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                    disabled={isLoading || !isConnected || room.playerCount >= (room.maxPlayers || 4)}
-                  >
-                    <span className="material-symbols-outlined">
-                      {room.playerCount >= (room.maxPlayers || 4) ? 'visibility' : 'door_open'}
-                    </span>
-                    {room.playerCount >= (room.maxPlayers || 4) ? '已滿' : '加入房間'}
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </main>
-
-      {/* 創建房間浮動按鈕 */}
-      <div className="fab-container">
-        <button
-          className="fab"
-          onClick={() => setShowCreateModal(true)}
-          disabled={!isConnected}
-          title="創建新房間"
-        >
-          <span className="material-symbols-outlined">add</span>
-        </button>
-      </div>
-
-      {/* 頁尾 */}
-      <footer className="lobby-footer">
-        <div className="lobby-footer-inner">
-          <div className="lobby-footer-links">
-            <p>© 2024 本草 Herbalism. All rights reserved.</p>
-            <a href="#">隱私政策</a>
-            <a href="#">服務條款</a>
-          </div>
-          <div className="lobby-footer-status">
-            <span>
-              <span className="online-indicator"></span>
-              {rooms.length} 個房間
+      <div className="lobby-main">
+        {/* 頂部用戶欄 */}
+        <header className="lobby-header">
+          <div className="lobby-user-area">
+            <p className="lobby-user-name">{playerName || '訪客'}</p>
+            <div className="lobby-avatar">
+              {getInitial(playerName)}
+            </div>
+            <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+              {isConnected ? '已連線' : '未連線'}
             </span>
-{!isConnected && (
-              <span>
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>wifi_off</span>
-                伺服器: 離線
-              </span>
+          </div>
+        </header>
+
+        {/* 主內容 */}
+        <main className="lobby-content">
+          {/* 玩家名稱輸入 */}
+          <div className="player-name-section">
+            <label className="player-name-label" htmlFor="playerName">玩家名稱</label>
+            <input
+              id="playerName"
+              className="player-name-input"
+              type="text"
+              value={playerName}
+              onChange={(e) => {
+                setPlayerName(e.target.value);
+                setError('');
+              }}
+              placeholder="請輸入您的名稱（2-12 字元）"
+              maxLength={12}
+              disabled={isLoading}
+            />
+            {playerName && getPlayerName() && playerName === getPlayerName() && (
+              <span className="welcome-message">歡迎回來，{playerName}！</span>
             )}
           </div>
-        </div>
-      </footer>
+
+          {/* 錯誤訊息 */}
+          {error && (
+            <div className="error-message" role="alert">
+              {error}
+            </div>
+          )}
+
+          {/* 創建房間按鈕 */}
+          <button
+            className="create-room-btn"
+            onClick={() => setShowCreateModal(true)}
+            disabled={!isConnected || isLoading}
+          >
+            <span className="material-symbols-outlined">add_circle</span>
+            創建新房間
+          </button>
+
+          {/* 加入房間區域 */}
+          <div className="join-room-section">
+            <input
+              className="join-room-input"
+              type="text"
+              value={joinRoomId}
+              onChange={(e) => setJoinRoomId(e.target.value)}
+              placeholder="輸入房間 ID"
+              disabled={isLoading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleJoinByRoomId();
+                }
+              }}
+            />
+            <button
+              className="join-room-btn"
+              onClick={handleJoinByRoomId}
+              disabled={!isConnected || isLoading || !joinRoomId.trim()}
+            >
+              <span className="material-symbols-outlined">login</span>
+              加入
+            </button>
+          </div>
+
+          {/* 房間列表表格 */}
+          <div className="room-table-container">
+            {rooms.length === 0 ? (
+              <div className="no-rooms">
+                <span className="material-symbols-outlined">meeting_room</span>
+                目前沒有可用的房間，點擊上方按鈕創建新房間
+              </div>
+            ) : (
+              <table className="room-table">
+                <thead>
+                  <tr>
+                    <th>房間名稱</th>
+                    <th>ID</th>
+                    <th>玩家</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rooms.map((room) => (
+                    <tr key={room.id}>
+                      <td>
+                        <span className="room-name">
+                          {room.name}
+                          {room.isPrivate && (
+                            <span className="material-symbols-outlined private-icon">lock</span>
+                          )}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="room-id">{room.id}</span>
+                      </td>
+                      <td>
+                        <span className="room-players">
+                          <span className={`room-players-count ${!canJoinRoom(room) ? 'full' : ''}`}>
+                            {room.playerCount}/{room.maxPlayers || 4}
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
+                          {canJoinRoom(room) ? '等待中' : '已滿'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className="room-action-btn"
+                          onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                          disabled={isLoading || !isConnected || !canJoinRoom(room)}
+                        >
+                          <span className="material-symbols-outlined">
+                            {canJoinRoom(room) ? 'login' : 'block'}
+                          </span>
+                          {canJoinRoom(room) ? '加入' : '已滿'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </main>
+
+        {/* 頁尾 */}
+        <footer className="lobby-footer">
+          <div className="lobby-footer-left">
+            <span>© 2024 本草 Herbalism</span>
+          </div>
+          <div className="lobby-footer-right">
+            <span className="online-indicator"></span>
+            <span>{rooms.length} 個房間</span>
+          </div>
+        </footer>
+      </div>
+
+      {/* 手機版底部導航 */}
+      <nav className="mobile-nav">
+        <button
+          className={`mobile-nav-item ${activeNav === 'rooms' ? 'active' : ''}`}
+          onClick={() => setActiveNav('rooms')}
+        >
+          <span className="material-symbols-outlined">meeting_room</span>
+          大廳
+        </button>
+        <button
+          className={`mobile-nav-item ${activeNav === 'profile' ? 'active' : ''}`}
+          onClick={() => navigate('/profile')}
+        >
+          <span className="material-symbols-outlined">person</span>
+          個人
+        </button>
+        <button
+          className={`mobile-nav-item ${activeNav === 'friends' ? 'active' : ''}`}
+          onClick={() => navigate('/friends')}
+        >
+          <span className="material-symbols-outlined">group</span>
+          好友
+        </button>
+        <button
+          className={`mobile-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
+          onClick={() => navigate('/leaderboard')}
+        >
+          <span className="material-symbols-outlined">leaderboard</span>
+          排行
+        </button>
+      </nav>
 
       {/* 創建房間 Modal */}
       {showCreateModal && (
@@ -634,24 +696,29 @@ function Lobby() {
       {showPasswordModal && (
         <div className="modal-overlay">
           <div className="modal password-modal">
-            <h3>🔒 私人房間</h3>
+            <h3>
+              <span className="material-symbols-outlined">lock</span>
+              私人房間
+            </h3>
             <p>「{pendingRoomName}」需要密碼才能加入</p>
 
-            <input
-              type="password"
-              value={inputPassword}
-              onChange={(e) => {
-                setInputPassword(e.target.value);
-                setPasswordError('');
-              }}
-              placeholder="請輸入房間密碼"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handlePasswordSubmit();
-                }
-              }}
-            />
+            <div className="input-group">
+              <input
+                type="password"
+                value={inputPassword}
+                onChange={(e) => {
+                  setInputPassword(e.target.value);
+                  setPasswordError('');
+                }}
+                placeholder="請輸入房間密碼"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePasswordSubmit();
+                  }
+                }}
+              />
+            </div>
 
             {passwordError && (
               <p className="modal-error">{passwordError}</p>

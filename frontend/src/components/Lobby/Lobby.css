@@ -1,10 +1,11 @@
 /**
  * 遊戲大廳樣式
- * 重新設計：中國風草藥主題（基於 Google Stitch 設計）
+ * 重新設計：側邊欄佈局（基於 Google Stitch 設計 - 提示詞 2）
  */
 
 /* ==================== Google Fonts ==================== */
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 /* Material Symbols */
@@ -25,146 +26,141 @@
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+/* ==================== CSS Variables ==================== */
+:root {
+  --primary: #2f7f34;
+  --primary-dark: #1a4a1d;
+  --accent-gold: #C5A059;
+  --bg-main: #F5F1E6;
+  --bg-light: #FFF8E1;
+  --text-dark: #131613;
+  --text-muted: #6b806c;
+  --sidebar-width: 80px;
+}
+
 /* ==================== 頁面容器 ==================== */
 .lobby {
   min-height: 100vh;
-  background-color: #FFF8E1;
-  position: relative;
+  background-color: var(--bg-main);
+  display: flex;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: var(--text-dark);
+}
+
+/* ==================== 側邊欄 ==================== */
+.lobby-sidebar {
+  width: var(--sidebar-width);
+  min-height: 100vh;
+  background-color: var(--primary);
   display: flex;
   flex-direction: column;
-  font-family: 'Be Vietnam Pro', sans-serif;
-  color: #131613;
-}
-
-/* 竹紋背景 */
-.lobby::before {
-  content: '';
+  align-items: center;
+  padding: 24px 0;
   position: fixed;
-  top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: radial-gradient(#2f7f3411 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  opacity: 0.4;
-}
-
-/* ==================== 頂部導航欄 ==================== */
-.lobby-header {
-  position: sticky;
   top: 0;
-  z-index: 50;
-  width: 100%;
-  border-bottom: 1px solid rgba(47, 127, 52, 0.13);
-  background-color: rgba(255, 248, 225, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 12px 24px;
+  z-index: 100;
 }
 
-.lobby-header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Logo 區域 */
-.lobby-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.lobby-logo {
-  width: 40px;
-  height: 40px;
-  background-color: #2f7f34;
-  border-radius: 8px;
+.sidebar-logo {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 8px;
+}
+
+.sidebar-logo .material-symbols-outlined {
+  font-size: 28px;
+  color: var(--accent-gold);
+}
+
+.sidebar-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin: 0 0 32px;
+  writing-mode: horizontal-tb;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.sidebar-nav-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+}
+
+.sidebar-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
-.lobby-logo .material-symbols-outlined {
+.sidebar-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--accent-gold);
+}
+
+.sidebar-nav-item .material-symbols-outlined {
   font-size: 24px;
 }
 
-.lobby-brand-text {
+.sidebar-decoration {
+  margin-top: auto;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-decoration .material-symbols-outlined {
+  font-size: 32px;
+}
+
+/* ==================== 主內容區容器 ==================== */
+.lobby-main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
-.lobby-brand-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #131613;
-  line-height: 1;
-  margin: 0;
+/* ==================== 頂部用戶欄 ==================== */
+.lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px 32px;
+  background-color: var(--bg-light);
+  border-bottom: 1px solid rgba(47, 127, 52, 0.1);
 }
 
-.lobby-brand-subtitle {
-  font-size: 10px;
-  font-weight: 700;
-  color: #2f7f34;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-/* 用戶資訊 */
 .lobby-user-area {
   display: flex;
   align-items: center;
-  gap: 24px;
-}
-
-.lobby-score {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background-color: rgba(47, 127, 52, 0.1);
-  border: 1px solid rgba(47, 127, 52, 0.2);
-  border-radius: 8px;
-}
-
-.lobby-score .material-symbols-outlined {
-  font-size: 14px;
-  color: #2f7f34;
-}
-
-.lobby-score span {
-  font-size: 14px;
-  font-weight: 700;
-  color: #2f7f34;
-}
-
-.lobby-user {
-  display: flex;
-  align-items: center;
   gap: 12px;
-  padding-left: 24px;
-  border-left: 1px solid rgba(47, 127, 52, 0.13);
-}
-
-.lobby-user-info {
-  text-align: right;
-  display: none;
 }
 
 .lobby-user-name {
   font-size: 14px;
-  font-weight: 700;
-  color: #131613;
-  margin: 0;
-}
-
-.lobby-user-rank {
-  font-size: 12px;
-  color: #6b806c;
+  font-weight: 600;
+  color: var(--text-dark);
   margin: 0;
 }
 
@@ -172,22 +168,25 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #2f7f34;
-  border: 2px solid #2f7f34;
+  background-color: var(--primary);
+  border: 2px solid var(--accent-gold);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-/* 連線狀態 */
 .connection-status {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
+  margin-left: 16px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(47, 127, 52, 0.2);
 }
 
 .connection-status::before {
@@ -213,415 +212,340 @@
   color: #ef4444;
 }
 
-@media (min-width: 640px) {
-  .lobby-user-info {
-    display: block;
-  }
-}
-
-@media (min-width: 768px) {
-  .lobby-score {
-    display: flex;
-  }
-  .lobby-header {
-    padding: 12px 80px;
-  }
-}
-
 /* ==================== 主內容區 ==================== */
 .lobby-content {
   flex: 1;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
-  margin: 0 auto;
+}
+
+/* ==================== 創建房間按鈕 ==================== */
+.create-room-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   width: 100%;
-  padding: 32px 24px;
-  position: relative;
-  z-index: 10;
-}
-
-@media (min-width: 1024px) {
-  .lobby-content {
-    padding: 32px 80px;
-  }
-}
-
-/* ==================== 分頁導航 ==================== */
-.lobby-tabs {
-  margin-bottom: 32px;
-}
-
-.lobby-tabs-inner {
-  display: flex;
-  border-bottom: 1px solid rgba(47, 127, 52, 0.13);
-  gap: 32px;
-  overflow-x: auto;
-}
-
-.lobby-tab {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 0 12px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #6b806c;
-  text-decoration: none;
-  border-bottom: 3px solid transparent;
-  white-space: nowrap;
-  transition: color 0.2s;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  cursor: pointer;
-}
-
-.lobby-tab:hover {
-  color: #2f7f34;
-}
-
-.lobby-tab.active {
-  color: #2f7f34;
-  border-bottom-color: #2f7f34;
-}
-
-.lobby-tab .material-symbols-outlined {
-  font-size: 18px;
-}
-
-/* ==================== 標題區域 ==================== */
-.lobby-title-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.lobby-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #131613;
-  margin: 0;
-}
-
-.lobby-subtitle {
-  font-size: 14px;
-  color: #6b806c;
-  font-style: italic;
-  margin: 4px 0 0;
-}
-
-/* ==================== 按鈕樣式 ==================== */
-.btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 24px;
-  height: 40px;
+  max-width: 400px;
+  padding: 16px 24px;
+  background-color: transparent;
+  border: 2px solid var(--accent-gold);
   border-radius: 8px;
-  font-size: 14px;
-  font-weight: 700;
+  color: var(--text-dark);
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  border: none;
+  margin-bottom: 24px;
 }
 
-.btn:disabled {
+.create-room-btn:hover:not(:disabled) {
+  background-color: rgba(197, 160, 89, 0.1);
+  border-color: var(--accent-gold);
+}
+
+.create-room-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-primary {
-  background-color: #2f7f34;
+.create-room-btn .material-symbols-outlined {
+  color: var(--accent-gold);
+  font-size: 24px;
+}
+
+/* ==================== 加入房間區域 ==================== */
+.join-room-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  max-width: 500px;
+}
+
+.join-room-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 2px solid rgba(47, 127, 52, 0.2);
+  border-radius: 8px;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  transition: border-color 0.2s;
+}
+
+.join-room-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.join-room-input::placeholder {
+  color: var(--text-muted);
+}
+
+.join-room-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: var(--primary);
+  border: none;
+  border-radius: 8px;
   color: white;
-  box-shadow: 0 4px 15px rgba(47, 127, 52, 0.2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: rgba(47, 127, 52, 0.9);
+.join-room-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark);
 }
 
-.btn-primary:active:not(:disabled) {
-  transform: scale(0.95);
+.join-room-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.btn-secondary {
-  background-color: rgba(197, 160, 89, 0.05);
-  border: 2px solid rgba(197, 160, 89, 0.4);
-  color: #131613;
+/* ==================== 玩家名稱輸入 ==================== */
+.player-name-section {
+  margin-bottom: 24px;
+  max-width: 400px;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  border-color: #C5A059;
+.player-name-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
 }
 
-.btn-secondary .material-symbols-outlined {
-  color: #C5A059;
+.player-name-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 2px solid rgba(47, 127, 52, 0.2);
+  border-radius: 8px;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  transition: border-color 0.2s;
 }
 
-.btn-small {
-  padding: 0 16px;
-  height: 36px;
+.player-name-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.player-name-input::placeholder {
+  color: var(--text-muted);
+}
+
+.welcome-message {
+  font-size: 12px;
+  color: var(--primary);
+  margin-top: 4px;
+}
+
+/* ==================== 房間表格 ==================== */
+.room-table-container {
+  flex: 1;
+  background-color: var(--bg-light);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(47, 127, 52, 0.1);
+}
+
+.room-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.room-table thead {
+  background-color: rgba(47, 127, 52, 0.05);
+}
+
+.room-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(47, 127, 52, 0.1);
+}
+
+.room-table td {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: var(--text-dark);
+  border-bottom: 1px solid rgba(47, 127, 52, 0.05);
+}
+
+.room-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.room-table tbody tr:hover {
+  background-color: rgba(47, 127, 52, 0.03);
+}
+
+.room-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.room-name {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-name .private-icon {
+  color: var(--accent-gold);
+  font-size: 16px;
+}
+
+.room-id {
+  color: var(--text-muted);
+  font-family: monospace;
   font-size: 13px;
 }
 
-/* ==================== 房間網格 ==================== */
-.room-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  padding-bottom: 80px;
-}
-
-@media (min-width: 768px) {
-  .room-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .room-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* ==================== 房間卡片 ==================== */
-.room-card {
+.room-players {
   display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  background-color: white;
-  overflow: hidden;
-  border: 1px solid rgba(47, 127, 52, 0.07);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
+  align-items: center;
+  gap: 4px;
 }
 
-.room-card:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+.room-players-count {
+  font-weight: 600;
+  color: var(--primary);
 }
 
-.room-card-image {
-  position: relative;
-  height: 160px;
-  width: 100%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #2f7f34 0%, #1a4a1d 100%);
+.room-players-count.full {
+  color: var(--text-muted);
 }
 
-.room-card-image-bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  transition: transform 0.5s;
-}
-
-.room-card:hover .room-card-image-bg {
-  transform: scale(1.1);
-}
-
-.room-card-status {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
+.room-status {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 9999px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: white;
+  letter-spacing: 0.05em;
 }
 
-.room-card-status.waiting {
-  background-color: #2f7f34;
-  box-shadow: 0 4px 15px rgba(47, 127, 52, 0.4);
+.room-status.waiting {
+  background-color: rgba(47, 127, 52, 0.1);
+  color: var(--primary);
 }
 
-.room-card-status.waiting::before {
+.room-status.waiting::before {
   content: '';
   width: 6px;
   height: 6px;
-  background-color: white;
+  background-color: var(--primary);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
-.room-card-status.in-game {
-  background-color: #6b806c;
+.room-status.in-game {
+  background-color: rgba(107, 128, 108, 0.1);
+  color: var(--text-muted);
 }
 
-.room-card-status.private::after {
-  content: '🔒';
-  margin-left: 4px;
+.room-status.full {
+  background-color: rgba(107, 128, 108, 0.1);
+  color: var(--text-muted);
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-.room-card-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.room-card-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.room-card-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #131613;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.room-card-id {
-  font-size: 12px;
-  color: #6b806c;
-  font-weight: 500;
-  margin: 4px 0 0;
-}
-
-.room-card-players {
-  text-align: right;
-}
-
-.room-card-players-count {
-  font-size: 14px;
-  font-weight: 700;
-  color: #2f7f34;
-  margin: 0;
-}
-
-.room-card-players-count.full {
-  color: #6b806c;
-  opacity: 0.5;
-}
-
-.room-card-players-label {
-  font-size: 10px;
-  color: #6b806c;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin: 0;
-}
-
-/* ==================== 無房間提示 ==================== */
-.no-rooms {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 64px 24px;
-  color: #6b806c;
-  font-style: italic;
-  background: rgba(47, 127, 52, 0.05);
-  border-radius: 12px;
-  border: 2px dashed rgba(47, 127, 52, 0.2);
-}
-
-/* ==================== 創建房間浮動按鈕 ==================== */
-.fab-container {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  z-index: 100;
-}
-
-.fab {
-  display: flex;
+.room-action-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  background-color: #2f7f34;
-  border-radius: 50%;
-  border: 4px solid rgba(197, 160, 89, 0.2);
-  box-shadow: 0 8px 30px rgba(47, 127, 52, 0.4);
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: var(--primary);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.fab:hover {
-  box-shadow: 0 8px 30px rgba(47, 127, 52, 0.6);
-  transform: scale(1.1);
+.room-action-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark);
 }
 
-.fab:active {
-  transform: scale(0.9);
+.room-action-btn:disabled {
+  background-color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.fab .material-symbols-outlined {
-  font-size: 30px;
-  color: #C5A059;
-  font-weight: 700;
+.room-action-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* ==================== 無房間提示 ==================== */
+.no-rooms {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.no-rooms .material-symbols-outlined {
+  font-size: 48px;
+  color: rgba(47, 127, 52, 0.2);
+  margin-bottom: 16px;
+  display: block;
+}
+
+/* ==================== 錯誤訊息 ==================== */
+.error-message {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #b91c1c;
+  font-size: 14px;
+  margin-bottom: 24px;
+  max-width: 500px;
 }
 
 /* ==================== 頁尾 ==================== */
 .lobby-footer {
-  width: 100%;
-  padding: 24px;
-  border-top: 1px solid rgba(47, 127, 52, 0.07);
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-.lobby-footer-inner {
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 16px 32px;
+  border-top: 1px solid rgba(47, 127, 52, 0.1);
+  background-color: var(--bg-light);
   display: flex;
-  flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
   font-size: 12px;
-  color: #6b806c;
+  color: var(--text-muted);
 }
 
-.lobby-footer-links {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.lobby-footer-links a {
-  color: #6b806c;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.lobby-footer-links a:hover {
-  color: #2f7f34;
-}
-
-.lobby-footer-status {
+.lobby-footer-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.lobby-footer-status span {
+.lobby-footer-right {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -632,15 +556,6 @@
   height: 8px;
   background-color: #22c55e;
   border-radius: 50%;
-}
-
-@media (min-width: 768px) {
-  .lobby-footer {
-    padding: 24px 80px;
-  }
-  .lobby-footer-inner {
-    flex-direction: row;
-  }
 }
 
 /* ==================== Modal 樣式 ==================== */
@@ -682,12 +597,19 @@
 .modal h3 {
   font-size: 20px;
   font-weight: 700;
-  color: #131613;
+  color: var(--text-dark);
   margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal h3 .material-symbols-outlined {
+  color: var(--primary);
 }
 
 .modal > p {
-  color: #6b806c;
+  color: var(--text-muted);
   margin: 0 0 24px;
   font-size: 14px;
 }
@@ -701,7 +623,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #131613;
+  color: var(--text-dark);
   margin-bottom: 6px;
 }
 
@@ -713,18 +635,18 @@
   border: 2px solid rgba(47, 127, 52, 0.2);
   border-radius: 8px;
   background-color: white;
-  color: #131613;
+  color: var(--text-dark);
   transition: border-color 0.2s;
 }
 
 .input-group input:focus,
 .input-group select:focus {
   outline: none;
-  border-color: #2f7f34;
+  border-color: var(--primary);
 }
 
 .input-group input::placeholder {
-  color: #6b806c;
+  color: var(--text-muted);
 }
 
 .input-group input:disabled,
@@ -735,13 +657,7 @@
 
 .input-hint {
   font-size: 12px;
-  color: #6b806c;
-  margin-top: 4px;
-}
-
-.welcome-message {
-  font-size: 12px;
-  color: #2f7f34;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -756,32 +672,14 @@
   gap: 8px;
   cursor: pointer;
   font-size: 14px;
-  color: #131613;
+  color: var(--text-dark);
 }
 
 .checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #2f7f34;
+  accent-color: var(--primary);
   cursor: pointer;
-}
-
-/* ==================== 錯誤訊息 ==================== */
-.error-message {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 16px;
-  color: #b91c1c;
-  text-align: center;
-  margin-top: 16px;
-}
-
-.modal-error {
-  color: #b91c1c;
-  font-size: 12px;
-  margin-top: -8px;
-  margin-bottom: 16px;
 }
 
 /* ==================== Modal Actions ==================== */
@@ -792,6 +690,52 @@
   margin-top: 24px;
 }
 
+.modal-error {
+  color: #b91c1c;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* ==================== 按鈕樣式 ==================== */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 24px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 2px solid rgba(47, 127, 52, 0.2);
+  color: var(--text-dark);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
 /* ==================== 重連中樣式 ==================== */
 .reconnecting-modal {
   text-align: center;
@@ -800,32 +744,140 @@
 .reconnecting-modal p {
   margin-top: 16px;
   font-size: 16px;
-  color: #6b806c;
+  color: var(--text-muted);
 }
 
 .reconnecting-spinner {
   width: 50px;
   height: 50px;
   border: 4px solid rgba(47, 127, 52, 0.2);
-  border-top-color: #2f7f34;
+  border-top-color: var(--primary);
   border-radius: 50%;
   margin: 0 auto;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== 響應式設計 ==================== */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 60px;
+  }
+
+  .lobby-sidebar {
+    width: var(--sidebar-width);
+    padding: 16px 0;
+  }
+
+  .sidebar-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sidebar-logo .material-symbols-outlined {
+    font-size: 24px;
+  }
+
+  .sidebar-title {
+    font-size: 12px;
+    margin-bottom: 24px;
+  }
+
+  .sidebar-nav-item {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sidebar-nav-item .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .lobby-content {
+    padding: 24px 16px;
+  }
+
+  .lobby-header {
+    padding: 12px 16px;
+  }
+
+  .join-room-section {
+    flex-direction: column;
+  }
+
+  .room-table th,
+  .room-table td {
+    padding: 12px;
+  }
+
+  .room-table th:nth-child(2),
+  .room-table td:nth-child(2) {
+    display: none;
   }
 }
 
-/* ==================== 創建房間 Modal ==================== */
-.create-room-modal h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+@media (max-width: 480px) {
+  .lobby-sidebar {
+    display: none;
+  }
+
+  .lobby-main {
+    margin-left: 0;
+  }
+
+  /* Mobile bottom nav */
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--primary);
+    padding: 8px 0;
+    justify-content: space-around;
+    z-index: 100;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--accent-gold);
+  }
+
+  .mobile-nav-item .material-symbols-outlined {
+    font-size: 24px;
+  }
+
+  .lobby-content {
+    padding-bottom: 80px;
+  }
+
+  .lobby-footer {
+    display: none;
+  }
+
+  .room-table th:nth-child(3),
+  .room-table td:nth-child(3) {
+    display: none;
+  }
 }
 
-.create-room-modal h3 .material-symbols-outlined {
-  color: #2f7f34;
+/* Desktop: hide mobile nav */
+@media (min-width: 481px) {
+  .mobile-nav {
+    display: none;
+  }
 }
