@@ -858,9 +858,10 @@ function GameRoom() {
           3: '給一張要全部'
         };
         const typeText = questionTypes[record.questionType] || '';
+        const cardsCount = record.cardsTransferred || 0;
         return {
           playerName,
-          action: `向 ${targetPlayer?.name || '玩家'} 問了 ${colors} 牌（${typeText}）`
+          action: `向 ${targetPlayer?.name || '玩家'} 問了 ${colors} 牌（${typeText}），獲得 ${cardsCount} 張`
         };
       }
       case 'prediction': {
