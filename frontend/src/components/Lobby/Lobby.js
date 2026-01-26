@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../firebase/AuthContext';
 import {
   updateGameState
 } from '../../store/gameStore';
@@ -47,12 +48,13 @@ import './Lobby.css';
 function Lobby() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user } = useAuth();  // 從 Auth Context 取得登入資訊
 
   // 本地狀態
   // 工單 0122：分離玩家名稱與暱稱
-  // TODO: 從 Auth Context 取得登入資訊（Google 登入後會有 user.displayName）
-  const [authUser] = useState(null);  // 未來從 Auth Context 取得
-  const displayName = authUser?.displayName || '訪客';  // Google 登入顯示帳號名稱，否則顯示訪客
+  // user.displayName: Google 登入時為帳號名稱，訪客登入時為 null
+  // user.isAnonymous: 訪客登入時為 true
+  const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || '訪客');
   const [nickname, setNickname] = useState('');  // 遊戲暱稱（可編輯）
   const [playerCount, setPlayerCount] = useState(MIN_PLAYERS);
   const [rooms, setRooms] = useState([]);
@@ -438,9 +440,18 @@ function Lobby() {
         {/* 頂部用戶欄 */}
         <header className="lobby-header">
           <div className="lobby-user-area">
-            <div className="lobby-avatar">
-              {getInitial(displayName)}
-            </div>
+            {user?.photoURL ? (
+              <img
+                className="lobby-avatar-img"
+                src={user.photoURL}
+                alt={displayName}
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="lobby-avatar">
+                {getInitial(displayName)}
+              </div>
+            )}
             <p className="lobby-user-name">{displayName}</p>
           </div>
 {!isConnected && (

@@ -15,6 +15,12 @@ import * as socketService from '../../services/socketService';
 // Mock socketService
 jest.mock('../../services/socketService');
 
+// Mock useAuth
+const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
+jest.mock('../../firebase/AuthContext', () => ({
+  useAuth: () => ({ user: mockUser })
+}));
+
 // Mock useNavigate
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({

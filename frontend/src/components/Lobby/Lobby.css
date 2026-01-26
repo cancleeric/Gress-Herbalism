@@ -178,6 +178,14 @@
   font-weight: 600;
 }
 
+.lobby-avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-gold);
+  object-fit: cover;
+}
+
 .connection-status {
   display: flex;
   align-items: center;
