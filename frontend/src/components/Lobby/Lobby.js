@@ -634,77 +634,103 @@ function Lobby() {
         </button>
       </nav>
 
-      {/* 創建房間 Modal */}
+      {/* 創建房間 Modal（工單 0128 重新設計）*/}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal create-room-modal" onClick={e => e.stopPropagation()}>
-            <h3>
-              <span className="material-symbols-outlined">add_circle</span>
-              創建新房間
-            </h3>
-            <p>設定房間參數後開始遊戲</p>
+          <div className="create-room-modal" onClick={e => e.stopPropagation()}>
+            {/* 裝飾圖示 */}
+            <span className="material-symbols-outlined crm-decor-top">eco</span>
+            <span className="material-symbols-outlined crm-decor-bottom">psychiatry</span>
 
-            <div className="input-group">
-              <label htmlFor="createPlayerCount">玩家數量</label>
-              <select
-                id="createPlayerCount"
-                value={playerCount}
-                onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
-                disabled={isLoading}
-              >
-                <option value={3}>3 人</option>
-                <option value={4}>4 人</option>
-              </select>
+            {/* 頂部區域 */}
+            <div className="crm-header">
+              <span className="material-symbols-outlined crm-header-icon">add_circle</span>
+              <h2 className="crm-title">創建新房間</h2>
+              <p className="crm-subtitle">設定房間參數後開始遊戲</p>
             </div>
 
-            <div className="checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={isPrivate}
-                  onChange={(e) => {
-                    setIsPrivate(e.target.checked);
-                    if (!e.target.checked) {
-                      setRoomPassword('');
-                    }
-                  }}
+            {/* 表單區域 */}
+            <div className="crm-form">
+              {/* 玩家數量 */}
+              <div className="crm-input-group">
+                <label htmlFor="createPlayerCount">玩家數量</label>
+                <select
+                  id="createPlayerCount"
+                  className="crm-select"
+                  value={playerCount}
+                  onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
                   disabled={isLoading}
-                />
-                <span>設為私人房間</span>
-              </label>
-            </div>
-
-            {isPrivate && (
-              <div className="input-group">
-                <label htmlFor="createRoomPassword">房間密碼</label>
-                <input
-                  id="createRoomPassword"
-                  type="password"
-                  value={roomPassword}
-                  onChange={(e) => setRoomPassword(e.target.value)}
-                  placeholder="輸入 4-16 位密碼"
-                  maxLength={16}
-                  disabled={isLoading}
-                />
-                <span className="input-hint">密碼長度：4-16 個字元</span>
+                >
+                  <option value={3}>3人</option>
+                  <option value={4}>4人</option>
+                </select>
               </div>
-            )}
 
-            <div className="modal-actions">
+              {/* 設為私人房間 */}
+              <div className="crm-checkbox-row">
+                <div className="crm-checkbox-left">
+                  <input
+                    type="checkbox"
+                    id="privateToggle"
+                    className="crm-checkbox"
+                    checked={isPrivate}
+                    onChange={(e) => {
+                      setIsPrivate(e.target.checked);
+                      if (!e.target.checked) {
+                        setRoomPassword('');
+                      }
+                    }}
+                    disabled={isLoading}
+                  />
+                  <label htmlFor="privateToggle" className="crm-checkbox-label">設為私人房間</label>
+                </div>
+                <span className="material-symbols-outlined crm-checkbox-icon">lock</span>
+              </div>
+
+              {/* 房間密碼（條件顯示）*/}
+              {isPrivate && (
+                <div className="crm-password-group">
+                  <label htmlFor="createRoomPassword">房間密碼</label>
+                  <div className="crm-password-wrapper">
+                    <input
+                      id="createRoomPassword"
+                      type="password"
+                      className="crm-password-input"
+                      value={roomPassword}
+                      onChange={(e) => setRoomPassword(e.target.value)}
+                      placeholder="請輸入密碼"
+                      maxLength={16}
+                      disabled={isLoading}
+                    />
+                    <span className="material-symbols-outlined crm-password-icon">key</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 按鈕區域 */}
+            <div className="crm-actions">
               <button
-                className="btn btn-secondary"
+                type="button"
+                className="crm-btn crm-btn-cancel"
                 onClick={() => setShowCreateModal(false)}
+                disabled={isLoading}
               >
                 取消
               </button>
               <button
-                className="btn btn-primary"
+                type="button"
+                className="crm-btn crm-btn-confirm"
                 onClick={handleCreateRoom}
                 disabled={isLoading || !isConnected}
               >
+                <span className="material-symbols-outlined">done_all</span>
                 {isLoading ? '創建中...' : '創建房間'}
               </button>
             </div>
+
+            {/* 底部金色橫條 */}
+            <div className="crm-bottom-accent"></div>
           </div>
         </div>
       )}

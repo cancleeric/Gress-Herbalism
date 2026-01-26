@@ -368,8 +368,8 @@ describe('Lobby - 創建房間功能', () => {
     fireEvent.click(screen.getByText('創建新房間'));
 
     await waitFor(() => {
-      expect(screen.getByRole('option', { name: '3 人' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: '4 人' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '3人' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: '4人' })).toBeInTheDocument();
     });
   });
 

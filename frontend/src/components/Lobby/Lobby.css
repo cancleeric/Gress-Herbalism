@@ -886,3 +886,254 @@
     display: none;
   }
 }
+
+/* ==================== 創建房間 Modal（工單 0128）==================== */
+.create-room-modal {
+  position: relative;
+  max-width: 400px;
+  width: 100%;
+  background-color: #f5f1e6;
+  border: 1px solid var(--accent-gold);
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  padding: 0;
+  animation: modalIn 0.3s ease-out;
+}
+
+/* 裝飾圖示 */
+.create-room-modal .crm-decor-top {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 48px;
+  color: var(--primary);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.create-room-modal .crm-decor-bottom {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  font-size: 64px;
+  color: var(--primary);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* 頂部區域 */
+.crm-header {
+  padding: 32px 24px 16px;
+  text-align: center;
+}
+
+.crm-header-icon {
+  font-size: 48px;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.crm-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #131613;
+  margin: 0 0 4px;
+}
+
+.crm-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* 表單區域 */
+.crm-form {
+  padding: 16px 24px;
+}
+
+.crm-input-group {
+  margin-bottom: 20px;
+}
+
+.crm-input-group label {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  color: #131613;
+  margin-bottom: 8px;
+}
+
+.crm-select {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 14px;
+  border: 1px solid rgba(187, 156, 99, 0.3);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #131613;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b806c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+}
+
+.crm-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 1px var(--accent-gold);
+}
+
+.crm-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkbox 樣式 */
+.crm-checkbox-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  margin-bottom: 16px;
+}
+
+.crm-checkbox-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crm-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(187, 156, 99, 0.5);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.crm-checkbox:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.crm-checkbox-label {
+  font-size: 16px;
+  color: #131613;
+  cursor: pointer;
+}
+
+.crm-checkbox-icon {
+  font-size: 20px;
+  color: rgba(187, 156, 99, 0.4);
+}
+
+/* 密碼輸入框 */
+.crm-password-group {
+  margin-bottom: 16px;
+}
+
+.crm-password-wrapper {
+  position: relative;
+}
+
+.crm-password-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 48px 0 16px;
+  font-size: 14px;
+  border: 1px solid rgba(187, 156, 99, 0.3);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
+  color: #131613;
+  transition: all 0.2s;
+}
+
+.crm-password-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 1px var(--accent-gold);
+}
+
+.crm-password-input::placeholder {
+  color: rgba(107, 128, 108, 0.6);
+}
+
+.crm-password-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crm-password-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: rgba(107, 128, 108, 0.4);
+  pointer-events: none;
+}
+
+/* 按鈕區域 */
+.crm-actions {
+  display: flex;
+  gap: 12px;
+  padding: 24px;
+}
+
+.crm-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.crm-btn-cancel {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.crm-btn-cancel:hover:not(:disabled) {
+  background-color: #d1d5db;
+}
+
+.crm-btn-confirm {
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(47, 127, 52, 0.2);
+}
+
+.crm-btn-confirm:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+}
+
+.crm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.crm-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* 底部金色橫條 */
+.crm-bottom-accent {
+  height: 6px;
+  width: 100%;
+  background-color: var(--accent-gold);
+}
