@@ -1405,15 +1405,14 @@ function GameRoom() {
                 <div className="gr-cards-row">
                   {guessResultData.hiddenCards.map((card, index) => {
                     const colorConfig = {
-                      red: { bg: '#E53E3E', icon: 'local_fire_department', name: '火 (Red)' },
-                      yellow: { bg: '#D69E2E', icon: 'energy_savings_leaf', name: '土 (Yellow)' },
-                      green: { bg: '#43A047', icon: 'eco', name: '木 (Green)' },
-                      blue: { bg: '#1E88E5', icon: 'water_drop', name: '水 (Blue)' }
+                      red: { bg: '#E53E3E', name: '紅' },
+                      yellow: { bg: '#D69E2E', name: '黃' },
+                      green: { bg: '#43A047', name: '綠' },
+                      blue: { bg: '#1E88E5', name: '藍' }
                     };
                     const config = colorConfig[card.color] || colorConfig.green;
                     return (
                       <div key={index} className="gr-card-pill" style={{ backgroundColor: config.bg }}>
-                        <span className="material-symbols-outlined">{config.icon}</span>
                         <span>{config.name}</span>
                       </div>
                     );
