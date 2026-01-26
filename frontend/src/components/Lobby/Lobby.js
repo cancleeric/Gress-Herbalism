@@ -434,14 +434,14 @@ function Lobby() {
         {/* 頂部用戶欄 */}
         <header className="lobby-header">
           <div className="lobby-user-area">
-            <p className="lobby-user-name">{playerName || '訪客'}</p>
             <div className="lobby-avatar">
               {getInitial(playerName)}
             </div>
-            <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-              {isConnected ? '已連線' : '未連線'}
-            </span>
+            <p className="lobby-user-name">{playerName || '訪客'}</p>
           </div>
+          <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+            {isConnected ? '已連線' : '未連線'}
+          </span>
         </header>
 
         {/* 主內容 */}

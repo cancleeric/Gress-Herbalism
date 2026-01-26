@@ -145,7 +145,7 @@
 .lobby-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 16px 32px;
   background-color: var(--bg-light);
   border-bottom: 1px solid rgba(47, 127, 52, 0.1);
@@ -184,9 +184,6 @@
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  margin-left: 16px;
-  padding-left: 16px;
-  border-left: 1px solid rgba(47, 127, 52, 0.2);
 }
 
 .connection-status::before {
