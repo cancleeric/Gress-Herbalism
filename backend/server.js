@@ -772,7 +772,9 @@ io.on('connection', (socket) => {
     }
 
     // 驗證選擇的顏色是否有效
-    if (!pendingChoice.colors.includes(chosenColor)) {
+    // 'none' 是有效選擇當 availableColors 為空時（被問玩家兩種顏色都沒有）
+    const isNoneChoice = chosenColor === 'none' && pendingChoice.availableColors.length === 0;
+    if (!isNoneChoice && !pendingChoice.colors.includes(chosenColor)) {
       socket.emit('error', { message: '無效的顏色選擇' });
       return;
     }
