@@ -477,10 +477,27 @@ class LocalGameController {
     // 檢查是否有玩家達到 7 分（獲勝）
     const winner = this.gameState.players.find(p => p.score >= 7);
 
+    // 工單 0149：判斷猜錯後是否繼續遊戲
+    const activePlayers = this.gameState.players.filter(p => p.isActive);
+    const continueGame = !isCorrect && activePlayers.length > 0;
+
     if (winner) {
       this.gameState.winner = winner.id;
       this.gameState.gamePhase = GAME_PHASE_FINISHED;
       console.log(`[LocalGameController] ${winner.name} 獲勝！`);
+    } else if (continueGame) {
+      // 工單 0149：猜錯但還有活躍玩家，繼續遊戲
+      console.log(`[LocalGameController] 猜錯，遊戲繼續，剩餘 ${activePlayers.length} 位活躍玩家`);
+      // 切換到下一位活躍玩家
+      const nextIndex = getNextPlayerIndex(
+        this.gameState.currentPlayerIndex,
+        this.gameState.players
+      );
+      if (nextIndex !== -1) {
+        this.gameState.currentPlayerIndex = nextIndex;
+        this.gameState.gamePhase = GAME_PHASE_PLAYING;
+        console.log(`[LocalGameController] 切換到玩家: ${this.gameState.players[nextIndex].name}`);
+      }
     } else {
       this.gameState.gamePhase = GAME_PHASE_ROUND_END;
     }
@@ -493,7 +510,8 @@ class LocalGameController {
       hiddenCards: this.gameState.hiddenCards,
       guessingPlayerId,
       followingPlayers,
-      predictionResults: [] // TODO: 預測結算
+      predictionResults: [], // TODO: 預測結算
+      continueGame  // 工單 0149：猜錯但遊戲繼續
     });
 
     this.emitStateChange();

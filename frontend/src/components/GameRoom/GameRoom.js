@@ -167,6 +167,8 @@ function GameRoom() {
   const [showFollowGuessPanel, setShowFollowGuessPanel] = useState(false);
   const [guessResultData, setGuessResultData] = useState(null);
   const [showRoundEnd, setShowRoundEnd] = useState(false);
+  // 簡短猜牌結果顯示（工單 0149：猜錯但遊戲繼續時使用）
+  const [showBriefGuessResult, setShowBriefGuessResult] = useState(false);
   // 預測相關狀態（工單 0071）
   const [showPrediction, setShowPrediction] = useState(false);
   const [predictionLoading, setPredictionLoading] = useState(false);
@@ -296,9 +298,15 @@ function GameRoom() {
             hiddenCards: event.hiddenCards,
             guessingPlayerId: event.guessingPlayerId,
             followingPlayers: event.followingPlayers,
-            predictionResults: event.predictionResults || []
+            predictionResults: event.predictionResults || [],
+            continueGame: event.continueGame  // 工單 0149
           });
-          setShowRoundEnd(true);
+          // 工單 0149：根據 continueGame 決定顯示方式
+          if (event.continueGame) {
+            setShowBriefGuessResult(true);
+          } else {
+            setShowRoundEnd(true);
+          }
         } else if (event.type === 'roundStarted') {
           setShowRoundEnd(false);
           setGuessResultData(null);
@@ -371,6 +379,20 @@ function GameRoom() {
 
     return () => clearTimeout(timerId);
   }, [isLocalMode, gameState.gamePhase, followGuessData, gameState.players, isAIPlayer, handleAIFollowGuess]);
+
+  /**
+   * 工單 0149：自動關閉簡短猜牌結果
+   */
+  useEffect(() => {
+    if (!showBriefGuessResult) return;
+
+    const timer = setTimeout(() => {
+      setShowBriefGuessResult(false);
+      setGuessResultData(null);
+    }, 3000);  // 3 秒後自動關閉
+
+    return () => clearTimeout(timer);
+  }, [showBriefGuessResult]);
 
   /**
    * 訂閱 Socket 事件（多人模式）
@@ -456,10 +478,15 @@ function GameRoom() {
     });
 
     // 監聽猜牌結果
-    const unsubGuessResult = onGuessResult(({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults }) => {
+    const unsubGuessResult = onGuessResult(({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults, continueGame }) => {
       setShowFollowGuessPanel(false);
-      setGuessResultData({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults });
-      setShowRoundEnd(true);
+      setGuessResultData({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults, continueGame });
+      // 工單 0149：根據 continueGame 決定顯示方式
+      if (continueGame) {
+        setShowBriefGuessResult(true);
+      } else {
+        setShowRoundEnd(true);
+      }
     });
 
     // 監聽局開始
@@ -1663,6 +1690,18 @@ function GameRoom() {
                followGuessData.decisionOrder?.includes(myPlayer?.id) && (
                 <p className="fg-waiting-text">還沒輪到你，請等待...</p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* 工單 0149：簡短猜牌結果（猜錯但遊戲繼續） */}
+        {showBriefGuessResult && guessResultData && (
+          <div className="brief-guess-result">
+            <div className="brief-guess-content">
+              <span className="material-symbols-outlined brief-icon">close</span>
+              <span className="brief-text">
+                {gameState.players.find(p => p.id === guessResultData.guessingPlayerId)?.name || '玩家'} 猜錯了！遊戲繼續...
+              </span>
             </div>
           </div>
         )}

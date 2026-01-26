@@ -3244,3 +3244,48 @@
   background: linear-gradient(to right, transparent, #bb9c63, transparent);
   opacity: 0.4;
 }
+
+/* ==================== 工單 0149：簡短猜牌結果 ==================== */
+.brief-guess-result {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  animation: briefSlideIn 0.3s ease-out;
+}
+
+@keyframes briefSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.brief-guess-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border: 2px solid #E53E3E;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(229, 62, 62, 0.3);
+}
+
+.brief-icon {
+  font-size: 28px;
+  color: #E53E3E;
+  font-variation-settings: 'FILL' 1;
+}
+
+.brief-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #FFF;
+}

@@ -752,7 +752,8 @@ io.on('connection', (socket) => {
               hiddenCards: result.hiddenCards,
               guessingPlayerId: action.playerId,
               followingPlayers: [],
-              predictionResults: result.predictionResults || []
+              predictionResults: result.predictionResults || [],
+              continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
             });
           }
         }
@@ -980,7 +981,8 @@ io.on('connection', (socket) => {
         hiddenCards: result.hiddenCards,
         guessingPlayerId: followState.guessingPlayerId,
         followingPlayers: followState.followingPlayers,
-        predictionResults: result.predictionResults || []
+        predictionResults: result.predictionResults || [],
+        continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
       });
 
       // 廣播更新後的遊戲狀態
@@ -1685,6 +1687,10 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     }
   }
 
+  // 工單 0149：判斷猜錯後是否繼續遊戲
+  const activePlayers = gameState.players.filter(p => p.isActive);
+  const continueGame = !isCorrect && activePlayers.length > 0;
+
   // 工單 0071、0113：預測結算（只在局結束時結算）
   let predictionResults = [];
   if (isCorrect || gameState.gamePhase === 'roundEnd' || gameState.gamePhase === 'finished') {
@@ -1697,7 +1703,8 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     isCorrect,
     scoreChanges,
     hiddenCards: gameState.hiddenCards,
-    predictionResults
+    predictionResults,
+    continueGame  // 工單 0149：猜錯但遊戲繼續
   };
 }
 
