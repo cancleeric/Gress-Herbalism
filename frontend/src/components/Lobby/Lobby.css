@@ -570,3 +570,63 @@
     transform: rotate(360deg);
   }
 }
+
+/* ==================== 工單 202601260048：單人模式樣式 ==================== */
+
+.single-player-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.single-player-section h2 {
+  color: white;
+  margin-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.single-player-section h2::before {
+  background: linear-gradient(to bottom, white, rgba(255, 255, 255, 0.8));
+}
+
+.section-description {
+  opacity: 0.9;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.single-player-btn {
+  background-color: white;
+  color: #667eea;
+  font-weight: bold;
+  padding: 12px 32px;
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.single-player-btn:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.ai-modal {
+  max-width: 600px;
+  padding: 32px;
+}
+
+.ai-modal h3 {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.modal-description {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 14px;
+}

@@ -93,6 +93,7 @@ describe('單人模式 E2E 測試', () => {
       handleAction: jest.fn(),
       getState: jest.fn(() => store.getState()),
       destroy: jest.fn(),
+      startGame: jest.fn(), // 添加 startGame 方法
       // 保留這些方法用於測試（雖然實際 GameRoom 不會調用）
       processPlayerAction: jest.fn().mockResolvedValue({ success: true }),
       getCurrentGameState: jest.fn(() => store.getState())

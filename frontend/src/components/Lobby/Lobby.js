@@ -26,7 +26,7 @@ import {
   joinRoom,
   attemptReconnect
 } from '../../services/socketService';
-import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
+import { MIN_PLAYERS, MAX_PLAYERS, AI_DIFFICULTY } from '../../shared/constants';
 import {
   savePlayerName,
   getPlayerName,
@@ -35,6 +35,7 @@ import {
   saveCurrentRoom
 } from '../../utils/localStorage';
 import { getPlayerNameError, getRoomPasswordError } from '../../utils/validation';
+import { AIPlayerSelector } from '../GameSetup';
 import './Lobby.css';
 
 /**
@@ -68,6 +69,13 @@ function Lobby() {
   // 工單 0079：重連相關狀態
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempted, setReconnectAttempted] = useState(false);
+
+  // 工單 202601260048：單人模式相關狀態
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiConfig, setAIConfig] = useState({
+    aiCount: 2,
+    difficulties: [AI_DIFFICULTY.MEDIUM, AI_DIFFICULTY.MEDIUM]
+  });
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
@@ -361,6 +369,60 @@ function Lobby() {
     setPasswordError('');
   };
 
+  /**
+   * 工單 202601260048：打開 AI 設定 Modal
+   */
+  const handleOpenAIModal = () => {
+    setShowAIModal(true);
+  };
+
+  /**
+   * 工單 202601260048：關閉 AI 設定 Modal
+   */
+  const handleCloseAIModal = () => {
+    setShowAIModal(false);
+  };
+
+  /**
+   * 工單 202601260048：處理 AI 配置變更
+   */
+  const handleAIConfigChange = (newConfig) => {
+    setAIConfig(newConfig);
+  };
+
+  /**
+   * 工單 202601260048：開始單人遊戲
+   */
+  const handleStartSinglePlayer = () => {
+    if (!playerName.trim()) {
+      setError('請輸入玩家名稱');
+      return;
+    }
+
+    console.log('[Lobby] 開始單人遊戲，aiConfig:', aiConfig);
+
+    // 儲存暱稱到 localStorage
+    savePlayerName(playerName.trim());
+
+    // 使用 URL 參數傳遞 aiConfig（避免 state 在刷新後丟失）
+    const params = new URLSearchParams({
+      mode: 'single',
+      aiCount: aiConfig.aiCount.toString(),
+      difficulties: aiConfig.difficulties.join(','),
+      playerName: playerName.trim(),
+      playerId: playerId
+    });
+
+    // 導航到單人模式遊戲（使用 URL 參數 + state）
+    navigate(`/game/local-game?${params.toString()}`, {
+      state: {
+        aiConfig,
+        playerName: playerName.trim(),
+        playerId
+      }
+    });
+  };
+
   return (
     <div className="lobby">
       {/* 工單 0079：重連中覆蓋層 */}
@@ -400,6 +462,20 @@ function Lobby() {
               <span className="welcome-message">歡迎回來，{playerName}！</span>
             )}
           </div>
+        </section>
+
+        {/* 工單 202601260048：單人模式區 */}
+        <section className="lobby-section single-player-section">
+          <h2>🎮 單人模式</h2>
+          <p className="section-description">
+            挑戰 AI 玩家，無需等待其他玩家
+          </p>
+          <button
+            className="btn btn-primary single-player-btn"
+            onClick={handleOpenAIModal}
+          >
+            開始單人遊戲
+          </button>
         </section>
 
         {/* 創建房間區 */}
@@ -581,6 +657,35 @@ function Lobby() {
                 disabled={isLoading}
               >
                 {isLoading ? '加入中...' : '加入'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 工單 202601260048：AI 設定 Modal */}
+      {showAIModal && (
+        <div className="modal-overlay">
+          <div className="modal ai-modal">
+            <h3>🎮 單人模式設定</h3>
+            <p className="modal-description">
+              選擇 AI 對手的數量和難度
+            </p>
+
+            <AIPlayerSelector onConfigChange={handleAIConfigChange} />
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-secondary"
+                onClick={handleCloseAIModal}
+              >
+                取消
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleStartSinglePlayer}
+              >
+                開始遊戲
               </button>
             </div>
           </div>

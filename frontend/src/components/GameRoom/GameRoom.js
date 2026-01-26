@@ -70,8 +70,42 @@ function GameRoom() {
   const location = useLocation();
 
   // 檢查是否為本地模式（單人 + AI）
-  const aiConfig = location.state?.aiConfig || null;
+  // 優先從 location.state 讀取，如果沒有則從 URL 參數讀取
+  const getAIConfigFromURL = () => {
+    console.log('[GameRoom] getAIConfigFromURL 被調用');
+    console.log('[GameRoom] location.search:', location.search);
+
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode');
+    const aiCount = params.get('aiCount');
+    const difficulties = params.get('difficulties');
+
+    console.log('[GameRoom] URL 參數 - mode:', mode);
+    console.log('[GameRoom] URL 參數 - aiCount:', aiCount);
+    console.log('[GameRoom] URL 參數 - difficulties:', difficulties);
+
+    if (mode === 'single' && aiCount && difficulties) {
+      const config = {
+        aiCount: parseInt(aiCount, 10),
+        difficulties: difficulties.split(',')
+      };
+      console.log('[GameRoom] ✅ 從 URL 解析成功:', config);
+      return config;
+    }
+
+    console.log('[GameRoom] ❌ URL 解析失敗，返回 null');
+    return null;
+  };
+
+  const aiConfig = location.state?.aiConfig || getAIConfigFromURL();
   const isLocalMode = aiConfig !== null;
+
+  console.log('[GameRoom] ========== 單人模式檢測 ==========');
+  console.log('[GameRoom] location.state:', location.state);
+  console.log('[GameRoom] location.search:', location.search);
+  console.log('[GameRoom] aiConfig:', aiConfig);
+  console.log('[GameRoom] isLocalMode:', isLocalMode);
+  console.log('[GameRoom] ========================================');
 
   // 從 Redux store 取得遊戲狀態
   const gameState = useSelector((state) => ({
@@ -197,10 +231,11 @@ function GameRoom() {
 
     console.log('[GameRoom] 初始化本地遊戲控制器');
 
-    // 創建人類玩家
+    // 創建人類玩家（從 state 或 URL 參數讀取）
+    const params = new URLSearchParams(location.search);
     const humanPlayer = {
-      id: 'human-1',
-      name: location.state?.playerName || '玩家1',
+      id: location.state?.playerId || params.get('playerId') || 'human-1',
+      name: location.state?.playerName || params.get('playerName') || '玩家1',
       isAI: false,
       isHost: true
     };
@@ -270,6 +305,10 @@ function GameRoom() {
 
     localControllerRef.current = controller;
     console.log('[GameRoom] 本地控制器創建完成，玩家數:', allPlayers.length);
+
+    // 立即開始遊戲
+    controller.startGame();
+    console.log('[GameRoom] 遊戲已自動開始');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocalMode, aiPlayers.length]);
 
