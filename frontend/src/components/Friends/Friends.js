@@ -1,6 +1,7 @@
 /**
  * 好友頁面組件
- * 工單 0061
+ * 工單 0061, 0140
+ * 中國風草藥主題設計
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -133,182 +134,203 @@ function Friends() {
 
   return (
     <div className="friends-page">
-      <div className="friends-container">
-        <button className="back-btn" onClick={handleBack}>
-          ← 返回大廳
-        </button>
+      {/* Background Decorations */}
+      <div className="bg-decoration bg-decoration-top"></div>
+      <div className="bg-decoration bg-decoration-bottom"></div>
 
-        <h1 className="friends-title">好友</h1>
-
-        {/* 標籤頁 */}
-        <div className="friends-tabs">
-          <button
-            className={`tab-btn ${activeTab === 'friends' ? 'active' : ''}`}
-            onClick={() => setActiveTab('friends')}
-          >
-            好友 ({friends.length})
+      <div className="friends-layout">
+        {/* 導航欄 */}
+        <header className="friends-nav">
+          <button className="back-btn" onClick={handleBack}>
+            ← 返回大廳
           </button>
-          <button
-            className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
-            onClick={() => setActiveTab('requests')}
-          >
-            請求
-            {requests.length > 0 && (
-              <span className="badge">{requests.length}</span>
-            )}
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
-            onClick={() => setActiveTab('search')}
-          >
-            搜尋
-          </button>
-        </div>
-
-        {error && <div className="friends-error">{error}</div>}
-
-        {/* 好友列表 */}
-        {activeTab === 'friends' && (
-          <div className="friends-list">
-            {friends.length === 0 ? (
-              <div className="empty-state">
-                <p>還沒有好友</p>
-                <p className="hint">去搜尋頁面找玩家加好友吧！</p>
-              </div>
-            ) : (
-              friends.map(({ friend }) => (
-                <div key={friend.id} className="friend-item">
-                  <div className="friend-avatar">
-                    {friend.avatar_url ? (
-                      <img src={friend.avatar_url} alt="" />
-                    ) : (
-                      <div className="avatar-placeholder">
-                        {(friend.display_name || '?')[0]}
-                      </div>
-                    )}
-                    {getStatusIcon(friend.presence?.status)}
-                  </div>
-                  <div className="friend-info">
-                    <span className="friend-name">{friend.display_name}</span>
-                    <span className="friend-stats">
-                      {friend.games_won} 勝 / {friend.games_played} 場
-                    </span>
-                  </div>
-                  <div className="friend-actions">
-                    <button
-                      className="remove-btn"
-                      onClick={() => handleRemoveFriend(friend.id)}
-                    >
-                      刪除
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="nav-brand">
+            <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
+            </svg>
+            <span className="nav-title">Herbalism</span>
           </div>
-        )}
+        </header>
 
-        {/* 好友請求 */}
-        {activeTab === 'requests' && (
-          <div className="requests-list">
-            {requests.length === 0 ? (
-              <div className="empty-state">
-                <p>沒有待處理的好友請求</p>
-              </div>
-            ) : (
-              requests.map((request) => (
-                <div key={request.id} className="request-item">
-                  <div className="request-avatar">
-                    {request.from_user?.avatar_url ? (
-                      <img src={request.from_user.avatar_url} alt="" />
-                    ) : (
-                      <div className="avatar-placeholder">
-                        {(request.from_user?.display_name || '?')[0]}
-                      </div>
-                    )}
-                  </div>
-                  <div className="request-info">
-                    <span className="request-name">
-                      {request.from_user?.display_name || '未知玩家'}
-                    </span>
-                    {request.message && (
-                      <span className="request-message">{request.message}</span>
-                    )}
-                  </div>
-                  <div className="request-actions">
-                    <button
-                      className="accept-btn"
-                      onClick={() => handleRespondRequest(request.id, 'accept')}
-                    >
-                      接受
-                    </button>
-                    <button
-                      className="reject-btn"
-                      onClick={() => handleRespondRequest(request.id, 'reject')}
-                    >
-                      拒絕
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        <main className="friends-main">
+          <div className="friends-card">
+            <h1 className="friends-title">好友管理</h1>
 
-        {/* 搜尋玩家 */}
-        {activeTab === 'search' && (
-          <div className="search-section">
-            <div className="search-bar">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="輸入玩家暱稱搜尋..."
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
+            {/* 標籤頁 */}
+            <div className="friends-tabs">
               <button
-                className="search-btn"
-                onClick={handleSearch}
-                disabled={loading || searchQuery.length < 2}
+                className={`tab-btn ${activeTab === 'friends' ? 'active' : ''}`}
+                onClick={() => setActiveTab('friends')}
               >
-                {loading ? '搜尋中...' : '搜尋'}
+                好友 ({friends.length})
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
+                onClick={() => setActiveTab('requests')}
+              >
+                請求
+                {requests.length > 0 && (
+                  <span className="badge">{requests.length}</span>
+                )}
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
+                onClick={() => setActiveTab('search')}
+              >
+                搜尋
               </button>
             </div>
 
-            <div className="search-results">
-              {searchResults.length === 0 && searchQuery.length >= 2 && !loading && (
-                <div className="empty-state">
-                  <p>找不到符合的玩家</p>
-                </div>
-              )}
-              {searchResults.map((player) => (
-                <div key={player.id} className="player-item">
-                  <div className="player-avatar">
-                    {player.avatar_url ? (
-                      <img src={player.avatar_url} alt="" />
-                    ) : (
-                      <div className="avatar-placeholder">
-                        {(player.display_name || '?')[0]}
+            {error && <div className="friends-error">{error}</div>}
+
+            {/* 好友列表 */}
+            {activeTab === 'friends' && (
+              <div className="friends-list">
+                {friends.length === 0 ? (
+                  <div className="empty-state">
+                    <p>還沒有好友</p>
+                    <p className="hint">去搜尋頁面找玩家加好友吧！</p>
+                  </div>
+                ) : (
+                  friends.map(({ friend }) => (
+                    <div key={friend.id} className="friend-item">
+                      <div className="friend-avatar">
+                        {friend.avatar_url ? (
+                          <img src={friend.avatar_url} alt="" />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            {(friend.display_name || '?')[0]}
+                          </div>
+                        )}
+                        {getStatusIcon(friend.presence?.status)}
                       </div>
-                    )}
+                      <div className="friend-info">
+                        <span className="friend-name">{friend.display_name}</span>
+                        <span className="friend-stats">
+                          {friend.games_won} 勝 / {friend.games_played} 場
+                        </span>
+                      </div>
+                      <div className="friend-actions">
+                        <button
+                          className="remove-btn"
+                          onClick={() => handleRemoveFriend(friend.id)}
+                        >
+                          刪除
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* 好友請求 */}
+            {activeTab === 'requests' && (
+              <div className="requests-list">
+                {requests.length === 0 ? (
+                  <div className="empty-state">
+                    <p>沒有待處理的好友請求</p>
                   </div>
-                  <div className="player-info">
-                    <span className="player-name">{player.display_name}</span>
-                    <span className="player-stats">
-                      {player.games_won} 勝 · {player.win_rate}% 勝率
-                    </span>
-                  </div>
+                ) : (
+                  requests.map((request) => (
+                    <div key={request.id} className="request-item">
+                      <div className="request-avatar">
+                        {request.from_user?.avatar_url ? (
+                          <img src={request.from_user.avatar_url} alt="" />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            {(request.from_user?.display_name || '?')[0]}
+                          </div>
+                        )}
+                      </div>
+                      <div className="request-info">
+                        <span className="request-name">
+                          {request.from_user?.display_name || '未知玩家'}
+                        </span>
+                        {request.message && (
+                          <span className="request-message">{request.message}</span>
+                        )}
+                      </div>
+                      <div className="request-actions">
+                        <button
+                          className="accept-btn"
+                          onClick={() => handleRespondRequest(request.id, 'accept')}
+                        >
+                          接受
+                        </button>
+                        <button
+                          className="reject-btn"
+                          onClick={() => handleRespondRequest(request.id, 'reject')}
+                        >
+                          拒絕
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* 搜尋玩家 */}
+            {activeTab === 'search' && (
+              <div className="search-section">
+                <div className="search-bar">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="輸入玩家暱稱搜尋..."
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
                   <button
-                    className="add-btn"
-                    onClick={() => handleSendRequest(player.id)}
+                    className="search-btn"
+                    onClick={handleSearch}
+                    disabled={loading || searchQuery.length < 2}
                   >
-                    加好友
+                    {loading ? '搜尋中...' : '搜尋'}
                   </button>
                 </div>
-              ))}
-            </div>
+
+                <div className="search-results">
+                  {searchResults.length === 0 && searchQuery.length >= 2 && !loading && (
+                    <div className="empty-state">
+                      <p>找不到符合的玩家</p>
+                    </div>
+                  )}
+                  {searchResults.map((player) => (
+                    <div key={player.id} className="player-item">
+                      <div className="player-avatar">
+                        {player.avatar_url ? (
+                          <img src={player.avatar_url} alt="" />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            {(player.display_name || '?')[0]}
+                          </div>
+                        )}
+                      </div>
+                      <div className="player-info">
+                        <span className="player-name">{player.display_name}</span>
+                        <span className="player-stats">
+                          {player.games_won} 勝 · {player.win_rate}% 勝率
+                        </span>
+                      </div>
+                      <button
+                        className="add-btn"
+                        onClick={() => handleSendRequest(player.id)}
+                      >
+                        加好友
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </main>
+
+        <footer className="friends-footer">
+          <p>© 2024 本草 Herbalism Online. All Rights Reserved.</p>
+        </footer>
       </div>
     </div>
   );

@@ -1,167 +1,280 @@
 /**
  * 個人資料頁面樣式
- * 工單 0060
+ * 工單 0060, 0139
+ * 中國風草藥主題設計
  */
 
+/* ==================== 頁面容器 ==================== */
 .profile-page {
   min-height: 100vh;
+  background-color: #FFF8E1;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 水彩背景效果 */
+.profile-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at top left, rgba(47, 127, 51, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at bottom right, rgba(255, 179, 0, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* 背景裝飾 */
+.profile-page .bg-decoration {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  opacity: 0.15;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(46, 125, 50, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.profile-page .bg-decoration-top {
+  top: -50px;
+  left: -50px;
+}
+
+.profile-page .bg-decoration-bottom {
+  bottom: -50px;
+  right: -50px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(255, 179, 0, 0.3) 0%, transparent 70%);
+}
+
+/* ==================== 主布局 ==================== */
+.profile-layout {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: var(--spacing-lg);
-  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 100%);
-}
-
-.profile-container {
-  background: linear-gradient(145deg, var(--color-surface), rgba(22, 33, 62, 0.9));
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  max-width: 600px;
+  flex-direction: column;
+  min-height: 100vh;
   width: 100%;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-top: var(--spacing-lg);
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
-.back-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  padding: var(--spacing-sm) 0;
-  margin-bottom: var(--spacing-md);
-  transition: color var(--transition-normal);
-}
-
-.back-btn:hover {
-  color: var(--color-accent);
-}
-
-.profile-loading {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-lg);
-  text-align: center;
-  padding: var(--spacing-xl);
-}
-
-.profile-header {
+/* ==================== 導航欄 ==================== */
+.profile-nav {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
+  justify-content: space-between;
+  padding: 16px 40px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.profile-nav .back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(46, 125, 50, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 8px 0;
+}
+
+.profile-nav .back-btn:hover {
+  color: #2E7D32;
+}
+
+.profile-nav .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #2E7D32;
+}
+
+.profile-nav .nav-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.profile-nav .nav-title {
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: serif;
+}
+
+/* ==================== 主內容區 ==================== */
+.profile-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px;
+}
+
+/* ==================== 個人資料卡片 ==================== */
+.profile-card {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(46, 125, 50, 0.05);
+  margin-bottom: 24px;
+}
+
+/* ==================== 頭像區域 ==================== */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 32px;
 }
 
 .avatar-container {
-  flex-shrink: 0;
+  margin-bottom: 16px;
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--color-accent);
+  border: 4px solid #2E7D32;
+  box-shadow: 0 8px 24px rgba(46, 125, 50, 0.2);
 }
 
 .avatar-placeholder {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background: linear-gradient(135deg, #2E7D32, #FFB300);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-2xl);
+  font-size: 40px;
   font-weight: bold;
   color: white;
+  box-shadow: 0 8px 24px rgba(46, 125, 50, 0.2);
 }
 
 .user-info h2 {
-  font-size: var(--font-size-xl);
-  color: var(--color-text);
-  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 24px;
+  color: #2E7D32;
+  margin: 0 0 8px 0;
+  font-family: serif;
+  font-weight: 700;
 }
 
 .user-email {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  font-size: 14px;
+  color: rgba(46, 125, 50, 0.6);
   margin: 0;
 }
 
+/* ==================== 錯誤提示 ==================== */
 .profile-error {
-  background-color: rgba(231, 76, 60, 0.2);
-  border: 1px solid var(--color-error);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  color: var(--color-error);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #b91c1c;
   text-align: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 24px;
 }
 
-/* 統計區塊 */
+/* ==================== 統計區塊 ==================== */
 .stats-section {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 24px;
 }
 
 .stats-section h3 {
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  margin: 0 0 var(--spacing-md) 0;
+  font-size: 16px;
+  color: #2E7D32;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.05em;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-md);
+  gap: 12px;
 }
 
 .stat-card {
-  background: rgba(15, 52, 96, 0.5);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
+  background: rgba(46, 125, 50, 0.08);
+  border: 1px solid rgba(46, 125, 50, 0.15);
+  border-radius: 8px;
+  padding: 16px 12px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  background: rgba(46, 125, 50, 0.12);
+  transform: translateY(-2px);
 }
 
 .stat-card.highlight {
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.2), rgba(233, 69, 96, 0.1));
-  border-color: rgba(233, 69, 96, 0.3);
+  background: rgba(255, 179, 0, 0.1);
+  border-color: rgba(255, 179, 0, 0.3);
+}
+
+.stat-card.highlight:hover {
+  background: rgba(255, 179, 0, 0.15);
+}
+
+.stat-card.highlight .stat-value {
+  color: #FFB300;
 }
 
 .stat-value {
   display: block;
-  font-size: var(--font-size-2xl);
-  font-weight: bold;
-  color: var(--color-accent);
-  margin-bottom: var(--spacing-xs);
+  font-size: 28px;
+  font-weight: 700;
+  color: #2E7D32;
+  margin-bottom: 4px;
+  font-family: serif;
 }
 
 .stat-label {
   display: block;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  color: rgba(46, 125, 50, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
-/* 遊戲歷史 */
-.history-section {
-  margin-bottom: var(--spacing-xl);
-}
-
+/* ==================== 遊戲歷史 ==================== */
 .history-section h3 {
-  font-size: var(--font-size-lg);
-  color: var(--color-text);
-  margin: 0 0 var(--spacing-md) 0;
+  font-size: 16px;
+  color: #2E7D32;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.05em;
 }
 
 .no-history {
-  color: var(--color-text-secondary);
+  color: rgba(46, 125, 50, 0.5);
   text-align: center;
-  padding: var(--spacing-lg);
-  background: rgba(15, 52, 96, 0.3);
-  border-radius: var(--border-radius-md);
+  padding: 24px;
+  background: rgba(46, 125, 50, 0.05);
+  border-radius: 8px;
+  font-size: 14px;
 }
 
 .history-list {
@@ -173,77 +286,110 @@
 .history-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: rgba(15, 52, 96, 0.3);
-  border-radius: var(--border-radius-md);
-  margin-bottom: var(--spacing-sm);
-  border-left: 3px solid transparent;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(46, 125, 50, 0.1);
+  transition: all 0.2s;
+}
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .history-item.win {
-  border-left-color: var(--color-success);
-  background: rgba(46, 204, 113, 0.1);
+  border-left: 3px solid #2E7D32;
+  background: rgba(46, 125, 50, 0.05);
 }
 
 .history-item.lose {
-  border-left-color: var(--color-error);
-  background: rgba(231, 76, 60, 0.1);
+  border-left: 3px solid #FFB300;
+  background: rgba(255, 179, 0, 0.05);
 }
 
 .result-icon {
-  font-size: var(--font-size-xl);
+  font-size: 20px;
   flex-shrink: 0;
 }
 
 .history-info {
   flex: 1;
+  min-width: 0;
 }
 
 .history-info .score {
   display: block;
   font-weight: 600;
-  color: var(--color-text);
+  color: #2E7D32;
+  font-size: 14px;
 }
 
 .history-info .details {
   display: block;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  color: rgba(46, 125, 50, 0.6);
+  margin-top: 2px;
 }
 
 .history-item .date {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  color: rgba(46, 125, 50, 0.5);
   flex-shrink: 0;
 }
 
-/* 登出按鈕 */
+/* ==================== 登出按鈕 ==================== */
 .logout-btn {
   width: 100%;
-  padding: var(--spacing-md);
+  max-width: 500px;
+  padding: 14px;
   background: transparent;
-  border: 1px solid var(--color-error);
-  border-radius: var(--border-radius-md);
-  color: var(--color-error);
-  font-size: var(--font-size-base);
+  border: 2px solid #FFB300;
+  border-radius: 8px;
+  color: #FFB300;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
 }
 
 .logout-btn:hover {
-  background: rgba(231, 76, 60, 0.1);
+  background: rgba(255, 179, 0, 0.1);
 }
 
-/* 響應式 */
+/* ==================== 載入狀態 ==================== */
+.profile-loading {
+  color: #2E7D32;
+  font-size: 18px;
+  text-align: center;
+  padding: 48px;
+}
+
+/* ==================== 頁尾 ==================== */
+.profile-footer {
+  padding: 32px;
+  text-align: center;
+}
+
+.profile-footer p {
+  font-size: 10px;
+  color: rgba(46, 125, 50, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ==================== 響應式 ==================== */
 @media (max-width: 480px) {
-  .profile-container {
-    padding: var(--spacing-lg);
+  .profile-nav {
+    padding: 16px 20px;
   }
 
-  .profile-header {
-    flex-direction: column;
-    text-align: center;
+  .profile-card {
+    padding: 24px;
   }
 
   .stats-grid {
@@ -252,7 +398,16 @@
 
   .avatar,
   .avatar-placeholder {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+
+  .user-info h2 {
+    font-size: 20px;
+  }
+
+  .stat-value {
+    font-size: 24px;
   }
 }
