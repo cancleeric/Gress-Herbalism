@@ -951,14 +951,8 @@
 
 .fg-buttons {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.75rem;
-}
-
-@media (min-width: 640px) {
-  .fg-buttons {
-    flex-direction: row;
-  }
 }
 
 .fg-btn {
