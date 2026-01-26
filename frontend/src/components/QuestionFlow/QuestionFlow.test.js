@@ -2,7 +2,7 @@
  * QuestionFlow 組件測試
  *
  * @module QuestionFlow.test
- * 工單 0074
+ * 工單 0074, 0127（重新設計）
  */
 
 import React from 'react';
@@ -59,7 +59,7 @@ describe('QuestionFlow Component', () => {
     expect(screen.getByText(/綠色/)).toBeInTheDocument();
   });
 
-  test('shows player selection as first step', () => {
+  test('shows all three steps in the new three-column layout（工單 0127）', () => {
     render(
       <QuestionFlow
         selectedCard={mockSelectedCard}
@@ -70,14 +70,30 @@ describe('QuestionFlow Component', () => {
       />
     );
 
-    expect(screen.getByText('選擇要問牌的對象')).toBeInTheDocument();
+    // 三欄式佈局同時顯示所有步驟
+    expect(screen.getByText('選擇目標玩家')).toBeInTheDocument();
+    expect(screen.getByText('選擇要牌方式')).toBeInTheDocument();
+    expect(screen.getByText('確認問牌內容')).toBeInTheDocument();
+  });
+
+  test('shows player selection with other players excluding self', () => {
+    render(
+      <QuestionFlow
+        selectedCard={mockSelectedCard}
+        players={mockPlayers}
+        currentPlayerId="p1"
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
     expect(screen.getByText('玩家2')).toBeInTheDocument();
     expect(screen.getByText('玩家3')).toBeInTheDocument();
     // 不應顯示自己
     expect(screen.queryByText('玩家1')).not.toBeInTheDocument();
   });
 
-  test('advances to type selection after selecting player', () => {
+  test('shows question types in the new format（工單 0127）', () => {
     render(
       <QuestionFlow
         selectedCard={mockSelectedCard}
@@ -88,15 +104,12 @@ describe('QuestionFlow Component', () => {
       />
     );
 
-    fireEvent.click(screen.getByText('玩家2'));
-
-    expect(screen.getByText('選擇要牌方式')).toBeInTheDocument();
-    expect(screen.getByText('各一張')).toBeInTheDocument();
-    expect(screen.getByText('其中一種全部')).toBeInTheDocument();
-    expect(screen.getByText('給一張要全部')).toBeInTheDocument();
+    expect(screen.getByText(/各一張.*Each Color/)).toBeInTheDocument();
+    expect(screen.getByText(/其中一種全部.*All of One/)).toBeInTheDocument();
+    expect(screen.getByText(/給一張要全部.*Give.*Take/)).toBeInTheDocument();
   });
 
-  test('advances to confirm after selecting type', () => {
+  test('enables confirm button only when all selections made', () => {
     render(
       <QuestionFlow
         selectedCard={mockSelectedCard}
@@ -107,12 +120,17 @@ describe('QuestionFlow Component', () => {
       />
     );
 
-    fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('各一張'));
+    // 初始狀態確認按鈕應該禁用
+    const confirmButton = screen.getByRole('button', { name: /確認問牌/i });
+    expect(confirmButton).toBeDisabled();
 
-    // 標題「確認問牌」和按鈕「確認問牌」都會出現
-    expect(screen.getAllByText('確認問牌').length).toBe(2);
-    expect(screen.getByRole('button', { name: /確認問牌/i })).toBeInTheDocument();
+    // 選擇玩家
+    fireEvent.click(screen.getByText('玩家2'));
+    expect(confirmButton).toBeDisabled();
+
+    // 選擇問牌方式
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    expect(confirmButton).not.toBeDisabled();
   });
 
   test('calls onSubmit with correct data on confirm', () => {
@@ -127,7 +145,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('各一張'));
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
     fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
 
     expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -138,7 +156,7 @@ describe('QuestionFlow Component', () => {
     });
   });
 
-  test('calls onCancel when cancel button clicked on first step', () => {
+  test('calls onCancel when cancel button clicked', () => {
     render(
       <QuestionFlow
         selectedCard={mockSelectedCard}
@@ -151,24 +169,6 @@ describe('QuestionFlow Component', () => {
 
     fireEvent.click(screen.getByText('取消'));
     expect(mockOnCancel).toHaveBeenCalled();
-  });
-
-  test('goes back to player selection when back button clicked on type selection', () => {
-    render(
-      <QuestionFlow
-        selectedCard={mockSelectedCard}
-        players={mockPlayers}
-        currentPlayerId="p1"
-        onSubmit={mockOnSubmit}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    fireEvent.click(screen.getByText('玩家2'));
-    expect(screen.getByText('選擇要牌方式')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('上一步'));
-    expect(screen.getByText('選擇要問牌的對象')).toBeInTheDocument();
   });
 
   test('shows give color selection for type 3 when player has both colors', () => {
@@ -189,12 +189,12 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('給一張要全部'));
+    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
 
-    expect(screen.getByText('選擇要給哪種顏色的一張')).toBeInTheDocument();
+    expect(screen.getByText('選擇要給出的顏色：')).toBeInTheDocument();
   });
 
-  test('skips give color selection for type 3 when player has only one color', () => {
+  test('does not show give color selection for type 3 when player has only one color', () => {
     const mockHand = [
       { color: 'red', id: 'r1' }
     ];
@@ -211,10 +211,12 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('給一張要全部'));
+    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
 
-    // Should go directly to confirm (both heading and button will have "確認問牌")
-    expect(screen.getAllByText('確認問牌').length).toBe(2);
+    // 不應顯示顏色選擇區
+    expect(screen.queryByText('選擇要給出的顏色：')).not.toBeInTheDocument();
+    // 確認按鈕應可用
+    expect(screen.getByRole('button', { name: /確認問牌/i })).not.toBeDisabled();
   });
 
   test('shows error when type 3 selected but player has neither color', () => {
@@ -234,7 +236,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('給一張要全部'));
+    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
 
     expect(screen.getByRole('alert')).toHaveTextContent('你沒有這兩種顏色的牌');
   });
@@ -257,7 +259,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('給一張要全部'));
+    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
     // 選擇給紅色
     fireEvent.click(screen.getByText(/給 紅色 一張/));
     fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
@@ -305,10 +307,9 @@ describe('QuestionFlow Component', () => {
       />
     );
 
-    fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText('各一張'));
-
-    const confirmButton = screen.getByRole('button', { name: /處理中/i });
+    const cancelButton = screen.getByRole('button', { name: /取消/i });
+    const confirmButton = screen.getByRole('button', { name: /確認問牌/i });
+    expect(cancelButton).toBeDisabled();
     expect(confirmButton).toBeDisabled();
   });
 
@@ -325,5 +326,28 @@ describe('QuestionFlow Component', () => {
     );
 
     expect(screen.getByText('處理中...')).toBeInTheDocument();
+  });
+
+  test('updates confirm card when selections change（工單 0127）', () => {
+    render(
+      <QuestionFlow
+        selectedCard={mockSelectedCard}
+        players={mockPlayers}
+        currentPlayerId="p1"
+        onSubmit={mockOnSubmit}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    // 初始狀態顯示 —
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+
+    // 選擇玩家後顯示玩家名稱（會出現在兩個位置：選項和確認卡片）
+    fireEvent.click(screen.getByText('玩家2'));
+    expect(screen.getAllByText('玩家2').length).toBe(2);
+
+    // 選擇類型後顯示行動
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    expect(screen.getByText(/向目標索取.*紅色.*和.*綠色.*各一張/)).toBeInTheDocument();
   });
 });

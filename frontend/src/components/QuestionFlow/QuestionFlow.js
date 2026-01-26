@@ -2,8 +2,8 @@
  * 問牌流程組件
  *
  * @module QuestionFlow
- * @description 新版問牌流程介面，用於選擇顏色牌後的後續步驟
- * 工單 0074
+ * @description 新版問牌流程介面，三欄式設計
+ * 工單 0074, 0127（重新設計）
  */
 
 import React, { useState, useCallback } from 'react';
@@ -24,26 +24,6 @@ const COLOR_NAMES = {
   yellow: '黃色',
   green: '綠色',
   blue: '藍色'
-};
-
-/**
- * 顏色對應的 emoji
- */
-const COLOR_ICONS = {
-  red: '🔴',
-  yellow: '🟡',
-  green: '🟢',
-  blue: '🔵'
-};
-
-/**
- * 問牌流程步驟
- */
-const STEPS = {
-  SELECT_PLAYER: 'selectPlayer',
-  SELECT_TYPE: 'selectType',
-  SELECT_GIVE_COLOR: 'selectGiveColor',
-  CONFIRM: 'confirm'
 };
 
 /**
@@ -69,7 +49,6 @@ function QuestionFlow({
   isLoading = false
 }) {
   // 流程狀態
-  const [step, setStep] = useState(STEPS.SELECT_PLAYER);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [selectedGiveColor, setSelectedGiveColor] = useState(null);
@@ -122,7 +101,6 @@ function QuestionFlow({
    */
   const handleSelectPlayer = (playerId) => {
     setSelectedPlayerId(playerId);
-    setStep(STEPS.SELECT_TYPE);
     setError('');
   };
 
@@ -130,22 +108,17 @@ function QuestionFlow({
    * 處理選擇問牌類型
    */
   const handleSelectType = (type) => {
-    setSelectedType(type);
-    setError('');
-
-    // 如果是類型3且兩種顏色都有，需要選擇給哪種
+    // 如果是類型3，檢查是否有牌
     if (type === QUESTION_TYPE_GIVE_ONE_GET_ALL) {
       const ownedColors = getOwnedColorsFromSelection();
-      if (ownedColors.length === 2) {
-        setStep(STEPS.SELECT_GIVE_COLOR);
-        return;
-      } else if (ownedColors.length === 0) {
+      if (ownedColors.length === 0) {
         setError('你沒有這兩種顏色的牌，無法使用此問牌方式');
         return;
       }
     }
-
-    setStep(STEPS.CONFIRM);
+    setSelectedType(type);
+    setSelectedGiveColor(null);
+    setError('');
   };
 
   /**
@@ -153,33 +126,6 @@ function QuestionFlow({
    */
   const handleSelectGiveColor = (color) => {
     setSelectedGiveColor(color);
-    setStep(STEPS.CONFIRM);
-    setError('');
-  };
-
-  /**
-   * 處理返回上一步
-   */
-  const handleBack = () => {
-    switch (step) {
-      case STEPS.SELECT_TYPE:
-        setStep(STEPS.SELECT_PLAYER);
-        setSelectedType(null);
-        break;
-      case STEPS.SELECT_GIVE_COLOR:
-        setStep(STEPS.SELECT_TYPE);
-        setSelectedGiveColor(null);
-        break;
-      case STEPS.CONFIRM:
-        if (needsGiveColorChoice()) {
-          setStep(STEPS.SELECT_GIVE_COLOR);
-        } else {
-          setStep(STEPS.SELECT_TYPE);
-        }
-        break;
-      default:
-        onCancel?.();
-    }
     setError('');
   };
 
@@ -212,182 +158,269 @@ function QuestionFlow({
     return player?.name || '';
   };
 
+  /**
+   * 檢查是否可以提交
+   */
+  const canSubmit = () => {
+    if (!selectedPlayerId || !selectedType) return false;
+    if (selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL) {
+      const ownedColors = getOwnedColorsFromSelection();
+      if (ownedColors.length === 2 && !selectedGiveColor) return false;
+      if (ownedColors.length === 0) return false;
+    }
+    return true;
+  };
+
+  /**
+   * 取得問牌方式的描述文字
+   */
+  const getActionDescription = () => {
+    if (!selectedType) return '';
+
+    const effectiveGiveColor = getEffectiveGiveColor();
+
+    switch (selectedType) {
+      case QUESTION_TYPE_ONE_EACH:
+        return `向目標索取 ${COLOR_NAMES[colors[0]]} 和 ${COLOR_NAMES[colors[1]]} 各一張`;
+      case QUESTION_TYPE_ALL_ONE_COLOR:
+        return `向目標索取指定顏色的所有手牌`;
+      case QUESTION_TYPE_GIVE_ONE_GET_ALL:
+        if (effectiveGiveColor) {
+          const getColor = colors.find(c => c !== effectiveGiveColor);
+          return `給予目標 1 張${COLOR_NAMES[effectiveGiveColor]}，獲取其手中所有${COLOR_NAMES[getColor]}`;
+        }
+        return `給予一張，換取另一色全部手牌`;
+      default:
+        return '';
+    }
+  };
+
+  /**
+   * 取得問牌方式的簡短文字
+   */
+  const getActionText = () => {
+    if (!selectedType) return '';
+
+    const effectiveGiveColor = getEffectiveGiveColor();
+
+    switch (selectedType) {
+      case QUESTION_TYPE_ONE_EACH:
+        return '各一張';
+      case QUESTION_TYPE_ALL_ONE_COLOR:
+        return '其中一種全部';
+      case QUESTION_TYPE_GIVE_ONE_GET_ALL:
+        if (effectiveGiveColor) {
+          const getColor = colors.find(c => c !== effectiveGiveColor);
+          return `給一張 ${COLOR_NAMES[effectiveGiveColor]} 要全部 ${COLOR_NAMES[getColor]}`;
+        }
+        return '給一張要全部';
+      default:
+        return '';
+    }
+  };
+
   if (!selectedCard) return null;
 
   return (
     <div className="question-flow-overlay">
       <div className="question-flow-modal">
-        {/* 標題 */}
-        <div className="question-flow-header">
-          <h3>問牌</h3>
-          <div className="selected-card-info">
-            <span className="color-badge">
-              {COLOR_ICONS[colors[0]]} {COLOR_NAMES[colors[0]]}
-            </span>
-            <span className="separator">+</span>
-            <span className="color-badge">
-              {COLOR_ICONS[colors[1]]} {COLOR_NAMES[colors[1]]}
-            </span>
+        {/* 裝飾圖示 */}
+        <span className="material-symbols-outlined qf-decor-top">eco</span>
+        <span className="material-symbols-outlined qf-decor-bottom">psychiatry</span>
+
+        {/* Header */}
+        <header className="question-flow-header">
+          <h2 className="qf-title">
+            問牌
+            <span className="qf-title-sub">(Inquiry)</span>
+          </h2>
+          <div className="qf-color-chips">
+            <span className="qf-color-chips-label">當前組合：</span>
+            {colors.map((color) => (
+              <div key={color} className={`qf-color-chip ${color}`}>
+                <span className={`qf-color-dot ${color}`}></span>
+                <span className="qf-color-name">{COLOR_NAMES[color]}</span>
+              </div>
+            ))}
           </div>
-        </div>
+        </header>
 
         {/* 載入指示器 */}
         {isLoading && (
-          <div className="loading-overlay">
-            <div className="loading-spinner"></div>
+          <div className="qf-loading">
+            <div className="qf-loading-spinner"></div>
             <p>處理中...</p>
           </div>
         )}
 
-        {/* 內容區域 */}
-        <div className="question-flow-body">
-          {/* 步驟 1: 選擇目標玩家 */}
-          {step === STEPS.SELECT_PLAYER && (
-            <div className="step-content">
-              <h4>選擇要問牌的對象</h4>
-              <div className="player-options">
+        {/* Main Content - 三欄式 */}
+        <main className="question-flow-body">
+          <div className="qf-steps-grid">
+            {/* 步驟 1: 選擇目標玩家 */}
+            <section className="qf-step">
+              <div className="qf-step-header">
+                <span className={`qf-step-number ${selectedPlayerId ? 'completed' : ''}`}>1</span>
+                <h3 className="qf-step-title">選擇目標玩家</h3>
+              </div>
+              <div className="qf-player-options">
                 {otherPlayers.length === 0 ? (
-                  <p className="no-players">沒有其他玩家</p>
+                  <p style={{ color: '#6b7280', textAlign: 'center', padding: '16px' }}>沒有其他玩家</p>
                 ) : (
                   otherPlayers.map((player) => (
-                    <button
+                    <label
                       key={player.id}
-                      type="button"
-                      className="player-option"
+                      className={`qf-player-option ${selectedPlayerId === player.id ? 'selected' : ''}`}
                       onClick={() => handleSelectPlayer(player.id)}
                     >
-                      {player.name}
-                    </button>
+                      <input
+                        type="radio"
+                        name="target_player"
+                        checked={selectedPlayerId === player.id}
+                        onChange={() => handleSelectPlayer(player.id)}
+                      />
+                      <div className="qf-player-info">
+                        <span className="qf-player-name">{player.name}</span>
+                      </div>
+                    </label>
                   ))
                 )}
               </div>
-            </div>
-          )}
+            </section>
 
-          {/* 步驟 2: 選擇問牌方式 */}
-          {step === STEPS.SELECT_TYPE && (
-            <div className="step-content">
-              <p className="step-info">
-                問牌對象：<strong>{getSelectedPlayerName()}</strong>
-              </p>
-              <h4>選擇要牌方式</h4>
-              <div className="type-options">
+            {/* 步驟 2: 選擇問牌方式 */}
+            <section className="qf-step">
+              <div className="qf-step-header">
+                <span className={`qf-step-number ${selectedType ? 'completed' : ''}`}>2</span>
+                <h3 className="qf-step-title">選擇要牌方式</h3>
+              </div>
+              <div className="qf-type-options">
                 <button
                   type="button"
-                  className="type-option"
+                  className={`qf-type-option ${selectedType === QUESTION_TYPE_ONE_EACH ? 'selected' : ''}`}
                   onClick={() => handleSelectType(QUESTION_TYPE_ONE_EACH)}
                 >
-                  <span className="type-name">各一張</span>
-                  <span className="type-desc">{QUESTION_TYPE_DESCRIPTIONS[QUESTION_TYPE_ONE_EACH]}</span>
+                  <div className="qf-type-header">
+                    <span className="qf-type-name">各一張 (Each Color)</span>
+                    {selectedType === QUESTION_TYPE_ONE_EACH && (
+                      <span className="material-symbols-outlined qf-type-check">check_circle</span>
+                    )}
+                  </div>
+                  <span className="qf-type-desc">{QUESTION_TYPE_DESCRIPTIONS[QUESTION_TYPE_ONE_EACH]}</span>
                 </button>
+
                 <button
                   type="button"
-                  className="type-option"
+                  className={`qf-type-option ${selectedType === QUESTION_TYPE_ALL_ONE_COLOR ? 'selected' : ''}`}
                   onClick={() => handleSelectType(QUESTION_TYPE_ALL_ONE_COLOR)}
                 >
-                  <span className="type-name">其中一種全部</span>
-                  <span className="type-desc">{QUESTION_TYPE_DESCRIPTIONS[QUESTION_TYPE_ALL_ONE_COLOR]}</span>
+                  <div className="qf-type-header">
+                    <span className="qf-type-name">其中一種全部 (All of One)</span>
+                    {selectedType === QUESTION_TYPE_ALL_ONE_COLOR && (
+                      <span className="material-symbols-outlined qf-type-check">check_circle</span>
+                    )}
+                  </div>
+                  <span className="qf-type-desc">{QUESTION_TYPE_DESCRIPTIONS[QUESTION_TYPE_ALL_ONE_COLOR]}</span>
                 </button>
+
                 <button
                   type="button"
-                  className="type-option"
+                  className={`qf-type-option ${selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL ? 'selected' : ''}`}
                   onClick={() => handleSelectType(QUESTION_TYPE_GIVE_ONE_GET_ALL)}
                 >
-                  <span className="type-name">給一張要全部</span>
-                  <span className="type-desc">{QUESTION_TYPE_DESCRIPTIONS[QUESTION_TYPE_GIVE_ONE_GET_ALL]}</span>
+                  <div className="qf-type-header">
+                    <span className="qf-type-name">給一張要全部 (Give & Take)</span>
+                    {selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL && (
+                      <span className="material-symbols-outlined qf-type-check">check_circle</span>
+                    )}
+                  </div>
+                  <span className="qf-type-desc">{QUESTION_TYPE_DESCRIPTIONS[QUESTION_TYPE_GIVE_ONE_GET_ALL]}</span>
                 </button>
               </div>
-            </div>
-          )}
 
-          {/* 步驟 2.5: 選擇給牌顏色（類型3） */}
-          {step === STEPS.SELECT_GIVE_COLOR && (
-            <div className="step-content">
-              <p className="step-info">
-                問牌對象：<strong>{getSelectedPlayerName()}</strong>
-              </p>
-              <h4>選擇要給哪種顏色的一張</h4>
-              <p className="hint">你兩種顏色都有，請選擇要給對方哪種顏色</p>
-              <div className="color-options">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    className={`color-option color-${color}`}
-                    onClick={() => handleSelectGiveColor(color)}
-                  >
-                    {COLOR_ICONS[color]} 給 {COLOR_NAMES[color]} 一張
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 步驟 3: 確認 */}
-          {step === STEPS.CONFIRM && (
-            <div className="step-content">
-              <h4>確認問牌</h4>
-              <div className="confirm-summary">
-                <div className="summary-row">
-                  <span className="label">顏色：</span>
-                  <span className="value">
-                    {COLOR_ICONS[colors[0]]} {COLOR_NAMES[colors[0]]} + {COLOR_ICONS[colors[1]]} {COLOR_NAMES[colors[1]]}
-                  </span>
-                </div>
-                <div className="summary-row">
-                  <span className="label">對象：</span>
-                  <span className="value">{getSelectedPlayerName()}</span>
-                </div>
-                <div className="summary-row">
-                  <span className="label">方式：</span>
-                  <span className="value">
-                    {selectedType === QUESTION_TYPE_ONE_EACH && '各一張'}
-                    {selectedType === QUESTION_TYPE_ALL_ONE_COLOR && '其中一種全部'}
-                    {selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL && '給一張要全部'}
-                  </span>
-                </div>
-                {selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL && getEffectiveGiveColor() && (
-                  <div className="summary-row">
-                    <span className="label">給牌：</span>
-                    <span className="value">
-                      給 {COLOR_NAMES[getEffectiveGiveColor()]} 一張，
-                      要 {COLOR_NAMES[colors.find(c => c !== getEffectiveGiveColor())]} 全部
-                    </span>
+              {/* 步驟 2.5: 給牌顏色選擇 */}
+              {needsGiveColorChoice() && (
+                <div className="qf-give-color-section">
+                  <p className="qf-give-color-label">選擇要給出的顏色：</p>
+                  <div className="qf-give-color-options">
+                    {colors.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`qf-give-color-btn ${color} ${selectedGiveColor === color ? 'selected' : ''}`}
+                        onClick={() => handleSelectGiveColor(color)}
+                      >
+                        <span className={`qf-color-dot ${color}`}></span>
+                        給 {COLOR_NAMES[color]} 一張
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
+            </section>
+
+            {/* 步驟 3: 確認問牌內容 */}
+            <section className="qf-step">
+              <div className="qf-step-header">
+                <span className={`qf-step-number ${canSubmit() ? 'completed' : ''}`}>3</span>
+                <h3 className="qf-step-title">確認問牌內容</h3>
               </div>
-            </div>
-          )}
+              <div className="qf-confirm-card">
+                <div className="qf-confirm-content">
+                  <div className="qf-confirm-row">
+                    <div>
+                      <p className="qf-confirm-label">對象 Player</p>
+                      <p className="qf-confirm-value">
+                        {selectedPlayerId ? getSelectedPlayerName() : '—'}
+                      </p>
+                    </div>
+                    <span className="material-symbols-outlined qf-confirm-icon">person_search</span>
+                  </div>
+                  <div>
+                    <p className="qf-confirm-label">行動 Action</p>
+                    <p className="qf-confirm-action">
+                      {selectedType ? getActionText() : '—'}
+                    </p>
+                    {selectedType && (
+                      <p className="qf-confirm-action-desc">{getActionDescription()}</p>
+                    )}
+                  </div>
+                  <div className="qf-confirm-footer">
+                    <span className="material-symbols-outlined">info</span>
+                    <p>確認後將立即執行問牌，目標玩家需如實配合。</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
 
           {/* 錯誤訊息 */}
           {error && (
-            <div className="error-message" role="alert">
+            <div className="qf-error" role="alert">
               {error}
             </div>
           )}
-        </div>
+        </main>
 
-        {/* 底部按鈕 */}
-        <div className="question-flow-footer">
+        {/* Footer */}
+        <footer className="question-flow-footer">
           <button
             type="button"
-            className="btn btn-secondary"
-            onClick={step === STEPS.SELECT_PLAYER ? onCancel : handleBack}
+            className="qf-btn qf-btn-secondary"
+            onClick={onCancel}
             disabled={isLoading}
           >
-            {step === STEPS.SELECT_PLAYER ? '取消' : '上一步'}
+            取消
           </button>
-          {step === STEPS.CONFIRM && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? '處理中...' : '確認問牌'}
-            </button>
-          )}
-        </div>
+          <button
+            type="button"
+            className="qf-btn qf-btn-primary"
+            onClick={handleSubmit}
+            disabled={isLoading || !canSubmit()}
+          >
+            確認問牌
+            <span className="material-symbols-outlined">send</span>
+          </button>
+        </footer>
       </div>
     </div>
   );
