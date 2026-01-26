@@ -1942,6 +1942,16 @@
   }
 }
 
+/* 遊戲結束狀態 - 工單 0132 */
+.playing-status.finished .playing-status-dot::before,
+.playing-status.finished .playing-status-dot::after {
+  background-color: #D4AF37;
+}
+
+.playing-status.finished .playing-status-dot::before {
+  animation: none;
+}
+
 .playing-header-right {
   display: flex;
   align-items: center;
@@ -2847,4 +2857,28 @@
   .playing-action-btn span:last-child {
     font-size: 16px;
   }
+}
+
+/* 工單 0132：遊戲結束資訊 */
+.playing-game-over-info {
+  margin-top: 24px;
+  padding: 20px;
+  background-color: rgba(212, 175, 55, 0.15);
+  border: 2px solid #D4AF37;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.playing-winner-message {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #D4AF37;
+  margin: 0;
+}
+
+.playing-no-winner-message {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #666;
+  margin: 0;
 }

@@ -847,11 +847,12 @@ function GameRoom() {
     { id: 'green-blue', colors: ['green', 'blue'], icons: ['spa', 'water_drop'] },
   ];
 
-  // 遊戲進行中階段：渲染新的三欄式 UI（工單 0124）
+  // 遊戲進行中/結束階段：渲染新的三欄式 UI（工單 0124, 0132）
   if (gameState.gamePhase === GAME_PHASE_PLAYING ||
       gameState.gamePhase === GAME_PHASE_POST_QUESTION ||
       gameState.gamePhase === GAME_PHASE_FOLLOW_GUESSING ||
-      gameState.gamePhase === GAME_PHASE_ROUND_END) {
+      gameState.gamePhase === GAME_PHASE_ROUND_END ||
+      gameState.gamePhase === GAME_PHASE_FINISHED) {
     return (
       <div className="game-room playing-stage">
         {/* 遊戲進行中 Header */}
@@ -866,9 +867,9 @@ function GameRoom() {
               </div>
               <span className="playing-brand-text">Herbalism 本草</span>
             </div>
-            <div className="playing-status">
+            <div className={`playing-status ${gameState.gamePhase === GAME_PHASE_FINISHED ? 'finished' : ''}`}>
               <span className="playing-status-dot"></span>
-              <span>遊戲進行中</span>
+              <span>{gameState.gamePhase === GAME_PHASE_FINISHED ? '遊戲結束' : '遊戲進行中'}</span>
             </div>
           </div>
           <div className="playing-header-right">
@@ -997,6 +998,19 @@ function GameRoom() {
                 })}
               </div>
             </div>
+
+            {/* 遊戲結束資訊 - 工單 0132 */}
+            {gameState.gamePhase === GAME_PHASE_FINISHED && (
+              <div className="playing-game-over-info">
+                {gameState.winner ? (
+                  <p className="playing-winner-message">
+                    獲勝者: {gameState.players.find(p => p.id === gameState.winner)?.name || '未知'}
+                  </p>
+                ) : (
+                  <p className="playing-no-winner-message">遊戲結束，沒有獲勝者</p>
+                )}
+              </div>
+            )}
           </section>
 
           {/* 右欄 - 玩家列表 */}
