@@ -451,7 +451,8 @@ function broadcastRoomList() {
  */
 function broadcastGameState(gameId) {
   const gameState = gameRooms.get(gameId);
-  if (gameState) {
+  // 工單 0148：確保房間存在且有玩家時才廣播
+  if (gameState && gameState.players && gameState.players.length > 0) {
     io.to(gameId).emit('gameState', gameState);
   }
 }
@@ -466,6 +467,11 @@ io.on('connection', (socket) => {
   // 心跳回應 - 保持連線活躍
   socket.on('ping', () => {
     socket.emit('pong');
+  });
+
+  // 工單 0147：房間列表請求（確保前端訂閱後能獲取最新列表）
+  socket.on('requestRoomList', () => {
+    socket.emit('roomList', getAvailableRooms());
   });
 
   // 創建房間
@@ -1101,6 +1107,11 @@ function handlePlayerLeave(socket, gameId, playerId) {
   if (playerIndex === -1) return;
 
   const player = gameState.players[playerIndex];
+  const playerName = player.name;
+
+  // 工單 0148：先離開 Socket 房間，避免收到後續廣播
+  socket.leave(gameId);
+  playerSockets.delete(socket.id);
 
   if (gameState.gamePhase === 'waiting') {
     // 等待中，直接移除玩家
@@ -1109,6 +1120,9 @@ function handlePlayerLeave(socket, gameId, playerId) {
     if (gameState.players.length === 0) {
       // 房間空了，刪除房間
       gameRooms.delete(gameId);
+      // 房間已刪除，只更新房間列表
+      broadcastRoomList();
+      return;
     } else if (player.isHost) {
       // 房主離開，轉移房主
       gameState.players[0].isHost = true;
@@ -1118,8 +1132,8 @@ function handlePlayerLeave(socket, gameId, playerId) {
     gameState.players[playerIndex].isActive = false;
   }
 
-  socket.leave(gameId);
-  playerSockets.delete(socket.id);
+  // 工單 0148：通知房間內剩餘玩家有人離開
+  io.to(gameId).emit('playerLeft', { playerId, playerName });
 
   broadcastGameState(gameId);
   broadcastRoomList();

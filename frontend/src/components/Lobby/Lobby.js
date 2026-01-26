@@ -26,7 +26,8 @@ import {
   createRoom,
   joinRoom,
   attemptReconnect,
-  emitPlayerRefreshing
+  emitPlayerRefreshing,
+  requestRoomList
 } from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS, AI_DIFFICULTY } from '../../shared/constants';
 import VersionInfo from '../VersionInfo';
@@ -118,6 +119,9 @@ function Lobby() {
     const unsubRooms = onRoomList((updatedRooms) => {
       setRooms(updatedRooms);
     });
+
+    // 工單 0147：訂閱完成後，主動請求房間列表
+    requestRoomList();
 
     const unsubError = onError(({ message }) => {
       setError(message);

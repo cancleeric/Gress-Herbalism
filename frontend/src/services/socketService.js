@@ -139,12 +139,30 @@ export function onRoomList(callback) {
 }
 
 /**
+ * 工單 0147：主動請求房間列表
+ * 確保前端訂閱完成後能獲取最新房間列表
+ */
+export function requestRoomList() {
+  const s = getSocket();
+  s.emit('requestRoomList');
+}
+
+/**
  * 監聯遊戲狀態更新
  */
 export function onGameState(callback) {
   const s = getSocket();
   s.on('gameState', callback);
   return () => s.off('gameState', callback);
+}
+
+/**
+ * 工單 0148：監聽玩家離開事件
+ */
+export function onPlayerLeft(callback) {
+  const s = getSocket();
+  s.on('playerLeft', callback);
+  return () => s.off('playerLeft', callback);
 }
 
 // ==================== 工單 0079：重連功能 ====================

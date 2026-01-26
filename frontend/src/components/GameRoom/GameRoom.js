@@ -28,6 +28,7 @@ import {
   onPostQuestionPhase,
   onTurnEnded,
   onCardGiveNotification,
+  onPlayerLeft,
   startGame as socketStartGame,
   sendGameAction,
   requestRevealHiddenCards,
@@ -398,6 +399,11 @@ function GameRoom() {
       setIsLoading(false);
     });
 
+    // 工單 0148：監聽玩家離開
+    const unsubPlayerLeft = onPlayerLeft(({ playerId, playerName }) => {
+      console.log(`[房間] 玩家 ${playerName} 離開了房間`);
+    });
+
     // 監聽蓋牌揭示
     const unsubHidden = onHiddenCardsRevealed(({ cards }) => {
       setHiddenCardsForGuess(cards);
@@ -487,6 +493,7 @@ function GameRoom() {
     return () => {
       unsubGameState();
       unsubError();
+      unsubPlayerLeft();
       unsubHidden();
       unsubColorChoice();
       unsubWaiting();
