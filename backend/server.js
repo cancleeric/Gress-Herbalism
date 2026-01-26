@@ -394,6 +394,39 @@ function findSocketByPlayerId(gameId, playerId) {
 }
 
 /**
+ * 工單 0108：驗證遊戲房間中所有玩家的 socket 連線狀態
+ * @param {string} gameId - 遊戲房間 ID
+ */
+function validateSocketConnections(gameId) {
+  const gameState = gameRooms.get(gameId);
+  if (!gameState) return;
+
+  let hasInvalidSocket = false;
+
+  gameState.players.forEach(player => {
+    if (player.socketId && !player.isDisconnected) {
+      const socket = io.sockets.sockets.get(player.socketId);
+      if (!socket || !socket.connected) {
+        console.warn(`[心跳] 玩家 ${player.name} 的 socket ${player.socketId} 已失效`);
+        player.socketId = null;
+        hasInvalidSocket = true;
+      }
+    }
+  });
+
+  if (hasInvalidSocket) {
+    console.log(`[心跳] 房間 ${gameId} 有無效 socket，已清理`);
+  }
+}
+
+// 工單 0108：每 30 秒檢測一次所有房間的連線狀態
+setInterval(() => {
+  gameRooms.forEach((_, gameId) => {
+    validateSocketConnections(gameId);
+  });
+}, 30000);
+
+/**
  * 廣播房間列表給所有人
  */
 function broadcastRoomList() {
