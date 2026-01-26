@@ -1,6 +1,6 @@
 /**
  * Auth Context - 全局登入狀態管理
- * 工單 0059
+ * 工單 0059, 0142
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -11,6 +11,7 @@ import {
   logOut,
   upgradeAnonymousToGoogle,
 } from './authService';
+import { syncPlayer } from '../services/apiService';
 
 // 建立 Context
 const AuthContext = createContext(null);
@@ -27,7 +28,21 @@ export function AuthProvider({ children }) {
 
   // 監聽登入狀態變化
   useEffect(() => {
-    const unsubscribe = onAuthChange((state) => {
+    const unsubscribe = onAuthChange(async (state) => {
+      // 用戶登入成功時，同步資料到後端
+      if (state.isLoggedIn && state.user) {
+        try {
+          await syncPlayer({
+            firebaseUid: state.user.uid,
+            displayName: state.user.displayName || '玩家',
+            email: state.user.email,
+            avatarUrl: state.user.photoURL,
+          });
+        } catch (err) {
+          console.error('同步玩家資料失敗:', err);
+        }
+      }
+
       setAuthState({
         isLoading: false,
         isLoggedIn: state.isLoggedIn,

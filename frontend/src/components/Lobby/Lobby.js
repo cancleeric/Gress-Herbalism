@@ -554,17 +554,6 @@ function Lobby() {
             </div>
           )}
 
-          {/* 工單 202601260048：單人模式區 */}
-          <div className="single-player-section">
-            <button
-              className="single-player-btn"
-              onClick={handleOpenAIModal}
-            >
-              <span className="material-symbols-outlined">smart_toy</span>
-              單人模式
-            </button>
-          </div>
-
           {/* 創建房間按鈕 */}
           <button
             className="create-room-btn"
@@ -664,6 +653,17 @@ function Lobby() {
                 </tbody>
               </table>
             )}
+          </div>
+
+          {/* 工單 202601260048：單人模式區 */}
+          <div className="single-player-section">
+            <button
+              className="single-player-btn"
+              onClick={handleOpenAIModal}
+            >
+              <span className="material-symbols-outlined">smart_toy</span>
+              單人模式
+            </button>
           </div>
         </main>
       </div>

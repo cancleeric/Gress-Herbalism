@@ -232,7 +232,6 @@
   justify-content: center;
   gap: 12px;
   width: 100%;
-  max-width: 400px;
   padding: 16px 24px;
   background-color: transparent;
   border: 2px solid var(--accent-gold);
@@ -265,7 +264,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 32px;
-  max-width: 500px;
+  width: 100%;
 }
 
 .join-room-input {
@@ -317,7 +316,7 @@
 /* ==================== 遊戲暱稱輸入 ==================== */
 .nickname-section {
   margin-bottom: 24px;
-  max-width: 400px;
+  width: 100%;
 }
 
 .nickname-label {
@@ -529,7 +528,7 @@
   color: #b91c1c;
   font-size: 14px;
   margin-bottom: 24px;
-  max-width: 500px;
+  width: 100%;
 }
 
 /* ==================== 頁尾 ==================== */
@@ -1152,7 +1151,9 @@
 /* ==================== 工單 202601260048：單人模式樣式 ==================== */
 
 .single-player-section {
+  margin-top: 24px;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .single-player-btn {
