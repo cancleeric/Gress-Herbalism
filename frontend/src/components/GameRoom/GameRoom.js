@@ -29,6 +29,7 @@ import {
   onTurnEnded,
   onCardGiveNotification,
   onPlayerLeft,
+  onReconnectFailed,
   startGame as socketStartGame,
   sendGameAction,
   requestRevealHiddenCards,
@@ -183,6 +184,9 @@ function GameRoom() {
   const [disabledCardWarning, setDisabledCardWarning] = useState(null);
   // 複製連結提示（工單 0123）
   const [showCopyToast, setShowCopyToast] = useState(false);
+  // 遊戲不存在錯誤處理（工單 0150）
+  const [gameNotExist, setGameNotExist] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(3);
 
   // Firebase Auth（工單 0123）
   const { user: authUser } = useAuth();
@@ -395,6 +399,35 @@ function GameRoom() {
   }, [showBriefGuessResult]);
 
   /**
+   * 工單 0150：遊戲不存在時的倒數計時與自動導航
+   */
+  useEffect(() => {
+    if (!gameNotExist) return;
+
+    // 倒數計時
+    const countdownTimer = setInterval(() => {
+      setRedirectCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // 3 秒後自動導航
+    const redirectTimer = setTimeout(() => {
+      dispatch(resetGame());
+      navigate('/');
+    }, 3000);
+
+    return () => {
+      clearInterval(countdownTimer);
+      clearTimeout(redirectTimer);
+    };
+  }, [gameNotExist, dispatch, navigate]);
+
+  /**
    * 訂閱 Socket 事件（多人模式）
    */
   useEffect(() => {
@@ -415,10 +448,29 @@ function GameRoom() {
       setIsLoading(false);
     });
 
-    // 監聽錯誤
+    // 監聽錯誤（工單 0150 改善）
     const unsubError = onError(({ message }) => {
       setError(message);
       setIsLoading(false);
+
+      // 重置所有 Modal 狀態，避免卡在「處理中」
+      setShowQuestionFlow(false);
+      setShowQuestionCard(false);
+      setShowGuessCard(false);
+      setShowColorChoice(false);
+      setColorChoiceData(null);
+      setShowFollowGuessPanel(false);
+      setShowPrediction(false);
+      setSelectedColorCard(null);
+
+      // 特殊處理「遊戲不存在」錯誤
+      if (message === '遊戲不存在') {
+        setGameNotExist(true);
+        clearCurrentRoom();
+        localStorage.removeItem('lastRoomId');
+        localStorage.removeItem('lastPlayerId');
+        localStorage.removeItem('lastPlayerName');
+      }
     });
 
     // 工單 0148：監聽玩家離開
@@ -517,6 +569,16 @@ function GameRoom() {
       setCardGiveNotification(notification);
     });
 
+    // 工單 0150：監聽重連失敗
+    const unsubReconnectFailed = onReconnectFailed(({ message }) => {
+      console.log('[工單 0150] 重連失敗:', message);
+      setGameNotExist(true);
+      clearCurrentRoom();
+      localStorage.removeItem('lastRoomId');
+      localStorage.removeItem('lastPlayerId');
+      localStorage.removeItem('lastPlayerName');
+    });
+
     return () => {
       unsubGameState();
       unsubError();
@@ -532,6 +594,7 @@ function GameRoom() {
       unsubPostQuestion();
       unsubTurnEnded();
       unsubCardGive();
+      unsubReconnectFailed();
     };
   }, [dispatch, isLocalMode]);
 
@@ -2178,8 +2241,30 @@ function GameRoom() {
         </div>
       )}
 
-      {/* 錯誤訊息 */}
-      {error && (
+      {/* 工單 0150：遊戲不存在全螢幕提示 */}
+      {gameNotExist && (
+        <div className="game-not-exist-overlay">
+          <div className="game-not-exist-card">
+            <span className="material-symbols-outlined game-not-exist-icon">cloud_off</span>
+            <h2 className="game-not-exist-title">遊戲連線中斷</h2>
+            <p className="game-not-exist-desc">遊戲房間已不存在，可能是伺服器重啟或連線逾時。</p>
+            <p className="game-not-exist-countdown">{redirectCountdown} 秒後自動返回大廳...</p>
+            <button
+              className="game-not-exist-btn"
+              onClick={() => {
+                dispatch(resetGame());
+                navigate('/');
+              }}
+            >
+              <span className="material-symbols-outlined">home</span>
+              立即返回
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 錯誤訊息（排除「遊戲不存在」，因為有專屬 UI） */}
+      {error && error !== '遊戲不存在' && (
         <div className="error-message" role="alert">
           {error}
           <button onClick={() => setError('')} className="close-error">×</button>

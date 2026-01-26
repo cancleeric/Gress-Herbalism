@@ -3289,3 +3289,90 @@
   font-weight: 600;
   color: #FFF;
 }
+
+/* ==================== 工單 0150：遊戲不存在全螢幕提示 ==================== */
+.game-not-exist-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.game-not-exist-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #bb9c63;
+  border-radius: 20px;
+  padding: 48px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 40px rgba(187, 156, 99, 0.2);
+}
+
+.game-not-exist-icon {
+  font-size: 72px;
+  color: #bb9c63;
+  margin-bottom: 16px;
+  font-variation-settings: 'FILL' 0, 'wght' 300;
+}
+
+.game-not-exist-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #FFF;
+  margin: 0 0 16px 0;
+}
+
+.game-not-exist-desc {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1rem;
+  color: #9ca3af;
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+.game-not-exist-countdown {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 0.95rem;
+  color: #bb9c63;
+  margin: 0 0 24px 0;
+}
+
+.game-not-exist-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, #2f7f34 0%, #1a4a1d 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(47, 127, 52, 0.3);
+}
+
+.game-not-exist-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(47, 127, 52, 0.4);
+}
+
+.game-not-exist-btn .material-symbols-outlined {
+  font-size: 20px;
+}
