@@ -675,7 +675,7 @@ describe('Lobby - 連線狀態', () => {
     });
   });
 
-  test('連線後應顯示已連線狀態', async () => {
+  test('連線後不應顯示連線狀態', async () => {
     socketService.onConnectionChange.mockImplementation((callback) => {
       eventCallbacks.connectionChange = callback;
       queueMicrotask(() => callback(true));
@@ -685,7 +685,8 @@ describe('Lobby - 連線狀態', () => {
     renderWithProviders(<Lobby />);
 
     await waitFor(() => {
-      expect(screen.getByText('已連線')).toBeInTheDocument();
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+      expect(screen.queryByText('已連線')).not.toBeInTheDocument();
     });
   });
 });

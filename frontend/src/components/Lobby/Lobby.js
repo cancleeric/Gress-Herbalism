@@ -439,9 +439,11 @@ function Lobby() {
             </div>
             <p className="lobby-user-name">{playerName || '訪客'}</p>
           </div>
-          <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-            {isConnected ? '已連線' : '未連線'}
-          </span>
+{!isConnected && (
+            <span className="connection-status disconnected">
+              未連線
+            </span>
+          )}
         </header>
 
         {/* 主內容 */}
