@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-TW"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&amp;family=Noto+Sans+TC:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2f7f34",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#141e15",
+                        "parchment": "#F5F1E6",
+                        "gold": "#D4AF37",
+                        "traditional-red": "#B22222",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif TC", "serif"],
+                        "sans": ["Noto Sans TC", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "12px",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .herbal-texture {
+            background-image: radial-gradient(#d9d4c7 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body class="bg-stone-800 flex items-center justify-center min-h-screen p-4 font-sans">
+<div class="relative w-full max-w-[500px] bg-parchment dark:bg-background-dark rounded-lg shadow-2xl overflow-hidden border border-gold/20">
+<div class="absolute inset-0 herbal-texture pointer-events-none"></div>
+<div class="absolute top-0 right-0 w-24 h-24 opacity-20 pointer-events-none">
+<div class="absolute top-2 right-2 border-t-2 border-r-2 border-gold w-8 h-8 rounded-tr-lg"></div>
+<div class="absolute top-4 right-4 border-t border-r border-gold/40 w-4 h-4 rounded-tr-md"></div>
+</div>
+<div class="absolute bottom-0 left-0 w-24 h-24 opacity-20 pointer-events-none rotate-180">
+<div class="absolute top-2 right-2 border-t-2 border-r-2 border-gold w-8 h-8 rounded-tr-lg"></div>
+<div class="absolute top-4 right-4 border-t border-r border-gold/40 w-4 h-4 rounded-tr-md"></div>
+</div>
+<div class="relative px-8 pt-8 pb-4 text-center">
+<h1 class="text-3xl font-black text-stone-800 dark:text-stone-100 font-display tracking-tight">跟猜階段</h1>
+<div class="mx-auto mt-2 w-12 h-1 bg-traditional-red rounded-full"></div>
+</div>
+<div class="relative px-8 py-4">
+<div class="bg-white/50 dark:bg-white/5 rounded-lg p-4 border border-stone-200 dark:border-stone-700">
+<p class="text-stone-600 dark:text-stone-400 text-sm mb-3">Player A 猜測蓋牌是：</p>
+<div class="flex gap-3">
+<div class="flex h-9 items-center justify-center gap-x-2 rounded-full bg-[#E53E3E] px-4 shadow-sm border border-red-700/20">
+<span class="text-white text-sm font-bold tracking-wider">紅色</span>
+</div>
+<div class="flex h-9 items-center justify-center gap-x-2 rounded-full bg-[#D69E2E] px-4 shadow-sm border border-yellow-700/20">
+<span class="text-white text-sm font-bold tracking-wider">黃色</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative px-8 py-2">
+<h3 class="text-stone-800 dark:text-stone-200 text-sm font-bold mb-3 font-display">玩家決策狀態</h3>
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between bg-white/60 dark:bg-stone-900/40 px-4 py-3 rounded-lg border border-gold/30">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full border-2 border-gold overflow-hidden bg-stone-200">
+<img alt="Player A" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWYGbSQJZSokiXvn1GysHgVxAjSk--PrnNdOyF2aRvt_PHaN0Tbj9AGozp0iR9b5QQA6tcUghHCmylP5Gtq9xC0a_Pb8z_hMFVhiJeIuhGO9k8tU1GLm-x5ge-64PR5IJBO7jLG44VLt-VgMW37Ik8Wuzg0Hc0XFQ2e4FpPQUq3VwH_1RrFogBTfjdQvElp5zD4m-DN1exCkejZyDN6OC9tEVgglzEvfP7yEf1HHvt66CEsEMGf5BDxhjLcnVbC9cUyQFYXxC0Yqw"/>
+</div>
+<div>
+<p class="text-stone-800 dark:text-stone-100 font-bold text-sm font-display">Player A</p>
+<span class="inline-block bg-gold text-white text-[10px] px-2 py-0.5 rounded-full font-bold">猜牌者</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-primary font-bold text-xs">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                        發起猜測
+                    </div>
+</div>
+<div class="flex items-center justify-between bg-white/40 dark:bg-stone-900/20 px-4 py-3 rounded-lg border border-transparent">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full border border-stone-300 overflow-hidden bg-stone-200">
+<img alt="Player B" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEW716n5JGIZNxlZTwPt4eE2nQYIW84NB3_GmgttCqUqgL5thbCHS0wZ1OeB7MrazLcQnXPTGeS9NU1aR67BetxzO3LWVg8o59q7AhkC1ZI938N6zycv3D39Cc5rD2R_u5us84CEM3eXbmr7XN7nqN65m4v5aCb0QmWDm-lSNHDqC_IDvRFngub9G35L4u7MiMyjtKDNBVLeRLK4J8pzVXfGQa51cYskvX2DRNV-ToVycWYWyD_uyJ3-KK2gUqh44bkeepbCzkxKE"/>
+</div>
+<p class="text-stone-700 dark:text-stone-300 font-medium text-sm font-display">Player B</p>
+</div>
+<div class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20">
+                        跟猜
+                    </div>
+</div>
+<div class="flex items-center justify-between bg-white dark:bg-stone-800 px-4 py-3 rounded-lg border-2 border-orange-400 shadow-md scale-[1.02] z-10">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full border border-orange-400 overflow-hidden bg-stone-200">
+<img alt="You" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVzgW9g3oFwy5uiepCYSQwqGfS-cl-85XA_6KCumK0XnyTMUhaav_P8YCgda_jcO0uxcsHOr3KDkuyHlxbajOWH7xQzhfN_Bg_9jSo0QyuugAVF_k6TuHOsfJMm9yQRPotaEdBrseOMStrt-9JXY2DiA4KFFjzjRMef-XIGy6ol_FomsTLUPWX5Ud3DWYreQsfHF7xGX2brolNK5F35r7vhhrsn-zUP4eE7ZF4Q_tZ-g_1Rt9csn2-SNA-Wf0rc7JROz3cgWhLS_c"/>
+</div>
+<p class="text-stone-900 dark:text-white font-bold text-sm font-display">您 (當前玩家)</p>
+</div>
+<div class="flex items-center gap-1.5 bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold">
+<span class="size-2 bg-orange-500 rounded-full"></span>
+                        決定中...
+                    </div>
+</div>
+<div class="flex items-center justify-between bg-stone-200/30 dark:bg-stone-900/10 px-4 py-3 rounded-lg opacity-60">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full border border-stone-200 overflow-hidden grayscale">
+<img alt="Player C" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACHaPCrNvOJdfwzpcOfajsU3xY9FB9dydZkKid_2Y5dPSceF5H4-ny03kcydxyD_wl9fYG04LxqA-Ei8LUtnIEgNbqylD5iDmcbtTgK4FRqFkcYEh7w7M0vtS5eBGYc4wXMB3osYLcx3QBTvuhz6x46itspX-NQ4JS3Rm7cS2gbv_zSCgv6uoUTCs_en6DCr3rZ0fyqpTuurQIL0E10gOuBE0E4HmWOEOYbPtqDCq4n8bXvGJChKBmqrrPiQh23SswUP1KsNjOh5c"/>
+</div>
+<p class="text-stone-500 dark:text-stone-500 font-medium text-sm font-display">Player C</p>
+</div>
+<div class="text-stone-400 text-xs font-medium italic">
+                        等待中
+                    </div>
+</div>
+</div>
+</div>
+<div class="relative mt-4 px-8 pb-8">
+<div class="text-center mb-6">
+<p class="text-stone-800 dark:text-stone-200 font-bold text-sm mb-1">輪到你決定！</p>
+<p class="text-stone-500 dark:text-stone-400 text-xs">跟對 <span class="text-primary font-bold">+1 分</span>，跟錯 <span class="text-traditional-red font-bold">-1 分</span> 並退出當局</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-3">
+<button class="flex-1 bg-transparent border-2 border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-400 font-bold py-3.5 rounded-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+                    不跟
+                </button>
+<button class="flex-1 bg-primary hover:bg-green-800 transition-colors text-white font-bold py-3.5 rounded-lg shadow-lg flex items-center justify-center gap-2 group">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    跟猜
+                </button>
+</div>
+</div>
+</div>
+
+</body></html>

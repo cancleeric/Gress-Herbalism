@@ -580,71 +580,439 @@
   color: white;
 }
 
-/* 跟猜面板樣式 */
-.follow-guess-modal {
+/* ===== 跟猜面板樣式（新設計）===== */
+.fg-modal {
+  position: relative;
   max-width: 500px;
+  width: 100%;
+  background-color: #F5F1E6;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-.follow-guess-card {
-  padding: var(--spacing-lg);
+.fg-texture {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#d9d4c7 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.fg-corner-tr,
+.fg-corner-bl {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.fg-corner-tr {
+  top: 0;
+  right: 0;
+}
+
+.fg-corner-tr::before,
+.fg-corner-tr::after {
+  content: '';
+  position: absolute;
+  border-color: #D4AF37;
+  border-style: solid;
+}
+
+.fg-corner-tr::before {
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 8px 0 0;
+}
+
+.fg-corner-tr::after {
+  top: 16px;
+  right: 16px;
+  width: 16px;
+  height: 16px;
+  border-width: 1px 1px 0 0;
+  border-radius: 0 4px 0 0;
+  opacity: 0.4;
+}
+
+.fg-corner-bl {
+  bottom: 0;
+  left: 0;
+  transform: rotate(180deg);
+}
+
+.fg-corner-bl::before,
+.fg-corner-bl::after {
+  content: '';
+  position: absolute;
+  border-color: #D4AF37;
+  border-style: solid;
+}
+
+.fg-corner-bl::before {
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-width: 2px 2px 0 0;
+  border-radius: 0 8px 0 0;
+}
+
+.fg-corner-bl::after {
+  top: 16px;
+  right: 16px;
+  width: 16px;
+  height: 16px;
+  border-width: 1px 1px 0 0;
+  border-radius: 0 4px 0 0;
+  opacity: 0.4;
+}
+
+/* 標題區 */
+.fg-header {
+  position: relative;
+  padding: 2rem 2rem 1rem;
   text-align: center;
 }
 
-.follow-guess-card h3 {
-  color: var(--color-accent);
-  font-size: var(--font-size-xlarge);
-  margin-bottom: var(--spacing-md);
+.fg-title {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 900;
+  font-family: 'Noto Serif TC', serif;
+  color: #292524;
+  letter-spacing: -0.025em;
 }
 
-.guess-info {
-  font-size: var(--font-size-large);
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
+.fg-title-line {
+  width: 3rem;
+  height: 4px;
+  background-color: #B22222;
+  border-radius: 9999px;
+  margin: 0.5rem auto 0;
 }
 
-.guessed-colors {
+/* 猜牌資訊區塊 */
+.fg-guess-info {
+  position: relative;
+  margin: 0 2rem 1rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 0.5rem;
+  border: 1px solid #e7e5e4;
+}
+
+.fg-guess-text {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: #57534e;
+}
+
+.fg-color-pills {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.fg-color-pill {
   display: inline-flex;
-  gap: var(--spacing-xs);
-  margin-left: var(--spacing-sm);
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.05em;
 }
 
-.follow-guess-status {
-  background-color: var(--color-background);
-  padding: var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  margin-bottom: var(--spacing-md);
+.fg-color-pill.fg-color-red {
+  background-color: #E53E3E;
+  border: 1px solid rgba(127, 29, 29, 0.2);
 }
 
-.follow-guess-status p {
-  margin: var(--spacing-xs) 0;
-  color: var(--color-text-secondary);
+.fg-color-pill.fg-color-yellow {
+  background-color: #D69E2E;
+  border: 1px solid rgba(113, 63, 18, 0.2);
 }
 
-.following-list {
-  color: var(--color-green) !important;
+.fg-color-pill.fg-color-green {
+  background-color: #43A047;
+  border: 1px solid rgba(20, 83, 45, 0.2);
 }
 
-.declined-list {
-  color: var(--color-red) !important;
+.fg-color-pill.fg-color-blue {
+  background-color: #1E88E5;
+  border: 1px solid rgba(30, 64, 175, 0.2);
 }
 
-.pending-list {
-  color: var(--color-yellow) !important;
+/* 玩家決策狀態區塊 */
+.fg-status-section {
+  position: relative;
+  padding: 0.5rem 2rem;
 }
 
-.follow-guess-buttons {
-  margin-top: var(--spacing-lg);
+.fg-status-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: 'Noto Serif TC', serif;
+  color: #292524;
 }
 
-.decision-prompt {
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
-  font-size: var(--font-size-base);
+.fg-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.follow-guess-buttons .btn {
-  margin: 0 var(--spacing-sm);
-  min-width: 100px;
+.fg-player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.fg-player-item.fg-guesser {
+  background-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.fg-player-item.fg-current-decider {
+  background-color: white;
+  border: 2px solid #fb923c;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+  z-index: 1;
+}
+
+.fg-player-item.fg-waiting {
+  opacity: 0.6;
+  background-color: rgba(214, 211, 209, 0.3);
+}
+
+.fg-player-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fg-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background-color: #e7e5e4;
+  border: 1px solid #d6d3d1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.fg-avatar .material-symbols-outlined {
+  font-size: 24px;
+  color: #78716c;
+}
+
+.fg-avatar.fg-avatar-gold {
+  border: 2px solid #D4AF37;
+}
+
+.fg-avatar.fg-avatar-orange {
+  border: 1px solid #fb923c;
+}
+
+.fg-player-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fg-player-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: 'Noto Serif TC', serif;
+  color: #292524;
+}
+
+.fg-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.fg-badge-guesser {
+  background-color: #D4AF37;
+  color: white;
+}
+
+/* 狀態標籤 */
+.fg-status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.fg-status .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.fg-status-initiated {
+  color: #2f7f34;
+}
+
+.fg-status-follow {
+  background-color: rgba(47, 127, 52, 0.1);
+  color: #2f7f34;
+  border: 1px solid rgba(47, 127, 52, 0.2);
+}
+
+.fg-status-pass {
+  background-color: rgba(120, 113, 108, 0.1);
+  color: #78716c;
+  border: 1px solid rgba(120, 113, 108, 0.2);
+}
+
+.fg-status-deciding {
+  background-color: #fff7ed;
+  color: #ea580c;
+}
+
+.fg-deciding-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #f97316;
+  border-radius: 9999px;
+  animation: fg-pulse 1s ease-in-out infinite;
+}
+
+@keyframes fg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.fg-status-waiting {
+  color: #a8a29e;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* 操作區域 */
+.fg-action-area {
+  position: relative;
+  margin-top: 1rem;
+  padding: 0 2rem 2rem;
+}
+
+.fg-action-prompt {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.fg-prompt-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #292524;
+}
+
+.fg-prompt-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #78716c;
+}
+
+.fg-score-plus {
+  color: #2f7f34;
+  font-weight: 700;
+}
+
+.fg-score-minus {
+  color: #B22222;
+  font-weight: 700;
+}
+
+.fg-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .fg-buttons {
+    flex-direction: row;
+  }
+}
+
+.fg-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.fg-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.fg-btn-pass {
+  background-color: transparent;
+  border: 2px solid #d6d3d1;
+  color: #57534e;
+}
+
+.fg-btn-pass:hover {
+  background-color: #f5f5f4;
+}
+
+.fg-btn-follow {
+  background-color: #2f7f34;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(47, 127, 52, 0.2);
+}
+
+.fg-btn-follow:hover {
+  background-color: #166534;
+}
+
+/* 等待文字 */
+.fg-waiting-text {
+  position: relative;
+  padding: 1rem 2rem 2rem;
+  text-align: center;
+  color: #78716c;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* 舊樣式保留（向後相容） */
+.follow-guess-modal {
+  max-width: 500px;
 }
 
 .btn-success {
@@ -654,46 +1022,6 @@
 
 .btn-success:hover:not(:disabled) {
   background-color: #1e8449;
-}
-
-.waiting-others,
-.already-decided,
-.waiting-turn {
-  color: var(--color-text-secondary);
-  font-style: italic;
-  margin-top: var(--spacing-md);
-}
-
-/* 決定順序顯示 */
-.follow-guess-order {
-  margin: var(--spacing-md) 0;
-}
-
-.follow-guess-order h4 {
-  color: var(--color-text);
-  font-size: var(--font-size-base);
-  margin-bottom: var(--spacing-sm);
-}
-
-.decision-order-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.decision-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  margin-bottom: var(--spacing-xs);
-  background-color: var(--color-background);
-}
-
-.decision-item.guesser {
-  background-color: rgba(233, 69, 96, 0.2);
-  border: 1px solid var(--color-accent);
 }
 
 .decision-item.current-decider {
