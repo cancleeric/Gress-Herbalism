@@ -2882,3 +2882,338 @@
   color: #666;
   margin: 0;
 }
+
+/* ==================== 工單 0133：猜牌結果對話框 ==================== */
+
+.gr-modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background-color: #F5F1E6;
+  border: 2px solid #bb9c63;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-image: radial-gradient(circle at 2px 2px, rgba(187, 156, 99, 0.1) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.gr-texture {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 160px;
+  pointer-events: none;
+  opacity: 0.05;
+  mask-image: linear-gradient(to bottom, black, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+.gr-header {
+  padding: 40px 24px 16px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+.gr-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.gr-icon {
+  font-size: 48px;
+}
+
+.gr-icon-correct {
+  color: #2f7f34;
+}
+
+.gr-icon-wrong {
+  color: #e83b3e;
+}
+
+.gr-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.gr-title-correct {
+  color: #2f7f34;
+}
+
+.gr-title-wrong {
+  color: #e83b3e;
+}
+
+.gr-hidden-cards {
+  padding: 8px 24px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+.gr-hidden-label {
+  color: #bb9c63;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.gr-cards-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.gr-card-pill {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 0 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.gr-card-pill .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.gr-section {
+  padding: 24px 24px 8px;
+  position: relative;
+  z-index: 10;
+}
+
+.gr-section:last-of-type {
+  padding-bottom: 16px;
+}
+
+.gr-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #bb9c63;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.gr-section-title .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.gr-card-list {
+  background-color: #efeadc;
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(187, 156, 99, 0.2);
+}
+
+.gr-score-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid rgba(187, 156, 99, 0.1);
+}
+
+.gr-score-item:last-child {
+  border-bottom: none;
+}
+
+.gr-player-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gr-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gr-avatar-positive {
+  background-color: rgba(47, 127, 52, 0.1);
+  color: #2f7f34;
+}
+
+.gr-avatar-neutral {
+  background-color: #e5e5e5;
+  color: #9ca3af;
+}
+
+.gr-player-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.gr-player-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.gr-role-tag {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.gr-role-guesser {
+  color: #2f7f34;
+}
+
+.gr-role-follower {
+  color: #bb9c63;
+}
+
+.gr-player-desc {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.gr-score-change {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.gr-score-positive {
+  color: #2f7f34;
+}
+
+.gr-score-negative {
+  color: #e83b3e;
+}
+
+.gr-ranking-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.gr-ranking-other {
+  opacity: 0.6;
+  padding: 8px 12px;
+}
+
+.gr-ranking-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gr-rank-number {
+  width: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(187, 156, 99, 0.6);
+}
+
+.gr-rank-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.gr-ranking-other .gr-rank-name {
+  font-weight: 500;
+}
+
+.gr-winner-badge {
+  background-color: #e83b3e;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.gr-rank-score {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.gr-winner-announcement {
+  padding: 8px 24px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2f7f34;
+}
+
+.gr-winner-name {
+  text-decoration: underline;
+  text-decoration-color: rgba(187, 156, 99, 0.3);
+}
+
+.gr-actions {
+  padding: 24px;
+  position: relative;
+  z-index: 10;
+}
+
+.gr-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.gr-btn:hover {
+  filter: brightness(1.1);
+}
+
+.gr-btn-primary {
+  background-color: #2f7f34;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(47, 127, 52, 0.2);
+  letter-spacing: 0.1em;
+}
+
+.gr-btn-secondary {
+  background-color: #bb9c63;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(187, 156, 99, 0.2);
+}
+
+.gr-bottom-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right, transparent, #bb9c63, transparent);
+  opacity: 0.4;
+}

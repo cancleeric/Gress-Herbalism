@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Noto+Sans+TC:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "off-white": "#F5F1E6",
+                        "herbal-gold": "#bb9c63",
+                        "deep-green": "#2f7f34",
+                        "soft-red": "#e83b3e",
+                        "sub-card": "#efeadc",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans TC", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "12px",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        .chinese-pattern-light {
+            background-image: radial-gradient(circle at 2px 2px, rgba(187,156,99,0.1) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+        .herbal-texture {
+            mask-image: linear-gradient(to bottom, black, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body class="bg-[#e9e4d5] min-h-screen flex items-center justify-center p-4">
+<div class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+<div class="bg-off-white w-full max-w-[400px] rounded-lg border-2 border-herbal-gold shadow-2xl overflow-hidden flex flex-col relative chinese-pattern-light">
+<div class="absolute top-0 left-0 w-full h-40 pointer-events-none herbal-texture bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]"></div>
+<div class="pt-10 pb-4 px-6 text-center relative z-10">
+<div class="flex justify-center mb-2">
+<span class="material-symbols-outlined text-deep-green text-4xl">badge</span>
+</div>
+<h1 class="text-deep-green text-[32px] font-bold tracking-wide leading-tight">
+                    猜對了！
+                </h1>
+</div>
+<div class="px-6 py-2 text-center relative z-10">
+<p class="text-herbal-gold text-sm font-bold tracking-widest mb-4">蓋牌是：</p>
+<div class="flex justify-center gap-4">
+<div class="flex h-11 items-center justify-center gap-x-2 rounded-xl bg-[#43A047] px-6 shadow-md">
+<span class="material-symbols-outlined text-white text-lg">eco</span>
+<p class="text-white text-sm font-bold">木 (Green)</p>
+</div>
+<div class="flex h-11 items-center justify-center gap-x-2 rounded-xl bg-[#1E88E5] px-6 shadow-md">
+<span class="material-symbols-outlined text-white text-lg">water_drop</span>
+<p class="text-white text-sm font-bold">水 (Blue)</p>
+</div>
+</div>
+</div>
+<div class="px-6 pt-6 pb-2 relative z-10">
+<h3 class="text-herbal-gold text-base font-bold leading-tight mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">analytics</span> 分數變化
+                </h3>
+<div class="bg-sub-card rounded-lg p-1 border border-herbal-gold/20">
+<div class="flex items-center justify-between px-3 py-3 border-b border-herbal-gold/10">
+<div class="flex items-center gap-3">
+<div class="text-deep-green flex items-center justify-center rounded-lg bg-deep-green/10 size-10">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex flex-col">
+<p class="text-gray-800 text-sm font-bold">Player A <span class="text-deep-green text-xs">(猜牌者)</span></p>
+<p class="text-gray-500 text-[11px]">猜對獲得加分</p>
+</div>
+</div>
+<div class="text-deep-green font-bold text-lg">+3</div>
+</div>
+<div class="flex items-center justify-between px-3 py-3 border-b border-herbal-gold/10">
+<div class="flex items-center gap-3">
+<div class="text-gray-400 flex items-center justify-center rounded-lg bg-gray-200 size-10">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex flex-col">
+<p class="text-gray-800 text-sm font-medium">Player B</p>
+<p class="text-gray-500 text-[11px]">未猜測</p>
+</div>
+</div>
+<div class="text-soft-red font-bold">-1</div>
+</div>
+<div class="flex items-center justify-between px-3 py-3">
+<div class="flex items-center gap-3">
+<div class="text-gray-400 flex items-center justify-center rounded-lg bg-gray-200 size-10">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex flex-col">
+<p class="text-gray-800 text-sm font-medium">Player C</p>
+<p class="text-gray-500 text-[11px]">未猜測</p>
+</div>
+</div>
+<div class="text-soft-red font-bold">-1</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 relative z-10">
+<h3 class="text-herbal-gold text-base font-bold leading-tight mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">leaderboard</span> 目前分數
+                </h3>
+<div class="bg-sub-card rounded-lg p-1 border border-herbal-gold/20">
+<div class="flex items-center justify-between px-3 py-3">
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-herbal-gold/60 w-4">1</span>
+<p class="text-gray-800 text-sm font-bold">Player A</p>
+<span class="bg-soft-red text-white text-[10px] px-1.5 py-0.5 rounded font-bold">勝利！</span>
+</div>
+<div class="text-gray-800 font-bold">12</div>
+</div>
+<div class="flex items-center justify-between px-3 py-2 opacity-60">
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-herbal-gold/60 w-4">2</span>
+<p class="text-gray-800 text-sm font-medium">Player B</p>
+</div>
+<div class="text-gray-800 font-bold">8</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-2 text-center relative z-10">
+<p class="text-deep-green text-lg font-bold">
+                    恭喜 <span class="underline decoration-herbal-gold/30">Player A</span> 獲勝！
+                </p>
+</div>
+<div class="p-6 relative z-10">
+<button class="w-full bg-deep-green hover:brightness-110 text-white font-bold py-4 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-deep-green/20">
+<span class="tracking-widest">下一局</span>
+<span class="material-symbols-outlined">navigate_next</span>
+</button>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-herbal-gold to-transparent opacity-40"></div>
+</div>
+</div>
+
+</body></html>

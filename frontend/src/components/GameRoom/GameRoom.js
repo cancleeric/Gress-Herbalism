@@ -1380,68 +1380,142 @@ function GameRoom() {
           </div>
         )}
 
-        {/* 局結束 / 猜牌結果面板 */}
+        {/* 局結束 / 猜牌結果面板 - 工單 0133 */}
         {showRoundEnd && guessResultData && (
           <div className="modal-overlay">
-            <div className="modal-content round-end-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="round-end-card">
-                <h3>{guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}</h3>
-                <div className="hidden-cards-reveal">
-                  <p>蓋牌是：</p>
-                  <div className="hidden-cards">
-                    {guessResultData.hiddenCards.map((card, index) => (
-                      <span key={index} className={`card-badge color-${card.color}`}>
-                        {card.color === 'red' ? '紅' : card.color === 'yellow' ? '黃' : card.color === 'green' ? '綠' : '藍'}
-                      </span>
+            <div className="modal-content gr-modal" onClick={(e) => e.stopPropagation()}>
+              {/* 紋理背景 */}
+              <div className="gr-texture"></div>
+
+              {/* 頂部標題區 */}
+              <div className="gr-header">
+                <div className="gr-icon-wrapper">
+                  <span className={`material-symbols-outlined gr-icon ${guessResultData.isCorrect ? 'gr-icon-correct' : 'gr-icon-wrong'}`}>
+                    {guessResultData.isCorrect ? 'badge' : 'close'}
+                  </span>
+                </div>
+                <h1 className={`gr-title ${guessResultData.isCorrect ? 'gr-title-correct' : 'gr-title-wrong'}`}>
+                  {guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}
+                </h1>
+              </div>
+
+              {/* 蓋牌顯示區 */}
+              <div className="gr-hidden-cards">
+                <p className="gr-hidden-label">蓋牌是：</p>
+                <div className="gr-cards-row">
+                  {guessResultData.hiddenCards.map((card, index) => {
+                    const colorConfig = {
+                      red: { bg: '#E53E3E', icon: 'local_fire_department', name: '火 (Red)' },
+                      yellow: { bg: '#D69E2E', icon: 'energy_savings_leaf', name: '土 (Yellow)' },
+                      green: { bg: '#43A047', icon: 'eco', name: '木 (Green)' },
+                      blue: { bg: '#1E88E5', icon: 'water_drop', name: '水 (Blue)' }
+                    };
+                    const config = colorConfig[card.color] || colorConfig.green;
+                    return (
+                      <div key={index} className="gr-card-pill" style={{ backgroundColor: config.bg }}>
+                        <span className="material-symbols-outlined">{config.icon}</span>
+                        <span>{config.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 分數變化區塊 */}
+              <div className="gr-section">
+                <h3 className="gr-section-title">
+                  <span className="material-symbols-outlined">analytics</span>
+                  分數變化
+                </h3>
+                <div className="gr-card-list">
+                  {Object.entries(guessResultData.scoreChanges).map(([playerId, change]) => {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    const isGuesser = playerId === guessResultData.guessingPlayerId;
+                    const isFollower = guessResultData.followingPlayers?.includes(playerId);
+                    return (
+                      <div key={playerId} className="gr-score-item">
+                        <div className="gr-player-info">
+                          <div className={`gr-avatar ${change > 0 ? 'gr-avatar-positive' : 'gr-avatar-neutral'}`}>
+                            <span className="material-symbols-outlined">person</span>
+                          </div>
+                          <div className="gr-player-details">
+                            <p className="gr-player-name">
+                              {player?.name || playerId}
+                              {isGuesser && <span className="gr-role-tag gr-role-guesser">(猜牌者)</span>}
+                              {isFollower && <span className="gr-role-tag gr-role-follower">(跟猜)</span>}
+                            </p>
+                            <p className="gr-player-desc">
+                              {isGuesser ? (guessResultData.isCorrect ? '猜對獲得加分' : '猜錯扣分') :
+                               isFollower ? (change > 0 ? '跟猜成功' : '跟猜失敗') : '未猜測'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`gr-score-change ${change > 0 ? 'gr-score-positive' : change < 0 ? 'gr-score-negative' : ''}`}>
+                          {change > 0 ? `+${change}` : change}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 預測結果 */}
+              {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (
+                <PredictionResult
+                  predictionResults={guessResultData.predictionResults}
+                  players={gameState.players}
+                  hiddenCards={guessResultData.hiddenCards}
+                />
+              )}
+
+              {/* 目前分數區塊 */}
+              <div className="gr-section">
+                <h3 className="gr-section-title">
+                  <span className="material-symbols-outlined">leaderboard</span>
+                  目前分數
+                </h3>
+                <div className="gr-card-list">
+                  {[...gameState.players]
+                    .sort((a, b) => (b.score || 0) - (a.score || 0))
+                    .map((player, index) => (
+                      <div key={player.id} className={`gr-ranking-item ${index > 0 ? 'gr-ranking-other' : ''}`}>
+                        <div className="gr-ranking-info">
+                          <span className="gr-rank-number">{index + 1}</span>
+                          <p className="gr-rank-name">{player.name}</p>
+                          {(player.score || 0) >= 7 && (
+                            <span className="gr-winner-badge">勝利！</span>
+                          )}
+                        </div>
+                        <div className="gr-rank-score">{player.score || 0}</div>
+                      </div>
                     ))}
-                  </div>
                 </div>
-                <div className="score-changes">
-                  <h4>分數變化</h4>
-                  <ul className="score-list">
-                    {Object.entries(guessResultData.scoreChanges).map(([playerId, change]) => {
-                      const player = gameState.players.find(p => p.id === playerId);
-                      return (
-                        <li key={playerId} className={change > 0 ? 'score-up' : change < 0 ? 'score-down' : ''}>
-                          {player?.name || playerId}：
-                          <span className="score-change">{change > 0 ? `+${change}` : change}</span>
-                          {playerId === guessResultData.guessingPlayerId && ' (猜牌者)'}
-                          {guessResultData.followingPlayers?.includes(playerId) && ' (跟猜)'}
-                        </li>
-                      );
-                    })}
-                  </ul>
+              </div>
+
+              {/* 遊戲結束宣告 */}
+              {gameState.gamePhase === GAME_PHASE_FINISHED && (
+                <div className="gr-winner-announcement">
+                  恭喜 <span className="gr-winner-name">{gameState.players.find(p => p.id === gameState.winner)?.name || '獲勝者'}</span> 獲勝！
                 </div>
-                {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (
-                  <PredictionResult
-                    predictionResults={guessResultData.predictionResults}
-                    players={gameState.players}
-                    hiddenCards={guessResultData.hiddenCards}
-                  />
-                )}
-                <div className="current-scores">
-                  <h4>目前分數</h4>
-                  <ul className="score-list">
-                    {gameState.players.map(player => (
-                      <li key={player.id}>
-                        {player.name}：{player.score || 0} 分
-                        {(player.score || 0) >= 7 && <span className="winner-badge">勝利！</span>}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                {gameState.gamePhase !== GAME_PHASE_FINISHED && (
-                  <button className="btn btn-primary" onClick={handleStartNextRound}>開始下一局</button>
-                )}
-                {gameState.gamePhase === GAME_PHASE_FINISHED && (
-                  <div className="game-finished">
-                    <p className="winner-announcement">
-                      恭喜 {gameState.players.find(p => p.id === gameState.winner)?.name || '獲勝者'} 獲勝！
-                    </p>
-                    <button className="btn btn-secondary" onClick={handleLeaveRoom}>離開房間</button>
-                  </div>
+              )}
+
+              {/* 底部按鈕區 */}
+              <div className="gr-actions">
+                {gameState.gamePhase !== GAME_PHASE_FINISHED ? (
+                  <button className="gr-btn gr-btn-primary" onClick={handleStartNextRound}>
+                    <span>下一局</span>
+                    <span className="material-symbols-outlined">navigate_next</span>
+                  </button>
+                ) : (
+                  <button className="gr-btn gr-btn-secondary" onClick={handleLeaveRoom}>
+                    <span>離開房間</span>
+                    <span className="material-symbols-outlined">logout</span>
+                  </button>
                 )}
               </div>
+
+              {/* 底部裝飾線 */}
+              <div className="gr-bottom-line"></div>
             </div>
           </div>
         )}
@@ -1754,99 +1828,6 @@ function GameRoom() {
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>
-          </div>
-        </div>
-      )}
-
-      {/* 局結束 / 猜牌結果面板 */}
-      {showRoundEnd && guessResultData && (
-        <div className="modal-overlay">
-          <div className="modal-content round-end-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="round-end-card">
-              <h3>{guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}</h3>
-
-              {/* 顯示蓋牌 */}
-              <div className="hidden-cards-reveal">
-                <p>蓋牌是：</p>
-                <div className="hidden-cards">
-                  {guessResultData.hiddenCards.map((card, index) => (
-                    <span key={index} className={`card-badge color-${card.color}`}>
-                      {card.color === 'red' ? '紅' :
-                       card.color === 'yellow' ? '黃' :
-                       card.color === 'green' ? '綠' :
-                       card.color === 'blue' ? '藍' : card.color}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* 分數變化 */}
-              <div className="score-changes">
-                <h4>分數變化</h4>
-                <ul className="score-list">
-                  {Object.entries(guessResultData.scoreChanges).map(([playerId, change]) => {
-                    const player = gameState.players.find(p => p.id === playerId);
-                    return (
-                      <li key={playerId} className={change > 0 ? 'score-up' : change < 0 ? 'score-down' : ''}>
-                        {player?.name || playerId}：
-                        <span className="score-change">
-                          {change > 0 ? `+${change}` : change}
-                        </span>
-                        {playerId === guessResultData.guessingPlayerId && ' (猜牌者)'}
-                        {guessResultData.followingPlayers?.includes(playerId) && ' (跟猜)'}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              {/* 預測結算（工單 0071） */}
-              {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (
-                <PredictionResult
-                  predictionResults={guessResultData.predictionResults}
-                  players={gameState.players}
-                  hiddenCards={guessResultData.hiddenCards}
-                />
-              )}
-
-              {/* 目前分數 */}
-              <div className="current-scores">
-                <h4>目前分數</h4>
-                <ul className="score-list">
-                  {gameState.players.map(player => (
-                    <li key={player.id}>
-                      {player.name}：{player.score || 0} 分
-                      {(player.score || 0) >= 7 && <span className="winner-badge">勝利！</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* 下一局按鈕 */}
-              {gameState.gamePhase !== GAME_PHASE_FINISHED && (
-                <button
-                  className="btn btn-primary"
-                  onClick={handleStartNextRound}
-                >
-                  開始下一局
-                </button>
-              )}
-
-              {/* 遊戲結束 */}
-              {gameState.gamePhase === GAME_PHASE_FINISHED && (
-                <div className="game-finished">
-                  <p className="winner-announcement">
-                    恭喜 {gameState.players.find(p => p.id === gameState.winner)?.name || '獲勝者'} 獲勝！
-                  </p>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={handleLeaveRoom}
-                  >
-                    離開房間
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
