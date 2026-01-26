@@ -54,6 +54,7 @@ import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
 import { clearCurrentRoom } from '../../utils/localStorage';
+import VersionInfo from '../VersionInfo';
 import './GameRoom.css';
 
 /**
@@ -1073,6 +1074,9 @@ function GameRoom() {
           <button onClick={() => setError('')} className="close-error">×</button>
         </div>
       )}
+
+      {/* 工單 0112: 版本資訊 */}
+      <VersionInfo />
     </div>
   );
 }

@@ -1,0 +1,25 @@
+/**
+ * 版本資訊樣式
+ * 工單 0112
+ */
+
+.version-info {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  z-index: 1000;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 淺色背景頁面使用深色文字 */
+.login-page .version-info,
+.lobby-page .version-info {
+  color: rgba(46, 125, 50, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+}

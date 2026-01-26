@@ -28,6 +28,7 @@ import {
   emitPlayerRefreshing
 } from '../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS } from '../../shared/constants';
+import VersionInfo from '../VersionInfo';
 import {
   savePlayerName,
   getPlayerName,
@@ -674,6 +675,9 @@ function Lobby() {
           </div>
         </div>
       )}
+
+      {/* 工單 0112: 版本資訊 */}
+      <VersionInfo showFull />
     </div>
   );
 }
