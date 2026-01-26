@@ -294,3 +294,66 @@ export function getCardCount(color) {
 export function getQuestionTypeDescription(type) {
   return QUESTION_TYPE_DESCRIPTIONS[type] || '未知類型';
 }
+
+// ==================== AI 玩家常數 ====================
+
+/**
+ * AI 難度等級
+ * @readonly
+ * @enum {string}
+ */
+export const AI_DIFFICULTY = {
+  /** 簡單 */
+  EASY: 'easy',
+  /** 中等 */
+  MEDIUM: 'medium',
+  /** 困難 */
+  HARD: 'hard'
+};
+
+/**
+ * AI 思考延遲（毫秒）
+ * @readonly
+ * @type {Object<string, number>}
+ */
+export const AI_THINK_DELAY = {
+  [AI_DIFFICULTY.EASY]: 1000,
+  [AI_DIFFICULTY.MEDIUM]: 1500,
+  [AI_DIFFICULTY.HARD]: 2000
+};
+
+/**
+ * 玩家類型
+ * @readonly
+ * @enum {string}
+ */
+export const PLAYER_TYPE = {
+  /** 人類玩家 */
+  HUMAN: 'human',
+  /** AI 玩家 */
+  AI: 'ai'
+};
+
+/**
+ * 驗證是否為有效的 AI 難度
+ * @param {string} difficulty - 難度值
+ * @returns {boolean} 是否有效
+ */
+export function isValidAIDifficulty(difficulty) {
+  return Object.values(AI_DIFFICULTY).includes(difficulty);
+}
+
+/**
+ * 取得 AI 玩家名稱
+ * @param {number} index - AI 玩家索引
+ * @param {string} difficulty - 難度
+ * @returns {string} AI 玩家名稱
+ */
+export function getAIPlayerName(index, difficulty) {
+  const difficultyNames = {
+    [AI_DIFFICULTY.EASY]: '初學者',
+    [AI_DIFFICULTY.MEDIUM]: '中級',
+    [AI_DIFFICULTY.HARD]: '專家'
+  };
+  return `AI ${difficultyNames[difficulty] || ''} ${index + 1}`;
+}

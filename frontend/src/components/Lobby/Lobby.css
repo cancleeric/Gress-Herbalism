@@ -1148,3 +1148,53 @@
   width: 100%;
   background-color: var(--accent-gold);
 }
+
+/* ==================== 工單 202601260048：單人模式樣式 ==================== */
+
+.single-player-section {
+  margin-bottom: 20px;
+}
+
+.single-player-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-gold) 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(47, 127, 52, 0.3);
+}
+
+.single-player-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(47, 127, 52, 0.4);
+}
+
+.single-player-btn .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.ai-modal {
+  max-width: 600px;
+  padding: 32px;
+}
+
+.ai-modal h3 {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.modal-description {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
