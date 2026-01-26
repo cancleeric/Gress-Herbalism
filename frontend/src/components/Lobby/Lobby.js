@@ -50,7 +50,9 @@ function Lobby() {
 
   // 本地狀態
   // 工單 0122：分離玩家名稱與暱稱
-  const [displayName] = useState('訪客');  // 玩家名稱（登入身份，目前固定為訪客）
+  // TODO: 從 Auth Context 取得登入資訊（Google 登入後會有 user.displayName）
+  const [authUser] = useState(null);  // 未來從 Auth Context 取得
+  const displayName = authUser?.displayName || '訪客';  // Google 登入顯示帳號名稱，否則顯示訪客
   const [nickname, setNickname] = useState('');  // 遊戲暱稱（可編輯）
   const [playerCount, setPlayerCount] = useState(MIN_PLAYERS);
   const [rooms, setRooms] = useState([]);
