@@ -52,8 +52,23 @@ export function initSocket() {
     // 連線錯誤時會自動重試
   });
 
+  // 工單 0106：Socket.io 自動重連時觸發遊戲重連邏輯
   socket.on('reconnect', (attemptNumber) => {
-    console.log('重新連線成功，嘗試次數:', attemptNumber);
+    console.log(`[Socket] 自動重連成功 (第 ${attemptNumber} 次嘗試)`);
+
+    // 從 localStorage 取得上次的遊戲資訊
+    const savedRoom = localStorage.getItem('lastRoomId');
+    const savedPlayer = localStorage.getItem('lastPlayerId');
+    const savedName = localStorage.getItem('lastPlayerName');
+
+    if (savedRoom && savedPlayer && savedName) {
+      console.log(`[Socket] 自動觸發遊戲重連: 房間 ${savedRoom}`);
+      socket.emit('reconnect', {
+        roomId: savedRoom,
+        playerId: savedPlayer,
+        playerName: savedName
+      });
+    }
   });
 
   socket.on('reconnect_attempt', (attemptNumber) => {
@@ -228,18 +243,29 @@ export function onColorChoiceResult(callback) {
 
 /**
  * 創建房間
+ * 工單 0106：保存玩家資訊以便重連
  */
 export function createRoom(player, maxPlayers, password = null) {
   const s = getSocket();
   s.emit('createRoom', { player, maxPlayers, password });
+
+  // 保存玩家資訊以便重連
+  localStorage.setItem('lastPlayerId', player.id);
+  localStorage.setItem('lastPlayerName', player.name);
 }
 
 /**
  * 加入房間
+ * 工單 0106：保存房間資訊以便重連
  */
 export function joinRoom(gameId, player, password = null) {
   const s = getSocket();
   s.emit('joinRoom', { gameId, player, password });
+
+  // 保存房間資訊以便重連
+  localStorage.setItem('lastRoomId', gameId);
+  localStorage.setItem('lastPlayerId', player.id);
+  localStorage.setItem('lastPlayerName', player.name);
 }
 
 /**
@@ -277,10 +303,16 @@ export function requestRevealHiddenCards(gameId, playerId) {
 
 /**
  * 離開房間
+ * 工單 0106：清除重連資訊
  */
 export function leaveRoom(gameId, playerId) {
   const s = getSocket();
   s.emit('leaveRoom', { gameId, playerId });
+
+  // 清除重連資訊
+  localStorage.removeItem('lastRoomId');
+  localStorage.removeItem('lastPlayerId');
+  localStorage.removeItem('lastPlayerName');
 }
 
 /**
