@@ -1,430 +1,547 @@
 /**
  * 猜牌介面樣式
  *
- * @description GuessCard 組件的 CSS 樣式
+ * @description GuessCard 組件的 CSS 樣式 - 中國風草藥主題設計
  */
 
+/* ===== 主容器 ===== */
 .guess-card {
-  background-color: var(--color-surface);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 500px;
+  position: relative;
   width: 100%;
+  max-width: 500px;
+  background-color: #F5F1E6;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  border: 1px solid rgba(197, 160, 89, 0.3);
+  /* 草藥紋理背景 */
+  background-image: radial-gradient(circle at 2px 2px, rgba(197, 160, 89, 0.1) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
-/* 標題區 */
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .guess-card {
+    background-color: #211111;
+  }
+}
+
+/* ===== 裝飾角落 ===== */
+.guess-motif-tl,
+.guess-motif-br {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  opacity: 0.15;
+  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEw4zGFv24_O5J6bYfX4pEUSI8uu47xs2CUdBzjcFgRSPcxN5Pp45OsChAwUk2___n7VMPWQY1uM4M-ZUkr6kVBvZ4vOk1lSF0L7npuzmtELemMC5t52UloaamSqfdnXmFrFPLIxeLNCfipaAAC-hG877j21lBfFF5UFoPW1_9kBF_4UfCXkthcL35ds1H_YM5wQkya0s9NJSqL7HJW9g-v7bgXOrbMPAb7Sl7MdME0L-oR9_lGyx7Ns32H1Z_w8eZKA9qCXEpM9Y');
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.guess-motif-tl {
+  top: 0;
+  left: 0;
+}
+
+.guess-motif-br {
+  bottom: 0;
+  right: 0;
+  transform: rotate(180deg);
+}
+
+/* ===== 標題區 ===== */
 .guess-card-header {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 2px solid var(--color-error);
-}
-
-.guess-card-header h3 {
-  margin: 0;
-  font-size: var(--font-size-xlarge);
-  color: var(--color-error);
-}
-
-/* 內容區 */
-.guess-card-body {
-  padding: var(--spacing-lg);
+  position: relative;
+  padding: 2rem 1.5rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  align-items: center;
+  z-index: 1;
+}
+
+.guess-card-title {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  font-family: 'Noto Serif TC', serif;
+  color: #27272a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .guess-card-title {
+    color: #f4f4f5;
+  }
+}
+
+.guess-header-line {
+  width: 4rem;
+  height: 2px;
+  background-color: #e83b3e;
+  margin-top: 0.5rem;
+}
+
+/* ===== 內容區 ===== */
+.guess-card-body {
   position: relative;
+  padding: 0.5rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 1;
 }
 
-/* 警告訊息 */
-.warning-message {
-  padding: var(--spacing-md);
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.1));
-  border: 2px solid var(--color-error);
-  border-radius: var(--border-radius-md);
-  color: var(--color-error);
-  font-weight: bold;
-  text-align: center;
-  animation: pulse-warning 2s infinite;
+/* ===== 警告訊息 ===== */
+.guess-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #fef3c7;
+  border-left: 4px solid #e83b3e;
+  border-radius: 0.5rem;
 }
 
-@keyframes pulse-warning {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
+.guess-warning .warning-icon {
+  font-size: 1.5rem;
+  color: #e83b3e;
 }
 
-/* 顏色選擇器 */
+.guess-warning .warning-text {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #e83b3e;
+}
+
+/* ===== 顏色選擇器 ===== */
 .guess-color-selector {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
-.selector-title {
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  margin-bottom: var(--spacing-sm);
+.guess-selector-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Noto Serif TC', serif;
+  color: #3f3f46;
+  text-align: center;
 }
 
-.color-options {
+@media (prefers-color-scheme: dark) {
+  .guess-selector-title {
+    color: #d4d4d8;
+  }
+}
+
+/* 顏色按鈕網格 */
+.guess-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.guess-color-btn {
   display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-.color-option {
-  width: 80px;
-  height: 50px;
-  border: 3px solid transparent;
-  border-radius: var(--border-radius-md);
-  font-weight: bold;
-  text-transform: uppercase;
-  color: white;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.color-option.color-red {
-  background: linear-gradient(135deg, var(--color-red), #c0392b);
+.guess-color-btn:hover:not(:disabled) .guess-color-square {
+  border-color: white;
+  transform: scale(1.02);
 }
 
-.color-option.color-yellow {
-  background: linear-gradient(135deg, var(--color-yellow), #f39c12);
-  color: #333;
+.guess-color-btn:active:not(:disabled) .guess-color-square {
+  transform: scale(0.95);
 }
 
-.color-option.color-green {
-  background: linear-gradient(135deg, var(--color-green), #1e8449);
-}
-
-.color-option.color-blue {
-  background: linear-gradient(135deg, var(--color-blue), #2471a3);
-}
-
-.color-option:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-md);
-}
-
-.color-option:disabled {
+.guess-color-btn:disabled,
+.guess-color-btn.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* 已選顏色 */
-.selected-colors {
-  margin-top: var(--spacing-md);
-}
-
-.selected-colors p {
-  margin-bottom: var(--spacing-xs);
-  color: var(--color-text-secondary);
-}
-
-.selected-color-tags {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.selected-color-tag {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: none;
-  border-radius: var(--border-radius-sm);
-  font-weight: bold;
-  cursor: pointer;
+.guess-color-square {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
   transition: all 0.2s ease;
 }
 
-.selected-color-tag:hover:not(:disabled) {
-  transform: scale(1.1);
+.guess-color-square.color-red {
+  background-color: #E53935;
 }
 
-.selected-color-tag.color-red {
-  background: var(--color-red);
-  color: white;
+.guess-color-square.color-yellow {
+  background-color: #FDD835;
 }
 
-.selected-color-tag.color-yellow {
-  background: var(--color-yellow);
-  color: #333;
+.guess-color-square.color-green {
+  background-color: #43A047;
 }
 
-.selected-color-tag.color-green {
-  background: var(--color-green);
-  color: white;
+.guess-color-square.color-blue {
+  background-color: #1E88E5;
 }
 
-.selected-color-tag.color-blue {
-  background: var(--color-blue);
-  color: white;
+.guess-color-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #52525b;
 }
 
-.no-selection {
-  color: var(--color-text-secondary);
+@media (prefers-color-scheme: dark) {
+  .guess-color-label {
+    color: #a1a1aa;
+  }
+}
+
+/* ===== 已選擇顏色顯示區 ===== */
+.guess-selected-area {
+  min-height: 60px;
+  width: 100%;
+  border: 2px dashed rgba(197, 160, 89, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.guess-selected-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.guess-selected-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.guess-no-selection {
+  font-size: 0.875rem;
   font-style: italic;
+  color: #a1a1aa;
 }
 
-/* 查看答案區域 */
-.answer-section {
-  text-align: center;
-}
-
-.btn-view-answer {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: var(--color-primary);
-  border: none;
-  border-radius: var(--border-radius-md);
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-view-answer:hover:not(:disabled) {
-  background-color: #1a4a7a;
-}
-
-/* 蓋牌顯示 */
-.hidden-cards-reveal {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
-  background-color: var(--color-background);
-  border-radius: var(--border-radius-md);
-}
-
-.reveal-title {
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  margin-bottom: var(--spacing-sm);
-  text-align: center;
-}
-
-.hidden-cards-display {
+/* 顏色標籤 */
+.guess-color-chip {
   display: flex;
-  justify-content: center;
-  gap: var(--spacing-md);
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid;
 }
 
-.hidden-card-reveal {
-  width: 60px;
-  height: 80px;
+.guess-color-chip.color-red {
+  background-color: rgba(229, 57, 53, 0.2);
+  color: #E53935;
+  border-color: rgba(229, 57, 53, 0.3);
+}
+
+.guess-color-chip.color-yellow {
+  background-color: rgba(253, 216, 53, 0.2);
+  color: #b8860b;
+  border-color: rgba(253, 216, 53, 0.3);
+}
+
+.guess-color-chip.color-green {
+  background-color: rgba(67, 160, 71, 0.2);
+  color: #43A047;
+  border-color: rgba(67, 160, 71, 0.3);
+}
+
+.guess-color-chip.color-blue {
+  background-color: rgba(30, 136, 229, 0.2);
+  color: #1E88E5;
+  border-color: rgba(30, 136, 229, 0.3);
+}
+
+.guess-color-chip .chip-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.guess-color-chip .chip-remove {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--border-radius-md);
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: all 0.3s ease;
+  padding: 0.125rem;
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.hidden-card-reveal.face-down {
-  background: linear-gradient(135deg, #2c3e50, #1a252f);
-  color: #7f8c8d;
-  font-size: 2rem;
+.guess-color-chip .chip-remove:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
-.hidden-card-reveal.color-red {
-  background: linear-gradient(135deg, var(--color-red), #c0392b);
-  color: white;
+.guess-color-chip .chip-remove .material-symbols-outlined {
+  font-size: 0.875rem;
 }
 
-.hidden-card-reveal.color-yellow {
-  background: linear-gradient(135deg, var(--color-yellow), #f39c12);
-  color: #333;
-}
-
-.hidden-card-reveal.color-green {
-  background: linear-gradient(135deg, var(--color-green), #1e8449);
-  color: white;
-}
-
-.hidden-card-reveal.color-blue {
-  background: linear-gradient(135deg, var(--color-blue), #2471a3);
-  color: white;
-}
-
-/* 猜牌結果 */
-.guess-result {
+/* ===== 錯誤訊息 ===== */
+.guess-error {
+  padding: 0.75rem;
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 1px solid #e83b3e;
+  border-radius: 0.5rem;
+  color: #e83b3e;
+  font-size: 0.875rem;
   text-align: center;
-  padding: var(--spacing-lg);
 }
 
-.guess-result.correct .result-title {
-  color: var(--color-success);
-}
-
-.guess-result.incorrect .result-title {
-  color: var(--color-error);
-}
-
-.result-title {
-  font-size: var(--font-size-xlarge);
-  margin-bottom: var(--spacing-md);
-}
-
-.result-message {
-  color: var(--color-text);
-  margin-bottom: var(--spacing-md);
-}
-
-.revealed-answer {
-  margin: var(--spacing-md) 0;
-  padding: var(--spacing-md);
-  background-color: var(--color-background);
-  border-radius: var(--border-radius-md);
-}
-
-.answer-cards {
+/* ===== 底部按鈕區 ===== */
+.guess-card-footer {
+  position: relative;
+  padding: 1.5rem;
+  margin-top: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(197, 160, 89, 0.1);
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .guess-card-footer {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ===== 按鈕樣式 ===== */
+.guess-btn {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
 }
 
-.answer-card {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  font-weight: bold;
-  text-transform: uppercase;
+.guess-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.answer-card.color-red {
-  background: linear-gradient(135deg, var(--color-red), #c0392b);
+.guess-btn .btn-icon {
+  font-size: 1.25rem;
+}
+
+.guess-btn-cancel {
+  flex: 1;
+  background-color: transparent;
+  border: 1px solid #d4d4d8;
+  color: #52525b;
+}
+
+.guess-btn-cancel:hover:not(:disabled) {
+  background-color: #f4f4f5;
+}
+
+.guess-btn-submit {
+  flex: 2;
+  background-color: #e83b3e;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(232, 59, 62, 0.2);
+}
+
+.guess-btn-submit:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.guess-btn-confirm {
+  width: 100%;
+  background-color: #2f7f34;
   color: white;
 }
 
-.answer-card.color-yellow {
-  background: linear-gradient(135deg, var(--color-yellow), #f39c12);
-  color: #333;
+.guess-btn-confirm:hover:not(:disabled) {
+  background-color: #166534;
 }
 
-.answer-card.color-green {
-  background: linear-gradient(135deg, var(--color-green), #1e8449);
-  color: white;
-}
-
-.answer-card.color-blue {
-  background: linear-gradient(135deg, var(--color-blue), #2471a3);
-  color: white;
-}
-
-.game-over-message {
-  color: var(--color-error);
-  font-weight: bold;
-  margin-top: var(--spacing-md);
-}
-
-.elimination-message {
-  color: var(--color-text-secondary);
-  font-style: italic;
-  margin-top: var(--spacing-sm);
-}
-
-/* 載入狀態 */
-.loading-overlay {
+/* ===== 載入狀態 ===== */
+.guess-loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(26, 26, 46, 0.9);
+  background-color: rgba(245, 241, 230, 0.95);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  border-radius: var(--border-radius-lg);
+  border-radius: 1rem;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--color-primary);
-  border-top-color: var(--color-error);
+@media (prefers-color-scheme: dark) {
+  .guess-loading-overlay {
+    background-color: rgba(33, 17, 17, 0.95);
+  }
+}
+
+.guess-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(197, 160, 89, 0.3);
+  border-top-color: #e83b3e;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: guess-spin 1s linear infinite;
 }
 
-@keyframes spin {
+@keyframes guess-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.loading-overlay p {
-  margin-top: var(--spacing-md);
-  color: var(--color-text);
-}
-
-/* 錯誤訊息 */
-.guess-card .error-message {
-  padding: var(--spacing-sm);
-  background-color: rgba(231, 76, 60, 0.2);
-  border: 1px solid var(--color-error);
-  border-radius: var(--border-radius-sm);
-  color: var(--color-error);
-  text-align: center;
-}
-
-/* 底部按鈕區 */
-.guess-card-footer {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--color-error);
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-}
-
-/* 按鈕樣式 */
-.guess-card .btn {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-size: var(--font-size-base);
+.guess-loading-overlay p {
+  margin-top: 1rem;
+  color: #52525b;
   font-weight: 600;
-  border: none;
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.guess-card .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* ===== 猜牌結果 ===== */
+.guess-result {
+  text-align: center;
+  padding: 1.5rem;
 }
 
-.guess-card .btn-primary {
-  background-color: var(--color-accent);
+.guess-result .result-title {
+  font-size: 1.5rem;
+  font-family: 'Noto Serif TC', serif;
+  margin-bottom: 1rem;
+}
+
+.guess-result.correct .result-title {
+  color: #2f7f34;
+}
+
+.guess-result.incorrect .result-title {
+  color: #e83b3e;
+}
+
+.guess-result .result-message {
+  color: #52525b;
+  margin-bottom: 1rem;
+}
+
+.guess-result .revealed-answer {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: rgba(197, 160, 89, 0.1);
+  border-radius: 0.5rem;
+}
+
+.guess-result .revealed-answer p {
+  margin-bottom: 0.5rem;
+  color: #71717a;
+  font-weight: 600;
+}
+
+.guess-result .answer-cards {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.guess-result .answer-card {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.guess-result .answer-card.color-red {
+  background-color: #E53935;
   color: white;
 }
 
-.guess-card .btn-primary:hover:not(:disabled) {
-  background-color: #c13a50;
+.guess-result .answer-card.color-yellow {
+  background-color: #FDD835;
+  color: #333;
 }
 
-.guess-card .btn-secondary {
-  background-color: var(--color-primary);
+.guess-result .answer-card.color-green {
+  background-color: #43A047;
   color: white;
 }
 
-.guess-card .btn-secondary:hover:not(:disabled) {
-  background-color: #1a4a7a;
-}
-
-.guess-card .btn-danger {
-  background-color: var(--color-error);
+.guess-result .answer-card.color-blue {
+  background-color: #1E88E5;
   color: white;
 }
 
-.guess-card .btn-danger:hover:not(:disabled) {
-  background-color: #c0392b;
+.guess-result .game-over-message {
+  color: #e83b3e;
+  font-weight: 700;
+  margin-top: 1rem;
 }
 
-/* 響應式設計 */
+.guess-result .elimination-message {
+  color: #71717a;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* ===== 響應式設計 ===== */
 @media (max-width: 480px) {
   .guess-card {
     max-width: 100%;
     border-radius: 0;
   }
 
-  .color-options {
-    justify-content: center;
+  .guess-card-header {
+    padding: 1.5rem 1rem 0.75rem;
+  }
+
+  .guess-card-title {
+    font-size: 1.5rem;
+  }
+
+  .guess-card-body {
+    padding: 0.5rem 1rem 1rem;
+  }
+
+  .guess-card-footer {
+    padding: 1rem;
+    flex-direction: column;
+  }
+
+  .guess-btn-cancel,
+  .guess-btn-submit {
+    flex: none;
+    width: 100%;
+  }
+
+  .guess-color-grid {
+    gap: 0.375rem;
   }
 }

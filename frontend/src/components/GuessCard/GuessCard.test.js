@@ -1,6 +1,6 @@
 /**
  * GuessCard 組件單元測試
- * 工作單 0021
+ * 工作單 0021, 0129
  */
 
 import React from 'react';
@@ -14,7 +14,7 @@ import * as gameService from '../../services/gameService';
 // Mock gameService
 jest.mock('../../services/gameService');
 
-describe('GuessCard - 工作單 0021', () => {
+describe('GuessCard - 工作單 0021, 0129', () => {
   describe('渲染', () => {
     test('應顯示猜牌標題', () => {
       render(<GuessCard isOpen={true} />);
@@ -46,42 +46,42 @@ describe('GuessCard - 工作單 0021', () => {
   describe('顏色選擇器', () => {
     test('應顯示四種顏色選項', () => {
       render(<GuessCard isOpen={true} />);
-      expect(screen.getByLabelText('選擇 red')).toBeInTheDocument();
-      expect(screen.getByLabelText('選擇 yellow')).toBeInTheDocument();
-      expect(screen.getByLabelText('選擇 green')).toBeInTheDocument();
-      expect(screen.getByLabelText('選擇 blue')).toBeInTheDocument();
+      expect(screen.getByLabelText('選擇 紅色')).toBeInTheDocument();
+      expect(screen.getByLabelText('選擇 黃色')).toBeInTheDocument();
+      expect(screen.getByLabelText('選擇 綠色')).toBeInTheDocument();
+      expect(screen.getByLabelText('選擇 藍色')).toBeInTheDocument();
     });
 
     test('點擊顏色應選擇該顏色', () => {
       render(<GuessCard isOpen={true} />);
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      expect(screen.getByLabelText('移除 red')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      expect(screen.getByLabelText('移除 紅色')).toBeInTheDocument();
     });
 
     test('應可以選擇兩個相同顏色', () => {
       render(<GuessCard isOpen={true} />);
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      expect(screen.getAllByLabelText('移除 red').length).toBe(2);
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      expect(screen.getAllByLabelText('移除 紅色').length).toBe(2);
     });
 
     test('選擇兩個後不應再選擇', () => {
       render(<GuessCard isOpen={true} />);
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      fireEvent.click(screen.getByLabelText('選擇 blue'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      fireEvent.click(screen.getByLabelText('選擇 藍色'));
 
       // 嘗試選擇第三個
-      const greenButton = screen.getByLabelText('選擇 green');
+      const greenButton = screen.getByLabelText('選擇 綠色');
       expect(greenButton).toBeDisabled();
     });
 
     test('點擊已選顏色標籤應移除該顏色', () => {
       render(<GuessCard isOpen={true} />);
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      expect(screen.getByLabelText('移除 red')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      expect(screen.getByLabelText('移除 紅色')).toBeInTheDocument();
 
-      fireEvent.click(screen.getByLabelText('移除 red'));
-      expect(screen.queryByLabelText('移除 red')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('移除 紅色'));
+      expect(screen.queryByLabelText('移除 紅色')).not.toBeInTheDocument();
     });
   });
 
@@ -93,14 +93,14 @@ describe('GuessCard - 工作單 0021', () => {
 
     test('只選擇一個顏色時確認按鈕應禁用', () => {
       render(<GuessCard isOpen={true} />);
-      fireEvent.click(screen.getByLabelText('選擇 red'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
       expect(screen.getByText('確認猜牌')).toBeDisabled();
     });
 
     test('選擇兩個顏色後確認按鈕應啟用', () => {
       render(<GuessCard isOpen={true} />);
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      fireEvent.click(screen.getByLabelText('選擇 blue'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      fireEvent.click(screen.getByLabelText('選擇 藍色'));
       expect(screen.getByText('確認猜牌')).not.toBeDisabled();
     });
   });
@@ -110,8 +110,8 @@ describe('GuessCard - 工作單 0021', () => {
       const onSubmit = jest.fn();
       render(<GuessCard isOpen={true} onSubmit={onSubmit} />);
 
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      fireEvent.click(screen.getByLabelText('選擇 blue'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      fireEvent.click(screen.getByLabelText('選擇 藍色'));
       fireEvent.click(screen.getByText('確認猜牌'));
 
       expect(onSubmit).toHaveBeenCalledWith({
@@ -130,20 +130,20 @@ describe('GuessCard - 工作單 0021', () => {
     test('提交後應重置表單', () => {
       render(<GuessCard isOpen={true} onSubmit={() => {}} />);
 
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      fireEvent.click(screen.getByLabelText('選擇 blue'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      fireEvent.click(screen.getByLabelText('選擇 藍色'));
       fireEvent.click(screen.getByText('確認猜牌'));
 
-      expect(screen.queryByLabelText('移除 red')).not.toBeInTheDocument();
-      expect(screen.queryByLabelText('移除 blue')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('移除 紅色')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('移除 藍色')).not.toBeInTheDocument();
     });
   });
 
   describe('載入狀態', () => {
     test('載入中時應顯示載入指示器', () => {
       const { container } = render(<GuessCard isOpen={true} isLoading={true} />);
-      expect(container.querySelector('.loading-overlay')).toBeInTheDocument();
-      expect(container.querySelector('.loading-spinner')).toBeInTheDocument();
+      expect(container.querySelector('.guess-loading-overlay')).toBeInTheDocument();
+      expect(container.querySelector('.guess-loading-spinner')).toBeInTheDocument();
     });
 
     test('載入中時按鈕應禁用', () => {
@@ -213,64 +213,6 @@ describe('GuessCard - 工作單 0021', () => {
     });
   });
 
-  describe('查看答案功能', () => {
-    test('canViewAnswer 為 true 時應顯示查看答案按鈕', () => {
-      const hiddenCards = [
-        { id: 'c1', color: 'red' },
-        { id: 'c2', color: 'blue' }
-      ];
-
-      render(
-        <GuessCard
-          isOpen={true}
-          canViewAnswer={true}
-          hiddenCards={hiddenCards}
-        />
-      );
-      expect(screen.getByText('查看答案')).toBeInTheDocument();
-    });
-
-    test('點擊查看答案應顯示蓋牌顏色', () => {
-      const hiddenCards = [
-        { id: 'c1', color: 'red' },
-        { id: 'c2', color: 'blue' }
-      ];
-
-      const { container } = render(
-        <GuessCard
-          isOpen={true}
-          canViewAnswer={true}
-          hiddenCards={hiddenCards}
-        />
-      );
-
-      fireEvent.click(screen.getByText('查看答案'));
-      expect(container.querySelector('.hidden-card-reveal.color-red')).toBeInTheDocument();
-      expect(container.querySelector('.hidden-card-reveal.color-blue')).toBeInTheDocument();
-    });
-
-    test('再次點擊應隱藏答案', () => {
-      const hiddenCards = [
-        { id: 'c1', color: 'red' },
-        { id: 'c2', color: 'blue' }
-      ];
-
-      const { container } = render(
-        <GuessCard
-          isOpen={true}
-          canViewAnswer={true}
-          hiddenCards={hiddenCards}
-        />
-      );
-
-      fireEvent.click(screen.getByText('查看答案'));
-      expect(screen.getByText('隱藏答案')).toBeInTheDocument();
-
-      fireEvent.click(screen.getByText('隱藏答案'));
-      expect(container.querySelector('.hidden-card-reveal.face-down')).toBeInTheDocument();
-    });
-  });
-
   describe('樣式', () => {
     test('應包含 guess-card 容器類別', () => {
       const { container } = render(<GuessCard isOpen={true} />);
@@ -292,14 +234,14 @@ describe('GuessCard - 工作單 0021', () => {
       expect(container.querySelector('.guess-card-footer')).toBeInTheDocument();
     });
 
-    test('應包含 warning-message 類別', () => {
+    test('應包含 guess-warning 類別', () => {
       const { container } = render(<GuessCard isOpen={true} />);
-      expect(container.querySelector('.warning-message')).toBeInTheDocument();
+      expect(container.querySelector('.guess-warning')).toBeInTheDocument();
     });
   });
 });
 
-describe('GuessCardContainer - 工作單 0021', () => {
+describe('GuessCardContainer - 工作單 0021, 0129', () => {
   // 測試用 wrapper
   const renderWithProviders = (component, initialState = {}) => {
     const defaultState = {
@@ -322,20 +264,6 @@ describe('GuessCardContainer - 工作單 0021', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    gameService.revealHiddenCards.mockReturnValue({
-      success: true,
-      cards: [
-        { id: 'c1', color: 'red' },
-        { id: 'c2', color: 'blue' }
-      ]
-    });
-  });
-
-  describe('Redux 整合', () => {
-    test('應調用 revealHiddenCards 取得蓋牌', () => {
-      renderWithProviders(<GuessCardContainer isOpen={true} />);
-      expect(gameService.revealHiddenCards).toHaveBeenCalledWith('test_game_123', 'p1');
-    });
   });
 
   describe('gameService 整合', () => {
@@ -358,8 +286,8 @@ describe('GuessCardContainer - 工作單 0021', () => {
       renderWithProviders(<GuessCardContainer isOpen={true} />);
 
       // 選擇顏色並提交
-      fireEvent.click(screen.getByLabelText('選擇 red'));
-      fireEvent.click(screen.getByLabelText('選擇 blue'));
+      fireEvent.click(screen.getByLabelText('選擇 紅色'));
+      fireEvent.click(screen.getByLabelText('選擇 藍色'));
       fireEvent.click(screen.getByText('確認猜牌'));
 
       expect(gameService.processGuessAction).toHaveBeenCalledWith(

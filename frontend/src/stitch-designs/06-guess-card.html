@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-TW"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&amp;family=Noto+Sans+TC:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e83b3e",
+                        "background-light": "#F5F1E6",
+                        "background-dark": "#211111",
+                        "gold": "#C5A059",
+                        "game-red": "#E53935",
+                        "game-yellow": "#FDD835",
+                        "game-green": "#43A047",
+                        "game-blue": "#1E88E5",
+                        "deep-green": "#2f7f34"
+                    },
+                    fontFamily: {
+                        "display": ["Noto Serif TC", "serif"],
+                        "sans": ["Noto Sans TC", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>body {
+    font-family: "Noto Sans TC", sans-serif
+    }
+.font-display {
+    font-family: "Noto Serif TC", serif
+    }
+.herbal-pattern {
+    background-image: radial-gradient(circle at 2px 2px, rgba(197, 160, 89, 0.1) 1px, transparent 0);
+    background-size: 24px 24px
+    }
+.motif-corner-tl {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
+    opacity: 0.15;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBEw4zGFv24_O5J6bYfX4pEUSI8uu47xs2CUdBzjcFgRSPcxN5Pp45OsChAwUk2___n7VMPWQY1uM4M-ZUkr6kVBvZ4vOk1lSF0L7npuzmtELemMC5t52UloaamSqfdnXmFrFPLIxeLNCfipaAAC-hG877j21lBfFF5UFoPW1_9kBF_4UfCXkthcL35ds1H_YM5wQkya0s9NJSqL7HJW9g-v7bgXOrbMPAb7Sl7MdME0L-oR9_lGyx7Ns32H1Z_w8eZKA9qCXEpM9Y);
+    background-repeat: no-repeat;
+    pointer-events: none
+    }
+.motif-corner-br {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    opacity: 0.15;
+    transform: rotate(180deg);
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDEl4DtSCq4JoAGNQXUee4AgQLK0yMX_k5OnU71ZOQfHzU7E2wZJwl9Mpb5_1KnkWzpNYaLwOtRmX8ebQG0frcxVb3YyB8D_m-plY09nKgfJStZtI_MNH3KwkgWtnTa4AfXDIF1n0t6wVkteEJYzJguqZm03gnxe_MQ6FjLKtJpFuTQhsGZPEz-L-TetSYU0DG304orelPFYzv1h7Qb3N5YVbJxPmxsb9LDzhQI1t7ICx0KVliLZJp0UbnQFgXrF8TS3g5xRAsVLVQ);
+    background-repeat: no-repeat;
+    pointer-events: none
+    }</style>
+</head>
+<body class="bg-stone-200 dark:bg-zinc-900 min-h-screen flex items-center justify-center p-4">
+<!-- Modal Container -->
+<div class="relative w-full max-w-[500px] bg-background-light dark:bg-background-dark rounded-xl shadow-2xl overflow-hidden border border-gold/30 herbal-pattern">
+<!-- Decorative motifs -->
+<div class="motif-corner-tl" data-alt="Traditional Chinese cloud motif pattern"></div>
+<div class="motif-corner-br" data-alt="Traditional Chinese cloud motif pattern"></div>
+<!-- Header -->
+<div class="relative pt-8 pb-4 px-6 flex flex-col items-center">
+<h2 class="text-3xl font-bold font-display text-zinc-800 dark:text-zinc-100">猜牌</h2>
+<div class="w-16 h-0.5 bg-primary mt-2"></div>
+</div>
+<!-- Warning Block -->
+<div class="px-6 py-2">
+<div class="bg-yellow-100 border-l-4 border-primary p-4 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-2xl">warning</span>
+<p class="text-primary font-bold text-sm">猜錯會退出遊戲！請謹慎選擇。</p>
+</div>
+</div>
+<!-- Color Selection -->
+<div class="px-6 py-4">
+<h3 class="text-zinc-700 dark:text-zinc-300 font-bold font-display mb-3 text-center">選擇兩個顏色（可重複）</h3>
+<div class="grid grid-cols-4 gap-2">
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-full aspect-square bg-game-red rounded-lg shadow-sm border-2 border-transparent group-hover:border-white group-active:scale-95 transition-all"></div>
+<span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">紅色</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-full aspect-square bg-game-yellow rounded-lg shadow-sm border-2 border-transparent group-hover:border-white group-active:scale-95 transition-all"></div>
+<span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">黃色</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-full aspect-square bg-game-green rounded-lg shadow-sm border-2 border-transparent group-hover:border-white group-active:scale-95 transition-all"></div>
+<span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">綠色</span>
+</button>
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-full aspect-square bg-game-blue rounded-lg shadow-sm border-2 border-transparent group-hover:border-white group-active:scale-95 transition-all"></div>
+<span class="text-xs font-bold text-zinc-600 dark:text-zinc-400">藍色</span>
+</button>
+</div>
+</div>
+<!-- Selected Display Area -->
+<div class="px-6 py-4">
+<div class="min-h-[60px] w-full border-2 border-dashed border-gold/30 rounded-lg p-3 flex items-center gap-3">
+<span class="text-sm font-bold text-zinc-500 whitespace-nowrap">已選擇：</span>
+<!-- Example of selected states -->
+<div class="flex gap-2 w-full">
+<!-- Chip 1 -->
+<div class="flex items-center gap-2 bg-game-red/20 text-game-red px-3 py-1.5 rounded-full border border-game-red/30">
+<span class="text-xs font-bold">紅色</span>
+<button class="hover:bg-game-red/20 rounded-full leading-none p-0.5">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<!-- Empty State Placeholder (Gray text if nothing selected) -->
+<!-- <span class="text-zinc-400 text-sm italic">尚未選擇</span> -->
+</div>
+</div>
+</div>
+<!-- Footer -->
+<div class="p-6 mt-2 bg-white/30 dark:bg-black/10 border-t border-gold/10 flex items-center justify-between gap-4">
+<button class="flex-1 px-6 py-3 rounded-lg border border-zinc-300 text-zinc-600 font-bold hover:bg-zinc-100 transition-colors">
+                取消
+            </button>
+<button class="flex-[2] px-6 py-3 rounded-lg bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-xl">check_circle</span>
+                確認猜牌
+            </button>
+</div>
+</div>
+</body></html>

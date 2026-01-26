@@ -9,9 +9,19 @@ import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ALL_COLORS } from '../../shared/constants';
-import { processGuessAction, revealHiddenCards } from '../../services/gameService';
+import { processGuessAction } from '../../services/gameService';
 import { updateGameState } from '../../store/gameStore';
 import './GuessCard.css';
+
+/**
+ * 顏色名稱對照
+ */
+const COLOR_NAMES = {
+  red: '紅色',
+  yellow: '黃色',
+  green: '綠色',
+  blue: '藍色'
+};
 
 /**
  * 顏色選擇器組件（猜牌用，可重複選擇）
@@ -46,40 +56,50 @@ function GuessColorSelector({ selectedColors, onColorSelect, disabled = false })
     onColorSelect(newColors);
   };
 
+  const isMaxSelected = selectedColors.length >= 2;
+
   return (
     <div className="guess-color-selector">
-      <h4 className="selector-title">選擇兩個顏色（可重複）</h4>
-      <div className="color-options">
+      <h4 className="guess-selector-title">選擇兩個顏色（可重複）</h4>
+      <div className="guess-color-grid">
         {ALL_COLORS.map((color) => (
           <button
             key={color}
             type="button"
-            className={`color-option color-${color}`}
+            className={`guess-color-btn ${isMaxSelected ? 'disabled' : ''}`}
             onClick={() => handleColorClick(color)}
-            disabled={disabled || selectedColors.length >= 2}
-            aria-label={`選擇 ${color}`}
+            disabled={disabled || isMaxSelected}
+            aria-label={`選擇 ${COLOR_NAMES[color]}`}
           >
-            {color}
+            <div className={`guess-color-square color-${color}`}></div>
+            <span className="guess-color-label">{COLOR_NAMES[color]}</span>
           </button>
         ))}
       </div>
-      <div className="selected-colors">
-        <p>已選擇：</p>
-        <div className="selected-color-tags">
+
+      {/* 已選擇顏色顯示區 */}
+      <div className="guess-selected-area">
+        <span className="guess-selected-label">已選擇：</span>
+        <div className="guess-selected-chips">
           {selectedColors.length === 0 ? (
-            <span className="no-selection">尚未選擇</span>
+            <span className="guess-no-selection">尚未選擇</span>
           ) : (
             selectedColors.map((color, index) => (
-              <button
+              <div
                 key={index}
-                type="button"
-                className={`selected-color-tag color-${color}`}
-                onClick={() => handleRemoveColor(index)}
-                disabled={disabled}
-                aria-label={`移除 ${color}`}
+                className={`guess-color-chip color-${color}`}
               >
-                {color} ✕
-              </button>
+                <span className="chip-text">{COLOR_NAMES[color]}</span>
+                <button
+                  type="button"
+                  className="chip-remove"
+                  onClick={() => handleRemoveColor(index)}
+                  disabled={disabled}
+                  aria-label={`移除 ${COLOR_NAMES[color]}`}
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
             ))
           )}
         </div>
@@ -92,46 +112,6 @@ GuessColorSelector.propTypes = {
   selectedColors: PropTypes.arrayOf(PropTypes.string).isRequired,
   onColorSelect: PropTypes.func.isRequired,
   disabled: PropTypes.bool
-};
-
-/**
- * 蓋牌顯示組件（查看答案用）
- *
- * @param {Object} props - 組件屬性
- * @param {Array} props.hiddenCards - 蓋牌資訊
- * @param {boolean} props.revealed - 是否已揭示
- * @returns {JSX.Element} 蓋牌顯示
- */
-function HiddenCardsReveal({ hiddenCards, revealed }) {
-  if (!hiddenCards || hiddenCards.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className={`hidden-cards-reveal ${revealed ? 'revealed' : ''}`}>
-      <h4 className="reveal-title">
-        {revealed ? '蓋牌答案' : '蓋牌（點擊查看）'}
-      </h4>
-      <div className="hidden-cards-display">
-        {hiddenCards.map((card, index) => (
-          <div
-            key={card.id || index}
-            className={`hidden-card-reveal ${revealed ? `color-${card.color}` : 'face-down'}`}
-          >
-            {revealed ? card.color : '?'}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-HiddenCardsReveal.propTypes = {
-  hiddenCards: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    color: PropTypes.string
-  })),
-  revealed: PropTypes.bool
 };
 
 /**
@@ -163,7 +143,7 @@ function GuessResult({ result, onClose }) {
           <div className="answer-cards">
             {result.revealedCards.map((card, index) => (
               <span key={index} className={`answer-card color-${card.color}`}>
-                {card.color}
+                {COLOR_NAMES[card.color] || card.color}
               </span>
             ))}
           </div>
@@ -182,7 +162,7 @@ function GuessResult({ result, onClose }) {
 
       <button
         type="button"
-        className="btn btn-primary"
+        className="guess-btn guess-btn-confirm"
         onClick={onClose}
       >
         確定
@@ -214,8 +194,6 @@ GuessResult.propTypes = {
  * @param {boolean} props.isLoading - 是否載入中
  * @param {Object} props.guessResult - 猜牌結果
  * @param {Function} props.onResultClose - 關閉結果回調
- * @param {Array} props.hiddenCards - 蓋牌資訊（供查看）
- * @param {boolean} props.canViewAnswer - 是否可查看答案
  * @returns {JSX.Element} 猜牌介面組件
  */
 function GuessCard({
@@ -224,14 +202,11 @@ function GuessCard({
   isOpen = true,
   isLoading = false,
   guessResult = null,
-  onResultClose,
-  hiddenCards = [],
-  canViewAnswer = false
+  onResultClose
 }) {
   // 狀態
   const [selectedColors, setSelectedColors] = useState([]);
   const [error, setError] = useState('');
-  const [showAnswer, setShowAnswer] = useState(false);
 
   /**
    * 驗證表單
@@ -281,7 +256,6 @@ function GuessCard({
   const resetForm = () => {
     setSelectedColors([]);
     setError('');
-    setShowAnswer(false);
   };
 
   /**
@@ -291,13 +265,6 @@ function GuessCard({
   const handleColorChange = (colors) => {
     setSelectedColors(colors);
     setError('');
-  };
-
-  /**
-   * 切換查看答案
-   */
-  const handleToggleAnswer = () => {
-    setShowAnswer(!showAnswer);
   };
 
   /**
@@ -315,7 +282,8 @@ function GuessCard({
     return (
       <div className="guess-card">
         <div className="guess-card-header">
-          <h3>猜牌結果</h3>
+          <h3 className="guess-card-title">猜牌結果</h3>
+          <div className="guess-header-line"></div>
         </div>
         <div className="guess-card-body">
           <GuessResult
@@ -329,41 +297,30 @@ function GuessCard({
 
   return (
     <div className="guess-card">
+      {/* 裝飾角落 */}
+      <div className="guess-motif-tl"></div>
+      <div className="guess-motif-br"></div>
+
+      {/* 標題區 */}
       <div className="guess-card-header">
-        <h3>猜牌</h3>
+        <h3 className="guess-card-title">猜牌</h3>
+        <div className="guess-header-line"></div>
       </div>
 
       <div className="guess-card-body">
         {/* 載入指示器 */}
         {isLoading && (
-          <div className="loading-overlay">
-            <div className="loading-spinner" aria-label="載入中"></div>
+          <div className="guess-loading-overlay">
+            <div className="guess-loading-spinner" aria-label="載入中"></div>
             <p>處理中...</p>
           </div>
         )}
 
         {/* 警告訊息 */}
-        <div className="warning-message" role="alert">
-          ⚠️ 猜錯會退出遊戲！請謹慎選擇。
+        <div className="guess-warning" role="alert">
+          <span className="material-symbols-outlined warning-icon">warning</span>
+          <p className="warning-text">猜錯會退出遊戲！請謹慎選擇。</p>
         </div>
-
-        {/* 查看蓋牌答案 */}
-        {canViewAnswer && hiddenCards.length > 0 && (
-          <div className="answer-section">
-            <button
-              type="button"
-              className="btn btn-view-answer"
-              onClick={handleToggleAnswer}
-              disabled={isLoading}
-            >
-              {showAnswer ? '隱藏答案' : '查看答案'}
-            </button>
-            <HiddenCardsReveal
-              hiddenCards={hiddenCards}
-              revealed={showAnswer}
-            />
-          </div>
-        )}
 
         {/* 顏色選擇 */}
         <GuessColorSelector
@@ -374,16 +331,17 @@ function GuessCard({
 
         {/* 錯誤訊息 */}
         {error && (
-          <div className="error-message" role="alert">
+          <div className="guess-error" role="alert">
             {error}
           </div>
         )}
       </div>
 
+      {/* 底部按鈕區 */}
       <div className="guess-card-footer">
         <button
           type="button"
-          className="btn btn-secondary"
+          className="guess-btn guess-btn-cancel"
           onClick={handleCancel}
           disabled={isLoading}
         >
@@ -391,10 +349,11 @@ function GuessCard({
         </button>
         <button
           type="button"
-          className="btn btn-danger"
+          className="guess-btn guess-btn-submit"
           onClick={handleSubmit}
           disabled={!canSubmit() || isLoading}
         >
+          <span className="material-symbols-outlined btn-icon">check_circle</span>
           {isLoading ? '處理中...' : '確認猜牌'}
         </button>
       </div>
@@ -408,9 +367,7 @@ GuessCard.propTypes = {
   isOpen: PropTypes.bool,
   isLoading: PropTypes.bool,
   guessResult: PropTypes.object,
-  onResultClose: PropTypes.func,
-  hiddenCards: PropTypes.array,
-  canViewAnswer: PropTypes.bool
+  onResultClose: PropTypes.func
 };
 
 /**
@@ -434,30 +391,10 @@ function GuessCardContainer({ isOpen = true, onClose }) {
   // 本地狀態
   const [isLoading, setIsLoading] = useState(false);
   const [guessResult, setGuessResult] = useState(null);
-  const [hiddenCards, setHiddenCards] = useState([]);
 
   // 取得當前玩家資訊
   const currentPlayer = players[currentPlayerIndex] || {};
   const currentPlayerId = reduxCurrentPlayerId || currentPlayer.id;
-
-  /**
-   * 取得蓋牌答案（供猜牌者查看）
-   */
-  const fetchHiddenCards = useCallback(() => {
-    if (!gameId || !currentPlayerId) return;
-
-    const result = revealHiddenCards(gameId, currentPlayerId);
-    if (result.success) {
-      setHiddenCards(result.cards);
-    }
-  }, [gameId, currentPlayerId]);
-
-  // 組件載入時取得蓋牌答案
-  React.useEffect(() => {
-    if (isOpen) {
-      fetchHiddenCards();
-    }
-  }, [isOpen, fetchHiddenCards]);
 
   /**
    * 處理猜牌提交
@@ -514,7 +451,6 @@ function GuessCardContainer({ isOpen = true, onClose }) {
    */
   const handleCancel = useCallback(() => {
     setGuessResult(null);
-    setHiddenCards([]);
     if (onClose) {
       onClose();
     }
@@ -525,7 +461,6 @@ function GuessCardContainer({ isOpen = true, onClose }) {
    */
   const handleResultClose = useCallback(() => {
     setGuessResult(null);
-    setHiddenCards([]);
     if (onClose) {
       onClose();
     }
@@ -539,8 +474,6 @@ function GuessCardContainer({ isOpen = true, onClose }) {
       isLoading={isLoading}
       guessResult={guessResult}
       onResultClose={handleResultClose}
-      hiddenCards={hiddenCards}
-      canViewAnswer={true}
     />
   );
 }
