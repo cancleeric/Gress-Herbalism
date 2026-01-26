@@ -74,6 +74,7 @@ function Lobby() {
 
   // 創建房間 Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createRoomError, setCreateRoomError] = useState('');
 
   // 重連相關狀態
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -246,7 +247,7 @@ function Lobby() {
     if (isPrivate) {
       const pwdError = getRoomPasswordError(roomPassword);
       if (pwdError) {
-        setError(pwdError);
+        setCreateRoomError(pwdError);
         return;
       }
     }
@@ -254,7 +255,7 @@ function Lobby() {
     saveNickname(nickname.trim());
 
     setIsLoading(true);
-    setError('');
+    setCreateRoomError('');
 
     const player = {
       id: playerId,
@@ -494,7 +495,10 @@ function Lobby() {
           {/* 創建房間按鈕 */}
           <button
             className="create-room-btn"
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setCreateRoomError('');
+              setShowCreateModal(true);
+            }}
             disabled={!isConnected || isLoading}
           >
             <span className="material-symbols-outlined">add_circle</span>
@@ -697,13 +701,23 @@ function Lobby() {
                       type="password"
                       className="crm-password-input"
                       value={roomPassword}
-                      onChange={(e) => setRoomPassword(e.target.value)}
+                      onChange={(e) => {
+                        setRoomPassword(e.target.value);
+                        setCreateRoomError('');
+                      }}
                       placeholder="請輸入密碼"
                       maxLength={16}
                       disabled={isLoading}
                     />
                     <span className="material-symbols-outlined crm-password-icon">key</span>
                   </div>
+                </div>
+              )}
+
+              {/* 錯誤訊息 */}
+              {createRoomError && (
+                <div className="crm-error" role="alert">
+                  {createRoomError}
                 </div>
               )}
             </div>

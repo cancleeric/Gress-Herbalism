@@ -1131,6 +1131,17 @@
   font-size: 18px;
 }
 
+/* 錯誤訊息 */
+.crm-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #b91c1c;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
 /* 底部金色橫條 */
 .crm-bottom-accent {
   height: 6px;
