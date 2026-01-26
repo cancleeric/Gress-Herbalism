@@ -19,6 +19,12 @@ jest.mock('../../services/gameService');
 // Mock socketService
 jest.mock('../../services/socketService');
 
+// Mock useAuth（工單 0123）
+const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
+jest.mock('../../firebase/AuthContext', () => ({
+  useAuth: () => ({ user: mockUser })
+}));
+
 // Socket event callbacks storage
 let socketCallbacks = {};
 
@@ -116,14 +122,29 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('渲染', () => {
-    test('應顯示遊戲房間標題', () => {
+    test('等待階段應顯示品牌名稱（工單 0123）', () => {
       renderWithProviders(<GameRoom />);
+      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
+    });
+
+    test('遊戲進行中應顯示遊戲房間標題', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        players: [
+          { id: 'p1', name: '玩家1', isHost: true, isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
       expect(screen.getByText('遊戲房間')).toBeInTheDocument();
     });
 
     test('應顯示房間ID', () => {
       renderWithProviders(<GameRoom />, { gameId: 'room_123' });
-      expect(screen.getByText(/房間ID: room_123/)).toBeInTheDocument();
+      // 工單 0123：等待階段顯示 "房間 ID:" 格式
+      expect(screen.getByText(/房間 ID: room_123/)).toBeInTheDocument();
     });
 
     test('應顯示離開房間按鈕', () => {
@@ -131,8 +152,23 @@ describe('GameRoom - 工作單 0023', () => {
       expect(screen.getByText('離開房間')).toBeInTheDocument();
     });
 
-    test('應顯示玩家列表區域', () => {
+    test('等待階段應顯示玩家區域（工單 0123）', () => {
       renderWithProviders(<GameRoom />);
+      // 等待階段顯示「玩家」
+      expect(screen.getByText('玩家')).toBeInTheDocument();
+    });
+
+    test('遊戲進行中應顯示玩家列表區域', () => {
+      const state = {
+        ...initialState,
+        gamePhase: 'playing',
+        players: [
+          { id: 'p1', name: '玩家1', isHost: true, isActive: true },
+          { id: 'p2', name: '玩家2', isActive: true },
+          { id: 'p3', name: '玩家3', isActive: true }
+        ]
+      };
+      renderWithProviders(<GameRoom />, { preloadedState: state });
       expect(screen.getByText('玩家列表')).toBeInTheDocument();
     });
 
@@ -166,14 +202,15 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('遊戲階段顯示', () => {
-    test('等待階段應顯示等待訊息', () => {
+    test('等待階段應顯示等待訊息（工單 0123 更新）', () => {
       const state = {
         ...initialState,
         gamePhase: 'waiting',
         players: [{ id: 'p1', name: '玩家1', isHost: true }]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('等待玩家加入...')).toBeInTheDocument();
+      // 新的等待階段 UI 顯示「等待房主開始」
+      expect(screen.getByText('等待房主開始')).toBeInTheDocument();
     });
 
     test('進行中階段應顯示遊戲進行中', () => {
@@ -218,13 +255,14 @@ describe('GameRoom - 工作單 0023', () => {
       expect(screen.getAllByText(/玩家2/).length).toBeGreaterThan(0);
     });
 
-    test('房主應顯示標記', () => {
+    test('房主應顯示標記（工單 0123 更新）', () => {
       const state = {
         ...initialState,
         players: [{ id: 'p1', name: '玩家1', isHost: true }]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText(/\(房主\)/)).toBeInTheDocument();
+      // 新的等待階段 UI 使用 host-tag 顯示「房主」（無括號）
+      expect(screen.getAllByText('房主').length).toBeGreaterThan(0);
     });
 
     test('當前回合玩家應顯示標記', () => {
@@ -484,43 +522,70 @@ describe('GameRoom - 工作單 0023', () => {
   });
 
   describe('樣式', () => {
-    test('應包含 game-room 容器類別', () => {
+    // 工單 0123：等待階段樣式測試
+    test('等待階段應包含 waiting-stage 類別', () => {
       const { container } = renderWithProviders(<GameRoom />);
+      expect(container.querySelector('.waiting-stage')).toBeInTheDocument();
+    });
+
+    test('等待階段應包含 waiting-header 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />);
+      expect(container.querySelector('.waiting-header')).toBeInTheDocument();
+    });
+
+    test('等待階段應包含 waiting-main 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />);
+      expect(container.querySelector('.waiting-main')).toBeInTheDocument();
+    });
+
+    // 遊戲進行中樣式測試（需要 playing 階段）
+    const playingState = {
+      ...initialState,
+      gamePhase: 'playing',
+      players: [
+        { id: 'p1', name: '玩家1', isHost: true, isActive: true },
+        { id: 'p2', name: '玩家2', isActive: true },
+        { id: 'p3', name: '玩家3', isActive: true }
+      ]
+    };
+
+    test('遊戲進行中應包含 game-room 容器類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.game-room')).toBeInTheDocument();
     });
 
-    test('應包含 game-room-header 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 game-room-header 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.game-room-header')).toBeInTheDocument();
     });
 
-    test('應包含 game-room-main 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 game-room-main 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.game-room-main')).toBeInTheDocument();
     });
 
-    test('應包含 game-room-footer 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 game-room-footer 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.game-room-footer')).toBeInTheDocument();
     });
 
-    test('應包含 status-sidebar 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 status-sidebar 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.status-sidebar')).toBeInTheDocument();
     });
 
-    test('應包含 players-sidebar 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 players-sidebar 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.players-sidebar')).toBeInTheDocument();
     });
 
-    test('應包含 game-board-area 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 game-board-area 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.game-board-area')).toBeInTheDocument();
     });
 
-    test('應包含 my-hand-section 類別', () => {
-      const { container } = renderWithProviders(<GameRoom />);
+    test('遊戲進行中應包含 my-hand-section 類別', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
       expect(container.querySelector('.my-hand-section')).toBeInTheDocument();
     });
   });

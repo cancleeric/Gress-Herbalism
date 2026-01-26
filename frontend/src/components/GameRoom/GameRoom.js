@@ -54,6 +54,7 @@ import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
 import { clearCurrentRoom } from '../../utils/localStorage';
+import { useAuth } from '../../firebase/AuthContext';
 import VersionInfo from '../VersionInfo';
 import './GameRoom.css';
 
@@ -111,6 +112,11 @@ function GameRoom() {
   const [myLastColorCardId, setMyLastColorCardId] = useState(null);
   const [colorCardMarkers, setColorCardMarkers] = useState({});
   const [disabledCardWarning, setDisabledCardWarning] = useState(null);
+  // 複製連結提示（工單 0123）
+  const [showCopyToast, setShowCopyToast] = useState(false);
+
+  // Firebase Auth（工單 0123）
+  const { user: authUser } = useAuth();
 
   /**
    * 取得當前回合的玩家
@@ -561,11 +567,217 @@ function GameRoom() {
     }
   };
 
+  /**
+   * 複製房間連結（工單 0123）
+   */
+  const handleCopyRoomLink = async () => {
+    const roomLink = `${window.location.origin}/game/${gameId}`;
+    try {
+      await navigator.clipboard.writeText(roomLink);
+      setShowCopyToast(true);
+      setTimeout(() => setShowCopyToast(false), 3000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = roomLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShowCopyToast(true);
+      setTimeout(() => setShowCopyToast(false), 3000);
+    }
+  };
+
+  /**
+   * 取得玩家頭像首字（工單 0123）
+   */
+  const getPlayerInitial = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
+
   const myPlayer = getMyPlayer();
   const currentPlayer = getCurrentPlayer();
   const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING && myPlayer?.isActive !== false;
   const onlyGuess = mustGuess();
+  const maxPlayers = gameState.maxPlayers || 4;
 
+  // 等待階段：渲染新的三欄式 UI（工單 0123）
+  if (gameState.gamePhase === GAME_PHASE_WAITING) {
+    const emptySlots = maxPlayers - gameState.players.length;
+
+    return (
+      <div className="game-room waiting-stage">
+        {/* 等待階段 Header */}
+        <header className="waiting-header">
+          <div className="waiting-header-left">
+            <div className="waiting-brand">
+              <div className="waiting-brand-icon">
+                <span className="material-symbols-outlined">eco</span>
+              </div>
+              <span className="waiting-brand-text">本草 Herbalism</span>
+            </div>
+            <div className="waiting-status-badge">
+              等待房主開始
+            </div>
+          </div>
+          <div className="waiting-header-right">
+            <span className="waiting-room-id">房間 ID: {gameId}</span>
+            <button className="waiting-leave-btn" onClick={handleLeaveRoom}>
+              <span className="material-symbols-outlined">logout</span>
+              離開房間
+            </button>
+          </div>
+        </header>
+
+        {/* 主內容 - 三欄佈局 */}
+        <main className="waiting-main">
+          {/* 左欄 - 自己的 Hero Card */}
+          <div className="waiting-left-column">
+            <div className="waiting-hero-card">
+              {authUser?.photoURL ? (
+                <img
+                  className="waiting-hero-avatar-img"
+                  src={authUser.photoURL}
+                  alt={myPlayer?.name || '玩家'}
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="waiting-hero-avatar">
+                  {getPlayerInitial(myPlayer?.name)}
+                </div>
+              )}
+              <h3 className="waiting-hero-name">
+                {myPlayer?.name || '載入中...'}
+                <span className="waiting-hero-me-badge">我</span>
+                {myPlayer?.isHost && <span className="waiting-hero-host-badge">房主</span>}
+              </h3>
+              <div className="waiting-hero-stats">
+                <div className="waiting-hero-stat">
+                  <div className="waiting-hero-stat-value">{myPlayer?.score || 0}</div>
+                  <div className="waiting-hero-stat-label">分數</div>
+                </div>
+                <div className="waiting-hero-stat">
+                  <div className="waiting-hero-stat-value">{myPlayer?.hand?.length || 0}</div>
+                  <div className="waiting-hero-stat-label">張牌</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 開始遊戲按鈕（僅房主可見） */}
+            {myPlayer?.isHost ? (
+              <button
+                className="waiting-start-btn"
+                onClick={handleStartGame}
+                disabled={gameState.players.length < 3 || isLoading}
+              >
+                <span className="material-symbols-outlined">play_arrow</span>
+                {isLoading ? '啟動中...' : `開始遊戲 (${gameState.players.length}/${maxPlayers})`}
+              </button>
+            ) : (
+              <p className="waiting-not-host-text">
+                等待房主開始遊戲...
+              </p>
+            )}
+          </div>
+
+          {/* 中央 - 蓋牌展示 */}
+          <div className="waiting-center-column">
+            <div className="waiting-hidden-cards-area">
+              <h3 className="waiting-hidden-title">
+                <span className="material-symbols-outlined">help</span>
+                蓋牌
+              </h3>
+              <div className="waiting-hidden-cards">
+                <div className="waiting-hidden-card"></div>
+                <div className="waiting-hidden-card"></div>
+              </div>
+              <p className="waiting-hidden-hint">遊戲開始後將隨機抽取兩張蓋牌</p>
+            </div>
+          </div>
+
+          {/* 右欄 - 玩家列表 */}
+          <div className="waiting-right-column">
+            <div className="waiting-players-header">
+              <h3 className="waiting-players-title">
+                <span className="material-symbols-outlined">group</span>
+                玩家
+              </h3>
+              <span className="waiting-players-count">{gameState.players.length}/{maxPlayers}</span>
+            </div>
+
+            <div className="waiting-players-list">
+              {gameState.players.map((player) => (
+                <div
+                  key={player.id}
+                  className={`waiting-player-card ${player.id === myPlayer?.id ? 'is-me' : ''}`}
+                >
+                  {player.id === myPlayer?.id && authUser?.photoURL ? (
+                    <img
+                      className="waiting-player-avatar-img"
+                      src={authUser.photoURL}
+                      alt={player.name}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="waiting-player-avatar">
+                      {getPlayerInitial(player.name)}
+                    </div>
+                  )}
+                  <div className="waiting-player-info">
+                    <p className="waiting-player-name">
+                      {player.name}
+                      {player.id === myPlayer?.id && <span className="me-tag">我</span>}
+                      {player.isHost && <span className="host-tag">房主</span>}
+                    </p>
+                    <div className="waiting-player-stats">
+                      <span>{player.score || 0} 分</span>
+                      <span>{player.hand?.length || 0} 張牌</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* 空位 */}
+              {Array.from({ length: emptySlots }).map((_, index) => (
+                <div key={`empty-${index}`} className="waiting-empty-slot">
+                  <span className="material-symbols-outlined">hourglass_empty</span>
+                  等待中...
+                </div>
+              ))}
+            </div>
+
+            {/* 邀請好友按鈕 */}
+            <button className="waiting-invite-btn" onClick={handleCopyRoomLink}>
+              <span className="material-symbols-outlined">person_add</span>
+              邀請好友
+            </button>
+          </div>
+        </main>
+
+        {/* 複製成功提示 */}
+        {showCopyToast && (
+          <div className="waiting-copy-toast">
+            已複製房間連結到剪貼簿
+          </div>
+        )}
+
+        {/* 錯誤訊息 */}
+        {error && (
+          <div className="error-message" role="alert">
+            {error}
+            <button onClick={() => setError('')} className="close-error">×</button>
+          </div>
+        )}
+
+        {/* 版本資訊 */}
+        <VersionInfo />
+      </div>
+    );
+  }
+
+  // 遊戲進行中：渲染原有 UI
   return (
     <div className="game-room">
       {/* 頂部區域：遊戲資訊 */}
