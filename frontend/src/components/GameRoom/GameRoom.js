@@ -1216,71 +1216,152 @@ function GameRoom() {
           </div>
         )}
 
-        {/* 跟猜面板 Modal */}
+        {/* 跟猜面板 Modal - 工單 0131 */}
         {showFollowGuessPanel && followGuessData && (
           <div className="modal-overlay">
-            <div className="modal-content follow-guess-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="follow-guess-card">
-                <h3>跟猜階段</h3>
-                <p className="guess-info">
-                  <strong>{gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}</strong>
-                  {' '}猜測蓋牌是：
-                  <span className="guessed-colors">
-                    {followGuessData.guessedColors.map(color => (
-                      <span key={color} className={`color-badge color-${color}`}>
-                        {color === 'red' ? '紅' : color === 'yellow' ? '黃' : color === 'green' ? '綠' : '藍'}
-                      </span>
-                    ))}
-                  </span>
-                </p>
-                <div className="follow-guess-order">
-                  <h4>決定順序</h4>
-                  <ul className="decision-order-list">
-                    <li className="decision-item guesser">
-                      <span className="player-label">
-                        {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}
-                      </span>
-                      <span className="decision-badge guesser-badge">猜牌者</span>
-                    </li>
-                    {followGuessData.decisionOrder?.map((playerId, index) => {
-                      const player = gameState.players.find(p => p.id === playerId);
-                      const decision = followGuessData.decisions?.[playerId];
-                      const isCurrentDecider = followGuessData.currentDeciderId === playerId;
-                      return (
-                        <li key={playerId} className={`decision-item ${isCurrentDecider ? 'current-decider' : ''}`}>
-                          <span className="order-number">{index + 1}.</span>
-                          <span className="player-label">{player?.name || playerId}</span>
-                          {isCurrentDecider && !decision && <span className="decision-badge deciding">決定中...</span>}
-                          {decision === 'follow' && <span className="decision-badge followed">跟猜</span>}
-                          {decision === 'pass' && <span className="decision-badge declined">不跟</span>}
-                          {!isCurrentDecider && !decision && <span className="decision-badge waiting">等待中</span>}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-                {followGuessData.currentDeciderId === myPlayer?.id && (
-                  <div className="follow-guess-buttons">
-                    <p className="decision-prompt">輪到你決定！跟對 +1 分，跟錯 -1 分並退出當局</p>
-                    <button className="btn btn-success" onClick={() => handleFollowGuess(true)}>跟猜</button>
-                    <button className="btn btn-secondary" onClick={() => handleFollowGuess(false)}>不跟</button>
-                  </div>
-                )}
-                {followGuessData.guessingPlayerId === myPlayer?.id && (
-                  <p className="waiting-others">等待其他玩家按順序決定是否跟猜...</p>
-                )}
-                {followGuessData.decisions?.[myPlayer?.id] && followGuessData.guessingPlayerId !== myPlayer?.id && (
-                  <p className="already-decided">
-                    你選擇了「{followGuessData.decisions[myPlayer?.id] === 'follow' ? '跟猜' : '不跟'}」，等待其他玩家...
-                  </p>
-                )}
-                {!followGuessData.decisions?.[myPlayer?.id] &&
-                 followGuessData.currentDeciderId !== myPlayer?.id &&
-                 followGuessData.guessingPlayerId !== myPlayer?.id &&
-                 followGuessData.decisionOrder?.includes(myPlayer?.id) && (
-                  <p className="waiting-turn">還沒輪到你，請等待...</p>
-                )}
+            <div className="modal-content fg-modal" onClick={(e) => e.stopPropagation()}>
+              {/* 草藥紋理背景 */}
+              <div className="fg-texture"></div>
+              {/* 角落裝飾 */}
+              <div className="fg-corner-tr"></div>
+              <div className="fg-corner-bl"></div>
+
+              {/* 標題區 */}
+              <div className="fg-header">
+                <h3 className="fg-title">跟猜階段</h3>
+                <div className="fg-title-line"></div>
               </div>
+
+              {/* 猜牌資訊區塊 */}
+              <div className="fg-guess-info">
+                <p className="fg-guess-text">
+                  {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'} 猜測蓋牌是：
+                </p>
+                <div className="fg-color-pills">
+                  {followGuessData.guessedColors.map((color, idx) => (
+                    <span key={idx} className={`fg-color-pill fg-color-${color}`}>
+                      {color === 'red' ? '紅色藥草' :
+                       color === 'yellow' ? '黃色藥草' :
+                       color === 'green' ? '綠色藥草' :
+                       color === 'blue' ? '藍色藥草' : color}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 玩家決策狀態列表 */}
+              <div className="fg-status-section">
+                <h4 className="fg-status-title">玩家決策狀態</h4>
+                <div className="fg-player-list">
+                  {/* 猜牌者 */}
+                  <div className="fg-player-item fg-guesser">
+                    <div className="fg-player-info">
+                      <div className="fg-avatar fg-avatar-gold">
+                        <span className="material-symbols-outlined">person</span>
+                      </div>
+                      <div className="fg-player-details">
+                        <span className="fg-player-name">
+                          {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}
+                        </span>
+                        <span className="fg-badge fg-badge-guesser">猜牌者</span>
+                      </div>
+                    </div>
+                    <div className="fg-status fg-status-initiated">
+                      <span className="material-symbols-outlined">check_circle</span>
+                      發起猜測
+                    </div>
+                  </div>
+
+                  {/* 其他玩家按順序 */}
+                  {followGuessData.decisionOrder?.map((playerId) => {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    const decision = followGuessData.decisions?.[playerId];
+                    const isCurrentDecider = followGuessData.currentDeciderId === playerId;
+                    const isMe = playerId === myPlayer?.id;
+
+                    return (
+                      <div
+                        key={playerId}
+                        className={`fg-player-item ${isCurrentDecider ? 'fg-current-decider' : ''} ${decision ? '' : 'fg-waiting'}`}
+                      >
+                        <div className="fg-player-info">
+                          <div className={`fg-avatar ${isCurrentDecider ? 'fg-avatar-orange' : ''}`}>
+                            <span className="material-symbols-outlined">person</span>
+                          </div>
+                          <span className="fg-player-name">
+                            {player?.name || playerId}
+                            {isMe && ' (你)'}
+                          </span>
+                        </div>
+                        {isCurrentDecider && !decision && (
+                          <div className="fg-status fg-status-deciding">
+                            <span className="fg-deciding-dot"></span>
+                            決定中...
+                          </div>
+                        )}
+                        {decision === 'follow' && (
+                          <div className="fg-status fg-status-follow">跟隨</div>
+                        )}
+                        {decision === 'pass' && (
+                          <div className="fg-status fg-status-pass">不跟</div>
+                        )}
+                        {!isCurrentDecider && !decision && (
+                          <div className="fg-status fg-status-waiting">等待中</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 自己需要決定時顯示按鈕 */}
+              {followGuessData.currentDeciderId === myPlayer?.id && (
+                <div className="fg-action-area">
+                  <div className="fg-action-prompt">
+                    <p className="fg-prompt-title">輪到你決定！</p>
+                    <p className="fg-prompt-desc">
+                      跟對 <span className="fg-score-plus">+1 分</span>，跟錯 <span className="fg-score-minus">-1 分</span> 並退出當局
+                    </p>
+                  </div>
+                  <div className="fg-buttons">
+                    <button
+                      className="fg-btn fg-btn-pass"
+                      onClick={() => handleFollowGuess(false)}
+                    >
+                      <span className="material-symbols-outlined">cancel</span>
+                      不跟
+                    </button>
+                    <button
+                      className="fg-btn fg-btn-follow"
+                      onClick={() => handleFollowGuess(true)}
+                    >
+                      <span className="material-symbols-outlined">check_circle</span>
+                      跟猜
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 自己是猜牌者 */}
+              {followGuessData.guessingPlayerId === myPlayer?.id && (
+                <p className="fg-waiting-text">等待其他玩家按順序決定是否跟猜...</p>
+              )}
+
+              {/* 自己已決定 */}
+              {followGuessData.decisions?.[myPlayer?.id] &&
+               followGuessData.guessingPlayerId !== myPlayer?.id && (
+                <p className="fg-waiting-text">
+                  你選擇了「{followGuessData.decisions[myPlayer?.id] === 'follow' ? '跟猜' : '不跟'}」，等待其他玩家...
+                </p>
+              )}
+
+              {/* 還沒輪到自己 */}
+              {!followGuessData.decisions?.[myPlayer?.id] &&
+               followGuessData.currentDeciderId !== myPlayer?.id &&
+               followGuessData.guessingPlayerId !== myPlayer?.id &&
+               followGuessData.decisionOrder?.includes(myPlayer?.id) && (
+                <p className="fg-waiting-text">還沒輪到你，請等待...</p>
+              )}
             </div>
           </div>
         )}
@@ -1659,156 +1740,6 @@ function GameRoom() {
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>
-          </div>
-        </div>
-      )}
-
-      {/* 跟猜面板 Modal */}
-      {showFollowGuessPanel && followGuessData && (
-        <div className="modal-overlay">
-          <div className="modal-content fg-modal" onClick={(e) => e.stopPropagation()}>
-            {/* 草藥紋理背景 */}
-            <div className="fg-texture"></div>
-            {/* 角落裝飾 */}
-            <div className="fg-corner-tr"></div>
-            <div className="fg-corner-bl"></div>
-
-            {/* 標題區 */}
-            <div className="fg-header">
-              <h3 className="fg-title">跟猜階段</h3>
-              <div className="fg-title-line"></div>
-            </div>
-
-            {/* 猜牌資訊區塊 */}
-            <div className="fg-guess-info">
-              <p className="fg-guess-text">
-                {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'} 猜測蓋牌是：
-              </p>
-              <div className="fg-color-pills">
-                {followGuessData.guessedColors.map((color, idx) => (
-                  <span key={idx} className={`fg-color-pill fg-color-${color}`}>
-                    {color === 'red' ? '紅色' :
-                     color === 'yellow' ? '黃色' :
-                     color === 'green' ? '綠色' :
-                     color === 'blue' ? '藍色' : color}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* 玩家決策狀態列表 */}
-            <div className="fg-status-section">
-              <h4 className="fg-status-title">玩家決策狀態</h4>
-              <div className="fg-player-list">
-                {/* 猜牌者 */}
-                <div className="fg-player-item fg-guesser">
-                  <div className="fg-player-info">
-                    <div className="fg-avatar fg-avatar-gold">
-                      <span className="material-symbols-outlined">person</span>
-                    </div>
-                    <div className="fg-player-details">
-                      <span className="fg-player-name">
-                        {gameState.players.find(p => p.id === followGuessData.guessingPlayerId)?.name || '玩家'}
-                      </span>
-                      <span className="fg-badge fg-badge-guesser">猜牌者</span>
-                    </div>
-                  </div>
-                  <div className="fg-status fg-status-initiated">
-                    <span className="material-symbols-outlined">check_circle</span>
-                    發起猜測
-                  </div>
-                </div>
-
-                {/* 其他玩家按順序 */}
-                {followGuessData.decisionOrder?.map((playerId) => {
-                  const player = gameState.players.find(p => p.id === playerId);
-                  const decision = followGuessData.decisions?.[playerId];
-                  const isCurrentDecider = followGuessData.currentDeciderId === playerId;
-                  const isMe = playerId === myPlayer?.id;
-
-                  return (
-                    <div
-                      key={playerId}
-                      className={`fg-player-item ${isCurrentDecider ? 'fg-current-decider' : ''} ${decision ? '' : 'fg-waiting'}`}
-                    >
-                      <div className="fg-player-info">
-                        <div className={`fg-avatar ${isCurrentDecider ? 'fg-avatar-orange' : ''}`}>
-                          <span className="material-symbols-outlined">person</span>
-                        </div>
-                        <span className="fg-player-name">
-                          {player?.name || playerId}
-                          {isMe && ' (你)'}
-                        </span>
-                      </div>
-                      {isCurrentDecider && !decision && (
-                        <div className="fg-status fg-status-deciding">
-                          <span className="fg-deciding-dot"></span>
-                          決定中...
-                        </div>
-                      )}
-                      {decision === 'follow' && (
-                        <div className="fg-status fg-status-follow">跟猜</div>
-                      )}
-                      {decision === 'pass' && (
-                        <div className="fg-status fg-status-pass">不跟</div>
-                      )}
-                      {!isCurrentDecider && !decision && (
-                        <div className="fg-status fg-status-waiting">等待中</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 自己需要決定時顯示按鈕 */}
-            {followGuessData.currentDeciderId === myPlayer?.id && (
-              <div className="fg-action-area">
-                <div className="fg-action-prompt">
-                  <p className="fg-prompt-title">輪到你決定！</p>
-                  <p className="fg-prompt-desc">
-                    跟對 <span className="fg-score-plus">+1 分</span>，跟錯 <span className="fg-score-minus">-1 分</span> 並退出當局
-                  </p>
-                </div>
-                <div className="fg-buttons">
-                  <button
-                    className="fg-btn fg-btn-pass"
-                    onClick={() => handleFollowGuess(false)}
-                  >
-                    <span className="material-symbols-outlined">cancel</span>
-                    不跟
-                  </button>
-                  <button
-                    className="fg-btn fg-btn-follow"
-                    onClick={() => handleFollowGuess(true)}
-                  >
-                    <span className="material-symbols-outlined">check_circle</span>
-                    跟猜
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 自己是猜牌者 */}
-            {followGuessData.guessingPlayerId === myPlayer?.id && (
-              <p className="fg-waiting-text">等待其他玩家按順序決定是否跟猜...</p>
-            )}
-
-            {/* 自己已決定 */}
-            {followGuessData.decisions?.[myPlayer?.id] &&
-             followGuessData.guessingPlayerId !== myPlayer?.id && (
-              <p className="fg-waiting-text">
-                你選擇了「{followGuessData.decisions[myPlayer?.id] === 'follow' ? '跟猜' : '不跟'}」，等待其他玩家...
-              </p>
-            )}
-
-            {/* 還沒輪到自己 */}
-            {!followGuessData.decisions?.[myPlayer?.id] &&
-             followGuessData.currentDeciderId !== myPlayer?.id &&
-             followGuessData.guessingPlayerId !== myPlayer?.id &&
-             followGuessData.decisionOrder?.includes(myPlayer?.id) && (
-              <p className="fg-waiting-text">還沒輪到你，請等待...</p>
-            )}
           </div>
         </div>
       )}
