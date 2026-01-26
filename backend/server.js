@@ -457,7 +457,8 @@ function broadcastGameState(gameId) {
 }
 
 io.on('connection', (socket) => {
-  console.log('玩家連線:', socket.id);
+  // 工單 0109：連線日誌增強
+  console.log(`[連線] 新連線: ${socket.id}`);
 
   // 發送目前房間列表
   socket.emit('roomList', getAvailableRooms());
@@ -507,7 +508,8 @@ io.on('connection', (socket) => {
     socket.emit('roomCreated', { gameId, gameState: roomState });
 
     broadcastRoomList();
-    console.log(`房間創建: ${gameId}, 房主: ${player.name}`);
+    // 工單 0109：房間操作日誌
+    console.log(`[房間] 創建: ${gameId}, 房主: ${player.name} (${player.id}), socketId: ${socket.id}`);
   });
 
   // 加入房間
@@ -560,7 +562,8 @@ io.on('connection', (socket) => {
 
     broadcastGameState(gameId);
     broadcastRoomList();
-    console.log(`玩家 ${player.name} 加入房間 ${gameId}`);
+    // 工單 0109：房間操作日誌
+    console.log(`[房間] 加入: ${gameId}, 玩家: ${player.name} (${player.id}), socketId: ${socket.id}`);
   });
 
   // 開始遊戲
@@ -1070,12 +1073,13 @@ io.on('connection', (socket) => {
   });
 
   // 斷線處理
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (reason) => {
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
     }
-    console.log('玩家斷線:', socket.id);
+    // 工單 0109：連線日誌增強
+    console.log(`[連線] 斷線: ${socket.id}, 原因: ${reason}`);
   });
 
   // 工單 0079：重連處理
@@ -1085,6 +1089,9 @@ io.on('connection', (socket) => {
 });
 
 function handlePlayerLeave(socket, gameId, playerId) {
+  // 工單 0109：房間操作日誌
+  console.log(`[房間] 離開: ${gameId}, 玩家: ${playerId}`);
+
   const gameState = gameRooms.get(gameId);
   if (!gameState) return;
 
