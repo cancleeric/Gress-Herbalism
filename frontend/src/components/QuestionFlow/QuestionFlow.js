@@ -54,9 +54,9 @@ function QuestionFlow({
   const [selectedGiveColor, setSelectedGiveColor] = useState(null);
   const [error, setError] = useState('');
 
-  // 排除自己的其他玩家（且只顯示活躍玩家）
+  // 排除自己的其他玩家（已退出的玩家仍可被問牌）
   const otherPlayers = players.filter(
-    p => p.id !== currentPlayerId && p.isActive !== false
+    p => p.id !== currentPlayerId
   );
 
   // 選擇的顏色

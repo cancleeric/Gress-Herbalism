@@ -1381,7 +1381,7 @@ function GameRoom() {
         {showQuestionFlow && selectedColorCard && (
           <QuestionFlow
             selectedCard={selectedColorCard}
-            players={gameState.players.filter(p => p.isActive !== false)}
+            players={gameState.players}
             currentPlayerId={myPlayer?.id}
             currentPlayerHand={myPlayer?.hand || []}
             onSubmit={handleQuestionFlowSubmit}
@@ -1967,7 +1967,7 @@ function GameRoom() {
         <div className="modal-overlay" onClick={handleCloseQuestion}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <QuestionCard
-              players={gameState.players.filter(p => p.isActive !== false)}
+              players={gameState.players}
               currentPlayerId={myPlayer?.id}
               currentPlayerHand={myPlayer?.hand || []}
               onSubmit={handleQuestionSubmit}
@@ -1985,7 +1985,7 @@ function GameRoom() {
       {showQuestionFlow && selectedColorCard && (
         <QuestionFlow
           selectedCard={selectedColorCard}
-          players={gameState.players.filter(p => p.isActive !== false)}
+          players={gameState.players}
           currentPlayerId={myPlayer?.id}
           currentPlayerHand={myPlayer?.hand || []}
           onSubmit={handleQuestionFlowSubmit}
