@@ -593,17 +593,6 @@ function Lobby() {
             )}
           </div>
         </main>
-
-        {/* 頁尾 */}
-        <footer className="lobby-footer">
-          <div className="lobby-footer-left">
-            <span>© 2024 本草 Herbalism</span>
-          </div>
-          <div className="lobby-footer-right">
-            <span className="online-indicator"></span>
-            <span>{rooms.length} 個房間</span>
-          </div>
-        </footer>
       </div>
 
       {/* 手機版底部導航 */}
