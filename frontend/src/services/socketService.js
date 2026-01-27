@@ -5,6 +5,7 @@
 
 import { io } from 'socket.io-client';
 import config from '../config';
+import { getCurrentRoom, clearCurrentRoom } from '../utils/localStorage';
 
 // 從設定檔取得後端 URL
 const SOCKET_URL = config.socketUrl;
@@ -52,21 +53,27 @@ export function initSocket() {
     // 連線錯誤時會自動重試
   });
 
-  // 工單 0106：Socket.io 自動重連時觸發遊戲重連邏輯
+  // 工單 0106, 0184：Socket.io 自動重連時觸發遊戲重連邏輯
   socket.on('reconnect', (attemptNumber) => {
     console.log(`[Socket] 自動重連成功 (第 ${attemptNumber} 次嘗試)`);
 
-    // 從 localStorage 取得上次的遊戲資訊
-    const savedRoom = localStorage.getItem('lastRoomId');
-    const savedPlayer = localStorage.getItem('lastPlayerId');
-    const savedName = localStorage.getItem('lastPlayerName');
+    // 工單 0184：統一使用 getCurrentRoom() 讀取房間資訊
+    const savedRoom = getCurrentRoom();
+    // 也嘗試舊的 key（向後相容）
+    const legacyRoomId = localStorage.getItem('lastRoomId');
+    const legacyPlayerId = localStorage.getItem('lastPlayerId');
+    const legacyPlayerName = localStorage.getItem('lastPlayerName');
 
-    if (savedRoom && savedPlayer && savedName) {
-      console.log(`[Socket] 自動觸發遊戲重連: 房間 ${savedRoom}`);
+    const roomId = savedRoom?.roomId || legacyRoomId;
+    const playerId = savedRoom?.playerId || legacyPlayerId;
+    const playerName = savedRoom?.playerName || legacyPlayerName;
+
+    if (roomId && playerId && playerName) {
+      console.log(`[Socket] 自動觸發遊戲重連: 房間 ${roomId}`);
       socket.emit('reconnect', {
-        roomId: savedRoom,
-        playerId: savedPlayer,
-        playerName: savedName
+        roomId,
+        playerId,
+        playerName
       });
     }
   });
@@ -92,7 +99,7 @@ function startHeartbeat() {
     if (socket && socket.connected) {
       socket.emit('ping');
     }
-  }, 30000); // 每 30 秒發送心跳
+  }, 15000); // 工單 0185：每 15 秒發送心跳（原 30 秒）
 }
 
 /**
@@ -322,7 +329,8 @@ export function leaveRoom(gameId, playerId) {
   const s = getSocket();
   s.emit('leaveRoom', { gameId, playerId });
 
-  // 清除重連資訊
+  // 工單 0184：清除重連資訊（兩組 key 都清除）
+  clearCurrentRoom();
   localStorage.removeItem('lastRoomId');
   localStorage.removeItem('lastPlayerId');
   localStorage.removeItem('lastPlayerName');

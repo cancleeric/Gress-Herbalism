@@ -317,7 +317,7 @@ const io = new Server(server, {
     credentials: true
   },
   // Cloud Run 連線穩定性設定
-  pingTimeout: 60000,      // 60 秒無回應視為斷線
+  pingTimeout: 30000,      // 工單 0185：30 秒無回應視為斷線（原 60 秒）
   pingInterval: 25000,     // 每 25 秒發送心跳
   transports: ['websocket', 'polling'],
   allowUpgrades: true,
