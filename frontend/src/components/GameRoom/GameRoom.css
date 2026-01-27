@@ -615,8 +615,31 @@
   background-color: #F5F1E6;
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
+  overflow-x: hidden; /* 工單 0187：僅水平裁切，允許垂直滾動 */
+  overflow-y: auto;
+  /* 滾動軸樣式 - 米色亮色系 */
+  scrollbar-width: thin;
+  scrollbar-color: #d4c9a8 #f5f1e6;
   border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* 工單 0187：WebKit 滾動軸樣式（Chrome/Edge） */
+.fg-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fg-modal::-webkit-scrollbar-track {
+  background: #f5f1e6;
+  border-radius: 3px;
+}
+
+.fg-modal::-webkit-scrollbar-thumb {
+  background: #d4c9a8;
+  border-radius: 3px;
+}
+
+.fg-modal::-webkit-scrollbar-thumb:hover {
+  background: #c5b68e;
 }
 
 .fg-texture {
