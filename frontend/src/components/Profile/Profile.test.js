@@ -128,12 +128,15 @@ describe('Profile 組件', () => {
   });
 
   describe('用戶資訊顯示', () => {
-    test('訪客應顯示訪客帳號', async () => {
+    test('工單 0175：匿名玩家應看到登入提示', async () => {
       mockUser = { uid: 'test-uid', displayName: '訪客', email: null, isAnonymous: true, photoURL: null };
       render(<MemoryRouter><Profile /></MemoryRouter>);
       await waitFor(() => {
-        expect(screen.getByText('訪客帳號')).toBeInTheDocument();
+        expect(screen.getByText('請先使用 Google 帳號登入以查看個人資料')).toBeInTheDocument();
       });
+      // 不應載入 API
+      expect(mockGetPlayerStats).not.toHaveBeenCalled();
+      expect(mockGetPlayerHistory).not.toHaveBeenCalled();
     });
 
     test('應顯示用戶頭像', async () => {
@@ -175,11 +178,29 @@ describe('Profile 組件', () => {
   });
 
   describe('錯誤處理', () => {
-    test('API 錯誤應顯示錯誤訊息', async () => {
+    test('API 錯誤應顯示錯誤訊息和重新載入按鈕', async () => {
       mockGetPlayerStats.mockRejectedValue(new Error('API 錯誤'));
       render(<MemoryRouter><Profile /></MemoryRouter>);
       await waitFor(() => {
-        expect(screen.getByText('載入資料失敗')).toBeInTheDocument();
+        expect(screen.getByText('載入資料失敗，請稍後再試')).toBeInTheDocument();
+        expect(screen.getByText('重新載入')).toBeInTheDocument();
+      });
+    });
+
+    test('點擊重新載入應重新呼叫 API', async () => {
+      mockGetPlayerStats.mockRejectedValueOnce(new Error('API 錯誤'));
+      render(<MemoryRouter><Profile /></MemoryRouter>);
+      await waitFor(() => {
+        expect(screen.getByText('重新載入')).toBeInTheDocument();
+      });
+
+      // 第二次呼叫成功
+      mockGetPlayerStats.mockResolvedValue({ success: true, data: { games_played: 5, games_won: 2, win_rate: 40, total_score: 50, highest_score: 15 } });
+      mockGetPlayerHistory.mockResolvedValue({ success: true, data: [] });
+      fireEvent.click(screen.getByText('重新載入'));
+
+      await waitFor(() => {
+        expect(screen.getByText('5')).toBeInTheDocument(); // games_played
       });
     });
   });

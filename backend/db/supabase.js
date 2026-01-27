@@ -116,6 +116,7 @@ async function saveGameRecord(gameData) {
       .insert({
         game_id: gameData.gameId,
         winner_name: gameData.winnerName,
+        winner_id: gameData.winnerId || null,
         player_count: gameData.playerCount,
         rounds_played: gameData.roundsPlayed,
         duration_seconds: gameData.durationSeconds,
@@ -145,6 +146,7 @@ async function saveGameParticipants(gameHistoryId, participants) {
     const records = participants.map(p => ({
       game_history_id: gameHistoryId,
       player_name: p.name,
+      player_id: p.playerId || null,
       final_score: p.score,
       is_winner: p.isWinner,
     }));

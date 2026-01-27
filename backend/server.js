@@ -23,6 +23,7 @@ const {
   getPlayerStats,
   getPlayerHistory,
   getPlayerIdByFirebaseUid,
+  updatePlayerGameStats,
 } = require('./db/supabase');
 
 // 工單 0061 - 好友服務
@@ -474,6 +475,22 @@ io.on('connection', (socket) => {
     socket.emit('roomList', getAvailableRooms());
   });
 
+  // 工單 0176：設定玩家線上狀態
+  socket.on('setPresence', async ({ firebaseUid }) => {
+    if (firebaseUid) {
+      try {
+        const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+        if (playerId) {
+          await presenceService.setOnline(playerId);
+          socket.firebasePlayerId = playerId;  // 保存以便斷線時使用
+          console.log(`[線上狀態] 玩家 ${playerId} 已上線`);
+        }
+      } catch (err) {
+        console.error('[線上狀態] setPresence 錯誤:', err.message);
+      }
+    }
+  });
+
   // 創建房間
   socket.on('createRoom', ({ player, maxPlayers, password }) => {
     const gameId = generateGameId();
@@ -512,6 +529,13 @@ io.on('connection', (socket) => {
 
     socket.join(gameId);
     socket.emit('roomCreated', { gameId, gameState: roomState });
+
+    // 工單 0176：加入房間後設為遊戲中
+    if (socket.firebasePlayerId) {
+      presenceService.setInGame(socket.firebasePlayerId, gameId).catch(err => {
+        console.error('[線上狀態] setInGame 錯誤:', err.message);
+      });
+    }
 
     broadcastRoomList();
     // 工單 0109：房間操作日誌
@@ -565,6 +589,13 @@ io.on('connection', (socket) => {
 
     socket.join(gameId);
     socket.emit('joinedRoom', { gameId, gameState });
+
+    // 工單 0176：加入房間後設為遊戲中
+    if (socket.firebasePlayerId) {
+      presenceService.setInGame(socket.firebasePlayerId, gameId).catch(err => {
+        console.error('[線上狀態] setInGame 錯誤:', err.message);
+      });
+    }
 
     broadcastGameState(gameId);
     broadcastRoomList();
@@ -1073,6 +1104,13 @@ io.on('connection', (socket) => {
   // 離開房間
   socket.on('leaveRoom', ({ gameId, playerId }) => {
     handlePlayerLeave(socket, gameId, playerId);
+
+    // 工單 0176：離開房間後恢復為上線
+    if (socket.firebasePlayerId) {
+      presenceService.setOnline(socket.firebasePlayerId).catch(err => {
+        console.error('[線上狀態] setOnline 錯誤:', err.message);
+      });
+    }
   });
 
   // 工單 0118：玩家正在重整頁面
@@ -1088,11 +1126,22 @@ io.on('connection', (socket) => {
   });
 
   // 斷線處理
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', async (reason) => {
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
     }
+
+    // 工單 0176：斷線時設為離線
+    if (socket.firebasePlayerId) {
+      try {
+        await presenceService.setOffline(socket.firebasePlayerId);
+        console.log(`[線上狀態] 玩家 ${socket.firebasePlayerId} 已離線`);
+      } catch (err) {
+        console.error('[線上狀態] setOffline 錯誤:', err.message);
+      }
+    }
+
     // 工單 0109：連線日誌增強
     console.log(`[連線] 斷線: ${socket.id}, 原因: ${reason}`);
   });
@@ -1778,29 +1827,57 @@ function settlePredictions(gameState, scoreChanges) {
  */
 async function saveGameToDatabase(gameState, winnerPlayer) {
   try {
+    // 工單 0174：查詢每位玩家的 Supabase player_id
+    const playerIdMap = {};
+    for (const player of gameState.players) {
+      if (player.firebaseUid) {
+        const dbPlayerId = await getPlayerIdByFirebaseUid(player.firebaseUid);
+        if (dbPlayerId) {
+          playerIdMap[player.id] = dbPlayerId;
+        }
+      }
+    }
+
     // 計算遊戲時長（如果有記錄開始時間）
     const durationSeconds = gameState.startTime
       ? Math.floor((Date.now() - gameState.startTime) / 1000)
       : null;
 
-    // 保存遊戲記錄
+    // 工單 0174：取得勝利者的 Supabase player_id
+    const winnerId = winnerPlayer ? (playerIdMap[winnerPlayer.id] || null) : null;
+
+    // 保存遊戲記錄（含 winner_id）
     const gameHistoryId = await saveGameRecord({
       gameId: gameState.gameId,
       winnerName: winnerPlayer ? winnerPlayer.name : null,
+      winnerId,
       playerCount: gameState.players.length,
       roundsPlayed: gameState.currentRound || 1,
       durationSeconds,
     });
 
     if (gameHistoryId) {
-      // 保存參與者記錄
+      // 工單 0174：保存參與者記錄（含 player_id）
       const participants = gameState.players.map(p => ({
         name: p.name,
         score: gameState.scores[p.id] || 0,
         isWinner: p.id === gameState.winner,
+        playerId: playerIdMap[p.id] || null,
       }));
 
       await saveGameParticipants(gameHistoryId, participants);
+
+      // 工單 0174：更新每位 Google 登入玩家的統計
+      for (const player of gameState.players) {
+        const dbPlayerId = playerIdMap[player.id];
+        if (dbPlayerId) {
+          await updatePlayerGameStats(dbPlayerId, {
+            score: gameState.scores[player.id] || 0,
+            isWinner: player.id === gameState.winner,
+          });
+        }
+      }
+
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);
     }
   } catch (err) {

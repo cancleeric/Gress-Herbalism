@@ -397,6 +397,19 @@ export function onGuessResultDismissed(callback) {
   return safeOn('guessResultDismissed', callback);
 }
 
+// ==================== 工單 0176：線上狀態 ====================
+
+/**
+ * 發送線上狀態給後端
+ * @param {string} firebaseUid - Firebase UID
+ */
+export function setPresence(firebaseUid) {
+  const s = getSocket();
+  if (s && firebaseUid) {
+    s.emit('setPresence', { firebaseUid });
+  }
+}
+
 // ==================== 預測相關（工單 0071）====================
 
 /**

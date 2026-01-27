@@ -18,9 +18,14 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // 工單 0175：阻止匿名玩家存取 Profile
+  const isAnonymous = user?.isAnonymous;
+
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.uid && !isAnonymous) {
       loadData();
+    } else if (isAnonymous) {
+      setLoading(false);
     }
   }, [user]);
 
@@ -36,13 +41,17 @@ function Profile() {
 
       if (statsResult.success) {
         setStats(statsResult.data);
+      } else {
+        setError(statsResult.message || '載入統計資料失敗');
       }
 
       if (historyResult.success) {
         setHistory(historyResult.data);
+      } else {
+        setError(prev => prev || (historyResult.message || '載入歷史資料失敗'));
       }
     } catch (err) {
-      setError('載入資料失敗');
+      setError('載入資料失敗，請稍後再試');
       console.error('載入資料失敗:', err);
     } finally {
       setLoading(false);
@@ -62,6 +71,18 @@ function Profile() {
     return (
       <div className="profile-page">
         <div className="profile-loading">載入中...</div>
+      </div>
+    );
+  }
+
+  // 工單 0175：匿名玩家阻止頁面
+  if (isAnonymous) {
+    return (
+      <div className="profile-page">
+        <div className="profile-anonymous">
+          <p>請先使用 Google 帳號登入以查看個人資料</p>
+          <button className="back-btn" onClick={handleBack}>返回大廳</button>
+        </div>
       </div>
     );
   }
@@ -106,7 +127,13 @@ function Profile() {
               </div>
             </div>
 
-            {error && <div className="profile-error">{error}</div>}
+            {/* 工單 0175：錯誤訊息改善 */}
+            {error && (
+              <div className="profile-error">
+                {error}
+                <button className="retry-btn" onClick={loadData}>重新載入</button>
+              </div>
+            )}
 
             {/* 統計數據 */}
             <div className="stats-section">

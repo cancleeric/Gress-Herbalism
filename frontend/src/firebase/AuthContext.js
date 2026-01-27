@@ -13,6 +13,7 @@ import {
   handleRedirectResult,
 } from './authService';
 import { syncPlayer } from '../services/apiService';
+import { initSocket, setPresence } from '../services/socketService';
 
 // 建立 Context
 const AuthContext = createContext(null);
@@ -46,6 +47,12 @@ export function AuthProvider({ children }) {
             email: state.user.email,
             avatarUrl: state.user.photoURL,
           });
+
+          // 工單 0176：登入後發送線上狀態
+          if (!state.user.isAnonymous) {
+            initSocket();
+            setPresence(state.user.uid);
+          }
         } catch (err) {
           console.error('同步玩家資料失敗:', err);
         }
