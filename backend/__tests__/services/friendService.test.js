@@ -15,6 +15,7 @@ jest.mock('../../db/supabase', () => {
       delete: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
       neq: jest.fn().mockReturnThis(),
+      not: jest.fn().mockReturnThis(),
       or: jest.fn().mockReturnThis(),
       in: jest.fn().mockReturnThis(),
       ilike: jest.fn().mockReturnThis(),
@@ -44,32 +45,94 @@ describe('friendService', () => {
   });
 
   describe('searchPlayers', () => {
+    // 工單 0178：建立搜尋用 mock 的輔助函數
+    function createSearchMocks({ friendIds = [], pendingIds = [], searchResult = [], searchError = null } = {}) {
+      const friendshipsChain = supabase._createMockChain();
+      friendshipsChain.eq.mockReturnValue({
+        ...friendshipsChain,
+        then: (resolve) => resolve({ data: friendIds.map(id => ({ friend_id: id })), error: null }),
+      });
+
+      const pendingChain = supabase._createMockChain();
+      pendingChain.eq.mockReturnValue({
+        ...pendingChain,
+        then: (resolve) => resolve({ data: pendingIds.map(id => ({ to_user_id: id })), error: null }),
+      });
+
+      const playersChain = supabase._createMockChain();
+      playersChain.limit.mockResolvedValue({ data: searchResult, error: searchError });
+
+      supabase.from
+        .mockReturnValueOnce(friendshipsChain)
+        .mockReturnValueOnce(pendingChain)
+        .mockReturnValueOnce(playersChain);
+
+      return { friendshipsChain, pendingChain, playersChain };
+    }
+
     test('應返回符合搜尋條件的玩家', async () => {
       const mockPlayers = [
         { id: 'user-1', display_name: '小明', games_played: 10, games_won: 5 },
         { id: 'user-2', display_name: '小明明', games_played: 20, games_won: 15 },
       ];
 
-      const mockChain = supabase._createMockChain();
-      mockChain.limit.mockResolvedValue({ data: mockPlayers, error: null });
-      supabase.from.mockReturnValue(mockChain);
+      const { playersChain } = createSearchMocks({ searchResult: mockPlayers });
 
       const result = await friendService.searchPlayers('小明', 'current-user-id');
 
+      expect(supabase.from).toHaveBeenCalledWith('friendships');
+      expect(supabase.from).toHaveBeenCalledWith('friend_requests');
       expect(supabase.from).toHaveBeenCalledWith('players');
-      expect(mockChain.neq).toHaveBeenCalledWith('id', 'current-user-id');
-      expect(mockChain.ilike).toHaveBeenCalledWith('display_name', '%小明%');
+      expect(playersChain.ilike).toHaveBeenCalledWith('display_name', '%小明%');
       expect(result).toEqual(mockPlayers);
     });
 
     test('搜尋失敗時應返回空陣列', async () => {
-      const mockChain = supabase._createMockChain();
-      mockChain.limit.mockResolvedValue({ data: null, error: { message: 'Database error' } });
-      supabase.from.mockReturnValue(mockChain);
+      createSearchMocks({ searchError: { message: 'Database error' } });
 
       const result = await friendService.searchPlayers('test', 'user-id');
 
       expect(result).toEqual([]);
+    });
+
+    // 工單 0178：新增過濾測試
+    test('應排除匿名玩家（firebase_uid 為 NULL）', async () => {
+      const { playersChain } = createSearchMocks();
+
+      await friendService.searchPlayers('test', 'user-id');
+
+      expect(playersChain.not).toHaveBeenCalledWith('firebase_uid', 'is', null);
+    });
+
+    test('應排除已加好友的玩家', async () => {
+      const { playersChain } = createSearchMocks({
+        friendIds: ['friend-1', 'friend-2'],
+      });
+
+      await friendService.searchPlayers('test', 'me-id');
+
+      // 驗證 not('id', 'in', ...) 包含自己和已加好友
+      expect(playersChain.not).toHaveBeenCalledWith(
+        'id', 'in', expect.stringContaining('me-id')
+      );
+      expect(playersChain.not).toHaveBeenCalledWith(
+        'id', 'in', expect.stringContaining('friend-1')
+      );
+      expect(playersChain.not).toHaveBeenCalledWith(
+        'id', 'in', expect.stringContaining('friend-2')
+      );
+    });
+
+    test('應排除已發送 pending 請求的玩家', async () => {
+      const { playersChain } = createSearchMocks({
+        pendingIds: ['pending-1'],
+      });
+
+      await friendService.searchPlayers('test', 'me-id');
+
+      expect(playersChain.not).toHaveBeenCalledWith(
+        'id', 'in', expect.stringContaining('pending-1')
+      );
     });
   });
 
@@ -115,6 +178,34 @@ describe('friendService', () => {
       await expect(
         friendService.sendFriendRequest('user-1', 'user-2')
       ).rejects.toThrow('已經發送過好友請求了');
+    });
+
+    // 工單 0179：雙向互加自動接受測試
+    test('對方已發送 pending 請求時應自動接受並返回 autoAccepted', async () => {
+      const mockChain = supabase._createMockChain();
+      // 1. 不是好友
+      // 2. 我沒有發送過請求
+      // 3. 對方已有 pending 請求給我（觸發自動接受）
+      mockChain.maybeSingle
+        .mockResolvedValueOnce({ data: null, error: null })  // 已是好友？否
+        .mockResolvedValueOnce({ data: null, error: null })  // 已發送請求？否
+        .mockResolvedValueOnce({ data: { id: 'reverse-req-1' }, error: null }); // 反向請求？有
+
+      // acceptFriendRequest 內部呼叫：取得請求 → 更新狀態 → 插入好友關係
+      const mockRequest = {
+        id: 'reverse-req-1',
+        from_user_id: 'user-2',
+        to_user_id: 'user-1',
+        status: 'pending',
+      };
+      mockChain.single.mockResolvedValue({ data: mockRequest, error: null });
+      supabase.from.mockReturnValue(mockChain);
+
+      const result = await friendService.sendFriendRequest('user-1', 'user-2');
+
+      expect(result).toEqual({ autoAccepted: true });
+      // 驗證呼叫了 friendships 表（建立好友關係）
+      expect(supabase.from).toHaveBeenCalledWith('friendships');
     });
   });
 

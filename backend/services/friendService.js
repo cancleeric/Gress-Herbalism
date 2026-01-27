@@ -7,15 +7,40 @@ const { supabase } = require('../db/supabase');
 
 /**
  * 搜尋玩家
+ * 工單 0178：過濾匿名玩家、已加好友、已發送請求的玩家
  * @param {string} query - 搜尋關鍵字
- * @param {string} excludeUserId - 排除的使用者 ID（自己）
+ * @param {string} currentPlayerId - 當前使用者 ID（排除自己及相關玩家）
  */
-async function searchPlayers(query, excludeUserId) {
+async function searchPlayers(query, currentPlayerId) {
   try {
+    // 工單 0178：收集需要排除的玩家 ID
+    const excludeIds = [currentPlayerId];
+
+    // 排除已加好友
+    const { data: friendships } = await supabase
+      .from('friendships')
+      .select('friend_id')
+      .eq('user_id', currentPlayerId);
+    if (friendships) {
+      friendships.forEach(f => excludeIds.push(f.friend_id));
+    }
+
+    // 排除已發送 pending 請求的對象
+    const { data: pendingRequests } = await supabase
+      .from('friend_requests')
+      .select('to_user_id')
+      .eq('from_user_id', currentPlayerId)
+      .eq('status', 'pending');
+    if (pendingRequests) {
+      pendingRequests.forEach(r => excludeIds.push(r.to_user_id));
+    }
+
+    // 搜尋玩家：排除匿名玩家 + 排除已有關係的 ID
     const { data, error } = await supabase
       .from('players')
       .select('id, display_name, avatar_url, games_played, games_won, win_rate')
-      .neq('id', excludeUserId)
+      .not('firebase_uid', 'is', null)
+      .not('id', 'in', `(${excludeIds.join(',')})`)
       .ilike('display_name', `%${query}%`)
       .limit(20);
 
