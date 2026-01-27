@@ -359,6 +359,89 @@
   background: rgba(255, 179, 0, 0.1);
 }
 
+/* ==================== 匿名用戶引導（工單 0181） ==================== */
+.profile-anonymous-content {
+  text-align: center;
+  background: rgba(46, 125, 50, 0.05);
+  border: 1px solid rgba(46, 125, 50, 0.15);
+  border-radius: 10px;
+  padding: 28px 24px;
+}
+
+.anonymous-hint {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2E7D32;
+  margin: 0 0 16px 0;
+  letter-spacing: 0.03em;
+}
+
+.anonymous-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  text-align: left;
+  max-width: 260px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.anonymous-benefits li {
+  position: relative;
+  padding: 6px 0 6px 24px;
+  font-size: 14px;
+  color: rgba(46, 125, 50, 0.75);
+}
+
+.anonymous-benefits li::before {
+  content: '\2714';
+  position: absolute;
+  left: 0;
+  color: #2E7D32;
+  font-weight: 700;
+}
+
+.google-login-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: #2E7D32;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.google-login-btn:hover {
+  background: #256b29;
+  transform: translateY(-1px);
+}
+
+.anonymous-back-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 2px solid rgba(46, 125, 50, 0.3);
+  border-radius: 8px;
+  color: rgba(46, 125, 50, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.anonymous-back-btn:hover {
+  border-color: #2E7D32;
+  color: #2E7D32;
+  background: rgba(46, 125, 50, 0.05);
+}
+
 /* ==================== 載入狀態 ==================== */
 .profile-loading {
   color: #2E7D32;

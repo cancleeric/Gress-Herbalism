@@ -75,13 +75,62 @@ function Profile() {
     );
   }
 
-  // 工單 0175：匿名玩家阻止頁面
+  // 工單 0175, 0181：匿名玩家引導頁面
   if (isAnonymous) {
     return (
       <div className="profile-page">
-        <div className="profile-anonymous">
-          <p>請先使用 Google 帳號登入以查看個人資料</p>
-          <button className="back-btn" onClick={handleBack}>返回大廳</button>
+        {/* Background Decorations */}
+        <div className="bg-decoration bg-decoration-top"></div>
+        <div className="bg-decoration bg-decoration-bottom"></div>
+
+        <div className="profile-layout">
+          {/* 導航欄 */}
+          <header className="profile-nav">
+            <button className="back-btn" onClick={handleBack}>
+              ← 返回大廳
+            </button>
+            <div className="nav-brand">
+              <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
+              </svg>
+              <span className="nav-title">Herbalism</span>
+            </div>
+          </header>
+
+          <main className="profile-main">
+            {/* 訪客資料卡片 */}
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="avatar-container">
+                  <div className="avatar-placeholder">訪</div>
+                </div>
+                <div className="user-info">
+                  <h2>訪客</h2>
+                  <p className="user-email">訪客帳號</p>
+                </div>
+              </div>
+
+              <div className="profile-anonymous-content">
+                <p className="anonymous-hint">登入 Google 帳號以解鎖完整功能</p>
+                <ul className="anonymous-benefits">
+                  <li>保存遊戲記錄與統計數據</li>
+                  <li>查看個人勝率與最高分</li>
+                  <li>使用好友功能</li>
+                  <li>登上排行榜</li>
+                </ul>
+                <button className="google-login-btn" onClick={() => navigate('/login')}>
+                  前往 Google 登入
+                </button>
+                <button className="anonymous-back-btn" onClick={handleBack}>
+                  返回大廳
+                </button>
+              </div>
+            </div>
+          </main>
+
+          <footer className="profile-footer">
+            <p>&copy; 2024 本草 Herbalism Online. All Rights Reserved.</p>
+          </footer>
         </div>
       </div>
     );
