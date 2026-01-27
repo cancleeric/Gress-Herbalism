@@ -1140,10 +1140,10 @@ function GameRoom() {
                   key={player.id}
                   className={`waiting-player-card ${player.id === myPlayer?.id ? 'is-me' : ''}`}
                 >
-                  {player.id === myPlayer?.id && authUser?.photoURL ? (
+                  {(player.id === myPlayer?.id ? authUser?.photoURL : player.photoURL) ? (
                     <img
                       className="waiting-player-avatar-img"
-                      src={authUser.photoURL}
+                      src={player.id === myPlayer?.id ? authUser.photoURL : player.photoURL}
                       alt={player.name}
                       referrerPolicy="no-referrer"
                     />
@@ -1394,10 +1394,10 @@ function GameRoom() {
                 {player.isActive === false && (
                   <span className="playing-eliminated-badge">已退出</span>
                 )}
-                {player.id === myPlayer?.id && authUser?.photoURL ? (
+                {(player.id === myPlayer?.id ? authUser?.photoURL : player.photoURL) ? (
                   <img
                     className="playing-player-avatar-img"
-                    src={authUser.photoURL}
+                    src={player.id === myPlayer?.id ? authUser.photoURL : player.photoURL}
                     alt={player.name}
                     referrerPolicy="no-referrer"
                   />

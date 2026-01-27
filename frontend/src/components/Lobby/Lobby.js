@@ -273,6 +273,7 @@ function Lobby() {
       id: playerId,
       name: nickname.trim(),
       firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+      photoURL: user?.photoURL || null,
     };
 
     createRoom(player, playerCount, isPrivate ? roomPassword : null);
@@ -306,6 +307,7 @@ function Lobby() {
       id: playerId,
       name: nickname.trim(),
       firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+      photoURL: user?.photoURL || null,
     };
 
     joinRoom(selectedRoomId, player);
@@ -344,6 +346,7 @@ function Lobby() {
       id: playerId,
       name: nickname.trim(),
       firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+      photoURL: user?.photoURL || null,
     };
 
     joinRoom(joinRoomId.trim(), player);
@@ -367,6 +370,7 @@ function Lobby() {
       id: playerId,
       name: nickname.trim(),
       firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+      photoURL: user?.photoURL || null,
     };
 
     joinRoom(pendingRoomId, player, inputPassword);
