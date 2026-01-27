@@ -10,6 +10,7 @@ import {
   signInAsGuest,
   logOut,
   upgradeAnonymousToGoogle,
+  handleRedirectResult,
 } from './authService';
 import { syncPlayer } from '../services/apiService';
 
@@ -25,6 +26,13 @@ export function AuthProvider({ children }) {
     isLoggedIn: false,
     user: null,
   });
+
+  // 處理 redirect 登入結果（從 Google 登入頁面返回時）
+  useEffect(() => {
+    handleRedirectResult().catch((err) => {
+      console.error('處理 redirect 登入結果失敗:', err);
+    });
+  }, []);
 
   // 監聽登入狀態變化
   useEffect(() => {

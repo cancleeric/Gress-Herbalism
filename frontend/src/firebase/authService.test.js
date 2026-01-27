@@ -6,6 +6,8 @@
 // Mock firebase/auth before importing
 jest.mock('firebase/auth', () => ({
   signInWithPopup: jest.fn(),
+  signInWithRedirect: jest.fn(),
+  getRedirectResult: jest.fn(),
   signInAnonymously: jest.fn(),
   signOut: jest.fn(),
   onAuthStateChanged: jest.fn(),
@@ -21,6 +23,8 @@ jest.mock('./config', () => ({
 
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -34,6 +38,7 @@ import {
   logOut,
   getCurrentUser,
   onAuthChange,
+  handleRedirectResult,
 } from './authService';
 
 import { auth } from './config';
@@ -63,22 +68,44 @@ describe('authService', () => {
       expect(result.user.isAnonymous).toBe(false);
     });
 
-    test('用戶取消登入返回錯誤', async () => {
-      signInWithPopup.mockRejectedValue({ code: 'auth/popup-closed-by-user' });
+    test('popup 被阻擋應降級為 redirect', async () => {
+      signInWithPopup.mockRejectedValue({ code: 'auth/popup-blocked' });
+      signInWithRedirect.mockResolvedValue();
 
       const result = await signInWithGoogle();
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('登入視窗已關閉');
+      expect(signInWithRedirect).toHaveBeenCalled();
+      expect(result.redirecting).toBe(true);
     });
 
-    test('popup 被阻擋返回錯誤', async () => {
+    test('popup 被關閉應降級為 redirect', async () => {
+      signInWithPopup.mockRejectedValue({ code: 'auth/popup-closed-by-user' });
+      signInWithRedirect.mockResolvedValue();
+
+      const result = await signInWithGoogle();
+
+      expect(signInWithRedirect).toHaveBeenCalled();
+      expect(result.redirecting).toBe(true);
+    });
+
+    test('popup 取消應降級為 redirect', async () => {
+      signInWithPopup.mockRejectedValue({ code: 'auth/cancelled-popup-request' });
+      signInWithRedirect.mockResolvedValue();
+
+      const result = await signInWithGoogle();
+
+      expect(signInWithRedirect).toHaveBeenCalled();
+      expect(result.redirecting).toBe(true);
+    });
+
+    test('redirect 降級也失敗應返回錯誤', async () => {
       signInWithPopup.mockRejectedValue({ code: 'auth/popup-blocked' });
+      signInWithRedirect.mockRejectedValue({ code: 'auth/network-request-failed' });
 
       const result = await signInWithGoogle();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('登入視窗被瀏覽器阻擋，請允許彈出視窗');
+      expect(result.error).toBe('網路連線失敗，請檢查網路連線');
     });
 
     test('網路錯誤返回錯誤', async () => {
@@ -330,17 +357,6 @@ describe('authService', () => {
       expect(result.error).toBe('登入嘗試次數過多，請稍後再試');
     });
 
-    test('取消登入請求錯誤', async () => {
-      signInWithPopup.mockRejectedValue({
-        code: 'auth/cancelled-popup-request',
-      });
-
-      const result = await signInWithGoogle();
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('登入已取消');
-    });
-
     test('無效憑證錯誤', async () => {
       signInWithPopup.mockRejectedValue({
         code: 'auth/invalid-credential',
@@ -350,6 +366,42 @@ describe('authService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('登入憑證無效');
+    });
+  });
+
+  describe('handleRedirectResult', () => {
+    test('有 redirect 結果時返回用戶資料', async () => {
+      const mockUser = {
+        uid: 'redirect-uid',
+        displayName: 'Redirect 用戶',
+        email: 'redirect@example.com',
+        photoURL: 'https://example.com/photo.jpg',
+      };
+      getRedirectResult.mockResolvedValue({ user: mockUser });
+
+      const result = await handleRedirectResult();
+
+      expect(result.success).toBe(true);
+      expect(result.user.uid).toBe('redirect-uid');
+      expect(result.user.displayName).toBe('Redirect 用戶');
+      expect(result.user.isAnonymous).toBe(false);
+    });
+
+    test('無 redirect 結果時返回 null', async () => {
+      getRedirectResult.mockResolvedValue(null);
+
+      const result = await handleRedirectResult();
+
+      expect(result).toBeNull();
+    });
+
+    test('redirect 結果處理失敗返回錯誤', async () => {
+      getRedirectResult.mockRejectedValue({ code: 'auth/internal-error' });
+
+      const result = await handleRedirectResult();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('內部錯誤，請稍後再試');
     });
   });
 });

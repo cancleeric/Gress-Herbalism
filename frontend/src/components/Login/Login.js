@@ -16,7 +16,8 @@ import './Login.css';
  */
 function isConfigurationError(errorCode) {
   return errorCode === 'auth/configuration-not-found' ||
-         errorCode === 'auth/operation-not-allowed';
+         errorCode === 'auth/operation-not-allowed' ||
+         errorCode === 'auth/unauthorized-domain';
 }
 
 function Login() {
@@ -136,7 +137,7 @@ function Login() {
                       <li>前往 <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer">Firebase Console</a></li>
                       <li>選擇專案 → Authentication → Sign-in method</li>
                       <li>啟用「Google」和「匿名」登入方式</li>
-                      <li>確認 Authorized domains 包含 localhost</li>
+                      <li>確認 Authorized domains 包含 localhost 和生產環境網域</li>
                     </ol>
                   </div>
                 )}

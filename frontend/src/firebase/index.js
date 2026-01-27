@@ -11,5 +11,6 @@ export {
   getCurrentUser,
   onAuthChange,
   upgradeAnonymousToGoogle,
+  handleRedirectResult,
 } from './authService';
 export { AuthProvider, useAuth } from './AuthContext';

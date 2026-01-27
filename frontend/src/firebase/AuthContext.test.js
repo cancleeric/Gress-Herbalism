@@ -12,6 +12,7 @@ const mockSignInWithGoogle = jest.fn();
 const mockSignInAsGuest = jest.fn();
 const mockLogOut = jest.fn();
 const mockUpgradeAnonymousToGoogle = jest.fn();
+const mockHandleRedirectResult = jest.fn();
 
 jest.mock('./authService', () => ({
   onAuthChange: (callback) => mockOnAuthChange(callback),
@@ -19,6 +20,7 @@ jest.mock('./authService', () => ({
   signInAsGuest: () => mockSignInAsGuest(),
   logOut: () => mockLogOut(),
   upgradeAnonymousToGoogle: () => mockUpgradeAnonymousToGoogle(),
+  handleRedirectResult: () => mockHandleRedirectResult(),
 }));
 
 // 測試用組件
@@ -40,6 +42,8 @@ function TestComponent() {
 describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // 模擬 handleRedirectResult 預設返回 null（無 redirect）
+    mockHandleRedirectResult.mockResolvedValue(null);
     // 模擬 onAuthChange 返回一個取消訂閱函數
     mockOnAuthChange.mockImplementation((callback) => {
       // 立即呼叫回調模擬初始狀態

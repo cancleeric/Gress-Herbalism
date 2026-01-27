@@ -5,6 +5,8 @@
 
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInAnonymously,
   signOut,
   onAuthStateChanged,
@@ -31,6 +33,7 @@ const ERROR_MESSAGES = {
   'auth/invalid-credential': '登入憑證無效',
   'auth/account-exists-with-different-credential': '此信箱已使用其他方式註冊',
   'auth/credential-already-in-use': '此憑證已被其他帳號使用',
+  'auth/unauthorized-domain': '此網域未被授權使用 Google 登入，請聯繫管理員在 Firebase Console 中新增授權網域',
   'auth/internal-error': '內部錯誤，請稍後再試',
 };
 
@@ -58,7 +61,19 @@ function getErrorMessage(error) {
 }
 
 /**
+ * 判斷是否為 popup 相關錯誤，可降級為 redirect
+ * @param {string} errorCode - Firebase 錯誤碼
+ * @returns {boolean}
+ */
+function isPopupError(errorCode) {
+  return errorCode === 'auth/popup-blocked' ||
+         errorCode === 'auth/popup-closed-by-user' ||
+         errorCode === 'auth/cancelled-popup-request';
+}
+
+/**
  * 使用 Google 帳號登入
+ * 先嘗試 popup，若 popup 失敗則自動降級為 redirect
  * @returns {Promise<object>} 使用者資料
  */
 export async function signInWithGoogle() {
@@ -77,6 +92,55 @@ export async function signInWithGoogle() {
     };
   } catch (error) {
     console.error('Google 登入失敗:', error.code, error.message);
+
+    // popup 相關錯誤：自動降級為 redirect
+    if (isPopupError(error.code)) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        // redirect 會離開頁面，不會返回結果
+        return { success: false, redirecting: true, error: '正在跳轉到 Google 登入頁面...' };
+      } catch (redirectError) {
+        console.error('Redirect 登入也失敗:', redirectError.code, redirectError.message);
+        return {
+          success: false,
+          error: getErrorMessage(redirectError),
+          errorCode: redirectError.code,
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: getErrorMessage(error),
+      errorCode: error.code,
+    };
+  }
+}
+
+/**
+ * 處理 redirect 登入結果
+ * 應在應用初始化時呼叫，處理從 Google 登入頁面返回的結果
+ * @returns {Promise<object|null>} 使用者資料，若無 redirect 結果則返回 null
+ */
+export async function handleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const user = result.user;
+      return {
+        success: true,
+        user: {
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          isAnonymous: false,
+        },
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Redirect 結果處理失敗:', error.code, error.message);
     return {
       success: false,
       error: getErrorMessage(error),
