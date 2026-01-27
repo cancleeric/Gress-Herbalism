@@ -1687,7 +1687,8 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
       // 所有人都退出，局結束
       gameState.gamePhase = 'roundEnd';
     } else {
-      // 還有活躍玩家，繼續遊戲
+      // 還有活躍玩家，繼續遊戲（工單 0173：恢復正常遊戲階段）
+      gameState.gamePhase = 'playing';
       moveToNextPlayer(gameState);
     }
   }
