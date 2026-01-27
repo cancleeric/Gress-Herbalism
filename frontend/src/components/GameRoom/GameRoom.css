@@ -2920,11 +2920,34 @@
   border: 2px solid #bb9c63;
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
+  overflow-x: hidden; /* 工單 0182：改為僅水平裁切，允許垂直滾動 */
+  overflow-y: auto;
+  /* 滾動軸樣式 - 米色亮色系 */
+  scrollbar-width: thin;
+  scrollbar-color: #d4c9a8 #f5f1e6;
   display: flex;
   flex-direction: column;
   background-image: radial-gradient(circle at 2px 2px, rgba(187, 156, 99, 0.1) 1px, transparent 0);
   background-size: 24px 24px;
+}
+
+/* WebKit 滾動軸樣式（Chrome/Edge） */
+.gr-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gr-modal::-webkit-scrollbar-track {
+  background: #f5f1e6;
+  border-radius: 3px;
+}
+
+.gr-modal::-webkit-scrollbar-thumb {
+  background: #d4c9a8;
+  border-radius: 3px;
+}
+
+.gr-modal::-webkit-scrollbar-thumb:hover {
+  background: #c5b68e;
 }
 
 .gr-texture {
