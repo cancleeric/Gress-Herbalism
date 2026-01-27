@@ -382,6 +382,21 @@ export function startNextRound(gameId) {
   s.emit('startNextRound', { gameId });
 }
 
+/**
+ * 工單 0172：發送關閉猜牌結果面板
+ */
+export function dismissGuessResult(gameId) {
+  const s = getSocket();
+  s.emit('dismissGuessResult', { gameId });
+}
+
+/**
+ * 工單 0172：監聽猜牌結果面板關閉
+ */
+export function onGuessResultDismissed(callback) {
+  return safeOn('guessResultDismissed', callback);
+}
+
 // ==================== 預測相關（工單 0071）====================
 
 /**

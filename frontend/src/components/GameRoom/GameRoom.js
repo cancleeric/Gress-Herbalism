@@ -39,7 +39,9 @@ import {
   submitFollowGuessResponse,
   startNextRound,
   endTurn,
-  emitPlayerRefreshing  // 工單 0118
+  emitPlayerRefreshing,  // 工單 0118
+  dismissGuessResult as socketDismissGuessResult,  // 工單 0172
+  onGuessResultDismissed  // 工單 0172
 } from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
@@ -159,8 +161,6 @@ function GameRoom() {
   const [showFollowGuessPanel, setShowFollowGuessPanel] = useState(false);
   const [guessResultData, setGuessResultData] = useState(null);
   const [showRoundEnd, setShowRoundEnd] = useState(false);
-  // 簡短猜牌結果顯示（工單 0149：猜錯但遊戲繼續時使用）
-  const [showBriefGuessResult, setShowBriefGuessResult] = useState(false);
   // 預測相關狀態（工單 0071）
   const [showPrediction, setShowPrediction] = useState(false);
   const [predictionLoading, setPredictionLoading] = useState(false);
@@ -294,14 +294,10 @@ function GameRoom() {
             guessingPlayerId: event.guessingPlayerId,
             followingPlayers: event.followingPlayers,
             predictionResults: event.predictionResults || [],
-            continueGame: event.continueGame  // 工單 0149
+            continueGame: event.continueGame
           });
-          // 工單 0149：根據 continueGame 決定顯示方式
-          if (event.continueGame) {
-            setShowBriefGuessResult(true);
-          } else {
-            setShowRoundEnd(true);
-          }
+          // 工單 0172：統一顯示完整結果面板
+          setShowRoundEnd(true);
         } else if (event.type === 'roundStarted') {
           setShowRoundEnd(false);
           setGuessResultData(null);
@@ -374,20 +370,6 @@ function GameRoom() {
 
     return () => clearTimeout(timerId);
   }, [isLocalMode, gameState.gamePhase, followGuessData, gameState.players, isAIPlayer, handleAIFollowGuess]);
-
-  /**
-   * 工單 0149：自動關閉簡短猜牌結果
-   */
-  useEffect(() => {
-    if (!showBriefGuessResult) return;
-
-    const timer = setTimeout(() => {
-      setShowBriefGuessResult(false);
-      setGuessResultData(null);
-    }, 3000);  // 3 秒後自動關閉
-
-    return () => clearTimeout(timer);
-  }, [showBriefGuessResult]);
 
   /**
    * 工單 0150：遊戲不存在時的倒數計時與自動導航
@@ -524,12 +506,8 @@ function GameRoom() {
     const unsubGuessResult = onGuessResult(({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults, continueGame }) => {
       setShowFollowGuessPanel(false);
       setGuessResultData({ isCorrect, scoreChanges, hiddenCards, guessingPlayerId, followingPlayers, predictionResults, continueGame });
-      // 工單 0149：根據 continueGame 決定顯示方式
-      if (continueGame) {
-        setShowBriefGuessResult(true);
-      } else {
-        setShowRoundEnd(true);
-      }
+      // 工單 0172：統一顯示完整結果面板
+      setShowRoundEnd(true);
     });
 
     // 監聽局開始
@@ -570,6 +548,12 @@ function GameRoom() {
       localStorage.removeItem('lastPlayerName');
     });
 
+    // 工單 0172：監聽猜牌結果面板關閉
+    const unsubDismiss = onGuessResultDismissed(() => {
+      setShowRoundEnd(false);
+      setGuessResultData(null);
+    });
+
     return () => {
       unsubGameState();
       unsubError();
@@ -586,6 +570,7 @@ function GameRoom() {
       unsubTurnEnded();
       unsubCardGive();
       unsubReconnectFailed();
+      unsubDismiss();
     };
   }, [dispatch, isLocalMode]);
 
@@ -811,6 +796,20 @@ function GameRoom() {
       startNextRound(gameId);
       setShowRoundEnd(false);
       setGuessResultData(null);
+    }
+  };
+
+  /**
+   * 工單 0172：處理關閉猜牌結果面板（猜錯但遊戲繼續時）
+   */
+  const handleDismissGuessResult = () => {
+    if (isLocalMode) {
+      // 本地模式直接關閉
+      setShowRoundEnd(false);
+      setGuessResultData(null);
+    } else if (gameId) {
+      // 多人模式：通知所有玩家關閉面板
+      socketDismissGuessResult(gameId);
     }
   };
 
@@ -1748,19 +1747,7 @@ function GameRoom() {
           </div>
         )}
 
-        {/* 工單 0149：簡短猜牌結果（猜錯但遊戲繼續） */}
-        {showBriefGuessResult && guessResultData && (
-          <div className="brief-guess-result">
-            <div className="brief-guess-content">
-              <span className="material-symbols-outlined brief-icon">close</span>
-              <span className="brief-text">
-                {gameState.players.find(p => p.id === guessResultData.guessingPlayerId)?.name || '玩家'} 猜錯了！遊戲繼續...
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* 局結束 / 猜牌結果面板 - 工單 0133 */}
+        {/* 局結束 / 猜牌結果面板 - 工單 0133 / 工單 0172 重構 */}
         {showRoundEnd && guessResultData && (
           <div className="modal-overlay">
             <div className="modal-content gr-modal" onClick={(e) => e.stopPropagation()}>
@@ -1779,26 +1766,28 @@ function GameRoom() {
                 </h1>
               </div>
 
-              {/* 蓋牌顯示區 */}
-              <div className="gr-hidden-cards">
-                <p className="gr-hidden-label">蓋牌是：</p>
-                <div className="gr-cards-row">
-                  {guessResultData.hiddenCards.map((card, index) => {
-                    const colorConfig = {
-                      red: { bg: '#E53E3E', name: '紅' },
-                      yellow: { bg: '#D69E2E', name: '黃' },
-                      green: { bg: '#43A047', name: '綠' },
-                      blue: { bg: '#1E88E5', name: '藍' }
-                    };
-                    const config = colorConfig[card.color] || colorConfig.green;
-                    return (
-                      <div key={index} className="gr-card-pill" style={{ backgroundColor: config.bg }}>
-                        <span>{config.name}</span>
-                      </div>
-                    );
-                  })}
+              {/* 工單 0172：蓋牌顯示區 — 只在猜對且有蓋牌資料時顯示 */}
+              {guessResultData.isCorrect && guessResultData.hiddenCards && (
+                <div className="gr-hidden-cards">
+                  <p className="gr-hidden-label">蓋牌是：</p>
+                  <div className="gr-cards-row">
+                    {guessResultData.hiddenCards.map((card, index) => {
+                      const colorConfig = {
+                        red: { bg: '#E53E3E', name: '紅' },
+                        yellow: { bg: '#D69E2E', name: '黃' },
+                        green: { bg: '#43A047', name: '綠' },
+                        blue: { bg: '#1E88E5', name: '藍' }
+                      };
+                      const config = colorConfig[card.color] || colorConfig.green;
+                      return (
+                        <div key={index} className="gr-card-pill" style={{ backgroundColor: config.bg }}>
+                          <span>{config.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 分數變化區塊 */}
               <div className="gr-section">
@@ -1878,18 +1867,32 @@ function GameRoom() {
                 </div>
               )}
 
-              {/* 底部按鈕區 */}
+              {/* 工單 0172：底部按鈕區 — 按鈕只顯示給猜牌者（遊戲結束時所有人可見） */}
               <div className="gr-actions">
-                {gameState.gamePhase !== GAME_PHASE_FINISHED ? (
-                  <button className="gr-btn gr-btn-primary" onClick={handleStartNextRound}>
-                    <span>下一局</span>
-                    <span className="material-symbols-outlined">navigate_next</span>
-                  </button>
-                ) : (
+                {gameState.gamePhase === GAME_PHASE_FINISHED ? (
+                  /* 遊戲結束：所有人看到「離開房間」 */
                   <button className="gr-btn gr-btn-secondary" onClick={handleLeaveRoom}>
                     <span>離開房間</span>
                     <span className="material-symbols-outlined">logout</span>
                   </button>
+                ) : guessResultData.guessingPlayerId === myPlayer?.id ? (
+                  /* 猜牌者：根據結果顯示不同按鈕 */
+                  guessResultData.isCorrect || !guessResultData.continueGame ? (
+                    /* 猜對 或 猜錯+全員退出：顯示「下一局」 */
+                    <button className="gr-btn gr-btn-primary" onClick={handleStartNextRound}>
+                      <span>下一局</span>
+                      <span className="material-symbols-outlined">navigate_next</span>
+                    </button>
+                  ) : (
+                    /* 猜錯+遊戲繼續：顯示「繼續觀戰遊戲」 */
+                    <button className="gr-btn gr-btn-primary" onClick={handleDismissGuessResult}>
+                      <span>繼續觀戰遊戲</span>
+                      <span className="material-symbols-outlined">visibility</span>
+                    </button>
+                  )
+                ) : (
+                  /* 跟猜者和其他玩家：等待猜牌者操作 */
+                  <p className="gr-waiting-text">等待猜牌者操作...</p>
                 )}
               </div>
 

@@ -1065,6 +1065,11 @@ io.on('connection', (socket) => {
     console.log(`第 ${gameState.currentRound} 局開始: ${gameId}`);
   });
 
+  // 工單 0171：猜牌者確認結果，關閉所有人的結果面板
+  socket.on('dismissGuessResult', ({ gameId }) => {
+    io.to(gameId).emit('guessResultDismissed');
+  });
+
   // 離開房間
   socket.on('leaveRoom', ({ gameId, playerId }) => {
     handlePlayerLeave(socket, gameId, playerId);
@@ -1702,7 +1707,7 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     gameState,
     isCorrect,
     scoreChanges,
-    hiddenCards: gameState.hiddenCards,
+    hiddenCards: isCorrect ? gameState.hiddenCards : null,  // 工單 0171：猜錯時不洩露蓋牌
     predictionResults,
     continueGame  // 工單 0149：猜錯但遊戲繼續
   };

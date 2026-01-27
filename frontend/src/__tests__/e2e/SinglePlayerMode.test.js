@@ -48,6 +48,7 @@ jest.mock('../../services/socketService', () => ({
   onCardGiveNotification: jest.fn(() => jest.fn()),
   onPlayerLeft: jest.fn(() => jest.fn()),
   onReconnectFailed: jest.fn(() => jest.fn()),
+  onGuessResultDismissed: jest.fn(() => jest.fn()),
   startGame: jest.fn(),
   sendGameAction: jest.fn(),
   requestRevealHiddenCards: jest.fn(),
@@ -55,7 +56,8 @@ jest.mock('../../services/socketService', () => ({
   submitColorChoice: jest.fn(),
   submitFollowGuessResponse: jest.fn(),
   startNextRound: jest.fn(),
-  endTurn: jest.fn()
+  endTurn: jest.fn(),
+  dismissGuessResult: jest.fn()
 }));
 
 jest.mock('../../controllers/LocalGameController');

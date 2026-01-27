@@ -120,6 +120,11 @@ describe('GameRoom - 工作單 0023', () => {
       socketCallbacks.reconnectFailed = callback;
       return () => {};
     });
+    // 工單 0172：猜牌結果面板關閉事件
+    socketService.onGuessResultDismissed.mockImplementation((callback) => {
+      socketCallbacks.guessResultDismissed = callback;
+      return () => {};
+    });
     socketService.startGame.mockImplementation(() => {});
     socketService.sendGameAction.mockImplementation(() => {});
     socketService.requestRevealHiddenCards.mockImplementation(() => {});
@@ -128,6 +133,7 @@ describe('GameRoom - 工作單 0023', () => {
     socketService.submitFollowGuessResponse.mockImplementation(() => {});
     socketService.startNextRound.mockImplementation(() => {});
     socketService.endTurn.mockImplementation(() => {});
+    socketService.dismissGuessResult.mockImplementation(() => {});
   });
 
   describe('渲染', () => {
