@@ -15,8 +15,8 @@ describe('MediumStrategy', () => {
 
     test('should have correct thresholds', () => {
       const strategy = new MediumStrategy();
-      expect(strategy.guessConfidenceThreshold).toBe(0.6);
-      expect(strategy.followGuessProbThreshold).toBe(0.15);
+      expect(strategy.guessConfidenceThreshold).toBe(0.2);
+      expect(strategy.followGuessProbThreshold).toBe(0.1);
     });
   });
 
@@ -165,8 +165,8 @@ describe('MediumStrategy', () => {
 
       expect(info.name).toBe('MediumStrategy');
       expect(info.difficulty).toBe(AI_DIFFICULTY.MEDIUM);
-      expect(info.guessConfidenceThreshold).toBe(0.6);
-      expect(info.followGuessProbThreshold).toBe(0.15);
+      expect(info.guessConfidenceThreshold).toBe(0.2);
+      expect(info.followGuessProbThreshold).toBe(0.1);
     });
   });
 });

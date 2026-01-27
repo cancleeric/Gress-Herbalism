@@ -60,6 +60,8 @@ jest.mock('../../../services/socketService', () => ({
   onPostQuestionPhase: jest.fn(() => jest.fn()),
   onTurnEnded: jest.fn(() => jest.fn()),
   onCardGiveNotification: jest.fn(() => jest.fn()),
+  onPlayerLeft: jest.fn(() => jest.fn()),
+  onReconnectFailed: jest.fn(() => jest.fn()),
   startGame: jest.fn(),
   sendGameAction: jest.fn(),
   requestRevealHiddenCards: jest.fn(),
@@ -68,6 +70,13 @@ jest.mock('../../../services/socketService', () => ({
   submitFollowGuessResponse: jest.fn(),
   startNextRound: jest.fn(),
   endTurn: jest.fn()
+}));
+
+// 工單 0161：Mock useAuth
+jest.mock('../../../firebase/AuthContext', () => ({
+  useAuth: () => ({
+    user: { displayName: null, isAnonymous: true, photoURL: null }
+  })
 }));
 
 // Mock localStorage

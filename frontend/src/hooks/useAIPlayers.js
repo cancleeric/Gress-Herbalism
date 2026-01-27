@@ -5,7 +5,7 @@
  * @description 管理 AI 玩家實例，處理 AI 回合決策
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createAIPlayer } from '../ai';
 import { PLAYER_TYPE } from '../shared/constants';
 
@@ -31,20 +31,30 @@ function useAIPlayers({ aiConfig, gameState, onAIAction }) {
   // 當前執行動作的 AI ID
   const [currentAIId, setCurrentAIId] = useState(null);
 
+  // 工單 0160：將 aiConfig 物件轉為穩定的原始值依賴，避免無限循環
+  const aiCount = aiConfig?.aiCount || 0;
+  const difficultiesKey = useMemo(
+    () => aiConfig?.difficulties ? JSON.stringify(aiConfig.difficulties) : '',
+    [aiConfig?.difficulties]
+  );
+
   /**
    * 初始化 AI 玩家
    */
   useEffect(() => {
-    if (!aiConfig || !aiConfig.aiCount || aiConfig.aiCount === 0) {
+    if (!aiCount) {
       setAIPlayers([]);
       aiPlayersRef.current = [];
       return;
     }
 
+    // 解析 difficulties
+    const difficulties = difficultiesKey ? JSON.parse(difficultiesKey) : [];
+
     // 創建 AI 玩家實例
     const players = [];
-    for (let i = 0; i < aiConfig.aiCount; i++) {
-      const difficulty = aiConfig.difficulties[i] || 'medium';
+    for (let i = 0; i < aiCount; i++) {
+      const difficulty = difficulties[i] || 'medium';
       const aiPlayer = createAIPlayer(
         `ai-${i + 1}`,
         null, // 使用預設名稱
@@ -57,12 +67,12 @@ function useAIPlayers({ aiConfig, gameState, onAIAction }) {
     setAIPlayers(players);
     aiPlayersRef.current = players;
 
-    console.log(`[AI] 初始化 ${aiConfig.aiCount} 個 AI 玩家`, players.map(p => ({
+    console.log(`[AI] 初始化 ${aiCount} 個 AI 玩家`, players.map(p => ({
       id: p.id,
       name: p.name,
       difficulty: p.difficulty
     })));
-  }, [aiConfig]);
+  }, [aiCount, difficultiesKey]);
 
   /**
    * 檢查玩家是否為 AI

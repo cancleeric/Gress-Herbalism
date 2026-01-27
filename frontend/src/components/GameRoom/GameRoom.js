@@ -12,6 +12,7 @@ import {
   updateGameState,
   resetGame
 } from '../../store/gameStore';
+import { selectGameRoomState } from '../../store/selectors';
 import useAIPlayers from '../../hooks/useAIPlayers';
 import LocalGameController from '../../controllers/LocalGameController';
 import {
@@ -112,18 +113,8 @@ function GameRoom() {
   console.log('[GameRoom] isLocalMode:', isLocalMode);
   console.log('[GameRoom] ========================================');
 
-  // 從 Redux store 取得遊戲狀態
-  const gameState = useSelector((state) => ({
-    storeGameId: state.gameId,
-    players: state.players,
-    currentPlayerIndex: state.currentPlayerIndex,
-    gamePhase: state.gamePhase,
-    winner: state.winner,
-    hiddenCards: state.hiddenCards,
-    gameHistory: state.gameHistory,
-    currentPlayerId: state.currentPlayerId,
-    maxPlayers: state.maxPlayers
-  }));
+  // 從 Redux store 取得遊戲狀態（工單 0162：使用記憶化 selector）
+  const gameState = useSelector(selectGameRoomState);
 
   // 本地遊戲控制器（單人模式專用）
   const localControllerRef = useRef(null);

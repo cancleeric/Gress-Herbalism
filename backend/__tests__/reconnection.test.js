@@ -14,10 +14,10 @@ const playerSockets = new Map();
 const disconnectTimeouts = new Map();
 const refreshingPlayers = new Set();
 
-// 常數
-const DISCONNECT_TIMEOUT = 60000;
-const WAITING_PHASE_DISCONNECT_TIMEOUT = 15000;
-const REFRESH_GRACE_PERIOD = 10000;
+// 常數（測試用縮短版本，加速測試執行）
+const DISCONNECT_TIMEOUT = 1000;
+const WAITING_PHASE_DISCONNECT_TIMEOUT = 500;
+const REFRESH_GRACE_PERIOD = 500;
 
 // 輔助函數
 function generateGameId() {
@@ -347,11 +347,11 @@ describe('斷線重連整合測試', () => {
 
       // 發送重整通知並斷線
       client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
-      await delay(100);
+      await delay(50);
       client1.disconnect();
 
-      // 等待一下讓伺服器處理
-      await delay(500);
+      // 等待一下讓伺服器處理（在寬限期內重連）
+      await delay(100);
 
       // 重新連線
       const client2 = createClient();
@@ -403,11 +403,11 @@ describe('斷線重連整合測試', () => {
 
       // 玩家 A 發送重整通知並斷線
       client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
-      await delay(100);
+      await delay(50);
       client1.disconnect();
 
-      // 等待狀態更新
-      await delay(500);
+      // 等待狀態更新（在寬限期內）
+      await delay(100);
 
       // 玩家 B 應看到玩家 A 斷線
       const disconnectedState = stateUpdates.find(s =>
@@ -415,7 +415,7 @@ describe('斷線重連整合測試', () => {
       );
       expect(disconnectedState).toBeDefined();
 
-      // 玩家 A 重連
+      // 玩家 A 重連（在寬限期內）
       const client1b = createClient();
       await waitForEvent(client1b, 'connect');
       client1b.emit('reconnect_request', {
@@ -426,7 +426,7 @@ describe('斷線重連整合測試', () => {
       await waitForEvent(client1b, 'reconnected');
 
       // 等待狀態更新
-      await delay(200);
+      await delay(100);
 
       // 玩家 B 應看到玩家 A 恢復
       const reconnectedState = stateUpdates.find(s =>
@@ -474,9 +474,8 @@ describe('斷線重連整合測試', () => {
       // 玩家 A 斷線（不發送 playerRefreshing）
       client1.disconnect();
 
-      // 等待超時（測試中使用 15 秒，但我們等待足夠長的時間）
-      // 注意：實際測試中這會是 15 秒，但為了測試效率，我們只驗證邏輯
-      await delay(16000);
+      // 等待超時（WAITING_PHASE_DISCONNECT_TIMEOUT = 500ms）
+      await delay(700);
 
       // 驗證玩家 A 被移除，玩家 B 成為房主
       expect(latestState).not.toBeNull();
@@ -485,7 +484,7 @@ describe('斷線重連整合測試', () => {
       expect(latestState.players[0].isHost).toBe(true);
 
       client2.disconnect();
-    }, 20000); // 增加測試超時
+    });
   });
 
   describe('GP-01: 遊戲中重整', () => {
@@ -585,8 +584,8 @@ describe('斷線重連整合測試', () => {
       // 玩家 A 斷線（不是重整）
       client1.disconnect();
 
-      // 等待 60 秒超時
-      await delay(61000);
+      // 等待斷線超時（DISCONNECT_TIMEOUT = 1000ms）
+      await delay(1200);
 
       // 驗證玩家 A 標記為不活躍
       expect(latestState).not.toBeNull();
@@ -596,7 +595,7 @@ describe('斷線重連整合測試', () => {
 
       client2.disconnect();
       client3.disconnect();
-    }, 65000); // 增加測試超時
+    });
   });
 
   describe('EC-01: 重連時房間已被刪除', () => {
@@ -614,8 +613,8 @@ describe('斷線重連整合測試', () => {
       // 斷線
       client1.disconnect();
 
-      // 等待超時（等待階段 15 秒）
-      await delay(16000);
+      // 等待超時（WAITING_PHASE_DISCONNECT_TIMEOUT = 500ms）
+      await delay(700);
 
       // 確認房間已刪除
       expect(gameRooms.has(gameId)).toBe(false);
@@ -634,7 +633,7 @@ describe('斷線重連整合測試', () => {
       expect(error.message).toBe('房間已不存在');
 
       client2.disconnect();
-    }, 20000);
+    });
   });
 
   describe('PF-01: 快速連續重整', () => {
@@ -741,8 +740,8 @@ describe('斷線重連整合測試', () => {
       client1.disconnect();
       await delay(100);
 
-      // 在 10 秒內重連應該成功
-      await delay(5000);
+      // 在寬限期內重連應該成功（REFRESH_GRACE_PERIOD = 500ms）
+      await delay(200);
 
       const client2 = createClient();
       await waitForEvent(client2, 'connect');
@@ -756,6 +755,6 @@ describe('斷線重連整合測試', () => {
       expect(result.gameId).toBe(gameId);
 
       client2.disconnect();
-    }, 15000);
+    });
   });
 });

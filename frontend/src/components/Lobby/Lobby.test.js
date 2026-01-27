@@ -997,3 +997,422 @@ describe('Lobby - Room ID 加入功能', () => {
     expect(joinButtons[0]).toBeDisabled();
   });
 });
+
+// ==================== 密碼房間功能測試 ====================
+describe('Lobby - 密碼房間功能', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+    socketService.requestRoomList.mockImplementation(() => {});
+  });
+
+  test('創建私人房間應勾選私人並輸入密碼', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    // 輸入暱稱
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    // 打開創建房間 Modal
+    fireEvent.click(screen.getByText('創建新房間'));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('設為私人房間')).toBeInTheDocument();
+    });
+
+    // 勾選私人房間
+    fireEvent.click(screen.getByLabelText('設為私人房間'));
+
+    // 應顯示密碼輸入欄
+    await waitFor(() => {
+      expect(screen.getByLabelText('房間密碼')).toBeInTheDocument();
+    });
+
+    // 輸入密碼
+    const passwordInput = screen.getByLabelText('房間密碼');
+    fireEvent.change(passwordInput, { target: { value: '1234' } });
+
+    // 點擊創建
+    const createButton = screen.getByRole('button', { name: /創建房間/ });
+    fireEvent.click(createButton);
+
+    expect(socketService.createRoom).toHaveBeenCalledWith(
+      expect.objectContaining({ name: '玩家1' }),
+      3,
+      '1234'
+    );
+  });
+
+  test('取消勾選私人房間應隱藏密碼欄位', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('創建新房間'));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('設為私人房間')).toBeInTheDocument();
+    });
+
+    // 勾選再取消
+    fireEvent.click(screen.getByLabelText('設為私人房間'));
+    await waitFor(() => {
+      expect(screen.getByLabelText('房間密碼')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('設為私人房間'));
+    await waitFor(() => {
+      expect(screen.queryByLabelText('房間密碼')).not.toBeInTheDocument();
+    });
+  });
+
+  test('加入私人房間應顯示密碼輸入 Modal', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    // 輸入暱稱
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    // 模擬收到包含私人房間的列表
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'private-room', name: '私密房間', playerCount: 1, maxPlayers: 3, isPrivate: true }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('私密房間')).toBeInTheDocument();
+    });
+
+    // 點擊加入按鈕
+    const joinButtons = screen.getAllByRole('button', { name: /加入/ });
+    const tableJoinButton = joinButtons.find(btn => btn.classList.contains('room-action-btn'));
+    fireEvent.click(tableJoinButton);
+
+    // 應顯示密碼 Modal
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('請輸入房間密碼')).toBeInTheDocument();
+    });
+  });
+
+  test('密碼 Modal 提交應傳遞密碼', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    // 輸入暱稱
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    // 模擬收到私人房間
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'private-room', name: '私密房間', playerCount: 1, maxPlayers: 3, isPrivate: true }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('私密房間')).toBeInTheDocument();
+    });
+
+    // 點擊加入觸發密碼 Modal
+    const joinButtons = screen.getAllByRole('button', { name: /加入/ });
+    const tableJoinButton = joinButtons.find(btn => btn.classList.contains('room-action-btn'));
+    fireEvent.click(tableJoinButton);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('請輸入房間密碼')).toBeInTheDocument();
+    });
+
+    // 輸入密碼
+    const pwdInput = screen.getByPlaceholderText('請輸入房間密碼');
+    fireEvent.change(pwdInput, { target: { value: 'secret123' } });
+
+    // 點擊加入
+    const modalJoinBtn = screen.getAllByRole('button', { name: /加入/ }).find(
+      btn => btn.classList.contains('btn-primary')
+    );
+    fireEvent.click(modalJoinBtn);
+
+    expect(socketService.joinRoom).toHaveBeenCalledWith(
+      'private-room',
+      expect.objectContaining({ name: '玩家1' }),
+      'secret123'
+    );
+  });
+
+  test('密碼 Modal 取消應關閉 Modal', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'private-room', name: '私密房間', playerCount: 1, maxPlayers: 3, isPrivate: true }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('私密房間')).toBeInTheDocument();
+    });
+
+    const joinButtons = screen.getAllByRole('button', { name: /加入/ });
+    const tableJoinButton = joinButtons.find(btn => btn.classList.contains('room-action-btn'));
+    fireEvent.click(tableJoinButton);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('請輸入房間密碼')).toBeInTheDocument();
+    });
+
+    // 點擊取消
+    fireEvent.click(screen.getByRole('button', { name: '取消' }));
+
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('請輸入房間密碼')).not.toBeInTheDocument();
+    });
+  });
+
+  test('密碼為空時提交應顯示錯誤', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'private-room', name: '私密房間', playerCount: 1, maxPlayers: 3, isPrivate: true }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('私密房間')).toBeInTheDocument();
+    });
+
+    const joinButtons = screen.getAllByRole('button', { name: /加入/ });
+    const tableJoinButton = joinButtons.find(btn => btn.classList.contains('room-action-btn'));
+    fireEvent.click(tableJoinButton);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('請輸入房間密碼')).toBeInTheDocument();
+    });
+
+    // 不輸入密碼直接提交
+    const modalJoinBtn = screen.getAllByRole('button', { name: /加入/ }).find(
+      btn => btn.classList.contains('btn-primary')
+    );
+    fireEvent.click(modalJoinBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText('請輸入密碼')).toBeInTheDocument();
+    });
+
+    // 不應呼叫 joinRoom
+    expect(socketService.joinRoom).not.toHaveBeenCalled();
+  });
+
+  test('私人房間應顯示鎖頭圖示', async () => {
+    const { container } = renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'private-room', name: '私密房間', playerCount: 1, maxPlayers: 3, isPrivate: true },
+        { id: 'public-room', name: '公開房間', playerCount: 1, maxPlayers: 3, isPrivate: false }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('私密房間')).toBeInTheDocument();
+      expect(screen.getByText('公開房間')).toBeInTheDocument();
+    });
+
+    // 私人房間應有 lock 圖示
+    const lockIcons = container.querySelectorAll('.private-icon');
+    expect(lockIcons).toHaveLength(1);
+  });
+});
+
+// ==================== 房間滿員狀態測試 ====================
+describe('Lobby - 房間滿員狀態', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+
+    socketService.initSocket.mockReturnValue({});
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      eventCallbacks.connectionChange = callback;
+      queueMicrotask(() => callback(true));
+      return () => {};
+    });
+    socketService.onRoomList.mockImplementation((callback) => {
+      eventCallbacks.roomList = callback;
+      return () => {};
+    });
+    socketService.onRoomCreated.mockImplementation((callback) => {
+      eventCallbacks.roomCreated = callback;
+      return () => {};
+    });
+    socketService.onJoinedRoom.mockImplementation((callback) => {
+      eventCallbacks.joinedRoom = callback;
+      return () => {};
+    });
+    socketService.onError.mockImplementation((callback) => {
+      eventCallbacks.error = callback;
+      return () => {};
+    });
+    socketService.onPasswordRequired.mockImplementation((callback) => {
+      eventCallbacks.passwordRequired = callback;
+      return () => {};
+    });
+    socketService.onReconnected.mockImplementation((callback) => {
+      eventCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      eventCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.createRoom.mockImplementation(() => {});
+    socketService.joinRoom.mockImplementation(() => {});
+    socketService.requestRoomList.mockImplementation(() => {});
+  });
+
+  test('房間滿員時加入按鈕應被禁用且顯示「已滿」', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'full-room', name: '滿員房間', playerCount: 3, maxPlayers: 3 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('滿員房間')).toBeInTheDocument();
+    });
+
+    // 按鈕應顯示「已滿」且被禁用
+    const actionBtn = screen.getByRole('button', { name: /已滿/ });
+    expect(actionBtn).toBeDisabled();
+  });
+
+  test('房間滿員時狀態欄應顯示「已滿」', async () => {
+    const { container } = renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'full-room', name: '滿員房間', playerCount: 4, maxPlayers: 4 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('滿員房間')).toBeInTheDocument();
+    });
+
+    // 狀態欄應顯示已滿
+    const statusSpan = container.querySelector('.room-status.full');
+    expect(statusSpan).toBeInTheDocument();
+    expect(statusSpan).toHaveTextContent('已滿');
+  });
+
+  test('房間未滿時狀態欄應顯示「等待中」', async () => {
+    const { container } = renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'open-room', name: '開放房間', playerCount: 1, maxPlayers: 3 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('開放房間')).toBeInTheDocument();
+    });
+
+    const statusSpan = container.querySelector('.room-status.waiting');
+    expect(statusSpan).toBeInTheDocument();
+    expect(statusSpan).toHaveTextContent('等待中');
+  });
+
+  test('玩家人數應顯示正確格式', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '測試房間', playerCount: 2, maxPlayers: 4 }
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('2/4')).toBeInTheDocument();
+    });
+  });
+});

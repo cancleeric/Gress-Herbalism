@@ -106,10 +106,10 @@ describe('MediumAI Integration Tests', () => {
     });
   });
 
-  describe('高信心度猜牌決策', () => {
-    test('should guess when confidence is high', async () => {
-      // 建立高信心場景：讓 AI 知道大部分牌的位置
-      // 模擬看到很多牌，只剩兩種顏色可能性高
+  describe('信心度猜牌決策', () => {
+    test('should guess when confidence exceeds threshold', async () => {
+      // 排除紅色和黃色後，只剩綠4、藍5，共9張
+      // 聯合概率 ≈ (5/9) * (4/9) ≈ 0.247 >= 0.2（閾值），應該猜牌
       aiPlayer.informationTracker.processEvent({
         type: EVENT_TYPES.CARD_TRANSFER,
         fromPlayerId: 'player-2',
@@ -124,13 +124,27 @@ describe('MediumAI Integration Tests', () => {
         cards: [{ color: 'yellow' }, { color: 'yellow' }, { color: 'yellow' }]
       });
 
-      // 現在剩餘：綠4、藍5，共9張，其中2張是蓋牌
-      // 藍色概率最高 (5/9)，綠色次之 (4/9)
-      // 聯合概率 ≈ (5/9) * (4/9) ≈ 0.247 < 0.6，應該還是問牌
+      const decision = await aiPlayer.takeTurn(gameState);
+
+      // 聯合概率 0.247 >= 閾值 0.2，AI 應選擇猜牌
+      expect(decision.type).toBe('guess');
+      expect(decision.colors).toHaveLength(2);
+    });
+
+    test('should ask when confidence is below threshold', async () => {
+      // 只排除紅色，剩餘：黃3、綠4、藍5，共12張
+      // 最高兩色：藍=5/12≈0.417, 綠=4/12≈0.333
+      // 聯合概率 ≈ 0.417 * 0.333 ≈ 0.139 < 0.2（閾值），應該問牌
+      aiPlayer.informationTracker.processEvent({
+        type: EVENT_TYPES.CARD_TRANSFER,
+        fromPlayerId: 'player-2',
+        toPlayerId: 'ai-1',
+        cards: [{ color: 'red' }, { color: 'red' }]
+      });
 
       const decision = await aiPlayer.takeTurn(gameState);
 
-      // 這個場景信心度不夠，應該問牌
+      // 聯合概率 0.139 < 閾值 0.2，AI 應選擇問牌
       expect(decision.type).toBe('question');
     });
 

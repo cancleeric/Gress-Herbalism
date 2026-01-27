@@ -33,19 +33,21 @@ import {
 
 // Mock modules
 jest.mock('../../services/socketService', () => ({
-  onGameState: jest.fn(),
-  onError: jest.fn(),
-  onHiddenCardsRevealed: jest.fn(),
-  onColorChoiceRequired: jest.fn(),
-  onWaitingForColorChoice: jest.fn(),
-  onColorChoiceResult: jest.fn(),
-  onFollowGuessStarted: jest.fn(),
-  onFollowGuessUpdate: jest.fn(),
-  onGuessResult: jest.fn(),
-  onRoundStarted: jest.fn(),
-  onPostQuestionPhase: jest.fn(),
-  onTurnEnded: jest.fn(),
-  onCardGiveNotification: jest.fn(),
+  onGameState: jest.fn(() => jest.fn()),
+  onError: jest.fn(() => jest.fn()),
+  onHiddenCardsRevealed: jest.fn(() => jest.fn()),
+  onColorChoiceRequired: jest.fn(() => jest.fn()),
+  onWaitingForColorChoice: jest.fn(() => jest.fn()),
+  onColorChoiceResult: jest.fn(() => jest.fn()),
+  onFollowGuessStarted: jest.fn(() => jest.fn()),
+  onFollowGuessUpdate: jest.fn(() => jest.fn()),
+  onGuessResult: jest.fn(() => jest.fn()),
+  onRoundStarted: jest.fn(() => jest.fn()),
+  onPostQuestionPhase: jest.fn(() => jest.fn()),
+  onTurnEnded: jest.fn(() => jest.fn()),
+  onCardGiveNotification: jest.fn(() => jest.fn()),
+  onPlayerLeft: jest.fn(() => jest.fn()),
+  onReconnectFailed: jest.fn(() => jest.fn()),
   startGame: jest.fn(),
   sendGameAction: jest.fn(),
   requestRevealHiddenCards: jest.fn(),
@@ -57,6 +59,20 @@ jest.mock('../../services/socketService', () => ({
 }));
 
 jest.mock('../../controllers/LocalGameController');
+
+// 工單 0161：Mock useAuth
+jest.mock('../../firebase/AuthContext', () => ({
+  useAuth: () => ({
+    user: { displayName: null, isAnonymous: true, photoURL: null }
+  })
+}));
+
+// Mock localStorage
+jest.mock('../../utils/localStorage', () => ({
+  clearCurrentRoom: jest.fn(),
+  saveCurrentRoom: jest.fn(),
+  getCurrentRoom: jest.fn()
+}));
 
 // Mock useAIPlayers hook
 jest.mock('../../hooks/useAIPlayers', () => ({

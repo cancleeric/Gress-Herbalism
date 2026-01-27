@@ -111,6 +111,15 @@ describe('GameRoom - 工作單 0023', () => {
       socketCallbacks.cardGiveNotification = callback;
       return () => {};
     });
+    // 工單 0159：補充遺漏的 socket 事件 mock
+    socketService.onPlayerLeft.mockImplementation((callback) => {
+      socketCallbacks.playerLeft = callback;
+      return () => {};
+    });
+    socketService.onReconnectFailed.mockImplementation((callback) => {
+      socketCallbacks.reconnectFailed = callback;
+      return () => {};
+    });
     socketService.startGame.mockImplementation(() => {});
     socketService.sendGameAction.mockImplementation(() => {});
     socketService.requestRevealHiddenCards.mockImplementation(() => {});

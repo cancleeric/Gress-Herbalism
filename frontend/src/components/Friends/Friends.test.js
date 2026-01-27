@@ -55,7 +55,7 @@ describe('Friends 組件', () => {
     test('應顯示標題', async () => {
       render(<MemoryRouter><Friends /></MemoryRouter>);
       await waitFor(() => {
-        expect(screen.getByText('好友')).toBeInTheDocument();
+        expect(screen.getByText('好友管理')).toBeInTheDocument();
       });
     });
 

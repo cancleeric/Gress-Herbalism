@@ -130,12 +130,31 @@ export function onConnectionChange(callback) {
 }
 
 /**
+ * 安全地建立事件監聽（工單 0159）
+ * 確保在任何情況下都返回有效的取消訂閱函數
+ * @param {string} eventName - 事件名稱
+ * @param {Function} callback - 回調函數
+ * @returns {Function} 取消訂閱函數
+ */
+function safeOn(eventName, callback) {
+  try {
+    const s = getSocket();
+    if (!s) {
+      return () => {};
+    }
+    s.on(eventName, callback);
+    return () => s.off(eventName, callback);
+  } catch (error) {
+    console.warn(`[socketService] 無法監聽事件 ${eventName}:`, error.message);
+    return () => {};
+  }
+}
+
+/**
  * 監聽房間列表更新
  */
 export function onRoomList(callback) {
-  const s = getSocket();
-  s.on('roomList', callback);
-  return () => s.off('roomList', callback);
+  return safeOn('roomList', callback);
 }
 
 /**
@@ -151,18 +170,14 @@ export function requestRoomList() {
  * 監聯遊戲狀態更新
  */
 export function onGameState(callback) {
-  const s = getSocket();
-  s.on('gameState', callback);
-  return () => s.off('gameState', callback);
+  return safeOn('gameState', callback);
 }
 
 /**
  * 工單 0148：監聽玩家離開事件
  */
 export function onPlayerLeft(callback) {
-  const s = getSocket();
-  s.on('playerLeft', callback);
-  return () => s.off('playerLeft', callback);
+  return safeOn('playerLeft', callback);
 }
 
 // ==================== 工單 0079：重連功能 ====================
@@ -182,81 +197,63 @@ export function attemptReconnect(roomId, playerId, playerName) {
  * 監聽重連成功
  */
 export function onReconnected(callback) {
-  const s = getSocket();
-  s.on('reconnected', callback);
-  return () => s.off('reconnected', callback);
+  return safeOn('reconnected', callback);
 }
 
 /**
  * 監聽重連失敗
  */
 export function onReconnectFailed(callback) {
-  const s = getSocket();
-  s.on('reconnectFailed', callback);
-  return () => s.off('reconnectFailed', callback);
+  return safeOn('reconnectFailed', callback);
 }
 
 /**
  * 監聽錯誤訊息
  */
 export function onError(callback) {
-  const s = getSocket();
-  s.on('error', callback);
-  return () => s.off('error', callback);
+  return safeOn('error', callback);
 }
 
 /**
  * 監聽房間創建成功
  */
 export function onRoomCreated(callback) {
-  const s = getSocket();
-  s.on('roomCreated', callback);
-  return () => s.off('roomCreated', callback);
+  return safeOn('roomCreated', callback);
 }
 
 /**
  * 監聽加入房間成功
  */
 export function onJoinedRoom(callback) {
-  const s = getSocket();
-  s.on('joinedRoom', callback);
-  return () => s.off('joinedRoom', callback);
+  return safeOn('joinedRoom', callback);
 }
 
 /**
  * 監聽蓋牌揭示
  */
 export function onHiddenCardsRevealed(callback) {
-  const s = getSocket();
-  s.on('hiddenCardsRevealed', callback);
-  return () => s.off('hiddenCardsRevealed', callback);
+  return safeOn('hiddenCardsRevealed', callback);
 }
 
 /**
  * 監聽顏色選擇請求（被要牌玩家需要選擇給哪種顏色）
  */
 export function onColorChoiceRequired(callback) {
-  const s = getSocket();
-  s.on('colorChoiceRequired', callback);
-  return () => s.off('colorChoiceRequired', callback);
+  return safeOn('colorChoiceRequired', callback);
 }
 
 /**
  * 監聽等待顏色選擇（通知其他玩家正在等待選擇）
  */
 export function onWaitingForColorChoice(callback) {
-  const s = getSocket();
-  s.on('waitingForColorChoice', callback);
-  return () => s.off('waitingForColorChoice', callback);
+  return safeOn('waitingForColorChoice', callback);
 }
 
 /**
  * 監聽顏色選擇結果
  */
 export function onColorChoiceResult(callback) {
-  const s = getSocket();
-  s.on('colorChoiceResult', callback);
-  return () => s.off('colorChoiceResult', callback);
+  return safeOn('colorChoiceResult', callback);
 }
 
 /**
@@ -290,9 +287,7 @@ export function joinRoom(gameId, player, password = null) {
  * 監聽需要密碼
  */
 export function onPasswordRequired(callback) {
-  const s = getSocket();
-  s.on('passwordRequired', callback);
-  return () => s.off('passwordRequired', callback);
+  return safeOn('passwordRequired', callback);
 }
 
 /**
@@ -347,36 +342,28 @@ export function submitColorChoice(gameId, chosenColor) {
  * 監聽跟猜開始
  */
 export function onFollowGuessStarted(callback) {
-  const s = getSocket();
-  s.on('followGuessStarted', callback);
-  return () => s.off('followGuessStarted', callback);
+  return safeOn('followGuessStarted', callback);
 }
 
 /**
  * 監聽跟猜狀態更新
  */
 export function onFollowGuessUpdate(callback) {
-  const s = getSocket();
-  s.on('followGuessUpdate', callback);
-  return () => s.off('followGuessUpdate', callback);
+  return safeOn('followGuessUpdate', callback);
 }
 
 /**
  * 監聽猜牌結果
  */
 export function onGuessResult(callback) {
-  const s = getSocket();
-  s.on('guessResult', callback);
-  return () => s.off('guessResult', callback);
+  return safeOn('guessResult', callback);
 }
 
 /**
  * 監聽局開始
  */
 export function onRoundStarted(callback) {
-  const s = getSocket();
-  s.on('roundStarted', callback);
-  return () => s.off('roundStarted', callback);
+  return safeOn('roundStarted', callback);
 }
 
 /**
@@ -401,18 +388,14 @@ export function startNextRound(gameId) {
  * 監聽進入問牌後階段（顯示預測選項）
  */
 export function onPostQuestionPhase(callback) {
-  const s = getSocket();
-  s.on('postQuestionPhase', callback);
-  return () => s.off('postQuestionPhase', callback);
+  return safeOn('postQuestionPhase', callback);
 }
 
 /**
  * 監聽回合結束（玩家結束回合並可能有預測）
  */
 export function onTurnEnded(callback) {
-  const s = getSocket();
-  s.on('turnEnded', callback);
-  return () => s.off('turnEnded', callback);
+  return safeOn('turnEnded', callback);
 }
 
 /**
@@ -432,9 +415,7 @@ export function endTurn(gameId, playerId, prediction) {
  * 監聽給牌通知（私密訊息給被要牌玩家）
  */
 export function onCardGiveNotification(callback) {
-  const s = getSocket();
-  s.on('cardGiveNotification', callback);
-  return () => s.off('cardGiveNotification', callback);
+  return safeOn('cardGiveNotification', callback);
 }
 
 // ==================== 工單 0118：重連時序優化 ====================
