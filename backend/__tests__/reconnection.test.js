@@ -13,6 +13,9 @@ const gameRooms = new Map();
 const playerSockets = new Map();
 const disconnectTimeouts = new Map();
 const refreshingPlayers = new Set();
+// 工單 0202：跟猜與預測階段狀態
+const followGuessStates = new Map();
+const postQuestionStates = new Map();
 
 // 常數（測試用縮短版本，加速測試執行）
 const DISCONNECT_TIMEOUT = 1000;
@@ -274,6 +277,27 @@ function setupServer() {
         gameState: gameState
       });
 
+      // 工單 0202：跟猜階段恢復
+      const followState = followGuessStates.get(roomId);
+      if (followState && followState.decisionOrder.includes(playerId)) {
+        socket.emit('followGuessStarted', {
+          guessingPlayerId: followState.guessingPlayerId,
+          guessedColors: followState.guessedColors,
+          decisionOrder: followState.decisionOrder,
+          currentDeciderId: followState.currentDeciderId,
+          decisions: followState.decisions
+        });
+      }
+
+      // 工單 0202：預測階段恢復
+      const postState = postQuestionStates.get(roomId);
+      if (postState && postState.playerId === playerId) {
+        socket.emit('postQuestionPhase', {
+          playerId: postState.playerId,
+          message: postState.message || '請選擇是否要進行預測'
+        });
+      }
+
       broadcastGameState(roomId);
     }
 
@@ -328,6 +352,8 @@ describe('斷線重連整合測試', () => {
     disconnectTimeouts.forEach(timer => clearTimeout(timer));
     disconnectTimeouts.clear();
     refreshingPlayers.clear();
+    followGuessStates.clear();
+    postQuestionStates.clear();
   });
 
   describe('WA-01: 等待階段單人重整', () => {
@@ -755,6 +781,705 @@ describe('斷線重連整合測試', () => {
       expect(result.gameId).toBe(gameId);
 
       client2.disconnect();
+    });
+  });
+
+  // ====================================================================
+  // 工單 0202：重連整合測試
+  // ====================================================================
+
+  describe('TC-0202-01：BUG-001 修復驗證 — reconnected 事件 payload', () => {
+    test('TC-0202-01a：重連成功時應發送包含完整 gameState 的 reconnected 事件', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      // 建立 3 人房間並開始遊戲
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 玩家 A 斷線
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      // 重連
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+      client1b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player1',
+        playerName: '玩家A'
+      });
+
+      const result = await waitForEvent(client1b, 'reconnected');
+
+      // 驗證 reconnected payload
+      expect(result.gameId).toBe(gameId);
+      expect(result.playerId).toBe('player1');
+      expect(result.gameState).toBeDefined();
+      expect(typeof result.gameState).toBe('object');
+
+      client1b.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+    });
+
+    test('TC-0202-01b：gameState 應包含所有必要遊戲欄位', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 斷線重連
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+      client1b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player1',
+        playerName: '玩家A'
+      });
+
+      const { gameState } = await waitForEvent(client1b, 'reconnected');
+
+      // 驗證必要欄位
+      expect(Array.isArray(gameState.players)).toBe(true);
+      expect(typeof gameState.maxPlayers).toBe('number');
+      expect(typeof gameState.gamePhase).toBe('string');
+      expect(gameState.gamePhase).toBe('playing');
+      // 遊戲中每個玩家應有 hand
+      gameState.players.forEach(p => {
+        expect(Array.isArray(p.hand)).toBe(true);
+      });
+
+      client1b.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+    });
+
+    test('TC-0202-01c：重連不應拋出錯誤', async () => {
+      const client1 = createClient();
+      await waitForEvent(client1, 'connect');
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 4
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      // 重連不應報錯
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+
+      await expect(async () => {
+        client1b.emit('reconnect_request', {
+          roomId: gameId,
+          playerId: 'player1',
+          playerName: '玩家A'
+        });
+        await waitForEvent(client1b, 'reconnected');
+      }).not.toThrow();
+
+      client1b.disconnect();
+    });
+  });
+
+  describe('TC-0202-02：BUG-004 修復驗證 — 跟猜階段重連', () => {
+    test('TC-0202-02a：跟猜階段重連時應收到 followGuessStarted 事件', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 手動設定跟猜狀態（模擬玩家 1 猜牌觸發跟猜）
+      followGuessStates.set(gameId, {
+        guessingPlayerId: 'player1',
+        guessedColors: ['red', 'blue'],
+        decisionOrder: ['player2', 'player3'],
+        currentDeciderId: 'player2',
+        decisions: {}
+      });
+
+      // 玩家 2 斷線重連
+      client2.emit('playerRefreshing', { gameId, playerId: 'player2' });
+      await delay(50);
+      client2.disconnect();
+      await delay(100);
+
+      const client2b = createClient();
+      await waitForEvent(client2b, 'connect');
+
+      // 先註冊所有事件監聽器，避免競態條件
+      const reconnectedPromise = waitForEvent(client2b, 'reconnected', 10000);
+      const followGuessPromise = waitForEvent(client2b, 'followGuessStarted', 10000);
+
+      client2b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player2',
+        playerName: '玩家B'
+      });
+
+      const reconnected = await reconnectedPromise;
+      expect(reconnected.gameId).toBe(gameId);
+
+      const followGuess = await followGuessPromise;
+      expect(followGuess.guessingPlayerId).toBe('player1');
+      expect(followGuess.guessedColors).toEqual(['red', 'blue']);
+      expect(followGuess.decisionOrder).toEqual(['player2', 'player3']);
+      expect(followGuess.currentDeciderId).toBe('player2');
+      expect(followGuess.decisions).toEqual({});
+
+      client1.disconnect();
+      client2b.disconnect();
+      client3.disconnect();
+    }, 15000);
+
+    test('TC-0202-02b：非跟猜階段重連時不應收到 followGuessStarted', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 不設定 followGuessStates
+
+      // 玩家 2 斷線重連
+      client2.emit('playerRefreshing', { gameId, playerId: 'player2' });
+      await delay(50);
+      client2.disconnect();
+      await delay(100);
+
+      const client2b = createClient();
+      await waitForEvent(client2b, 'connect');
+
+      let receivedFollowGuess = false;
+      client2b.on('followGuessStarted', () => {
+        receivedFollowGuess = true;
+      });
+
+      client2b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player2',
+        playerName: '玩家B'
+      });
+
+      await waitForEvent(client2b, 'reconnected');
+      await delay(200);
+
+      expect(receivedFollowGuess).toBe(false);
+
+      client1.disconnect();
+      client2b.disconnect();
+      client3.disconnect();
+    });
+
+    test('TC-0202-02c：不在 decisionOrder 中的玩家重連不應收到跟猜事件', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 跟猜狀態：只有 player2 和 player3 需要跟猜
+      followGuessStates.set(gameId, {
+        guessingPlayerId: 'player1',
+        guessedColors: ['red', 'blue'],
+        decisionOrder: ['player2', 'player3'],
+        currentDeciderId: 'player2',
+        decisions: {}
+      });
+
+      // 玩家 1（不在 decisionOrder 中）斷線重連
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+
+      let receivedFollowGuess = false;
+      client1b.on('followGuessStarted', () => {
+        receivedFollowGuess = true;
+      });
+
+      client1b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player1',
+        playerName: '玩家A'
+      });
+
+      await waitForEvent(client1b, 'reconnected');
+      await delay(200);
+
+      expect(receivedFollowGuess).toBe(false);
+
+      client1b.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+    });
+  });
+
+  describe('TC-0202-03：預測階段重連恢復', () => {
+    test('TC-0202-03a：預測階段重連時應收到 postQuestionPhase 事件', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 手動設定預測階段狀態
+      postQuestionStates.set(gameId, {
+        playerId: 'player1',
+        message: '請選擇是否要進行預測'
+      });
+
+      // 玩家 1 斷線重連
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+
+      // 先註冊所有事件監聽器，避免競態條件
+      const reconnectedPromise = waitForEvent(client1b, 'reconnected', 10000);
+      const postPhasePromise = waitForEvent(client1b, 'postQuestionPhase', 10000);
+
+      client1b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player1',
+        playerName: '玩家A'
+      });
+
+      await reconnectedPromise;
+      const postPhase = await postPhasePromise;
+
+      expect(postPhase.playerId).toBe('player1');
+      expect(postPhase.message).toBe('請選擇是否要進行預測');
+
+      client1b.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+    }, 15000);
+
+    test('TC-0202-03b：非當前預測玩家重連不應收到 postQuestionPhase', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 預測階段是玩家 1 的
+      postQuestionStates.set(gameId, {
+        playerId: 'player1',
+        message: '請選擇是否要進行預測'
+      });
+
+      // 玩家 2（非預測玩家）斷線重連
+      client2.emit('playerRefreshing', { gameId, playerId: 'player2' });
+      await delay(50);
+      client2.disconnect();
+      await delay(100);
+
+      const client2b = createClient();
+      await waitForEvent(client2b, 'connect');
+
+      let receivedPostPhase = false;
+      client2b.on('postQuestionPhase', () => {
+        receivedPostPhase = true;
+      });
+
+      client2b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player2',
+        playerName: '玩家B'
+      });
+
+      await waitForEvent(client2b, 'reconnected');
+      await delay(200);
+
+      expect(receivedPostPhase).toBe(false);
+
+      client1.disconnect();
+      client2b.disconnect();
+      client3.disconnect();
+    });
+  });
+
+  describe('TC-0202-04：完整重整事件鏈', () => {
+    test('TC-0202-04a：playerRefreshing → disconnect → reconnect 應成功恢復', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 完整事件鏈：playerRefreshing → disconnect → reconnect
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+      client1b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player1',
+        playerName: '玩家A'
+      });
+
+      const result = await waitForEvent(client1b, 'reconnected');
+
+      // 驗證恢復成功
+      expect(result.gameId).toBe(gameId);
+      const player = result.gameState.players.find(p => p.id === 'player1');
+      expect(player.isDisconnected).toBe(false);
+
+      // 驗證 refreshingPlayers 不含該玩家
+      const refreshKey = `${gameId}:player1`;
+      expect(refreshingPlayers.has(refreshKey)).toBe(false);
+
+      client1b.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+    });
+
+    test('TC-0202-04b：playerRefreshing 超時後應移除玩家（等待階段）', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 4
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      // 等待階段發送 playerRefreshing 並斷線
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+
+      // 等待超過寬限期（REFRESH_GRACE_PERIOD = 500ms）
+      await delay(700);
+
+      // 玩家應被從房間移除
+      const gameState = gameRooms.get(gameId);
+      expect(gameState).toBeDefined();
+      expect(gameState.players).toHaveLength(1);
+      expect(gameState.players[0].id).toBe('player2');
+
+      client2.disconnect();
+    });
+  });
+
+  describe('TC-0202-05：多人同時重整', () => {
+    test('TC-0202-05a：3 位玩家同時斷線後各自獨立計時', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 3 位玩家同時發送 playerRefreshing 並斷線
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      client2.emit('playerRefreshing', { gameId, playerId: 'player2' });
+      client3.emit('playerRefreshing', { gameId, playerId: 'player3' });
+      await delay(50);
+
+      client1.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+      await delay(200);
+
+      // 應有 3 個獨立的斷線計時器
+      expect(disconnectTimeouts.size).toBe(3);
+    });
+
+    test('TC-0202-05b：3 位玩家依序重連應全部成功', async () => {
+      const client1 = createClient();
+      const client2 = createClient();
+      const client3 = createClient();
+      await Promise.all([
+        waitForEvent(client1, 'connect'),
+        waitForEvent(client2, 'connect'),
+        waitForEvent(client3, 'connect')
+      ]);
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 3
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      client2.emit('joinRoom', { gameId, player: { id: 'player2', name: '玩家B' } });
+      await waitForEvent(client2, 'joinedRoom');
+
+      client3.emit('joinRoom', { gameId, player: { id: 'player3', name: '玩家C' } });
+      await waitForEvent(client3, 'joinedRoom');
+
+      client1.emit('startGame', { gameId });
+      await delay(200);
+
+      // 3 位玩家同時斷線
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      client2.emit('playerRefreshing', { gameId, playerId: 'player2' });
+      client3.emit('playerRefreshing', { gameId, playerId: 'player3' });
+      await delay(50);
+
+      client1.disconnect();
+      client2.disconnect();
+      client3.disconnect();
+      await delay(100);
+
+      // 依序重連
+      const newClients = [];
+      for (const [id, name] of [['player1', '玩家A'], ['player2', '玩家B'], ['player3', '玩家C']]) {
+        const nc = createClient();
+        await waitForEvent(nc, 'connect');
+        nc.emit('reconnect_request', { roomId: gameId, playerId: id, playerName: name });
+        const result = await waitForEvent(nc, 'reconnected');
+        expect(result.gameId).toBe(gameId);
+        newClients.push(nc);
+      }
+
+      // 驗證房間玩家數仍為 3
+      const gameState = gameRooms.get(gameId);
+      expect(gameState.players).toHaveLength(3);
+      expect(gameState.players.every(p => !p.isDisconnected)).toBe(true);
+
+      newClients.forEach(c => c.disconnect());
+    });
+  });
+
+  describe('TC-0202-06：socketId 更新驗證', () => {
+    test('TC-0202-06a：重連後 playerSockets Map 應包含新的映射', async () => {
+      const client1 = createClient();
+      await waitForEvent(client1, 'connect');
+
+      client1.emit('createRoom', {
+        player: { id: 'player1', name: '玩家A' },
+        maxPlayers: 4
+      });
+      const { gameId } = await waitForEvent(client1, 'roomCreated');
+
+      // 記錄舊 socketId
+      const oldSocketId = client1.id;
+
+      // 斷線
+      client1.emit('playerRefreshing', { gameId, playerId: 'player1' });
+      await delay(50);
+      client1.disconnect();
+      await delay(100);
+
+      // 舊 socketId 應已從 playerSockets 移除
+      expect(playerSockets.has(oldSocketId)).toBe(false);
+
+      // 重連
+      const client1b = createClient();
+      await waitForEvent(client1b, 'connect');
+      const newSocketId = client1b.id;
+
+      client1b.emit('reconnect_request', {
+        roomId: gameId,
+        playerId: 'player1',
+        playerName: '玩家A'
+      });
+      await waitForEvent(client1b, 'reconnected');
+
+      // 新 socketId 應在 playerSockets 中
+      expect(playerSockets.has(newSocketId)).toBe(true);
+      expect(playerSockets.get(newSocketId)).toEqual({
+        gameId: gameId,
+        playerId: 'player1'
+      });
+
+      // socketId 應不同
+      expect(newSocketId).not.toBe(oldSocketId);
+
+      client1b.disconnect();
     });
   });
 });
