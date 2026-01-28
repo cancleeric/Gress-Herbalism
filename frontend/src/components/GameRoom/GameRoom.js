@@ -183,6 +183,10 @@ function GameRoom() {
   // 遊戲不存在錯誤處理（工單 0150）
   const [gameNotExist, setGameNotExist] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(3);
+  // 工單 0210：重連狀態
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const reconnectTimerRef = useRef(null);
+  const reconnectAttemptsRef = useRef(0);
 
   // Firebase Auth（工單 0123）
   const { user: authUser } = useAuth();
@@ -543,14 +547,20 @@ function GameRoom() {
       setCardGiveNotification(notification);
     });
 
-    // 工單 0150：監聽重連失敗
+    // 工單 0150/0210：監聽重連失敗
     const unsubReconnectFailed = onReconnectFailed(({ message }) => {
-      console.log('[工單 0150] 重連失敗:', message);
+      console.log('[工單 0210] 重連失敗:', message);
       setGameNotExist(true);
       clearCurrentRoom();
       localStorage.removeItem('lastRoomId');
       localStorage.removeItem('lastPlayerId');
       localStorage.removeItem('lastPlayerName');
+      // 工單 0210：清除重連狀態
+      setIsReconnecting(false);
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
     });
 
     // 工單 0172：監聽猜牌結果面板關閉
@@ -559,9 +569,9 @@ function GameRoom() {
       setGuessResultData(null);
     });
 
-    // 工單 0196：監聽重連成功
+    // 工單 0196/0210：監聽重連成功
     const unsubReconnected = onReconnected(({ gameId: reconnGameId, playerId: reconnPlayerId, gameState: reconnState }) => {
-      console.log('[工單 0196] 重連成功，更新遊戲狀態');
+      console.log('[工單 0210] 重連成功，更新遊戲狀態');
       dispatch(updateGameState({
         gameId: reconnGameId,
         players: reconnState.players,
@@ -571,9 +581,19 @@ function GameRoom() {
         currentPlayerId: reconnPlayerId,
         hiddenCards: reconnState.hiddenCards,
         gameHistory: reconnState.gameHistory,
-        winner: reconnState.winner
+        winner: reconnState.winner,
+        // 工單 0210：補齊缺失欄位
+        scores: reconnState.scores,
+        currentRound: reconnState.currentRound,
+        predictions: reconnState.predictions,
       }));
       setIsLoading(false);
+      // 工單 0210：清除重連狀態
+      setIsReconnecting(false);
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
     });
 
     return () => {
@@ -598,23 +618,50 @@ function GameRoom() {
   }, [dispatch, isLocalMode]);
 
   /**
-   * 工單 0196：多人模式重連
+   * 工單 0196/0210：多人模式重連（含重試機制）
    * 頁面重整後 socket 重新連線時，主動發起 reconnect 請求
    */
   useEffect(() => {
     if (isLocalMode) return;
 
+    const MAX_RETRIES = 3;
+    const RETRY_INTERVAL = 5000;
+
+    const doReconnect = (savedRoom) => {
+      console.log(`[工單 0210] 嘗試重連 (第 ${reconnectAttemptsRef.current + 1} 次):`, savedRoom.roomId);
+      attemptReconnect(savedRoom.roomId, savedRoom.playerId, savedRoom.playerName);
+
+      // 設定重試 timer
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectAttemptsRef.current++;
+        if (reconnectAttemptsRef.current < MAX_RETRIES) {
+          console.log(`[工單 0210] 重連未回應，第 ${reconnectAttemptsRef.current + 1} 次重試`);
+          doReconnect(savedRoom);
+        } else {
+          console.log('[工單 0210] 重連重試次數已用盡');
+          setIsReconnecting(false);
+        }
+      }, RETRY_INTERVAL);
+    };
+
     const unsubConnect = onConnectionChange((connected) => {
       if (connected) {
         const savedRoom = getCurrentRoom();
         if (savedRoom && savedRoom.roomId === gameId && savedRoom.playerId) {
-          console.log('[工單 0196] 偵測到已儲存的房間資訊，嘗試重連:', savedRoom);
-          attemptReconnect(savedRoom.roomId, savedRoom.playerId, savedRoom.playerName);
+          setIsReconnecting(true);
+          reconnectAttemptsRef.current = 0;
+          doReconnect(savedRoom);
         }
       }
     });
 
-    return () => unsubConnect();
+    return () => {
+      unsubConnect();
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+    };
   }, [gameId, isLocalMode]);
 
   /**
@@ -1951,6 +1998,16 @@ function GameRoom() {
 
               {/* 底部裝飾線 */}
               <div className="gr-bottom-line"></div>
+            </div>
+          </div>
+        )}
+
+        {/* 工單 0210：重連覆蓋層 */}
+        {isReconnecting && (
+          <div className="gr-reconnecting-overlay">
+            <div className="gr-reconnecting-content">
+              <div className="gr-reconnecting-spinner"></div>
+              <p>重新連線中...</p>
             </div>
           </div>
         )}

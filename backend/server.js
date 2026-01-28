@@ -345,12 +345,12 @@ const guessResultConfirmations = new Map();
 const disconnectTimeouts = new Map();
 const DISCONNECT_TIMEOUT = 60000; // 60 秒（遊戲中）
 
-// 工單 0115：等待階段寬限期
-const WAITING_PHASE_DISCONNECT_TIMEOUT = 15000; // 15 秒（等待階段）
+// 工單 0115/0209：等待階段寬限期（從 15 秒提高到 30 秒）
+const WAITING_PHASE_DISCONNECT_TIMEOUT = 30000; // 30 秒（等待階段）
 
-// 工單 0118：追蹤正在重整的玩家（給予更長寬限期）
+// 工單 0118/0209：追蹤正在重整的玩家（從 10 秒提高到 30 秒）
 const refreshingPlayers = new Set();
-const REFRESH_GRACE_PERIOD = 10000; // 10 秒重整寬限期
+const REFRESH_GRACE_PERIOD = 30000; // 30 秒重整寬限期
 
 /**
  * 產生唯一遊戲 ID
@@ -1147,7 +1147,7 @@ io.on('connection', (socket) => {
     refreshingPlayers.add(refreshKey);
     console.log(`[重整] 玩家 ${playerId} 正在重整頁面，加入寬限列表`);
 
-    // 10 秒後自動移除（避免記憶體洩漏）
+    // 工單 0209：30 秒後自動移除（避免記憶體洩漏）
     setTimeout(() => {
       refreshingPlayers.delete(refreshKey);
     }, REFRESH_GRACE_PERIOD);
@@ -1286,14 +1286,14 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
       if (currentPlayerIndex !== -1 && currentState.players[currentPlayerIndex].isDisconnected) {
         const currentPlayer = currentState.players[currentPlayerIndex];
 
-        // 工單 0118：重整中或等待階段超時後移除玩家
-        if (isWaitingPhase || isRefreshing) {
-          const reason = isRefreshing ? '重整' : '等待階段';
-          console.log(`[${reason}] 玩家 ${playerId} 重連超時，移除玩家`);
-          currentState.players.splice(currentPlayerIndex, 1);
+        // 工單 0209：修復移除邏輯 — 只有等待階段才移除玩家，遊戲階段一律標記不活躍
+        // 清除 isRefreshing 標記
+        delete currentPlayer.isRefreshing;
 
-          // 清除 isRefreshing 標記
-          delete currentPlayer.isRefreshing;
+        if (isWaitingPhase) {
+          // 等待階段：移除玩家
+          console.log(`[等待階段] 玩家 ${playerId} 重連超時，移除玩家`);
+          currentState.players.splice(currentPlayerIndex, 1);
 
           if (currentState.players.length === 0) {
             // 房間空了，刪除房間
@@ -1310,8 +1310,9 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
             broadcastRoomList();
           }
         } else {
-          // 遊戲中：標記為不活躍
-          console.log(`[遊戲中] 玩家 ${playerId} 重連超時，標記為不活躍`);
+          // 遊戲階段（含重整中）：標記為不活躍，不移除
+          const reason = isRefreshing ? '重整超時' : '斷線超時';
+          console.log(`[遊戲中] 玩家 ${playerId} ${reason}，標記為不活躍`);
           currentState.players[currentPlayerIndex].isActive = false;
           currentState.players[currentPlayerIndex].isDisconnected = false;
           broadcastGameState(gameId);
