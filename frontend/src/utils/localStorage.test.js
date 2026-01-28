@@ -8,6 +8,9 @@ import {
   clearPlayerName,
   savePlayerSettings,
   getPlayerSettings,
+  saveCurrentRoom,
+  getCurrentRoom,
+  clearCurrentRoom,
   STORAGE_KEYS
 } from './localStorage';
 
@@ -142,6 +145,95 @@ describe('localStorage 工具函數', () => {
     test('getPlayerSettings - JSON 解析錯誤時應返回空物件', () => {
       localStorage.setItem(STORAGE_KEYS.PLAYER_SETTINGS, 'invalid json');
       expect(getPlayerSettings()).toEqual({});
+    });
+  });
+
+  // ====================================================================
+  // 工單 0203：房間重連 localStorage 函數測試
+  // ====================================================================
+
+  describe('saveCurrentRoom', () => {
+    test('TC-0203-09：應儲存完整房間資訊並附加 timestamp', () => {
+      saveCurrentRoom({ roomId: 'room1', playerId: 'p1', playerName: '玩家A' });
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_ROOM));
+      expect(saved.roomId).toBe('room1');
+      expect(saved.playerId).toBe('p1');
+      expect(saved.playerName).toBe('玩家A');
+      expect(saved.timestamp).toBeDefined();
+      expect(typeof saved.timestamp).toBe('number');
+    });
+
+    test('saveCurrentRoom - localStorage 錯誤時不應拋出異常', () => {
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = jest.fn(() => {
+        throw new Error('Storage full');
+      });
+
+      expect(() => saveCurrentRoom({ roomId: 'room1', playerId: 'p1', playerName: '玩家A' })).not.toThrow();
+
+      localStorage.setItem = originalSetItem;
+    });
+  });
+
+  describe('getCurrentRoom', () => {
+    test('TC-0203-10：過期機制應在 2 小時後返回 null', () => {
+      const expired = {
+        roomId: 'room1', playerId: 'p1', playerName: '玩家A',
+        timestamp: Date.now() - 3 * 60 * 60 * 1000  // 3 小時前
+      };
+      localStorage.setItem(STORAGE_KEYS.CURRENT_ROOM, JSON.stringify(expired));
+      expect(getCurrentRoom()).toBeNull();
+    });
+
+    test('TC-0203-11：應正常讀取未過期的資料', () => {
+      const recent = {
+        roomId: 'room1', playerId: 'p1', playerName: '玩家A',
+        timestamp: Date.now() - 30 * 60 * 1000  // 30 分鐘前
+      };
+      localStorage.setItem(STORAGE_KEYS.CURRENT_ROOM, JSON.stringify(recent));
+      const result = getCurrentRoom();
+      expect(result).not.toBeNull();
+      expect(result.roomId).toBe('room1');
+    });
+
+    test('TC-0203-13：應容忍損壞的 JSON', () => {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_ROOM, 'not valid json {{{');
+      expect(getCurrentRoom()).toBeNull();
+    });
+
+    test('TC-0203-14：無資料時應返回 null', () => {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_ROOM);
+      expect(getCurrentRoom()).toBeNull();
+    });
+
+    test('過期資料應被自動清除', () => {
+      const expired = {
+        roomId: 'room1', playerId: 'p1', playerName: '玩家A',
+        timestamp: Date.now() - 3 * 60 * 60 * 1000
+      };
+      localStorage.setItem(STORAGE_KEYS.CURRENT_ROOM, JSON.stringify(expired));
+      getCurrentRoom(); // 觸發過期清除
+      expect(localStorage.getItem(STORAGE_KEYS.CURRENT_ROOM)).toBeNull();
+    });
+  });
+
+  describe('clearCurrentRoom', () => {
+    test('TC-0203-12：clearCurrentRoom 後 getCurrentRoom 應返回 null', () => {
+      saveCurrentRoom({ roomId: 'room1', playerId: 'p1', playerName: '玩家A' });
+      expect(getCurrentRoom()).not.toBeNull();
+      clearCurrentRoom();
+      expect(getCurrentRoom()).toBeNull();
+    });
+
+    test('clearCurrentRoom - localStorage 錯誤時不應拋出異常', () => {
+      const originalRemoveItem = localStorage.removeItem;
+      localStorage.removeItem = jest.fn(() => {
+        throw new Error('Storage error');
+      });
+
+      expect(() => clearCurrentRoom()).not.toThrow();
+
+      localStorage.removeItem = originalRemoveItem;
     });
   });
 });
