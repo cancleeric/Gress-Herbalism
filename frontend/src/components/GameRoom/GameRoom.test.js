@@ -134,6 +134,17 @@ describe('GameRoom - 工作單 0023', () => {
     socketService.startNextRound.mockImplementation(() => {});
     socketService.endTurn.mockImplementation(() => {});
     socketService.dismissGuessResult.mockImplementation(() => {});
+    // 工單 0196：重連相關 mock
+    socketService.onReconnected.mockImplementation((callback) => {
+      socketCallbacks.reconnected = callback;
+      return () => {};
+    });
+    socketService.onConnectionChange.mockImplementation((callback) => {
+      socketCallbacks.connectionChange = callback;
+      return () => {};
+    });
+    socketService.attemptReconnect.mockImplementation(() => {});
+    socketService.emitPlayerRefreshing.mockImplementation(() => {});
   });
 
   describe('渲染', () => {

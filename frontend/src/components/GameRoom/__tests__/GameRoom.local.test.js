@@ -41,25 +41,31 @@ jest.mock('../../../hooks/useAIPlayers', () => ({
 }));
 
 // Mock LocalGameController
+const mockStartGame = jest.fn();
+const mockGetState = jest.fn().mockReturnValue({
+  gameId: 'local-test',
+  players: [],
+  currentPlayerIndex: 0,
+  gamePhase: 'waiting',
+  winner: null,
+  hiddenCards: [],
+  gameHistory: [],
+  maxPlayers: 2
+});
+const mockGetCurrentPlayer = jest.fn().mockReturnValue(null);
+
 jest.mock('../../../controllers/LocalGameController', () => {
-  return jest.fn().mockImplementation(() => ({
-    startGame: jest.fn(),
-    handleAction: jest.fn(),
-    handleFollowGuessResponse: jest.fn(),
-    startNextRound: jest.fn(),
-    endTurn: jest.fn(),
-    getState: jest.fn().mockReturnValue({
-      gameId: 'local-test',
-      players: [],
-      currentPlayerIndex: 0,
-      gamePhase: 'waiting',
-      winner: null,
-      hiddenCards: [],
-      gameHistory: [],
-      maxPlayers: 2
-    }),
-    getCurrentPlayer: jest.fn().mockReturnValue(null)
-  }));
+  return class MockLocalGameController {
+    constructor() {
+      this.startGame = mockStartGame;
+      this.handleAction = jest.fn();
+      this.handleFollowGuessResponse = jest.fn();
+      this.startNextRound = jest.fn();
+      this.endTurn = jest.fn();
+      this.getState = mockGetState;
+      this.getCurrentPlayer = mockGetCurrentPlayer;
+    }
+  };
 });
 
 // Mock socketService
@@ -80,6 +86,10 @@ jest.mock('../../../services/socketService', () => ({
   onPlayerLeft: jest.fn(() => jest.fn()),
   onReconnectFailed: jest.fn(() => jest.fn()),
   onGuessResultDismissed: jest.fn(() => jest.fn()),
+  onReconnected: jest.fn(() => jest.fn()),
+  onConnectionChange: jest.fn(() => jest.fn()),
+  attemptReconnect: jest.fn(),
+  emitPlayerRefreshing: jest.fn(),
   startGame: jest.fn(),
   sendGameAction: jest.fn(),
   requestRevealHiddenCards: jest.fn(),

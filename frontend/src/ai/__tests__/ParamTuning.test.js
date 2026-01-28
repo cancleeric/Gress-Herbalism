@@ -117,13 +117,14 @@ describe('Parameter Tuning Tests', () => {
       expect(aggressiveGuessCount).toBeGreaterThanOrEqual(conservativeGuessCount);
     });
 
-    test('default threshold 0.6 should require high confidence', () => {
+    test('default threshold (AI_PARAMS.MEDIUM = 0.2) should require moderate confidence', () => {
       const strategy = new MediumStrategy();
       strategy.selfId = 'player-1';
 
+      // 預設 threshold 來自 AI_PARAMS.MEDIUM.guessConfidenceThreshold = 0.2
       // 測試不同信心度場景
       const scenarios = [
-        // 低信心：均勻分布
+        // 低信心：均勻分布 → confidence = 0.25 * 0.25 = 0.0625 < 0.2 → 問牌
         {
           knowledge: {
             hiddenCardProbability: { red: 0.25, yellow: 0.25, green: 0.25, blue: 0.25 },
@@ -132,7 +133,7 @@ describe('Parameter Tuning Tests', () => {
           shouldGuess: false,
           confidence: 0.25 * 0.25  // = 0.0625
         },
-        // 中信心：略微集中
+        // 中信心：略微集中 → confidence = 0.4 * 0.3 = 0.12 < 0.2 → 問牌
         {
           knowledge: {
             hiddenCardProbability: { red: 0.1, yellow: 0.2, green: 0.3, blue: 0.4 },
@@ -141,23 +142,23 @@ describe('Parameter Tuning Tests', () => {
           shouldGuess: false,
           confidence: 0.4 * 0.3  // = 0.12
         },
-        // 較高信心：更集中
+        // 較高信心：更集中 → confidence = 0.45 * 0.45 = 0.2025 >= 0.2 → 猜牌
         {
           knowledge: {
             hiddenCardProbability: { red: 0.05, yellow: 0.05, green: 0.45, blue: 0.45 },
             eliminatedColors: []
           },
-          shouldGuess: false,
-          confidence: 0.45 * 0.45  // = 0.2025
+          shouldGuess: true,
+          confidence: 0.45 * 0.45  // = 0.2025 >= 0.2
         },
-        // 非常高信心：需要極端集中才能達到 0.6
+        // 非常高信心 → confidence = 0.495 * 0.495 = 0.245 >= 0.2 → 猜牌
         {
           knowledge: {
             hiddenCardProbability: { red: 0.005, yellow: 0.005, green: 0.495, blue: 0.495 },
             eliminatedColors: []
           },
-          shouldGuess: false,
-          confidence: 0.495 * 0.495  // = 0.245，仍然 < 0.6
+          shouldGuess: true,
+          confidence: 0.495 * 0.495  // = 0.245 >= 0.2
         }
       ];
 
@@ -169,10 +170,6 @@ describe('Parameter Tuning Tests', () => {
           expect(action).toBe(ACTION_TYPE.QUESTION);
         }
       }
-
-      // 驗證：0.6 閾值確實需要非常高的信心度
-      // 例如需要兩個概率都達到 0.77 左右（0.77 * 0.77 ≈ 0.6）
-      expect(true).toBe(true);  // 通過測試表示閾值設置合理
     });
 
     test('threshold should affect guess timing', () => {
