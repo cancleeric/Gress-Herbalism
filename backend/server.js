@@ -213,7 +213,17 @@ app.post('/api/friends/requests', async (req, res) => {
     const result = await friendService.sendFriendRequest(playerId, toUserId, message);
     res.json({ success: true, data: result });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    // 工單 0213：將技術性錯誤轉換為使用者友善訊息
+    let userMessage = err.message;
+    if (err.message.includes('Could not find the table')) {
+      userMessage = '系統維護中，請稍後再試';
+    } else if (err.message.includes('duplicate key') || err.message.includes('unique_violation')) {
+      userMessage = '已經發送過好友請求了';
+    } else if (err.message.includes('foreign key') || err.message.includes('violates foreign key')) {
+      userMessage = '找不到該玩家';
+    }
+    console.error('[好友請求] 錯誤:', err.message);
+    res.status(400).json({ success: false, message: userMessage });
   }
 });
 
