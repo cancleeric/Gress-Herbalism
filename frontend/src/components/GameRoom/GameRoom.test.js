@@ -4,12 +4,13 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { createStore } from 'redux';
 import GameRoom from './GameRoom';
-import { gameReducer, initialState } from '../../store/gameStore';
+import { gameReducer, initialState, clearPersistedState } from '../../store/gameStore';
+import { getCurrentRoom, clearCurrentRoom } from '../../utils/localStorage';
 import * as gameService from '../../services/gameService';
 import * as socketService from '../../services/socketService';
 
@@ -24,6 +25,21 @@ const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
 jest.mock('../../firebase/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }));
+
+// Mock localStorage utils（工單 0200）
+jest.mock('../../utils/localStorage', () => ({
+  getCurrentRoom: jest.fn(),
+  clearCurrentRoom: jest.fn()
+}));
+
+// Partial mock gameStore — 保留 reducer，mock clearPersistedState（工單 0200）
+jest.mock('../../store/gameStore', () => {
+  const actual = jest.requireActual('../../store/gameStore');
+  return {
+    ...actual,
+    clearPersistedState: jest.fn()
+  };
+});
 
 // Socket event callbacks storage
 let socketCallbacks = {};
@@ -145,6 +161,8 @@ describe('GameRoom - 工作單 0023', () => {
     });
     socketService.attemptReconnect.mockImplementation(() => {});
     socketService.emitPlayerRefreshing.mockImplementation(() => {});
+    // 工單 0200：localStorage mock 預設值
+    getCurrentRoom.mockReturnValue(null);
   });
 
   describe('渲染', () => {
@@ -1107,6 +1125,266 @@ describe('GameRoom - 工作單 0023', () => {
 
       // 應該顯示問牌流程
       expect(document.querySelector('.question-flow-overlay')).toBeInTheDocument();
+    });
+  });
+
+  // ====================================================================
+  // 工單 0200：重連邏輯單元測試
+  // ====================================================================
+  describe('重連邏輯（工單 0200）', () => {
+    // Helper: render with store access for verifying dispatch results
+    const renderWithStore = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
+      const store = createStore(gameReducer, preloadedState);
+      const result = render(
+        <Provider store={store}>
+          <MemoryRouter initialEntries={[`/game/${gameId}`]}>
+            <Routes>
+              <Route path="/game/:gameId" element={component} />
+            </Routes>
+          </MemoryRouter>
+        </Provider>
+      );
+      return { ...result, store };
+    };
+
+    describe('TC-0200-01：重連 useEffect — 連線後觸發重連', () => {
+      test('TC-0200-01a：連線後有儲存的房間資訊且 roomId 相符時，應呼叫 attemptReconnect', () => {
+        getCurrentRoom.mockReturnValue({
+          roomId: 'test_room',
+          playerId: 'p1',
+          playerName: '玩家A'
+        });
+
+        renderWithProviders(<GameRoom />);
+
+        act(() => {
+          socketCallbacks.connectionChange(true);
+        });
+
+        expect(socketService.attemptReconnect).toHaveBeenCalledWith('test_room', 'p1', '玩家A');
+      });
+
+      test('TC-0200-01b：getCurrentRoom 返回 null 時，不應呼叫 attemptReconnect', () => {
+        getCurrentRoom.mockReturnValue(null);
+
+        renderWithProviders(<GameRoom />);
+
+        act(() => {
+          socketCallbacks.connectionChange(true);
+        });
+
+        expect(socketService.attemptReconnect).not.toHaveBeenCalled();
+      });
+
+      test('TC-0200-01c：savedRoom.roomId 與當前 gameId 不符時，不應呼叫 attemptReconnect', () => {
+        getCurrentRoom.mockReturnValue({
+          roomId: 'other_room',
+          playerId: 'p1',
+          playerName: '玩家A'
+        });
+
+        renderWithProviders(<GameRoom />);
+
+        act(() => {
+          socketCallbacks.connectionChange(true);
+        });
+
+        expect(socketService.attemptReconnect).not.toHaveBeenCalled();
+      });
+
+      test('TC-0200-01d：savedRoom.playerId 為空時，不應呼叫 attemptReconnect', () => {
+        getCurrentRoom.mockReturnValue({
+          roomId: 'test_room',
+          playerId: '',
+          playerName: '玩家A'
+        });
+
+        renderWithProviders(<GameRoom />);
+
+        act(() => {
+          socketCallbacks.connectionChange(true);
+        });
+
+        expect(socketService.attemptReconnect).not.toHaveBeenCalled();
+      });
+
+      test('TC-0200-01e：連線斷開（connected=false）時不應呼叫 attemptReconnect', () => {
+        getCurrentRoom.mockReturnValue({
+          roomId: 'test_room',
+          playerId: 'p1',
+          playerName: '玩家A'
+        });
+
+        renderWithProviders(<GameRoom />);
+
+        act(() => {
+          socketCallbacks.connectionChange(false);
+        });
+
+        expect(socketService.attemptReconnect).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('TC-0200-02：onReconnected handler', () => {
+      test('TC-0200-02a：收到 reconnected 事件時應更新 Redux store 的遊戲狀態', () => {
+        const { store } = renderWithStore(<GameRoom />);
+
+        const mockReconnState = {
+          players: [
+            { id: 'p1', name: '玩家1', isActive: true },
+            { id: 'p2', name: '玩家2', isActive: true },
+            { id: 'p3', name: '玩家3', isActive: true }
+          ],
+          maxPlayers: 4,
+          gamePhase: 'playing',
+          currentPlayerIndex: 1,
+          hiddenCards: [{ color: 'red' }, { color: 'blue' }],
+          gameHistory: [{ action: 'question' }],
+          winner: null
+        };
+
+        act(() => {
+          socketCallbacks.reconnected({
+            gameId: 'test_room',
+            playerId: 'p1',
+            gameState: mockReconnState
+          });
+        });
+
+        const state = store.getState();
+        expect(state.gameId).toBe('test_room');
+        expect(state.players).toEqual(mockReconnState.players);
+        expect(state.maxPlayers).toBe(4);
+        expect(state.gamePhase).toBe('playing');
+        expect(state.currentPlayerIndex).toBe(1);
+        expect(state.currentPlayerId).toBe('p1');
+        expect(state.hiddenCards).toEqual(mockReconnState.hiddenCards);
+        expect(state.gameHistory).toEqual(mockReconnState.gameHistory);
+        expect(state.winner).toBeNull();
+      });
+
+      test('TC-0200-02b：reconnected handler 應正確映射 gameState 中的所有 9 個欄位', () => {
+        const { store } = renderWithStore(<GameRoom />);
+
+        const mockReconnState = {
+          players: [{ id: 'p1', name: '測試', isActive: true }],
+          maxPlayers: 3,
+          gamePhase: 'finished',
+          currentPlayerIndex: 0,
+          hiddenCards: [],
+          gameHistory: [],
+          winner: 'p1'
+        };
+
+        act(() => {
+          socketCallbacks.reconnected({
+            gameId: 'room_123',
+            playerId: 'p1',
+            gameState: mockReconnState
+          });
+        });
+
+        const state = store.getState();
+        expect(state).toMatchObject({
+          gameId: 'room_123',
+          players: mockReconnState.players,
+          maxPlayers: 3,
+          gamePhase: 'finished',
+          currentPlayerIndex: 0,
+          currentPlayerId: 'p1',
+          hiddenCards: [],
+          gameHistory: [],
+          winner: 'p1'
+        });
+      });
+    });
+
+    describe('TC-0200-03：beforeunload handler', () => {
+      test('TC-0200-03a：有 gameId 和 playerId 時，beforeunload 應呼叫 emitPlayerRefreshing', () => {
+        const state = {
+          ...initialState,
+          gameId: 'test_room',
+          currentPlayerId: 'p1',
+          players: [
+            { id: 'p1', name: '玩家1', isActive: true }
+          ]
+        };
+        renderWithProviders(<GameRoom />, { preloadedState: state });
+
+        act(() => {
+          window.dispatchEvent(new Event('beforeunload'));
+        });
+
+        expect(socketService.emitPlayerRefreshing).toHaveBeenCalledWith('test_room', 'p1');
+      });
+
+      test('TC-0200-03b：沒有有效的 playerId 時，不應呼叫 emitPlayerRefreshing', () => {
+        const state = {
+          ...initialState,
+          gameId: 'test_room',
+          currentPlayerId: null,
+          players: []
+        };
+        renderWithProviders(<GameRoom />, { preloadedState: state });
+
+        act(() => {
+          window.dispatchEvent(new Event('beforeunload'));
+        });
+
+        expect(socketService.emitPlayerRefreshing).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('TC-0200-04：handleLeaveRoom 清理流程', () => {
+      test('TC-0200-04a：點擊離開按鈕應呼叫 clearCurrentRoom、clearPersistedState 和 navigate', () => {
+        const state = {
+          ...initialState,
+          gameId: 'test_room',
+          currentPlayerId: 'p1',
+          players: [{ id: 'p1', name: '玩家1' }]
+        };
+        renderWithProviders(<GameRoom />, { preloadedState: state });
+
+        fireEvent.click(screen.getByText('離開房間'));
+
+        expect(clearCurrentRoom).toHaveBeenCalled();
+        expect(clearPersistedState).toHaveBeenCalled();
+        expect(mockNavigate).toHaveBeenCalledWith('/');
+      });
+    });
+
+    describe('TC-0200-05：cleanup 函數完整性', () => {
+      test('TC-0200-05a：組件 unmount 時應呼叫所有 unsubscribe 函數（含 onReconnected）', () => {
+        // 追蹤每個 socket 事件的 unsubscribe 函數
+        const unsubFunctions = {};
+        const mainEffectEvents = [
+          'onGameState', 'onError', 'onHiddenCardsRevealed',
+          'onColorChoiceRequired', 'onWaitingForColorChoice', 'onColorChoiceResult',
+          'onFollowGuessStarted', 'onFollowGuessUpdate', 'onGuessResult',
+          'onRoundStarted', 'onPostQuestionPhase', 'onTurnEnded',
+          'onCardGiveNotification', 'onPlayerLeft', 'onReconnectFailed',
+          'onGuessResultDismissed', 'onReconnected'
+        ];
+        const separateEffectEvents = ['onConnectionChange'];
+        const allEvents = [...mainEffectEvents, ...separateEffectEvents];
+
+        allEvents.forEach(event => {
+          const unsub = jest.fn();
+          unsubFunctions[event] = unsub;
+          socketService[event].mockImplementation((callback) => {
+            return unsub;
+          });
+        });
+
+        const { unmount } = renderWithProviders(<GameRoom />);
+
+        unmount();
+
+        // 驗證所有 unsubscribe 都被呼叫
+        allEvents.forEach(event => {
+          expect(unsubFunctions[event]).toHaveBeenCalled();
+        });
+      });
     });
   });
 });
