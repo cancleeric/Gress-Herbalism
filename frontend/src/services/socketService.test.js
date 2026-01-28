@@ -12,6 +12,8 @@ const createMockSocket = () => ({
 });
 
 let mockSocketInstance = createMockSocket();
+let mockGetCurrentRoom = jest.fn();
+let mockClearCurrentRoom = jest.fn();
 
 // Mock socket.io-client
 jest.mock('socket.io-client', () => ({
@@ -45,6 +47,16 @@ describe('socketService', () => {
         socketUrl: 'http://localhost:3001',
       },
     }));
+
+    // 工單 0201：Mock localStorage utils
+    mockGetCurrentRoom = jest.fn().mockReturnValue(null);
+    mockClearCurrentRoom = jest.fn();
+    jest.doMock('../utils/localStorage', () => ({
+      getCurrentRoom: mockGetCurrentRoom,
+      clearCurrentRoom: mockClearCurrentRoom,
+    }));
+
+    localStorage.clear();
 
     // 重新載入模組
     socketService = require('./socketService');
@@ -304,6 +316,196 @@ describe('socketService', () => {
 
     test('未初始化時呼叫 disconnect 不應報錯', () => {
       expect(() => socketService.disconnect()).not.toThrow();
+    });
+  });
+
+  // ====================================================================
+  // 工單 0201：重連相關函數單元測試
+  // ====================================================================
+  describe('TC-0201-01：attemptReconnect 函數', () => {
+    test('TC-0201-01a：應發送 reconnect 事件到 socket', () => {
+      socketService.attemptReconnect('room1', 'player1', '玩家A');
+
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('reconnect', expect.any(Object));
+    });
+
+    test('TC-0201-01b：參數應正確傳遞', () => {
+      socketService.attemptReconnect('room1', 'player1', '玩家A');
+
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('reconnect', {
+        roomId: 'room1',
+        playerId: 'player1',
+        playerName: '玩家A',
+      });
+    });
+  });
+
+  describe('TC-0201-02：onReconnected 函數', () => {
+    test('TC-0201-02a：應註冊 reconnected 事件監聽', () => {
+      const callback = jest.fn();
+      socketService.onReconnected(callback);
+
+      expect(mockSocketInstance.on).toHaveBeenCalledWith('reconnected', callback);
+    });
+
+    test('TC-0201-02b：應返回 unsubscribe 函數', () => {
+      const callback = jest.fn();
+      const unsub = socketService.onReconnected(callback);
+
+      expect(typeof unsub).toBe('function');
+
+      unsub();
+      expect(mockSocketInstance.off).toHaveBeenCalledWith('reconnected', callback);
+    });
+  });
+
+  describe('TC-0201-03：onReconnectFailed 函數', () => {
+    test('TC-0201-03a：應註冊 reconnectFailed 事件監聽', () => {
+      const callback = jest.fn();
+      socketService.onReconnectFailed(callback);
+
+      expect(mockSocketInstance.on).toHaveBeenCalledWith('reconnectFailed', callback);
+    });
+
+    test('TC-0201-03b：應返回 unsubscribe 函數', () => {
+      const callback = jest.fn();
+      const unsub = socketService.onReconnectFailed(callback);
+
+      expect(typeof unsub).toBe('function');
+
+      unsub();
+      expect(mockSocketInstance.off).toHaveBeenCalledWith('reconnectFailed', callback);
+    });
+  });
+
+  describe('TC-0201-04：emitPlayerRefreshing 函數', () => {
+    test('TC-0201-04a：socket 已連線時應發送 playerRefreshing 事件', () => {
+      mockSocketInstance.connected = true;
+      socketService.emitPlayerRefreshing('game1', 'player1');
+
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('playerRefreshing', {
+        gameId: 'game1',
+        playerId: 'player1',
+      });
+    });
+
+    test('TC-0201-04b：socket 未連線時不應發送事件', () => {
+      mockSocketInstance.connected = false;
+      socketService.emitPlayerRefreshing('game1', 'player1');
+
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith(
+        'playerRefreshing',
+        expect.anything()
+      );
+    });
+  });
+
+  describe('TC-0201-05：onConnectionChange 函數', () => {
+    test('TC-0201-05a：應立即通知目前連線狀態', () => {
+      socketService.initSocket();
+      const callback = jest.fn();
+      socketService.onConnectionChange(callback);
+
+      // socket.connected 為 true，應立即收到 true
+      expect(callback).toHaveBeenCalledWith(true);
+    });
+
+    test('TC-0201-05b：connect 事件觸發時 callback 應收到 true', () => {
+      socketService.initSocket();
+      const callback = jest.fn();
+      socketService.onConnectionChange(callback);
+      callback.mockClear();
+
+      // 找到並觸發 connect handler
+      const connectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'connect');
+      const connectHandler = connectCall[1];
+      connectHandler();
+
+      expect(callback).toHaveBeenCalledWith(true);
+    });
+
+    test('TC-0201-05c：disconnect 事件觸發時 callback 應收到 false', () => {
+      socketService.initSocket();
+      const callback = jest.fn();
+      socketService.onConnectionChange(callback);
+      callback.mockClear();
+
+      // 找到並觸發 disconnect handler
+      const disconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'disconnect');
+      const disconnectHandler = disconnectCall[1];
+      disconnectHandler('transport close');
+
+      expect(callback).toHaveBeenCalledWith(false);
+    });
+
+    test('TC-0201-05d：unsubscribe 後不再收到連線狀態通知', () => {
+      socketService.initSocket();
+      const callback = jest.fn();
+      const unsub = socketService.onConnectionChange(callback);
+      callback.mockClear();
+
+      unsub();
+
+      // 觸發 connect 事件
+      const connectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'connect');
+      connectCall[1]();
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('TC-0201-06：Socket.io 自動重連事件處理', () => {
+    test('TC-0201-06a：getCurrentRoom 有資料時應自動發送重連', () => {
+      mockGetCurrentRoom.mockReturnValue({
+        roomId: 'room1',
+        playerId: 'player1',
+        playerName: '玩家A',
+      });
+
+      socketService.initSocket();
+
+      // 找到 reconnect handler 並觸發
+      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'reconnect');
+      const reconnectHandler = reconnectCall[1];
+      reconnectHandler(1);
+
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('reconnect', {
+        roomId: 'room1',
+        playerId: 'player1',
+        playerName: '玩家A',
+      });
+    });
+
+    test('TC-0201-06b：localStorage 無資料時不應自動發送重連', () => {
+      mockGetCurrentRoom.mockReturnValue(null);
+      localStorage.clear();
+
+      socketService.initSocket();
+
+      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'reconnect');
+      const reconnectHandler = reconnectCall[1];
+      reconnectHandler(1);
+
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('reconnect', expect.any(Object));
+    });
+
+    test('TC-0201-06c：應支援 legacy key fallback', () => {
+      mockGetCurrentRoom.mockReturnValue(null);
+      localStorage.setItem('lastRoomId', 'room1');
+      localStorage.setItem('lastPlayerId', 'player1');
+      localStorage.setItem('lastPlayerName', '玩家A');
+
+      socketService.initSocket();
+
+      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'reconnect');
+      const reconnectHandler = reconnectCall[1];
+      reconnectHandler(1);
+
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('reconnect', {
+        roomId: 'room1',
+        playerId: 'player1',
+        playerName: '玩家A',
+      });
     });
   });
 });
