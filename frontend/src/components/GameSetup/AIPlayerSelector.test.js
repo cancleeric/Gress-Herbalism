@@ -219,13 +219,13 @@ describe('AIPlayerSelector', () => {
       render(<AIPlayerSelector onConfigChange={mockCallback} />);
 
       expect(
-        screen.getByText(/簡單 - 隨機決策，適合新手練習/)
+        screen.getByText(/簡單 - 適合新手/)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/中等 - 基礎推理，會追蹤明顯資訊/)
+        screen.getByText(/中等 - 平衡挑戰/)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/困難 - 完整推理引擎，最佳化策略/)
+        screen.getByText(/困難 - 高級玩家/)
       ).toBeInTheDocument();
     });
 

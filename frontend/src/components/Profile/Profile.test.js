@@ -132,7 +132,7 @@ describe('Profile 組件', () => {
       mockUser = { uid: 'test-uid', displayName: '訪客', email: null, isAnonymous: true, photoURL: null };
       render(<MemoryRouter><Profile /></MemoryRouter>);
       await waitFor(() => {
-        expect(screen.getByText('請先使用 Google 帳號登入以查看個人資料')).toBeInTheDocument();
+        expect(screen.getByText('登入 Google 帳號以解鎖完整功能')).toBeInTheDocument();
       });
       // 不應載入 API
       expect(mockGetPlayerStats).not.toHaveBeenCalled();

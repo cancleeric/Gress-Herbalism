@@ -291,7 +291,8 @@ describe('QuestionFlow Component', () => {
       />
     );
 
-    expect(screen.queryByText('玩家2')).not.toBeInTheDocument();
+    // 遊戲規則：已退出的玩家仍可被問牌，因此不過濾 isActive
+    expect(screen.getByText('玩家2')).toBeInTheDocument();
     expect(screen.getByText('玩家3')).toBeInTheDocument();
   });
 

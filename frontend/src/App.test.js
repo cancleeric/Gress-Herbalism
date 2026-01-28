@@ -20,6 +20,31 @@ jest.mock('./firebase', () => ({
   }),
 }));
 
+// Mock 子元件以隔離 App 層級測試
+jest.mock('./components/Lobby', () => {
+  return function MockLobby() {
+    return <div className="lobby"><h1>本草 Herbalism</h1><p>3-4 人推理卡牌遊戲</p></div>;
+  };
+});
+jest.mock('./components/GameRoom', () => {
+  return function MockGameRoom() { return <div>GameRoom</div>; };
+});
+jest.mock('./components/Profile', () => {
+  return function MockProfile() { return <div>Profile</div>; };
+});
+jest.mock('./components/Leaderboard', () => {
+  return function MockLeaderboard() { return <div>Leaderboard</div>; };
+});
+jest.mock('./components/Friends', () => {
+  return function MockFriends() { return <div>Friends</div>; };
+});
+jest.mock('./components/Login', () => {
+  return function MockLogin() { return <div>Login</div>; };
+});
+jest.mock('./components/ConnectionStatus', () => {
+  return function MockConnectionStatus() { return null; };
+});
+
 describe('App - 工作單 0013', () => {
   describe('應用程式渲染', () => {
     test('應用程式應該正常渲染', () => {

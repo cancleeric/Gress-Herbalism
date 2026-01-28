@@ -23,33 +23,40 @@ import {
 } from '../../shared/constants';
 
 // Mock modules
-jest.mock('../../services/socketService', () => ({
-  onGameState: jest.fn(() => jest.fn()),
-  onError: jest.fn(() => jest.fn()),
-  onHiddenCardsRevealed: jest.fn(() => jest.fn()),
-  onColorChoiceRequired: jest.fn(() => jest.fn()),
-  onWaitingForColorChoice: jest.fn(() => jest.fn()),
-  onColorChoiceResult: jest.fn(() => jest.fn()),
-  onFollowGuessStarted: jest.fn(() => jest.fn()),
-  onFollowGuessUpdate: jest.fn(() => jest.fn()),
-  onGuessResult: jest.fn(() => jest.fn()),
-  onRoundStarted: jest.fn(() => jest.fn()),
-  onPostQuestionPhase: jest.fn(() => jest.fn()),
-  onTurnEnded: jest.fn(() => jest.fn()),
-  onCardGiveNotification: jest.fn(() => jest.fn()),
-  onPlayerLeft: jest.fn(() => jest.fn()),
-  onReconnectFailed: jest.fn(() => jest.fn()),
-  onGuessResultDismissed: jest.fn(() => jest.fn()),
-  startGame: jest.fn(),
-  sendGameAction: jest.fn(),
-  requestRevealHiddenCards: jest.fn(),
-  leaveRoom: jest.fn(),
-  submitColorChoice: jest.fn(),
-  submitFollowGuessResponse: jest.fn(),
-  startNextRound: jest.fn(),
-  endTurn: jest.fn(),
-  dismissGuessResult: jest.fn()
-}));
+jest.mock('../../services/socketService', () => {
+  const unsub = () => {};
+  return {
+    onGameState: jest.fn(() => unsub),
+    onError: jest.fn(() => unsub),
+    onHiddenCardsRevealed: jest.fn(() => unsub),
+    onColorChoiceRequired: jest.fn(() => unsub),
+    onWaitingForColorChoice: jest.fn(() => unsub),
+    onColorChoiceResult: jest.fn(() => unsub),
+    onFollowGuessStarted: jest.fn(() => unsub),
+    onFollowGuessUpdate: jest.fn(() => unsub),
+    onGuessResult: jest.fn(() => unsub),
+    onRoundStarted: jest.fn(() => unsub),
+    onPostQuestionPhase: jest.fn(() => unsub),
+    onTurnEnded: jest.fn(() => unsub),
+    onCardGiveNotification: jest.fn(() => unsub),
+    onPlayerLeft: jest.fn(() => unsub),
+    onReconnectFailed: jest.fn(() => unsub),
+    onReconnected: jest.fn(() => unsub),
+    onConnectionChange: jest.fn(() => unsub),
+    onGuessResultDismissed: jest.fn(() => unsub),
+    startGame: jest.fn(),
+    sendGameAction: jest.fn(),
+    requestRevealHiddenCards: jest.fn(),
+    leaveRoom: jest.fn(),
+    submitColorChoice: jest.fn(),
+    submitFollowGuessResponse: jest.fn(),
+    startNextRound: jest.fn(),
+    endTurn: jest.fn(),
+    emitPlayerRefreshing: jest.fn(),
+    attemptReconnect: jest.fn(),
+    dismissGuessResult: jest.fn()
+  };
+});
 
 jest.mock('../../controllers/LocalGameController');
 
@@ -84,12 +91,36 @@ const createTestStore = (initialState = {}) => {
   return createStore(gameReducer, mergedInitialState);
 };
 
+// 引入 socketService mock 以便在 beforeEach 重新設定實作
+// （react-scripts 預設 resetMocks: true，每個測試前會 resetAllMocks）
+const socketService = require('../../services/socketService');
+
 describe('單人模式 URL 參數解析測試', () => {
   let store;
   let mockLocalController;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    // react-scripts 的 resetMocks: true 會在每個測試前清除 mock 實作
+    // 必須在此重新設定所有 socket 事件訂閱函數的返回值
+    const unsub = () => {};
+    socketService.onGameState.mockReturnValue(unsub);
+    socketService.onError.mockReturnValue(unsub);
+    socketService.onHiddenCardsRevealed.mockReturnValue(unsub);
+    socketService.onColorChoiceRequired.mockReturnValue(unsub);
+    socketService.onWaitingForColorChoice.mockReturnValue(unsub);
+    socketService.onColorChoiceResult.mockReturnValue(unsub);
+    socketService.onFollowGuessStarted.mockReturnValue(unsub);
+    socketService.onFollowGuessUpdate.mockReturnValue(unsub);
+    socketService.onGuessResult.mockReturnValue(unsub);
+    socketService.onRoundStarted.mockReturnValue(unsub);
+    socketService.onPostQuestionPhase.mockReturnValue(unsub);
+    socketService.onTurnEnded.mockReturnValue(unsub);
+    socketService.onCardGiveNotification.mockReturnValue(unsub);
+    socketService.onPlayerLeft.mockReturnValue(unsub);
+    socketService.onReconnectFailed.mockReturnValue(unsub);
+    socketService.onReconnected.mockReturnValue(unsub);
+    socketService.onConnectionChange.mockReturnValue(unsub);
+    socketService.onGuessResultDismissed.mockReturnValue(unsub);
 
     store = createTestStore();
 

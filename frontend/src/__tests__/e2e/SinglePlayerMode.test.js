@@ -171,7 +171,7 @@ describe('單人模式 E2E 測試', () => {
 
       // 驗證預設難度設定（使用 AI 名稱）
       const difficulty1 = screen.getByLabelText(/小草.*難度/i);
-      const difficulty2 = screen.getByLabelText(/藥師.*難度/i);
+      const difficulty2 = screen.getByLabelText(/小花.*難度/i);
       expect(difficulty1).toHaveValue(AI_DIFFICULTY.MEDIUM);
       expect(difficulty2).toHaveValue(AI_DIFFICULTY.MEDIUM);
 
@@ -197,8 +197,8 @@ describe('單人模式 E2E 測試', () => {
 
       // 驗證難度選擇器數量增加（使用 AI 名稱）
       expect(screen.getByLabelText(/小草.*難度/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/藥師.*難度/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/本草.*難度/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/小花.*難度/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/小樹.*難度/i)).toBeInTheDocument();
 
       // 驗證 onConfigChange 被調用，新增的 AI 使用預設難度
       expect(onConfigChange).toHaveBeenCalledWith({
@@ -218,7 +218,7 @@ describe('單人模式 E2E 測試', () => {
 
       // 使用 AI 名稱選擇難度選擇器
       const difficulty1 = screen.getByLabelText(/小草.*難度/i);
-      const difficulty2 = screen.getByLabelText(/藥師.*難度/i);
+      const difficulty2 = screen.getByLabelText(/小花.*難度/i);
 
       // 設定第一個 AI 為簡單
       fireEvent.change(difficulty1, { target: { value: AI_DIFFICULTY.EASY } });
@@ -241,7 +241,7 @@ describe('單人模式 E2E 測試', () => {
       // 驗證顯示 AI 名稱
       const elements = screen.getAllByText(/小草/i);
       expect(elements.length).toBeGreaterThan(0);
-      expect(screen.getByText(/藥師/i)).toBeInTheDocument();
+      expect(screen.getByText(/小花/i)).toBeInTheDocument();
     });
 
     test('應顯示難度說明', () => {
