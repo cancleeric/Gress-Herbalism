@@ -10,7 +10,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   updateGameState,
-  resetGame
+  resetGame,
+  clearPersistedState
 } from '../../store/gameStore';
 import { selectGameRoomState } from '../../store/selectors';
 import useAIPlayers from '../../hooks/useAIPlayers';
@@ -41,7 +42,10 @@ import {
   endTurn,
   emitPlayerRefreshing,  // 工單 0118
   dismissGuessResult as socketDismissGuessResult,  // 工單 0172
-  onGuessResultDismissed  // 工單 0172
+  onGuessResultDismissed,  // 工單 0172
+  onConnectionChange,  // 工單 0196
+  attemptReconnect,  // 工單 0196
+  onReconnected  // 工單 0196
 } from '../../services/socketService';
 import {
   GAME_PHASE_WAITING,
@@ -60,7 +64,7 @@ import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
-import { clearCurrentRoom } from '../../utils/localStorage';
+import { clearCurrentRoom, getCurrentRoom } from '../../utils/localStorage';
 import { useAuth } from '../../firebase/AuthContext';
 import VersionInfo from '../VersionInfo';
 import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
@@ -554,6 +558,23 @@ function GameRoom() {
       setGuessResultData(null);
     });
 
+    // 工單 0196：監聽重連成功
+    const unsubReconnected = onReconnected(({ gameId: reconnGameId, playerId: reconnPlayerId, gameState: reconnState }) => {
+      console.log('[工單 0196] 重連成功，更新遊戲狀態');
+      dispatch(updateGameState({
+        gameId: reconnGameId,
+        players: reconnState.players,
+        maxPlayers: reconnState.maxPlayers,
+        gamePhase: reconnState.gamePhase,
+        currentPlayerIndex: reconnState.currentPlayerIndex,
+        currentPlayerId: reconnPlayerId,
+        hiddenCards: reconnState.hiddenCards,
+        gameHistory: reconnState.gameHistory,
+        winner: reconnState.winner
+      }));
+      setIsLoading(false);
+    });
+
     return () => {
       unsubGameState();
       unsubError();
@@ -571,8 +592,29 @@ function GameRoom() {
       unsubCardGive();
       unsubReconnectFailed();
       unsubDismiss();
+      unsubReconnected();
     };
   }, [dispatch, isLocalMode]);
+
+  /**
+   * 工單 0196：多人模式重連
+   * 頁面重整後 socket 重新連線時，主動發起 reconnect 請求
+   */
+  useEffect(() => {
+    if (isLocalMode) return;
+
+    const unsubConnect = onConnectionChange((connected) => {
+      if (connected) {
+        const savedRoom = getCurrentRoom();
+        if (savedRoom && savedRoom.roomId === gameId && savedRoom.playerId) {
+          console.log('[工單 0196] 偵測到已儲存的房間資訊，嘗試重連:', savedRoom);
+          attemptReconnect(savedRoom.roomId, savedRoom.playerId, savedRoom.playerName);
+        }
+      }
+    });
+
+    return () => unsubConnect();
+  }, [gameId, isLocalMode]);
 
   /**
    * 工單 0093：重連時恢復預測 UI 狀態
@@ -618,6 +660,8 @@ function GameRoom() {
     }
     // 工單 0079：清除房間資訊（正常離開不需要重連）
     clearCurrentRoom();
+    // 工單 0198：清除持久化狀態，避免重新載入時恢復舊狀態
+    clearPersistedState();
     dispatch(resetGame());
     navigate('/');
   };

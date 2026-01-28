@@ -1350,7 +1350,7 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
   socket.emit('reconnected', {
     gameId: roomId,
     playerId: playerId,
-    gameState: getClientGameState(gameState, playerId)
+    gameState: gameState
   });
 
   // 工單 0093：如果玩家在預測階段，重新發送 postQuestionPhase 事件
@@ -1361,6 +1361,19 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
       message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
     });
     console.log(`[重連] 恢復玩家 ${player.name} 的預測階段`);
+  }
+
+  // 工單 0197：如果遊戲在跟猜階段，重新發送 followGuessStarted 事件
+  const followState = followGuessStates.get(roomId);
+  if (followState && followState.decisionOrder.includes(playerId)) {
+    socket.emit('followGuessStarted', {
+      guessingPlayerId: followState.guessingPlayerId,
+      guessedColors: followState.guessedColors,
+      decisionOrder: followState.decisionOrder,
+      currentDeciderId: followState.currentDeciderId,
+      decisions: followState.decisions
+    });
+    console.log(`[重連] 恢復玩家 ${player.name} 的跟猜階段`);
   }
 
   // 廣播狀態更新
