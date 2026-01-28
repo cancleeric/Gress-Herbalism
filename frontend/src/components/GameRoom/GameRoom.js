@@ -43,6 +43,7 @@ import {
   emitPlayerRefreshing,  // 工單 0118
   dismissGuessResult as socketDismissGuessResult,  // 工單 0172
   onGuessResultDismissed,  // 工單 0172
+  confirmGuessResult as socketConfirmGuessResult,  // 工單 0207
   onConnectionChange,  // 工單 0196
   attemptReconnect,  // 工單 0196
   onReconnected  // 工單 0196
@@ -854,6 +855,26 @@ function GameRoom() {
     } else if (gameId) {
       // 多人模式：通知所有玩家關閉面板
       socketDismissGuessResult(gameId);
+    }
+  };
+
+  /**
+   * 工單 0207：處理確認猜牌結果（全員確認機制）
+   */
+  const handleConfirmGuessResult = () => {
+    const myPlayer = getMyPlayer();
+    if (!myPlayer) return;
+
+    if (isLocalMode) {
+      // 本地模式直接關閉並開始下一局
+      setShowRoundEnd(false);
+      setGuessResultData(null);
+      if (localControllerRef.current) {
+        localControllerRef.current.startNextRound();
+      }
+    } else if (gameId) {
+      // 多人模式：發送確認，後端會通知關閉面板並在全員確認後自動處理
+      socketConfirmGuessResult(gameId, myPlayer.id);
     }
   };
 
@@ -1911,7 +1932,7 @@ function GameRoom() {
                 </div>
               )}
 
-              {/* 工單 0172：底部按鈕區 — 按鈕只顯示給猜牌者（遊戲結束時所有人可見） */}
+              {/* 工單 0207：底部按鈕區 — 所有玩家都顯示確認按鈕 */}
               <div className="gr-actions">
                 {gameState.gamePhase === GAME_PHASE_FINISHED ? (
                   /* 遊戲結束：所有人看到「離開房間」 */
@@ -1919,24 +1940,12 @@ function GameRoom() {
                     <span>離開房間</span>
                     <span className="material-symbols-outlined">logout</span>
                   </button>
-                ) : guessResultData.guessingPlayerId === myPlayer?.id ? (
-                  /* 猜牌者：根據結果顯示不同按鈕 */
-                  guessResultData.isCorrect || !guessResultData.continueGame ? (
-                    /* 猜對 或 猜錯+全員退出：顯示「下一局」 */
-                    <button className="gr-btn gr-btn-primary" onClick={handleStartNextRound}>
-                      <span>下一局</span>
-                      <span className="material-symbols-outlined">navigate_next</span>
-                    </button>
-                  ) : (
-                    /* 猜錯+遊戲繼續：顯示「繼續觀戰遊戲」 */
-                    <button className="gr-btn gr-btn-primary" onClick={handleDismissGuessResult}>
-                      <span>繼續觀戰遊戲</span>
-                      <span className="material-symbols-outlined">visibility</span>
-                    </button>
-                  )
                 ) : (
-                  /* 跟猜者和其他玩家：等待猜牌者操作 */
-                  <p className="gr-waiting-text">等待猜牌者操作...</p>
+                  /* 所有情況：所有玩家都顯示「確定」按鈕 */
+                  <button className="gr-btn gr-btn-primary" onClick={handleConfirmGuessResult}>
+                    <span>確定</span>
+                    <span className="material-symbols-outlined">check</span>
+                  </button>
                 )}
               </div>
 

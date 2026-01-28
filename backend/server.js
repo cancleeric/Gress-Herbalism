@@ -338,6 +338,9 @@ const followGuessStates = new Map();
 // 問牌後狀態（等待結束回合）
 const postQuestionStates = new Map();
 
+// 工單 0207：猜牌結果全員確認追蹤
+const guessResultConfirmations = new Map();
+
 // 工單 0079：斷線重連計時器
 const disconnectTimeouts = new Map();
 const DISCONNECT_TIMEOUT = 60000; // 60 秒（遊戲中）
@@ -786,6 +789,15 @@ io.on('connection', (socket) => {
               predictionResults: result.predictionResults || [],
               continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
             });
+
+            // 工單 0207：初始化全員確認追蹤
+            const allPlayerIds = gameState.players.map(p => p.id);
+            guessResultConfirmations.set(gameId, {
+              requiredPlayers: allPlayerIds,
+              confirmedPlayers: [],
+              isCorrect: result.isCorrect,
+              continueGame: result.continueGame
+            });
           }
         }
       }
@@ -1016,6 +1028,15 @@ io.on('connection', (socket) => {
         continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
       });
 
+      // 工單 0207：初始化全員確認追蹤
+      const allPlayerIds = gameState.players.map(p => p.id);
+      guessResultConfirmations.set(gameId, {
+        requiredPlayers: allPlayerIds,
+        confirmedPlayers: [],
+        isCorrect: result.isCorrect,
+        continueGame: result.continueGame
+      });
+
       // 廣播更新後的遊戲狀態
       broadcastGameState(gameId);
 
@@ -1059,46 +1080,53 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // 計算下一局的起始玩家（上一局最後行動者的下一位）
-    const lastActionPlayer = gameState.currentPlayerIndex;
-    let nextStartPlayer = (lastActionPlayer + 1) % gameState.players.length;
-
-    // 準備下一局
-    gameState.currentRound += 1;
-
-    // 重新洗牌和發牌
-    const deck = createDeck();
-    const shuffledDeck = shuffleDeck(deck);
-    const { hiddenCards, playerHands } = dealCards(shuffledDeck, gameState.players.length);
-
-    // 更新玩家狀態
-    gameState.players = gameState.players.map((player, index) => ({
-      ...player,
-      hand: playerHands[index],
-      isActive: true,
-      isCurrentTurn: index === nextStartPlayer
-    }));
-
-    gameState.hiddenCards = hiddenCards;
-    gameState.currentPlayerIndex = nextStartPlayer;
-    gameState.gamePhase = 'playing';
-    gameState.gameHistory = []; // 清空當局歷史
-    gameState.predictions = []; // 清空當局預測（工單 0091）
-    gameState.winner = null;
-
-    // 廣播下一局開始
-    io.to(gameId).emit('roundStarted', {
-      round: gameState.currentRound,
-      startPlayerIndex: nextStartPlayer
-    });
-
-    broadcastGameState(gameId);
-    console.log(`第 ${gameState.currentRound} 局開始: ${gameId}`);
+    startNextRoundLogic(gameId);
   });
 
-  // 工單 0171：猜牌者確認結果，關閉所有人的結果面板
+  // 工單 0171：猜牌者確認結果，關閉所有人的結果面板（保留向下相容）
   socket.on('dismissGuessResult', ({ gameId }) => {
     io.to(gameId).emit('guessResultDismissed');
+  });
+
+  // 工單 0207：全員確認猜牌結果
+  socket.on('confirmGuessResult', ({ gameId, playerId }) => {
+    const confirmation = guessResultConfirmations.get(gameId);
+    if (!confirmation) {
+      // 沒有確認追蹤（可能已完成），直接通知該玩家關閉面板
+      socket.emit('guessResultDismissed');
+      return;
+    }
+
+    // 避免重複確認
+    if (confirmation.confirmedPlayers.includes(playerId)) {
+      socket.emit('guessResultDismissed');
+      return;
+    }
+
+    // 記錄確認
+    confirmation.confirmedPlayers.push(playerId);
+    console.log(`[確認] 玩家 ${playerId} 確認猜牌結果 (${confirmation.confirmedPlayers.length}/${confirmation.requiredPlayers.length})`);
+
+    // 通知該玩家關閉面板
+    socket.emit('guessResultDismissed');
+
+    // 檢查是否全員已確認
+    if (confirmation.confirmedPlayers.length >= confirmation.requiredPlayers.length) {
+      console.log(`[確認] 全員已確認猜牌結果，gameId: ${gameId}`);
+      guessResultConfirmations.delete(gameId);
+
+      const gameState = gameRooms.get(gameId);
+      if (!gameState) return;
+
+      // 根據結果決定後續行為
+      if (confirmation.isCorrect || !confirmation.continueGame) {
+        // 猜對 或 猜錯+全員退出 → 進入下一局
+        if (gameState.gamePhase === 'roundEnd') {
+          startNextRoundLogic(gameId);
+        }
+      }
+      // 猜錯+遊戲繼續 → 不需做什麼，遊戲已在 playing 階段
+    }
   });
 
   // 離開房間
@@ -1908,6 +1936,52 @@ function checkWinCondition(scores, winningScore = 7) {
     }
   }
   return null;
+}
+
+/**
+ * 工單 0207：開始下一局邏輯（提取自 startNextRound 事件處理）
+ */
+function startNextRoundLogic(gameId) {
+  const gameState = gameRooms.get(gameId);
+  if (!gameState) return;
+
+  if (gameState.gamePhase !== 'roundEnd') return;
+
+  // 計算下一局的起始玩家（上一局最後行動者的下一位）
+  const lastActionPlayer = gameState.currentPlayerIndex;
+  let nextStartPlayer = (lastActionPlayer + 1) % gameState.players.length;
+
+  // 準備下一局
+  gameState.currentRound += 1;
+
+  // 重新洗牌和發牌
+  const deck = createDeck();
+  const shuffledDeck = shuffleDeck(deck);
+  const { hiddenCards, playerHands } = dealCards(shuffledDeck, gameState.players.length);
+
+  // 更新玩家狀態
+  gameState.players = gameState.players.map((player, index) => ({
+    ...player,
+    hand: playerHands[index],
+    isActive: true,
+    isCurrentTurn: index === nextStartPlayer
+  }));
+
+  gameState.hiddenCards = hiddenCards;
+  gameState.currentPlayerIndex = nextStartPlayer;
+  gameState.gamePhase = 'playing';
+  gameState.gameHistory = [];
+  gameState.predictions = [];
+  gameState.winner = null;
+
+  // 廣播下一局開始
+  io.to(gameId).emit('roundStarted', {
+    round: gameState.currentRound,
+    startPlayerIndex: nextStartPlayer
+  });
+
+  broadcastGameState(gameId);
+  console.log(`第 ${gameState.currentRound} 局開始: ${gameId}`);
 }
 
 function moveToNextPlayer(gameState) {

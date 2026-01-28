@@ -19,12 +19,6 @@
   background-size: 24px 24px;
 }
 
-/* 深色模式 */
-@media (prefers-color-scheme: dark) {
-  .guess-card {
-    background-color: #211111;
-  }
-}
 
 /* ===== 裝飾角落 ===== */
 .guess-motif-tl,
@@ -68,11 +62,6 @@
   color: #27272a;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guess-card-title {
-    color: #f4f4f5;
-  }
-}
 
 .guess-header-line {
   width: 4rem;
@@ -130,11 +119,6 @@
   text-align: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guess-selector-title {
-    color: #d4d4d8;
-  }
-}
 
 /* 顏色按鈕網格 */
 .guess-color-grid {
@@ -201,11 +185,6 @@
   color: #52525b;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guess-color-label {
-    color: #a1a1aa;
-  }
-}
 
 /* ===== 已選擇顏色顯示區 ===== */
 .guess-selected-area {
@@ -323,11 +302,6 @@
   z-index: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guess-card-footer {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-}
 
 /* ===== 按鈕樣式 ===== */
 .guess-btn {
@@ -401,11 +375,6 @@
   border-radius: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guess-loading-overlay {
-    background-color: rgba(33, 17, 17, 0.95);
-  }
-}
 
 .guess-loading-spinner {
   width: 48px;

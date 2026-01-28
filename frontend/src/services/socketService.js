@@ -399,6 +399,14 @@ export function dismissGuessResult(gameId) {
 }
 
 /**
+ * 工單 0207：確認猜牌結果（全員確認機制）
+ */
+export function confirmGuessResult(gameId, playerId) {
+  const s = getSocket();
+  s.emit('confirmGuessResult', { gameId, playerId });
+}
+
+/**
  * 工單 0172：監聽猜牌結果面板關閉
  */
 export function onGuessResultDismissed(callback) {
