@@ -12,13 +12,8 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
-import Login from './components/Login';
-import Lobby from './components/Lobby';
-import GameRoom from './components/GameRoom';
-import Profile from './components/Profile';
-import Leaderboard from './components/Leaderboard';
-import Friends from './components/Friends';
-import ConnectionStatus from './components/ConnectionStatus';
+import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus } from './components/common';
+import { GameRoom } from './components/games/herbalism';
 import './styles/App.css';
 
 /**

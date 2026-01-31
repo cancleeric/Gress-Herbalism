@@ -1,0 +1,388 @@
+/**
+ * 遊戲常數定義
+ * 
+ * 此檔案包含所有遊戲相關的常數定義，包括：
+ * - 牌組配置（顏色、牌數）
+ * - 遊戲規則常數（玩家數量、蓋牌數量）
+ * - 遊戲階段常數
+ * - 問牌類型常數
+ * - 動作類型常數
+ * 
+ * @module constants
+ */
+
+// ==================== 牌組配置 ====================
+
+/**
+ * 顏色定義
+ * @readonly
+ * @enum {string}
+ */
+const COLORS = {
+  /** 紅色 */
+  RED: 'red',
+  /** 黃色 */
+  YELLOW: 'yellow',
+  /** 綠色 */
+  GREEN: 'green',
+  /** 藍色 */
+  BLUE: 'blue'
+};
+
+/**
+ * 各顏色的牌數配置
+ * @readonly
+ * @type {Object<string, number>}
+ */
+const CARD_COUNTS = {
+  [COLORS.RED]: 2,      // 紅色2張
+  [COLORS.YELLOW]: 3,  // 黃色3張
+  [COLORS.GREEN]: 4,   // 綠色4張
+  [COLORS.BLUE]: 5     // 藍色5張
+};
+
+/**
+ * 總牌數
+ * @readonly
+ * @type {number}
+ */
+const TOTAL_CARDS = 14;
+
+/**
+ * 所有顏色的陣列
+ * @readonly
+ * @type {string[]}
+ */
+const ALL_COLORS = Object.values(COLORS);
+
+// ==================== 遊戲規則常數 ====================
+
+/**
+ * 最小玩家數
+ * @readonly
+ * @type {number}
+ */
+const MIN_PLAYERS = 3;
+
+/**
+ * 最大玩家數
+ * @readonly
+ * @type {number}
+ */
+const MAX_PLAYERS = 4;
+
+/**
+ * 蓋牌數量
+ * @readonly
+ * @type {number}
+ */
+const HIDDEN_CARDS_COUNT = 2;
+
+// ==================== 計分相關常數 ====================
+
+/**
+ * 勝利分數
+ * @readonly
+ * @type {number}
+ */
+const WINNING_SCORE = 7;
+
+/**
+ * 猜對得分
+ * @readonly
+ * @type {number}
+ */
+const GUESS_CORRECT_POINTS = 3;
+
+/**
+ * 跟猜正確得分
+ * @readonly
+ * @type {number}
+ */
+const FOLLOW_CORRECT_POINTS = 1;
+
+/**
+ * 跟猜錯誤扣分
+ * @readonly
+ * @type {number}
+ */
+const FOLLOW_WRONG_POINTS = -1;
+
+/**
+ * 預測正確得分
+ * @readonly
+ * @type {number}
+ */
+const PREDICTION_CORRECT_POINTS = 1;
+
+/**
+ * 預測錯誤扣分
+ * @readonly
+ * @type {number}
+ */
+const PREDICTION_WRONG_POINTS = -1;
+
+/**
+ * 最低分數（分數不會低於此值）
+ * @readonly
+ * @type {number}
+ */
+const MIN_SCORE = 0;
+
+// ==================== 遊戲階段常數 ====================
+
+/**
+ * 遊戲階段：等待中
+ * @readonly
+ * @type {string}
+ */
+const GAME_PHASE_WAITING = 'waiting';
+
+/**
+ * 遊戲階段：進行中
+ * @readonly
+ * @type {string}
+ */
+const GAME_PHASE_PLAYING = 'playing';
+
+/**
+ * 遊戲階段：跟猜中
+ * @readonly
+ * @type {string}
+ */
+const GAME_PHASE_FOLLOW_GUESSING = 'followGuessing';
+
+/**
+ * 遊戲階段：局結束
+ * @readonly
+ * @type {string}
+ */
+const GAME_PHASE_ROUND_END = 'roundEnd';
+
+/**
+ * 遊戲階段：已結束
+ * @readonly
+ * @type {string}
+ */
+const GAME_PHASE_FINISHED = 'finished';
+
+/**
+ * 遊戲階段：問牌後預測
+ * @readonly
+ * @type {string}
+ */
+const GAME_PHASE_POST_QUESTION = 'postQuestion';
+
+/**
+ * 所有遊戲階段
+ * @readonly
+ * @type {string[]}
+ */
+const GAME_PHASES = [
+  GAME_PHASE_WAITING,
+  GAME_PHASE_PLAYING,
+  GAME_PHASE_POST_QUESTION,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END,
+  GAME_PHASE_FINISHED
+];
+
+// ==================== 問牌類型常數 ====================
+
+/**
+ * 問牌類型：兩個顏色各一張
+ * @readonly
+ * @type {number}
+ */
+const QUESTION_TYPE_ONE_EACH = 1;
+
+/**
+ * 問牌類型：其中一種顏色全部
+ * @readonly
+ * @type {number}
+ */
+const QUESTION_TYPE_ALL_ONE_COLOR = 2;
+
+/**
+ * 問牌類型：給其中一種顏色一張，要另一種顏色全部
+ * @readonly
+ * @type {number}
+ */
+const QUESTION_TYPE_GIVE_ONE_GET_ALL = 3;
+
+/**
+ * 所有問牌類型
+ * @readonly
+ * @type {number[]}
+ */
+const QUESTION_TYPES = [
+  QUESTION_TYPE_ONE_EACH,
+  QUESTION_TYPE_ALL_ONE_COLOR,
+  QUESTION_TYPE_GIVE_ONE_GET_ALL
+];
+
+/**
+ * 問牌類型描述
+ * @readonly
+ * @type {Object<number, string>}
+ */
+const QUESTION_TYPE_DESCRIPTIONS = {
+  [QUESTION_TYPE_ONE_EACH]: '兩個顏色各一張',
+  [QUESTION_TYPE_ALL_ONE_COLOR]: '其中一種顏色全部',
+  [QUESTION_TYPE_GIVE_ONE_GET_ALL]: '給其中一種顏色一張，要另一種顏色全部'
+};
+
+// ==================== 動作類型常數 ====================
+
+/**
+ * 動作類型：問牌
+ * @readonly
+ * @type {string}
+ */
+const ACTION_TYPE_QUESTION = 'question';
+
+/**
+ * 動作類型：猜牌
+ * @readonly
+ * @type {string}
+ */
+const ACTION_TYPE_GUESS = 'guess';
+
+/**
+ * 所有動作類型
+ * @readonly
+ * @type {string[]}
+ */
+const ACTION_TYPES = [
+  ACTION_TYPE_QUESTION,
+  ACTION_TYPE_GUESS
+];
+
+// ==================== 顏色組合牌常數 ====================
+
+/**
+ * 六張顏色組合牌定義
+ * 從四種顏色中選兩種的所有組合
+ * @readonly
+ * @type {Array<{id: string, colors: string[], name: string}>}
+ */
+const COLOR_COMBINATION_CARDS = [
+  { id: 'red-green', colors: ['red', 'green'], name: '紅綠' },
+  { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍' },
+  { id: 'green-yellow', colors: ['green', 'yellow'], name: '綠黃' },
+  { id: 'red-blue', colors: ['red', 'blue'], name: '紅藍' },
+  { id: 'yellow-red', colors: ['yellow', 'red'], name: '黃紅' },
+  { id: 'yellow-blue', colors: ['yellow', 'blue'], name: '黃藍' },
+];
+
+// ==================== 預設值 ====================
+
+/**
+ * 預設遊戲配置
+ * @readonly
+ * @type {Object}
+ */
+const DEFAULT_GAME_CONFIG = {
+  minPlayers: MIN_PLAYERS,
+  maxPlayers: MAX_PLAYERS,
+  totalCards: TOTAL_CARDS,
+  hiddenCardsCount: HIDDEN_CARDS_COUNT,
+  cardCounts: CARD_COUNTS
+};
+
+// ==================== 工具函數 ====================
+
+/**
+ * 驗證顏色是否有效
+ * @param {string} color - 要驗證的顏色
+ * @returns {boolean} 顏色是否有效
+ */
+function isValidColor(color) {
+  return ALL_COLORS.includes(color);
+}
+
+/**
+ * 驗證玩家數量是否有效
+ * @param {number} count - 玩家數量
+ * @returns {boolean} 玩家數量是否有效
+ */
+function isValidPlayerCount(count) {
+  return count >= MIN_PLAYERS && count <= MAX_PLAYERS;
+}
+
+/**
+ * 驗證問牌類型是否有效
+ * @param {number} type - 問牌類型
+ * @returns {boolean} 問牌類型是否有效
+ */
+function isValidQuestionType(type) {
+  return QUESTION_TYPES.includes(type);
+}
+
+/**
+ * 驗證遊戲階段是否有效
+ * @param {string} phase - 遊戲階段
+ * @returns {boolean} 遊戲階段是否有效
+ */
+function isValidGamePhase(phase) {
+  return GAME_PHASES.includes(phase);
+}
+
+/**
+ * 取得指定顏色的牌數
+ * @param {string} color - 顏色
+ * @returns {number} 該顏色的牌數
+ */
+function getCardCount(color) {
+  return CARD_COUNTS[color] || 0;
+}
+
+/**
+ * 取得問牌類型的描述
+ * @param {number} type - 問牌類型
+ * @returns {string} 問牌類型描述
+ */
+function getQuestionTypeDescription(type) {
+  return QUESTION_TYPE_DESCRIPTIONS[type] || '未知類型';
+}
+
+// CommonJS 匯出
+module.exports = {
+  COLORS,
+  CARD_COUNTS,
+  TOTAL_CARDS,
+  ALL_COLORS,
+  MIN_PLAYERS,
+  MAX_PLAYERS,
+  HIDDEN_CARDS_COUNT,
+  WINNING_SCORE,
+  GUESS_CORRECT_POINTS,
+  FOLLOW_CORRECT_POINTS,
+  FOLLOW_WRONG_POINTS,
+  PREDICTION_CORRECT_POINTS,
+  PREDICTION_WRONG_POINTS,
+  MIN_SCORE,
+  GAME_PHASE_WAITING,
+  GAME_PHASE_PLAYING,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END,
+  GAME_PHASE_FINISHED,
+  GAME_PHASE_POST_QUESTION,
+  GAME_PHASES,
+  QUESTION_TYPE_ONE_EACH,
+  QUESTION_TYPE_ALL_ONE_COLOR,
+  QUESTION_TYPE_GIVE_ONE_GET_ALL,
+  QUESTION_TYPES,
+  QUESTION_TYPE_DESCRIPTIONS,
+  ACTION_TYPE_QUESTION,
+  ACTION_TYPE_GUESS,
+  ACTION_TYPES,
+  COLOR_COMBINATION_CARDS,
+  DEFAULT_GAME_CONFIG,
+  isValidColor,
+  isValidPlayerCount,
+  isValidQuestionType,
+  isValidGamePhase,
+  getCardCount,
+  getQuestionTypeDescription
+};

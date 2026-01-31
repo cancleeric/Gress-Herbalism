@@ -13,8 +13,8 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { createStore } from 'redux';
 import GameRoom from '../../components/GameRoom/GameRoom';
-import useAIPlayers from '../../hooks/useAIPlayers';
-import LocalGameController from '../../controllers/LocalGameController';
+import useAIPlayers from '../../hooks/herbalism/useAIPlayers';
+import LocalGameController from '../../controllers/herbalism/LocalGameController';
 import { gameReducer, initialState as defaultInitialState } from '../../store/gameStore';
 import {
   AI_DIFFICULTY,

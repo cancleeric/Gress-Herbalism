@@ -5,7 +5,7 @@
 
 import { io } from 'socket.io-client';
 import config from '../config';
-import { getCurrentRoom, clearCurrentRoom } from '../utils/localStorage';
+import { getCurrentRoom, clearCurrentRoom } from '../utils/common/localStorage';
 
 // 從設定檔取得後端 URL
 const SOCKET_URL = config.socketUrl;

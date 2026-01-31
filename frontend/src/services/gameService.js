@@ -10,14 +10,14 @@ import {
   createDeck,
   shuffleDeck,
   dealCards
-} from '../utils/cardUtils.js';
+} from '../utils/herbalism/cardUtils';
 import {
   validatePlayerCount
-} from '../utils/gameRules.js';
+} from '../utils/herbalism/gameRules';
 import {
   processAction as processActionHandler,
   getHiddenCardsForPlayer
-} from '../utils/actionHandlers';
+} from '../utils/herbalism/actionHandlers';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,

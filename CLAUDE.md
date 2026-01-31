@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 專案概述
 
-這是一款 3-4 人推理桌遊的網頁版實作。玩家透過問牌和推理來猜測桌面上兩張蓋牌的顏色。
+Nicholas Game 是一個多遊戲平台，目前支援以下遊戲：
+- **本草 Herbalism**：3-4 人推理桌遊，玩家透過問牌和推理來猜測桌面上兩張蓋牌的顏色
+- **演化論：物種起源**：2-4 人策略卡牌遊戲（開發中）
 
 ## 常用指令
 
@@ -27,16 +29,31 @@ npm run dev          # 開發模式 (nodemon)
 
 ## 架構概述
 
+### 模組化多遊戲架構（工單 0214-0227）
+
 - **frontend/**: React 18 + Redux 前端應用
+  - `components/common/`: 共用組件（Login、Lobby、Profile 等）
+  - `components/games/herbalism/`: 本草遊戲專屬組件
+  - `components/games/evolution/`: 演化論遊戲組件（待開發）
+  - `ai/herbalism/`: 本草 AI 系統
+
 - **backend/**: Node.js + Express 後端服務
-- **shared/**: 前後端共用的常數和工具函數（如 `constants.js`）
+  - `logic/herbalism/`: 本草遊戲邏輯
+  - `logic/evolution/`: 演化論遊戲邏輯（待開發）
+  - `services/`: 共用服務
+
+- **shared/**: 前後端共用的常數和工具函數
+  - `constants/common.js`: 共用常數（遊戲類型等）
+  - `constants/herbalism.js`: 本草遊戲常數
+  - `constants/evolution.js`: 演化論常數（待開發）
+
 - **docs/**: 遊戲規則文檔
 - **work_orders/**: 工作單管理
 - **reports/**: 完成報告
 
-## 遊戲核心常數
+## 本草遊戲核心常數
 
-所有遊戲常數定義在 `shared/constants.js`：
+本草遊戲常數定義在 `shared/constants/herbalism.js`（向後相容：`shared/constants.js`）：
 - 牌組配置：紅2、黃3、綠4、藍5（共14張）
 - 玩家數量：3-4人
 - 蓋牌數量：2張
