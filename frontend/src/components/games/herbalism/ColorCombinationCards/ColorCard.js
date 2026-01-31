@@ -2,30 +2,11 @@
  * 單張顏色組合牌組件
  *
  * @module ColorCard
- * @description 顯示單張顏色組合牌，包含兩種顏色的圖示
+ * @description 顯示單張顏色組合牌，使用雙色卡片圖片
+ * @updated 2026-01-31 工單 0215：將 emoji + 條紋替換為卡片圖片
  */
 
 import React from 'react';
-
-/**
- * 顏色對應的 emoji 圖示
- */
-const COLOR_ICONS = {
-  red: '🔴',
-  yellow: '🟡',
-  green: '🟢',
-  blue: '🔵'
-};
-
-/**
- * 顏色對應的中文名稱
- */
-const COLOR_NAMES = {
-  red: '紅',
-  yellow: '黃',
-  green: '綠',
-  blue: '藍'
-};
 
 /**
  * 單張顏色組合牌組件
@@ -54,8 +35,6 @@ function ColorCard({
   onClick,
   onDisabledClick
 }) {
-  const [color1, color2] = card.colors;
-
   const handleClick = () => {
     if (disabledBySelf && onDisabledClick) {
       onDisabledClick(card);
@@ -89,25 +68,22 @@ function ColorCard({
         }
       }}
     >
-      {/* 左上角顏色圖示 */}
-      <span className="color-icon top-left">
-        {COLOR_ICONS[color1]}
-      </span>
-
-      {/* 卡牌中央圖案區域 */}
+      {/* 卡牌圖片區域（工單 0215：使用雙色卡片圖片） */}
       <div className="card-illustration">
-        <div className={`color-stripe color-${color1}`} />
-        <div className={`color-stripe color-${color2}`} />
+        <img
+          src={`/images/cards/${card.id}.jpg`}
+          alt={card.name}
+          className="card-image"
+          onError={(e) => {
+            // 圖片載入失敗時隱藏圖片
+            e.target.style.display = 'none';
+          }}
+        />
       </div>
 
       {/* 卡牌名稱 */}
       <span className="card-name">
-        {COLOR_NAMES[color1]}{COLOR_NAMES[color2]}
-      </span>
-
-      {/* 右下角顏色圖示 */}
-      <span className="color-icon bottom-right">
-        {COLOR_ICONS[color2]}
+        {card.name}
       </span>
 
       {/* 玩家標記（工單 0075，工單 0077：移除「你」字樣） */}

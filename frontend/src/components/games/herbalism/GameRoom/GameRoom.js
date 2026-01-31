@@ -1316,14 +1316,14 @@ function GameRoom() {
     );
   }
 
-  // 顏色組合牌定義（工單 0124）
+  // 顏色組合牌定義（工單 0124，工單 0217：改用圖片）
   const colorCombinations = [
-    { id: 'red-yellow', colors: ['red', 'yellow'], icons: ['eco', 'energy_savings_leaf'] },
-    { id: 'red-green', colors: ['red', 'green'], icons: ['eco', 'spa'] },
-    { id: 'red-blue', colors: ['red', 'blue'], icons: ['eco', 'water_drop'] },
-    { id: 'yellow-green', colors: ['yellow', 'green'], icons: ['energy_savings_leaf', 'spa'] },
-    { id: 'yellow-blue', colors: ['yellow', 'blue'], icons: ['energy_savings_leaf', 'water_drop'] },
-    { id: 'green-blue', colors: ['green', 'blue'], icons: ['spa', 'water_drop'] },
+    { id: 'yellow-red', colors: ['red', 'yellow'], name: '紅黃' },
+    { id: 'red-green', colors: ['red', 'green'], name: '紅綠' },
+    { id: 'red-blue', colors: ['red', 'blue'], name: '紅藍' },
+    { id: 'green-yellow', colors: ['green', 'yellow'], name: '綠黃' },
+    { id: 'yellow-blue', colors: ['yellow', 'blue'], name: '黃藍' },
+    { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍' },
   ];
 
   // 遊戲進行中/結束階段：渲染新的三欄式 UI（工單 0124, 0132）
@@ -1461,12 +1461,13 @@ function GameRoom() {
                         }
                       }}
                     >
-                      <div className={`playing-inquiry-card-half color-${combo.colors[0]}`}>
-                        <span className="material-symbols-outlined">{combo.icons[0]}</span>
-                      </div>
-                      <div className={`playing-inquiry-card-half color-${combo.colors[1]}`}>
-                        <span className="material-symbols-outlined">{combo.icons[1]}</span>
-                      </div>
+                      {/* 工單 0217：使用雙色卡片圖片 */}
+                      <img
+                        src={`/images/cards/${combo.id}.jpg`}
+                        alt={combo.name}
+                        className="playing-inquiry-card-image"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
                       {isDisabledBySelf && (
                         <div className="playing-inquiry-card-disabled-overlay">
                           <span className="material-symbols-outlined">block</span>

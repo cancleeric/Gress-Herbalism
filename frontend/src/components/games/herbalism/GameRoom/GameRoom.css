@@ -2316,26 +2316,38 @@
   color: var(--waiting-primary);
 }
 
+/* 工單 0219：3x2 排列，直立長方形卡片，填滿寬度並置中 */
 .playing-inquiry-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  height: 320px;
+  gap: 16px;
+  width: 100%;
 }
 
 .playing-inquiry-card {
-  border-radius: 12px;
-  border: 1px solid rgba(187, 156, 99, 0.1);
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  border: 2px solid rgba(187, 156, 99, 0.3);
   overflow: hidden;
-  background-color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
+  background-color: #f8f4e8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
 }
 
 .playing-inquiry-card:hover {
   transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 工單 0217, 0219：卡片圖片樣式 */
+.playing-inquiry-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .playing-inquiry-card.disabled {
@@ -2380,9 +2392,6 @@
 }
 
 /* 工單 0125：禁用顏色牌樣式 */
-.playing-inquiry-card {
-  position: relative;
-}
 
 .playing-inquiry-card.disabled-by-self {
   opacity: 0.6;
@@ -2760,8 +2769,7 @@
   }
 
   .playing-inquiry-grid {
-    gap: 16px;
-    height: 280px;
+    gap: 14px;
   }
 }
 
@@ -2834,7 +2842,7 @@
   }
 
   .playing-inquiry-grid {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .playing-footer {
@@ -2886,8 +2894,7 @@
   }
 
   .playing-inquiry-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 8px;
   }
 
   .playing-hand-card {
