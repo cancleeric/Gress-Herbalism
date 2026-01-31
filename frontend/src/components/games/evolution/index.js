@@ -1,7 +1,7 @@
 /**
  * 演化論遊戲組件匯出
  *
- * 工單 0215 - 建立匯出索引檔案
+ * @module components/games/evolution
  */
 
-// 待開發
+export { default as EvolutionRoom } from './EvolutionRoom';
