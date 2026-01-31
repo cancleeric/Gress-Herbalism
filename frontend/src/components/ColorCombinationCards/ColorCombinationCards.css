@@ -26,12 +26,12 @@
   max-width: 300px;
 }
 
-/* 單張顏色組合牌 */
+/* 單張顏色組合牌（工單 0215：調整尺寸以適應圖片） */
 .color-card {
   position: relative;
-  width: 80px;
-  height: 110px;
-  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  width: 75px;
+  height: 115px;
+  background: linear-gradient(145deg, #f8f4e8, #e8e0d0);
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius-md);
   cursor: default;
@@ -39,7 +39,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 6px;
   user-select: none;
 }
 
@@ -71,52 +72,28 @@
   cursor: not-allowed;
 }
 
-/* 顏色圖示 */
-.color-icon {
-  position: absolute;
-  font-size: 16px;
-  line-height: 1;
-}
-
-.color-icon.top-left {
-  top: 6px;
-  left: 6px;
-}
-
-.color-icon.bottom-right {
-  bottom: 6px;
-  right: 6px;
-}
-
-/* 卡牌中央圖案區域 */
+/* 卡牌圖片區域（工單 0215：使用雙色卡片圖片） */
 .card-illustration {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 80px;
   border-radius: var(--border-radius-sm);
   overflow: hidden;
   display: flex;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.color-stripe {
-  flex: 1;
-  transition: all 0.2s ease;
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+  transition: transform 0.2s ease;
 }
 
-.color-stripe.color-red {
-  background: linear-gradient(180deg, var(--color-red), #c0392b);
-}
-
-.color-stripe.color-yellow {
-  background: linear-gradient(180deg, var(--color-yellow), #f39c12);
-}
-
-.color-stripe.color-green {
-  background: linear-gradient(180deg, var(--color-green), #1e8449);
-}
-
-.color-stripe.color-blue {
-  background: linear-gradient(180deg, var(--color-blue), #2471a3);
+.color-card:not(.disabled):hover .card-image {
+  transform: scale(1.05);
 }
 
 /* 卡牌名稱 */
@@ -191,26 +168,23 @@
   opacity: 0.8;
 }
 
-/* 響應式設計 */
+/* 響應式設計（工單 0215：調整以適應圖片） */
 @media (max-width: 480px) {
   .cards-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-xs);
-    max-width: 240px;
+    max-width: 220px;
   }
 
   .color-card {
-    width: 65px;
-    height: 90px;
+    width: 60px;
+    height: 95px;
+    padding-top: 4px;
   }
 
   .card-illustration {
-    width: 40px;
-    height: 40px;
-  }
-
-  .color-icon {
-    font-size: 12px;
+    width: 48px;
+    height: 65px;
   }
 
   .card-name {
@@ -222,11 +196,16 @@
 @media (max-width: 320px) {
   .cards-grid {
     grid-template-columns: repeat(2, 1fr);
-    max-width: 160px;
+    max-width: 150px;
   }
 
   .color-card {
-    width: 60px;
-    height: 85px;
+    width: 55px;
+    height: 90px;
+  }
+
+  .card-illustration {
+    width: 44px;
+    height: 60px;
   }
 }

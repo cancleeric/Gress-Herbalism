@@ -2,6 +2,7 @@
  * ColorCombinationCards 組件測試
  *
  * @module ColorCombinationCards.test
+ * @updated 2026-01-31 工單 0215：更新測試以匹配圖片設計
  */
 
 import React from 'react';
@@ -16,27 +17,35 @@ describe('ColorCard Component', () => {
     name: '紅綠'
   };
 
-  test('renders card with correct colors', () => {
+  test('renders card with correct image and name', () => {
     render(<ColorCard card={mockCard} />);
 
-    expect(screen.getByText('🔴')).toBeInTheDocument();
-    expect(screen.getByText('🟢')).toBeInTheDocument();
+    // 檢查圖片元素存在
+    const img = screen.getByRole('img', { name: '紅綠' });
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', '/images/cards/red-green.jpg');
+
+    // 檢查卡牌名稱
     expect(screen.getByText('紅綠')).toBeInTheDocument();
   });
 
-  test('renders all color combinations', () => {
-    const colors = [
-      { id: 'red-green', colors: ['red', 'green'], name: '紅綠', icons: ['🔴', '🟢'] },
-      { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍', icons: ['🟢', '🔵'] },
-      { id: 'yellow-red', colors: ['yellow', 'red'], name: '黃紅', icons: ['🟡', '🔴'] },
-      { id: 'yellow-blue', colors: ['yellow', 'blue'], name: '黃藍', icons: ['🟡', '🔵'] },
+  test('renders all color combinations with images', () => {
+    const cards = [
+      { id: 'red-green', colors: ['red', 'green'], name: '紅綠' },
+      { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍' },
+      { id: 'yellow-red', colors: ['yellow', 'red'], name: '黃紅' },
+      { id: 'yellow-blue', colors: ['yellow', 'blue'], name: '黃藍' },
     ];
 
-    colors.forEach(({ id, colors, name, icons }) => {
+    cards.forEach(({ id, colors, name }) => {
       const { unmount } = render(<ColorCard card={{ id, colors, name }} />);
-      expect(screen.getByText(icons[0])).toBeInTheDocument();
-      expect(screen.getByText(icons[1])).toBeInTheDocument();
-      expect(screen.getByText(name.slice(0, 1) + name.slice(1))).toBeInTheDocument();
+
+      // 檢查圖片
+      const img = screen.getByRole('img', { name });
+      expect(img).toHaveAttribute('src', `/images/cards/${id}.jpg`);
+
+      // 檢查名稱
+      expect(screen.getByText(name)).toBeInTheDocument();
       unmount();
     });
   });
@@ -161,33 +170,30 @@ describe('ColorCombinationCards Component', () => {
     expect(handleSelect).toHaveBeenCalled();
   });
 
-  test('renders correct color emoji icons', () => {
+  test('renders card images for all combinations', () => {
     render(<ColorCombinationCards />);
 
-    // Check for all color emojis
-    const redIcons = screen.getAllByText('🔴');
-    const yellowIcons = screen.getAllByText('🟡');
-    const greenIcons = screen.getAllByText('🟢');
-    const blueIcons = screen.getAllByText('🔵');
+    // 檢查六張卡片都有圖片
+    const images = screen.getAllByRole('img');
+    expect(images.length).toBe(6);
 
-    // Each color appears in multiple cards
-    expect(redIcons.length).toBeGreaterThan(0);
-    expect(yellowIcons.length).toBeGreaterThan(0);
-    expect(greenIcons.length).toBeGreaterThan(0);
-    expect(blueIcons.length).toBeGreaterThan(0);
+    // 檢查所有圖片路徑
+    const expectedIds = ['red-green', 'green-blue', 'green-yellow', 'red-blue', 'yellow-red', 'yellow-blue'];
+    expectedIds.forEach(id => {
+      const img = images.find(img => img.getAttribute('src') === `/images/cards/${id}.jpg`);
+      expect(img).toBeTruthy();
+    });
   });
 
-  test('cards have color stripes for visual representation', () => {
+  test('cards have card-image class for visual representation', () => {
     const { container } = render(<ColorCombinationCards />);
 
-    const redStripes = container.querySelectorAll('.color-stripe.color-red');
-    const yellowStripes = container.querySelectorAll('.color-stripe.color-yellow');
-    const greenStripes = container.querySelectorAll('.color-stripe.color-green');
-    const blueStripes = container.querySelectorAll('.color-stripe.color-blue');
+    // 檢查所有卡片都有圖片元素
+    const cardImages = container.querySelectorAll('.card-image');
+    expect(cardImages.length).toBe(6);
 
-    expect(redStripes.length).toBeGreaterThan(0);
-    expect(yellowStripes.length).toBeGreaterThan(0);
-    expect(greenStripes.length).toBeGreaterThan(0);
-    expect(blueStripes.length).toBeGreaterThan(0);
+    // 檢查圖片容器存在
+    const cardIllustrations = container.querySelectorAll('.card-illustration');
+    expect(cardIllustrations.length).toBe(6);
   });
 });
