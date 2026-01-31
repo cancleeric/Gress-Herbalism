@@ -2316,35 +2316,38 @@
   color: var(--waiting-primary);
 }
 
+/* 工單 0218：改為直立長方形卡片，一排六張 */
 .playing-inquiry-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  height: 320px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  justify-items: center;
 }
 
 .playing-inquiry-card {
-  border-radius: 12px;
-  border: 1px solid rgba(187, 156, 99, 0.2);
+  width: 90px;
+  height: 125px;
+  border-radius: 8px;
+  border: 2px solid rgba(187, 156, 99, 0.3);
   overflow: hidden;
   background-color: #f8f4e8;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
 }
 
 .playing-inquiry-card:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* 工單 0217：卡片圖片樣式 */
+/* 工單 0217, 0218：卡片圖片樣式 */
 .playing-inquiry-card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .playing-inquiry-card.disabled {
@@ -2766,8 +2769,12 @@
   }
 
   .playing-inquiry-grid {
-    gap: 16px;
-    height: 280px;
+    gap: 10px;
+  }
+
+  .playing-inquiry-card {
+    width: 80px;
+    height: 110px;
   }
 }
 
@@ -2840,7 +2847,13 @@
   }
 
   .playing-inquiry-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .playing-inquiry-card {
+    width: 70px;
+    height: 95px;
   }
 
   .playing-footer {
@@ -2892,8 +2905,13 @@
   }
 
   .playing-inquiry-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .playing-inquiry-card {
+    width: 60px;
+    height: 82px;
   }
 
   .playing-hand-card {
