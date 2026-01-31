@@ -31,6 +31,12 @@ const friendService = require('./services/friendService');
 const invitationService = require('./services/invitationService');
 const presenceService = require('./services/presenceService');
 
+// 工單 0261 - 演化論遊戲房間管理（舊模組，保留但不使用）
+// const evolutionRoomManager = require('./services/evolutionRoomManager');
+
+// 工單 0313-0316 - 演化論遊戲處理（新模組）
+const evolutionHandler = require('./evolutionGameHandler');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -453,7 +459,8 @@ function broadcastRoomList() {
         name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
         playerCount: state.players.length,
         maxPlayers: state.maxPlayers || 4,
-        isPrivate: state.isPrivate || false
+        isPrivate: state.isPrivate || false,
+        gameType: 'herbalism'  // 標記為本草遊戲房間
       });
     }
   });
@@ -1165,10 +1172,14 @@ io.on('connection', (socket) => {
 
   // 斷線處理
   socket.on('disconnect', async (reason) => {
+    // 本草遊戲斷線處理
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
     }
+
+    // 工單 0313-0316：演化論遊戲斷線處理
+    evolutionHandler.handleDisconnect(socket, io);
 
     // 工單 0176：斷線時設為離線
     if (socket.firebasePlayerId) {
@@ -1188,6 +1199,27 @@ io.on('connection', (socket) => {
   socket.on('reconnect', ({ roomId, playerId, playerName }) => {
     handlePlayerReconnect(socket, roomId, playerId, playerName);
   });
+
+  // ==================== 工單 0313-0316：演化論遊戲 Socket 事件（使用新模組） ====================
+
+  // 房間操作
+  socket.on('evo:createRoom', (data) => evolutionHandler.createRoom(socket, io, data));
+  socket.on('evo:joinRoom', (data) => evolutionHandler.joinRoom(socket, io, data));
+  socket.on('evo:leaveRoom', (data) => evolutionHandler.leaveRoom(socket, io, data));
+  socket.on('evo:setReady', (data) => evolutionHandler.setReady(socket, io, data));
+  socket.on('evo:startGame', (data) => evolutionHandler.startGame(socket, io, data));
+  socket.on('evo:requestRoomList', () => evolutionHandler.requestRoomList(socket));
+
+  // 遊戲操作
+  socket.on('evo:createCreature', (data) => evolutionHandler.createCreature(socket, io, data));
+  socket.on('evo:addTrait', (data) => evolutionHandler.addTrait(socket, io, data));
+  socket.on('evo:passEvolution', (data) => evolutionHandler.passEvolution(socket, io, data));
+  socket.on('evo:feedCreature', (data) => evolutionHandler.feedCreature(socket, io, data));
+  socket.on('evo:attack', (data) => evolutionHandler.attack(socket, io, data));
+  socket.on('evo:respondAttack', (data) => evolutionHandler.respondAttack(socket, io, data));
+  socket.on('evo:useTrait', (data) => evolutionHandler.useTrait(socket, io, data));
+
+  // ==================== 工單 0313-0316 結束 ====================
 });
 
 function handlePlayerLeave(socket, gameId, playerId) {
@@ -1429,7 +1461,8 @@ function getAvailableRooms() {
         name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
         playerCount: state.players.length,
         maxPlayers: state.maxPlayers || 4,
-        isPrivate: state.isPrivate || false
+        isPrivate: state.isPrivate || false,
+        gameType: 'herbalism'  // 標記為本草遊戲房間
       });
     }
   });

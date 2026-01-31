@@ -711,7 +711,8 @@ function GameRoom() {
     // 工單 0198：清除持久化狀態，避免重新載入時恢復舊狀態
     clearPersistedState();
     dispatch(resetGame());
-    navigate('/');
+    // 工單 0276：返回本草大廳
+    navigate('/lobby/herbalism');
   };
 
   /**

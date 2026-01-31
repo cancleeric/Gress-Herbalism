@@ -1199,3 +1199,115 @@
   margin-bottom: 24px;
   font-size: 14px;
 }
+
+/* ==================== 工單 0276：返回遊戲選擇按鈕 ==================== */
+.back-to-selection-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  margin-bottom: 24px;
+  background-color: transparent;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-to-selection-btn:hover {
+  background-color: rgba(47, 127, 52, 0.1);
+}
+
+.back-to-selection-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* ==================== 工單 0260：遊戲選擇器（保留樣式供參考）==================== */
+.game-selector {
+  display: none; /* 工單 0276：隱藏，改用獨立頁面 */
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.game-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 16px;
+  background-color: var(--bg-light);
+  border: 2px solid rgba(47, 127, 52, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.game-btn:hover {
+  border-color: var(--primary);
+  background-color: rgba(47, 127, 52, 0.05);
+}
+
+.game-btn.active {
+  border-color: var(--primary);
+  background-color: rgba(47, 127, 52, 0.1);
+  box-shadow: 0 0 0 2px rgba(47, 127, 52, 0.2);
+}
+
+.game-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.game-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.game-btn.active .game-name {
+  color: var(--primary);
+}
+
+/* 遊戲類型標籤 */
+.game-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  background-color: rgba(47, 127, 52, 0.1);
+  color: var(--primary);
+}
+
+.game-type-badge.evolution {
+  background-color: rgba(197, 160, 89, 0.15);
+  color: var(--accent-gold);
+}
+
+@media (max-width: 480px) {
+  .game-selector {
+    gap: 8px;
+  }
+
+  .game-btn {
+    padding: 16px 12px;
+  }
+
+  .game-icon {
+    font-size: 28px;
+  }
+
+  .game-name {
+    font-size: 12px;
+  }
+}

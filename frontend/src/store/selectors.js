@@ -11,16 +11,18 @@ import { createSelector } from 'reselect';
 
 /**
  * 基礎 selector - 取得各個 state 欄位
+ * 工單 0261：更新為新的 state.herbalism 結構
  */
-const selectGameId = (state) => state.gameId;
-const selectPlayers = (state) => state.players;
-const selectCurrentPlayerIndex = (state) => state.currentPlayerIndex;
-const selectGamePhase = (state) => state.gamePhase;
-const selectWinnerState = (state) => state.winner;
-const selectHiddenCards = (state) => state.hiddenCards;
-const selectGameHistoryState = (state) => state.gameHistory;
-const selectCurrentPlayerId = (state) => state.currentPlayerId;
-const selectMaxPlayers = (state) => state.maxPlayers;
+const selectHerbalism = (state) => state.herbalism || {};
+const selectGameId = (state) => selectHerbalism(state).gameId;
+const selectPlayers = (state) => selectHerbalism(state).players;
+const selectCurrentPlayerIndex = (state) => selectHerbalism(state).currentPlayerIndex;
+const selectGamePhase = (state) => selectHerbalism(state).gamePhase;
+const selectWinnerState = (state) => selectHerbalism(state).winner;
+const selectHiddenCards = (state) => selectHerbalism(state).hiddenCards;
+const selectGameHistoryState = (state) => selectHerbalism(state).gameHistory;
+const selectCurrentPlayerId = (state) => selectHerbalism(state).currentPlayerId;
+const selectMaxPlayers = (state) => selectHerbalism(state).maxPlayers;
 
 /**
  * 遊戲房間狀態 selector
@@ -77,10 +79,12 @@ export const selectActivePlayers = createSelector(
 
 /**
  * 遊戲歷史記錄 selector（簡單提取，不需 createSelector）
+ * 工單 0261：更新為新的 state.herbalism 結構
  */
-export const selectGameHistory = (state) => state.gameHistory || [];
+export const selectGameHistory = (state) => (state.herbalism || {}).gameHistory || [];
 
 /**
  * 勝利者 selector（簡單提取，不需 createSelector）
+ * 工單 0261：更新為新的 state.herbalism 結構
  */
-export const selectWinner = (state) => state.winner;
+export const selectWinner = (state) => (state.herbalism || {}).winner;

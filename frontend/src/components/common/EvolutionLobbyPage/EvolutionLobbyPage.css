@@ -1,0 +1,206 @@
+/**
+ * 演化論大廳專用樣式
+ * 深綠色主題覆蓋
+ * 工單 0276
+ */
+
+/* 演化論主題變數 */
+.lobby.evolution-theme {
+  --primary: #1a5a3a;
+  --primary-dark: #0d3d26;
+  --accent-gold: #8fbc8f;
+  --bg-main: #e8f5e9;
+  --bg-light: #f1f8e9;
+}
+
+/* 側邊欄深綠色 */
+.lobby.evolution-theme .lobby-sidebar {
+  background-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .sidebar-logo {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.lobby.evolution-theme .sidebar-logo .material-symbols-outlined {
+  color: #8fbc8f;
+}
+
+.lobby.evolution-theme .sidebar-title {
+  color: #8fbc8f;
+}
+
+.lobby.evolution-theme .sidebar-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #8fbc8f;
+}
+
+.lobby.evolution-theme .sidebar-decoration .material-symbols-outlined {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* 頂部欄 */
+.lobby.evolution-theme .lobby-header {
+  background-color: #f1f8e9;
+  border-bottom-color: rgba(26, 90, 58, 0.1);
+}
+
+.lobby.evolution-theme .lobby-avatar {
+  background-color: #1a5a3a;
+  border-color: #8fbc8f;
+}
+
+/* 主內容區 */
+.lobby.evolution-theme .lobby-content {
+  background-color: #e8f5e9;
+}
+
+/* 暱稱輸入 */
+.lobby.evolution-theme .nickname-input {
+  border-color: rgba(26, 90, 58, 0.2);
+  background-color: #f1f8e9;
+}
+
+.lobby.evolution-theme .nickname-input:focus {
+  border-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .welcome-message {
+  color: #1a5a3a;
+}
+
+/* 返回按鈕 */
+.lobby.evolution-theme .back-to-selection-btn {
+  border-color: #1a5a3a;
+  color: #1a5a3a;
+}
+
+.lobby.evolution-theme .back-to-selection-btn:hover {
+  background-color: rgba(26, 90, 58, 0.1);
+}
+
+/* 創建房間按鈕 */
+.lobby.evolution-theme .create-room-btn {
+  border-color: #8fbc8f;
+}
+
+.lobby.evolution-theme .create-room-btn:hover:not(:disabled) {
+  background-color: rgba(143, 188, 143, 0.1);
+}
+
+.lobby.evolution-theme .create-room-btn .material-symbols-outlined {
+  color: #8fbc8f;
+}
+
+/* 加入房間 */
+.lobby.evolution-theme .join-room-input {
+  border-color: rgba(26, 90, 58, 0.2);
+  background-color: #f1f8e9;
+}
+
+.lobby.evolution-theme .join-room-input:focus {
+  border-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .join-room-btn {
+  background-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .join-room-btn:hover:not(:disabled) {
+  background-color: #0d3d26;
+}
+
+/* 房間表格 */
+.lobby.evolution-theme .room-table-container {
+  background-color: #f1f8e9;
+  border-color: rgba(26, 90, 58, 0.1);
+}
+
+.lobby.evolution-theme .room-table thead {
+  background-color: rgba(26, 90, 58, 0.05);
+}
+
+.lobby.evolution-theme .room-table th {
+  border-bottom-color: rgba(26, 90, 58, 0.1);
+}
+
+.lobby.evolution-theme .room-table td {
+  border-bottom-color: rgba(26, 90, 58, 0.05);
+}
+
+.lobby.evolution-theme .room-table tbody tr:hover {
+  background-color: rgba(26, 90, 58, 0.03);
+}
+
+.lobby.evolution-theme .room-players-count {
+  color: #1a5a3a;
+}
+
+.lobby.evolution-theme .room-status.waiting {
+  background-color: rgba(26, 90, 58, 0.1);
+  color: #1a5a3a;
+}
+
+.lobby.evolution-theme .room-status.waiting::before {
+  background-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .room-action-btn {
+  background-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .room-action-btn:hover:not(:disabled) {
+  background-color: #0d3d26;
+}
+
+/* 無房間提示 */
+.lobby.evolution-theme .no-rooms .material-symbols-outlined {
+  color: rgba(26, 90, 58, 0.2);
+}
+
+/* 手機版底部導航 */
+.lobby.evolution-theme .mobile-nav {
+  background-color: #1a5a3a;
+}
+
+.lobby.evolution-theme .mobile-nav-item.active {
+  color: #8fbc8f;
+}
+
+/* 創建房間 Modal */
+.lobby.evolution-theme .create-room-modal {
+  background-color: #e8f5e9;
+  border-color: #8fbc8f;
+}
+
+.lobby.evolution-theme .create-room-modal .crm-decor-top,
+.lobby.evolution-theme .create-room-modal .crm-decor-bottom {
+  color: #1a5a3a;
+}
+
+.lobby.evolution-theme .crm-header-icon {
+  color: #1a5a3a;
+}
+
+.lobby.evolution-theme .crm-select {
+  border-color: rgba(143, 188, 143, 0.3);
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.lobby.evolution-theme .crm-select:focus {
+  border-color: #8fbc8f;
+  box-shadow: 0 0 0 1px #8fbc8f;
+}
+
+.lobby.evolution-theme .crm-btn-confirm {
+  background-color: #1a5a3a;
+  box-shadow: 0 4px 6px -1px rgba(26, 90, 58, 0.2);
+}
+
+.lobby.evolution-theme .crm-btn-confirm:hover:not(:disabled) {
+  background-color: #0d3d26;
+}
+
+.lobby.evolution-theme .crm-bottom-accent {
+  background-color: #8fbc8f;
+}

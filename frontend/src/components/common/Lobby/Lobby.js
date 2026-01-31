@@ -88,6 +88,8 @@ function Lobby() {
   // 當前導航
   const [activeNav, setActiveNav] = useState('rooms');
 
+  // 工單 0276：移除遊戲類型選擇（現在有獨立的遊戲選擇頁面）
+
   // 工單 202601260048：單人模式相關狀態
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiConfig, setAIConfig] = useState({
@@ -142,6 +144,7 @@ function Lobby() {
         gamePhase: gameState.gamePhase,
         currentPlayerId: playerId
       }));
+      // 工單 0276：本草大廳只創建本草房間
       navigate(`/game/${gameId}`);
       setIsLoading(false);
       setShowCreateModal(false);
@@ -161,6 +164,7 @@ function Lobby() {
         gamePhase: gameState.gamePhase,
         currentPlayerId: playerId
       }));
+      // 工單 0276：本草大廳只加入本草房間
       navigate(`/game/${gameId}`);
       setIsLoading(false);
     });
@@ -566,6 +570,15 @@ function Lobby() {
             </div>
           )}
 
+          {/* 工單 0276：返回遊戲選擇頁面 */}
+          <button
+            className="back-to-selection-btn"
+            onClick={() => navigate('/')}
+          >
+            <span className="material-symbols-outlined">arrow_back</span>
+            返回遊戲選擇
+          </button>
+
           {/* 創建房間按鈕 */}
           <button
             className="create-room-btn"
@@ -605,8 +618,9 @@ function Lobby() {
           </div>
 
           {/* 房間列表表格 */}
+          {/* 工單 0276：只顯示本草房間 */}
           <div className="room-table-container">
-            {rooms.length === 0 ? (
+            {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').length === 0 ? (
               <div className="no-rooms">
                 <span className="material-symbols-outlined">meeting_room</span>
                 目前沒有可用的房間，點擊上方按鈕創建新房間
@@ -623,7 +637,8 @@ function Lobby() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rooms.map((room) => (
+                  {/* 工單 0276：只顯示本草房間 */}
+                  {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').map((room) => (
                     <tr key={room.id}>
                       <td>
                         <span className="room-name">

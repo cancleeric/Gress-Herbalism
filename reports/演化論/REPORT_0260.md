@@ -7,27 +7,44 @@
 2026-01-31
 
 ## 工作單標題
-後端 Socket 事件整合
+修改大廳支援遊戲選擇
 
-## 完成狀態
-待實作
+## 完成內容摘要
+
+成功修改大廳頁面，加入遊戲類型選擇器，支援本草和演化論兩款遊戲。
+
+### 已修改檔案
+
+| 檔案 | 操作 | 說明 |
+|------|------|------|
+| `frontend/src/components/common/Lobby/Lobby.js` | 修改 | 新增遊戲選擇器狀態和邏輯 |
+| `frontend/src/components/common/Lobby/Lobby.css` | 修改 | 新增遊戲選擇器樣式 |
+
+### 實作內容
+
+#### 1. 遊戲選擇器 UI
+- 新增 `selectedGame` 狀態（預設為 'herbalism'）
+- 兩個遊戲選擇按鈕：本草和演化論
+- 按鈕顯示遊戲圖示和名稱
+
+#### 2. 房間列表篩選
+- 根據選擇的遊戲類型篩選顯示房間
+- 支援向後相容（無 gameType 的房間視為本草遊戲）
+
+#### 3. 路由導航
+- 創建房間後根據遊戲類型導向正確路由
+- 加入房間後根據 gameState.gameType 導向正確路由
+- 本草遊戲：`/game/:gameId`
+- 演化論遊戲：`/game/evolution/:roomId`
+
+## 驗收標準達成狀況
+
+- [x] 遊戲選擇器正確顯示
+- [x] 房間列表按遊戲類型篩選
+- [x] 創建房間時正確傳送遊戲類型
+- [x] 加入房間後導向正確路由
+- [ ] 測試覆蓋率 >= 70%（待補充）
 
 ## 備註
 
-演化論遊戲基礎架構（後端邏輯 + 前端組件框架）已建立完成。
-此工單的核心功能已包含在基礎架構中，後續可根據需求進行細化和優化。
-
-### 已完成的基礎架構
-
-**後端邏輯** (backend/logic/evolution/):
-- cardLogic.js - 卡牌系統
-- creatureLogic.js - 生物系統
-- feedingLogic.js - 進食系統
-- phaseLogic.js - 階段系統
-- gameLogic.js - 主邏輯
-
-**前端組件** (frontend/src/components/games/evolution/):
-- EvolutionRoom - 主房間組件
-
-**狀態管理** (frontend/src/store/evolution/):
-- evolutionStore.js - Redux Store
+遊戲選擇器採用簡潔的卡片式設計，與現有大廳風格一致。響應式設計支援手機版顯示。

@@ -64,7 +64,8 @@ function Profile() {
   };
 
   const handleBack = () => {
-    navigate('/');
+    // 返回上一頁（可能是本草大廳或演化論大廳）
+    navigate(-1);
   };
 
   if (loading) {

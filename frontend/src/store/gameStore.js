@@ -7,7 +7,7 @@
  * @module gameStore
  */
 
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import {
@@ -15,6 +15,9 @@ import {
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
 } from '../shared/constants';
+
+// 工單 0261：引入演化論 reducer
+import evolutionReducer from './evolution/evolutionStore';
 
 // ==================== Redux Persist 設定 ====================
 
@@ -27,9 +30,18 @@ import {
 const persistConfig = {
   key: 'gress_game',
   storage,
-  version: 1,
-  // 只持久化重連所需的關鍵資訊
-  whitelist: ['gameId', 'currentPlayerId', 'players', 'gamePhase', 'currentPlayerIndex']
+  version: 2,
+  // 工單 0261：更新 whitelist 為新的 reducer 結構
+  whitelist: ['herbalism'],
+  // 遷移舊狀態結構
+  migrate: (state) => {
+    // 如果沒有 herbalism 欄位，代表是舊版本狀態，需要清除
+    if (state && !state.herbalism && !state._persist) {
+      console.log('[Store] 偵測到舊版狀態結構，清除並重新初始化');
+      return Promise.resolve(undefined);
+    }
+    return Promise.resolve(state);
+  }
 };
 
 // ==================== Action Types ====================
@@ -254,9 +266,18 @@ export function gameReducer(state = initialState, action) {
 // ==================== Store ====================
 
 /**
+ * 合併所有 reducers
+ * 工單 0261：添加 evolution reducer
+ */
+const rootReducer = combineReducers({
+  herbalism: gameReducer,
+  evolution: evolutionReducer
+});
+
+/**
  * 建立持久化 reducer
  */
-const persistedReducer = persistReducer(persistConfig, gameReducer);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 /**
  * Redux Store（使用持久化 reducer）

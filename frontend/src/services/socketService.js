@@ -485,3 +485,273 @@ export function disconnect() {
     socket = null;
   }
 }
+
+// ==================== 工單 0272：演化論遊戲 Socket 服務 ====================
+
+/**
+ * 創建演化論房間
+ * @param {string} roomName - 房間名稱
+ * @param {number} maxPlayers - 最大玩家數
+ * @param {Object} player - 玩家資訊 { id, name }
+ */
+export function evoCreateRoom(roomName, maxPlayers, player) {
+  const s = getSocket();
+  console.log('[socketService] evoCreateRoom - socket:', s ? 'exists' : 'null');
+  console.log('[socketService] evoCreateRoom - connected:', s?.connected);
+  console.log('[socketService] evoCreateRoom - params:', { roomName, maxPlayers, player });
+  s.emit('evo:createRoom', { roomName, maxPlayers, player });
+  console.log('[socketService] evoCreateRoom - emit 完成');
+}
+
+/**
+ * 加入演化論房間
+ * @param {string} roomId - 房間 ID
+ * @param {Object} player - 玩家資訊 { id, name }
+ */
+export function evoJoinRoom(roomId, player) {
+  const s = getSocket();
+  s.emit('evo:joinRoom', { roomId, player });
+}
+
+/**
+ * 離開演化論房間
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ */
+export function evoLeaveRoom(roomId, playerId) {
+  const s = getSocket();
+  s.emit('evo:leaveRoom', { roomId, playerId });
+}
+
+/**
+ * 設定準備狀態
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {boolean} isReady - 是否準備
+ */
+export function evoSetReady(roomId, playerId, isReady) {
+  const s = getSocket();
+  s.emit('evo:setReady', { roomId, playerId, isReady });
+}
+
+/**
+ * 開始演化論遊戲
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ */
+export function evoStartGame(roomId, playerId) {
+  const s = getSocket();
+  s.emit('evo:startGame', { roomId, playerId });
+}
+
+/**
+ * 創造生物
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string} cardId - 卡牌 ID
+ */
+export function evoCreateCreature(roomId, playerId, cardId) {
+  const s = getSocket();
+  s.emit('evo:createCreature', { roomId, playerId, cardId });
+}
+
+/**
+ * 賦予性狀
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string} cardId - 卡牌 ID
+ * @param {string} creatureId - 生物 ID
+ * @param {string|null} targetCreatureId - 互動性狀目標生物 ID
+ */
+export function evoAddTrait(roomId, playerId, cardId, creatureId, targetCreatureId = null) {
+  const s = getSocket();
+  s.emit('evo:addTrait', { roomId, playerId, cardId, creatureId, targetCreatureId });
+}
+
+/**
+ * 跳過演化
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ */
+export function evoPassEvolution(roomId, playerId) {
+  const s = getSocket();
+  s.emit('evo:passEvolution', { roomId, playerId });
+}
+
+/**
+ * 進食
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string} creatureId - 生物 ID
+ */
+export function evoFeedCreature(roomId, playerId, creatureId) {
+  const s = getSocket();
+  s.emit('evo:feedCreature', { roomId, playerId, creatureId });
+}
+
+/**
+ * 肉食攻擊
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string} attackerId - 攻擊者生物 ID
+ * @param {string} defenderId - 防禦者生物 ID
+ */
+export function evoAttack(roomId, playerId, attackerId, defenderId) {
+  const s = getSocket();
+  s.emit('evo:attack', { roomId, playerId, attackerId, defenderId });
+}
+
+/**
+ * 回應攻擊（斷尾、擬態、敏捷等）
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {Object} response - 回應內容 { type, traitId, targetId }
+ */
+export function evoRespondAttack(roomId, playerId, response) {
+  const s = getSocket();
+  s.emit('evo:respondAttack', { roomId, playerId, response });
+}
+
+/**
+ * 使用性狀能力（掠奪、踐踏等）
+ * @param {string} roomId - 房間 ID
+ * @param {string} playerId - 玩家 ID
+ * @param {string} creatureId - 生物 ID
+ * @param {string} traitType - 性狀類型
+ * @param {string|null} targetId - 目標 ID
+ */
+export function evoUseTrait(roomId, playerId, creatureId, traitType, targetId = null) {
+  const s = getSocket();
+  s.emit('evo:useTrait', { roomId, playerId, creatureId, traitType, targetId });
+}
+
+/**
+ * 請求演化論房間列表
+ */
+export function evoRequestRoomList() {
+  const s = getSocket();
+  s.emit('evo:requestRoomList');
+}
+
+// ========== 演化論事件監聽 ==========
+
+/**
+ * 監聽房間創建成功
+ */
+export function onEvoRoomCreated(callback) {
+  return safeOn('evo:roomCreated', callback);
+}
+
+/**
+ * 監聽加入房間成功
+ */
+export function onEvoJoinedRoom(callback) {
+  return safeOn('evo:joinedRoom', callback);
+}
+
+/**
+ * 監聽玩家加入
+ */
+export function onEvoPlayerJoined(callback) {
+  return safeOn('evo:playerJoined', callback);
+}
+
+/**
+ * 監聽玩家離開
+ */
+export function onEvoPlayerLeft(callback) {
+  return safeOn('evo:playerLeft', callback);
+}
+
+/**
+ * 監聽玩家準備狀態變更
+ */
+export function onEvoPlayerReady(callback) {
+  return safeOn('evo:playerReady', callback);
+}
+
+/**
+ * 監聽遊戲開始
+ */
+export function onEvoGameStarted(callback) {
+  return safeOn('evo:gameStarted', callback);
+}
+
+/**
+ * 監聽遊戲狀態更新
+ */
+export function onEvoGameState(callback) {
+  return safeOn('evo:gameState', callback);
+}
+
+/**
+ * 監聽生物創建
+ */
+export function onEvoCreatureCreated(callback) {
+  return safeOn('evo:creatureCreated', callback);
+}
+
+/**
+ * 監聽性狀添加
+ */
+export function onEvoTraitAdded(callback) {
+  return safeOn('evo:traitAdded', callback);
+}
+
+/**
+ * 監聽玩家跳過
+ */
+export function onEvoPlayerPassed(callback) {
+  return safeOn('evo:playerPassed', callback);
+}
+
+/**
+ * 監聽生物進食
+ */
+export function onEvoCreatureFed(callback) {
+  return safeOn('evo:creatureFed', callback);
+}
+
+/**
+ * 監聽連鎖效應（溝通、合作等）
+ */
+export function onEvoChainTriggered(callback) {
+  return safeOn('evo:chainTriggered', callback);
+}
+
+/**
+ * 監聽攻擊待處理（需要防禦回應）
+ */
+export function onEvoAttackPending(callback) {
+  return safeOn('evo:attackPending', callback);
+}
+
+/**
+ * 監聽攻擊結果
+ */
+export function onEvoAttackResolved(callback) {
+  return safeOn('evo:attackResolved', callback);
+}
+
+/**
+ * 監聽性狀使用
+ */
+export function onEvoTraitUsed(callback) {
+  return safeOn('evo:traitUsed', callback);
+}
+
+/**
+ * 監聽房間列表更新
+ */
+export function onEvoRoomListUpdated(callback) {
+  return safeOn('evo:roomListUpdated', callback);
+}
+
+/**
+ * 監聽錯誤訊息
+ */
+export function onEvoError(callback) {
+  return safeOn('evo:error', callback);
+}
+
+// ==================== 工單 0272 結束 ====================

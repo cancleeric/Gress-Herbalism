@@ -1,8 +1,10 @@
 /**
  * 演化論遊戲房間樣式
+ * 工單 0274：新增錯誤訊息和攻擊按鈕樣式
  */
 
 .evolution-room {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -294,6 +296,42 @@
 .action-btn.pass-btn {
   background: linear-gradient(145deg, #636e72 0%, #4a5154 100%);
   color: #fff;
+}
+
+.action-btn.attack-btn {
+  background: linear-gradient(145deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: #fff;
+}
+
+/* 錯誤訊息 */
+.error-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f44336;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* 接受攻擊按鈕 */
+.defense-btn.accept-btn {
+  background: linear-gradient(145deg, #ff6b6b 0%, #ee5a5a 100%);
 }
 
 /* 模態框 */

@@ -12,8 +12,9 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
-import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus } from './components/common';
+import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
 import { GameRoom } from './components/games/herbalism';
+import { EvolutionRoom } from './components/games/evolution';
 import './styles/App.css';
 
 /**
@@ -74,6 +75,7 @@ class ErrorBoundary extends React.Component {
 /**
  * 應用內容組件 - 包含路由邏輯
  * 工單 0119：新增 ConnectionStatus 組件
+ * 工單 0276：新增遊戲選擇頁面和各遊戲大廳路由
  */
 function AppContent() {
   return (
@@ -81,14 +83,43 @@ function AppContent() {
       <ConnectionStatus />
       <Routes>
         <Route path="/login" element={<Login />} />
+        {/* 工單 0276：遊戲選擇頁面 */}
         <Route
           path="/"
+          element={
+            <ProtectedRoute>
+              <GameSelection />
+            </ProtectedRoute>
+          }
+        />
+        {/* 工單 0276：本草大廳 */}
+        <Route
+          path="/lobby/herbalism"
           element={
             <ProtectedRoute>
               <Lobby />
             </ProtectedRoute>
           }
         />
+        {/* 工單 0276：演化論大廳 */}
+        <Route
+          path="/lobby/evolution"
+          element={
+            <ProtectedRoute>
+              <EvolutionLobbyPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* 演化論遊戲路由（必須放在 /game/:gameId 之前）*/}
+        <Route
+          path="/game/evolution/:roomId"
+          element={
+            <ProtectedRoute>
+              <EvolutionRoom />
+            </ProtectedRoute>
+          }
+        />
+        {/* 本草遊戲路由 */}
         <Route
           path="/game/:gameId"
           element={
