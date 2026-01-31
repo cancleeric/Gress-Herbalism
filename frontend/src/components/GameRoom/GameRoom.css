@@ -2316,18 +2316,17 @@
   color: var(--waiting-primary);
 }
 
-/* 工單 0219：3x2 排列，直立長方形卡片 */
+/* 工單 0219：3x2 排列，直立長方形卡片，填滿寬度並置中 */
 .playing-inquiry-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  justify-items: center;
-  max-width: 560px;
+  gap: 16px;
+  width: 100%;
 }
 
 .playing-inquiry-card {
-  width: 155px;
-  height: 215px;
+  width: 100%;
+  aspect-ratio: 3 / 4;
   border-radius: 10px;
   border: 2px solid rgba(187, 156, 99, 0.3);
   overflow: hidden;
@@ -2770,13 +2769,7 @@
   }
 
   .playing-inquiry-grid {
-    gap: 16px;
-    max-width: 480px;
-  }
-
-  .playing-inquiry-card {
-    width: 135px;
-    height: 185px;
+    gap: 14px;
   }
 }
 
@@ -2850,12 +2843,6 @@
 
   .playing-inquiry-grid {
     gap: 12px;
-    max-width: 400px;
-  }
-
-  .playing-inquiry-card {
-    width: 115px;
-    height: 158px;
   }
 
   .playing-footer {
@@ -2907,13 +2894,7 @@
   }
 
   .playing-inquiry-grid {
-    gap: 10px;
-    max-width: 320px;
-  }
-
-  .playing-inquiry-card {
-    width: 95px;
-    height: 130px;
+    gap: 8px;
   }
 
   .playing-hand-card {
