@@ -30,12 +30,39 @@ const {
   validateExpansionInterface,
 } = require('./ExpansionInterface');
 
+// 工單 0326：新增 Manifest 和 Loader
+const {
+  MANIFEST_VERSION,
+  EXPANSION_TYPE,
+  EXPANSION_STATUS,
+  validateManifest,
+  BASE_MANIFEST,
+  FLIGHT_MANIFEST_EXAMPLE,
+} = require('./manifest');
+
+const {
+  LoadResult,
+  ExpansionLoader,
+  expansionLoader,
+} = require('./loader');
+
+// 載入 base 擴充包
+const { baseExpansion } = require('./base');
+
 /**
  * 全域擴充包註冊表單例
  * 用於應用程式範圍內的擴充包管理
  * @type {ExpansionRegistry}
  */
 const globalRegistry = new ExpansionRegistry();
+
+// 預先註冊 base 擴充包到 expansionLoader
+// 為 baseExpansion 加上 manifest 屬性以符合 loader 規範
+const baseModule = {
+  ...require('./base'),
+  manifest: BASE_MANIFEST,
+};
+expansionLoader.registerModule('base', baseModule);
 
 module.exports = {
   // 核心類別
@@ -48,6 +75,19 @@ module.exports = {
   VERSION_PATTERN,
   createExpansionTemplate,
   validateExpansionInterface,
+
+  // Manifest 規範（工單 0326）
+  MANIFEST_VERSION,
+  EXPANSION_TYPE,
+  EXPANSION_STATUS,
+  validateManifest,
+  BASE_MANIFEST,
+  FLIGHT_MANIFEST_EXAMPLE,
+
+  // 載入器（工單 0326）
+  LoadResult,
+  ExpansionLoader,
+  expansionLoader,
 
   // 全域單例
   globalRegistry,

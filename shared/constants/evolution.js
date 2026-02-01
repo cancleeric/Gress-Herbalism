@@ -93,6 +93,52 @@ const GAME_PHASES = {
  */
 const ALL_GAME_PHASES = Object.values(GAME_PHASES);
 
+/**
+ * 遊戲狀態（工單 0327）
+ * @readonly
+ * @enum {string}
+ */
+const GAME_STATUS = {
+  /** 等待玩家 */
+  WAITING: 'waiting',
+  /** 準備開始 */
+  READY: 'ready',
+  /** 遊戲進行中 */
+  PLAYING: 'playing',
+  /** 遊戲暫停 */
+  PAUSED: 'paused',
+  /** 遊戲結束 */
+  FINISHED: 'finished',
+  /** 遊戲放棄 */
+  ABANDONED: 'abandoned',
+};
+
+/**
+ * 預設玩家範圍（可被擴充包覆寫）
+ * @readonly
+ * @type {Object}
+ */
+const DEFAULT_PLAYER_RANGE = {
+  MIN: 2,
+  MAX: 4,
+};
+
+/**
+ * 可用擴充包列表（工單 0327）
+ * @readonly
+ * @type {Object[]}
+ */
+const AVAILABLE_EXPANSIONS = [
+  {
+    id: 'base',
+    name: '基礎版',
+    nameEn: 'Evolution: The Origin of Species',
+    required: true,
+    description: '84張卡牌、19種性狀',
+  },
+  // 未來擴充包會加在這裡
+];
+
 // ==================== 食物類型 ====================
 
 /**
@@ -543,6 +589,9 @@ module.exports = {
   // 遊戲階段
   GAME_PHASES,
   ALL_GAME_PHASES,
+  GAME_STATUS,
+  DEFAULT_PLAYER_RANGE,
+  AVAILABLE_EXPANSIONS,
 
   // 食物
   FOOD_TYPES,

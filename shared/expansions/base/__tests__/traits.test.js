@@ -286,7 +286,7 @@ describe('baseExpansion', () => {
   });
 
   test('should have cards', () => {
-    expect(baseExpansion.cards.length).toBe(11);
+    expect(baseExpansion.cards.length).toBe(21);
   });
 
   test('should have rules', () => {

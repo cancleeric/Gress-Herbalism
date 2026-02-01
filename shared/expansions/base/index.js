@@ -33,7 +33,7 @@ const {
   Card,
   CardFactory,
   cardFactory,
-} = require('./cards');
+} = require('./cards/index');
 
 const { registerBaseRules } = require('./rules');
 
