@@ -46,6 +46,19 @@ const {
   expansionLoader,
 } = require('./loader');
 
+// 工單 0328：新增驗證器和相容性檢查器
+const {
+  ValidationResult,
+  ExpansionValidator,
+  expansionValidator,
+} = require('./validator');
+
+const {
+  CompatibilityResult,
+  CompatibilityChecker,
+  compatibilityChecker,
+} = require('./compatibility');
+
 // 載入 base 擴充包
 const { baseExpansion } = require('./base');
 
@@ -88,6 +101,16 @@ module.exports = {
   LoadResult,
   ExpansionLoader,
   expansionLoader,
+
+  // 驗證器（工單 0328）
+  ValidationResult,
+  ExpansionValidator,
+  expansionValidator,
+
+  // 相容性檢查器（工單 0328）
+  CompatibilityResult,
+  CompatibilityChecker,
+  compatibilityChecker,
 
   // 全域單例
   globalRegistry,
