@@ -37,6 +37,9 @@ class TraitHandler {
       throw new Error('TraitHandler requires a definition with type');
     }
 
+    // 保存完整定義
+    this.definition = definition;
+
     this.type = definition.type;
     this.name = definition.name || definition.type;
     this.nameEn = definition.nameEn || '';
