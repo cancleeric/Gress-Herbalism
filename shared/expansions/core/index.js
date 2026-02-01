@@ -1,7 +1,7 @@
 /**
  * 擴充包核心模組
  *
- * 提供效果系統、效果佇列、效果類型等核心功能
+ * 提供效果系統、事件系統等核心功能
  *
  * @module expansions/core
  */
@@ -37,6 +37,20 @@ const {
   findCreature,
 } = require('./handlers/builtinEffectHandlers');
 
+const {
+  GAME_EVENTS,
+  EventData,
+} = require('./gameEvents');
+
+const {
+  GameEventEmitter,
+  gameEventEmitter,
+} = require('./eventEmitter');
+
+const {
+  TraitEventBridge,
+} = require('./traitEventBridge');
+
 module.exports = {
   // 效果類型常數
   EFFECT_TIMING,
@@ -63,6 +77,17 @@ module.exports = {
   RemoveTraitHandler,
   ApplyPoisonHandler,
   registerBuiltinHandlers,
+
+  // 遊戲事件
+  GAME_EVENTS,
+  EventData,
+
+  // 事件發射器
+  GameEventEmitter,
+  gameEventEmitter,
+
+  // 性狀事件橋接
+  TraitEventBridge,
 
   // 工具函數
   findCreature,
