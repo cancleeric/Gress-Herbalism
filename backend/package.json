@@ -12,18 +12,30 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "coverageDirectory": "coverage",
+    "coverageDirectory": "<rootDir>/backend/coverage",
+    "rootDir": "..",
+    "roots": [
+      "<rootDir>/backend",
+      "<rootDir>/shared"
+    ],
     "collectCoverageFrom": [
-      "**/*.js",
-      "!node_modules/**",
-      "!coverage/**"
+      "<rootDir>/backend/**/*.js",
+      "<rootDir>/shared/**/*.js",
+      "!**/node_modules/**",
+      "!**/coverage/**",
+      "!**/__tests__/**",
+      "!**/tests/**"
     ],
     "testMatch": [
       "**/__tests__/**/*.test.js",
       "**/*.test.js"
     ],
     "modulePathIgnorePatterns": [
-      "<rootDir>/node_modules/"
+      "<rootDir>/node_modules/",
+      "<rootDir>/frontend/"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/frontend/"
     ]
   },
   "keywords": [
