@@ -10,7 +10,22 @@
  * - 動作類型常數
  *
  * @module constants/evolution
+ *
+ * @deprecated 此檔案保留以向後相容。
+ * 新代碼應使用 shared/expansions/base/ 下的模組：
+ * - 性狀定義：shared/expansions/base/traits/definitions.js
+ * - 卡牌定義：shared/expansions/base/cards.js
+ * - 擴充包：shared/expansions/base/index.js
  */
+
+// 匯入新模組以確保相容性
+const baseExpansionModule = require('../expansions/base');
+
+/**
+ * 性狀類別定義（從新模組匯入）
+ * @see module:expansions/base/traits/definitions
+ */
+const TRAIT_CATEGORIES = baseExpansionModule.TRAIT_CATEGORIES;
 
 // ==================== 遊戲基本常數 ====================
 
@@ -540,6 +555,7 @@ module.exports = {
   TRAIT_INCOMPATIBILITIES,
   STACKABLE_TRAITS,
   TRAIT_DEFINITIONS,
+  TRAIT_CATEGORIES, // 新增：從新模組匯入
 
   // 計分
   SCORING,
@@ -566,5 +582,8 @@ module.exports = {
   isStackableTrait,
   areTraitsIncompatible,
   getTraitInfo,
-  calculateFoodAmount
+  calculateFoodAmount,
+
+  // 新增：擴充包模組存取
+  baseExpansion: baseExpansionModule.baseExpansion,
 };
