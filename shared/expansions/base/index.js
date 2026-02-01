@@ -4,7 +4,7 @@
  *
  * 此模組定義了演化論的基礎版擴充包，包含：
  * - 19 種性狀
- * - 44 張雙面卡（88 面）
+ * - 84 張雙面卡
  * - 基礎遊戲規則
  *
  * @module expansions/base
@@ -20,9 +20,24 @@ const {
   getTraitsByCategory,
   areTraitsIncompatible,
   getTraitDefinition,
-  getTotalCardCount,
+  getTotalCardCount: getTraitTotalCardCount,
 } = require('./traits');
 
+const {
+  BASE_CARDS,
+  EXPECTED_TOTAL,
+  getTotalCardCount,
+  getCardDefinition,
+  getCardsByTrait,
+  validateCardDefinitions,
+  Card,
+  CardFactory,
+  cardFactory,
+} = require('./cards');
+
+const { registerBaseRules } = require('./rules');
+
+// 向後相容：保留舊的 cards.js 匯出
 const {
   CARD_PAIRS,
   BASE_CARD_POOL,
@@ -30,7 +45,7 @@ const {
   generateCardPool,
   generateSimpleCards,
   EXPECTED_CARD_COUNT,
-} = require('./cards');
+} = require('./cards.js');
 
 /**
  * 基礎版擴充包定義
@@ -41,17 +56,17 @@ const baseExpansion = {
   name: '物種起源',
   nameEn: 'Evolution: The Origin of Species',
   version: '1.0.0',
-  description: '演化論基礎版，包含 19 種性狀和 44 張雙面卡',
+  description: '演化論基礎版，包含 19 種性狀和 84 張雙面卡',
 
   // 無依賴
   requires: [],
   incompatible: [],
 
-  // 性狀定義（稍後會被 TraitHandler 取代）
+  // 性狀定義
   traits: TRAIT_DEFINITIONS,
 
-  // 卡牌池
-  cards: BASE_CARD_POOL,
+  // 新版卡牌（84 張）
+  cards: BASE_CARDS,
 
   // 規則
   rules: {
@@ -73,6 +88,55 @@ const baseExpansion = {
       foodBonus1: 1,
       foodBonus2: 2,
     },
+  },
+
+  /**
+   * 建立此擴充包的牌庫
+   * @returns {Card[]}
+   */
+  createDeck() {
+    return cardFactory.createDeck(BASE_CARDS, this.id);
+  },
+
+  /**
+   * 建立並洗好的牌庫
+   * @returns {Card[]}
+   */
+  createShuffledDeck() {
+    return cardFactory.createShuffledDeck(BASE_CARDS, this.id);
+  },
+
+  /**
+   * 註冊規則到引擎
+   * @param {RuleEngine} engine - 規則引擎
+   */
+  registerRules(engine) {
+    registerBaseRules(engine);
+  },
+
+  /**
+   * 驗證擴充包完整性
+   * @returns {{valid: boolean, errors: string[]}}
+   */
+  validate() {
+    const errors = [];
+
+    // 驗證卡牌定義
+    const cardValidation = validateCardDefinitions();
+    if (!cardValidation.valid) {
+      errors.push(...cardValidation.errors);
+    }
+
+    // 檢查卡牌總數
+    const totalCards = getTotalCardCount();
+    if (totalCards !== 84) {
+      errors.push(`Expected 84 cards, got ${totalCards}`);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+    };
   },
 
   // 生命週期鉤子
@@ -111,13 +175,27 @@ module.exports = {
   getTraitsByCategory,
   areTraitsIncompatible,
   getTraitDefinition,
-  getTotalCardCount,
+  getTraitTotalCardCount,
 
-  // 卡牌相關
+  // 新版卡牌模組
+  BASE_CARDS,
+  EXPECTED_TOTAL,
+  getTotalCardCount,
+  getCardDefinition,
+  getCardsByTrait,
+  validateCardDefinitions,
+  Card,
+  CardFactory,
+  cardFactory,
+
+  // 向後相容：舊版卡牌
   CARD_PAIRS,
   BASE_CARD_POOL,
   BASE_SIMPLE_CARDS,
   generateCardPool,
   generateSimpleCards,
   EXPECTED_CARD_COUNT,
+
+  // 規則
+  registerBaseRules,
 };
