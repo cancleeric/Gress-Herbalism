@@ -1,0 +1,204 @@
+/**
+ * 排行榜頁面樣式
+ */
+
+.leaderboard-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.leaderboard-page__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+/* 類型切換 */
+.leaderboard-page__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.leaderboard-page__tab {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  background: var(--bg-secondary, #2a2a2a);
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.leaderboard-page__tab:hover {
+  background: var(--bg-tertiary, #3a3a3a);
+}
+
+.leaderboard-page__tab.active {
+  background: var(--color-primary, #4CAF50);
+  color: #fff;
+}
+
+/* 搜尋框 */
+.leaderboard-page__search {
+  margin-bottom: 16px;
+}
+
+.leaderboard-page__search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 8px;
+  background: var(--bg-secondary, #2a2a2a);
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+}
+
+.leaderboard-page__search-input::placeholder {
+  color: var(--text-muted, #666);
+}
+
+.leaderboard-page__search-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #4CAF50);
+}
+
+/* 當前排名 */
+.leaderboard-page__my-rank {
+  text-align: center;
+  padding: 12px;
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: var(--text-secondary, #aaa);
+}
+
+.leaderboard-page__my-rank strong {
+  color: var(--color-primary, #4CAF50);
+  font-size: 18px;
+}
+
+/* 表頭 */
+.leaderboard-page__header {
+  display: grid;
+  grid-template-columns: 60px 1fr 70px 70px 70px 80px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary, #3a3a3a);
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #aaa);
+  text-transform: uppercase;
+}
+
+/* 列表 */
+.leaderboard-page__list {
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 0 0 8px 8px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* 排行榜項目 */
+.leaderboard-item {
+  display: grid;
+  grid-template-columns: 60px 1fr 70px 70px 70px 80px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color, #333);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.leaderboard-item:hover {
+  background: var(--bg-tertiary, #3a3a3a);
+}
+
+.leaderboard-item:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-item--current {
+  background: rgba(76, 175, 80, 0.1);
+  border-left: 3px solid var(--color-primary, #4CAF50);
+}
+
+.leaderboard-item__rank {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.leaderboard-item__name {
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-item__games,
+.leaderboard-item__wins,
+.leaderboard-item__win-rate,
+.leaderboard-item__score {
+  color: var(--text-secondary, #aaa);
+  font-size: 13px;
+  text-align: right;
+}
+
+.leaderboard-item__win-rate {
+  color: var(--color-primary, #4CAF50);
+  font-weight: 600;
+}
+
+/* 狀態 */
+.leaderboard-page__loading,
+.leaderboard-page__error,
+.leaderboard-page__empty {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-secondary, #aaa);
+}
+
+.leaderboard-page__error {
+  color: var(--color-error, #F44336);
+}
+
+/* 響應式 */
+@media (max-width: 768px) {
+  .leaderboard-page {
+    padding: 16px;
+  }
+
+  .leaderboard-page__header {
+    grid-template-columns: 50px 1fr 60px 60px;
+  }
+
+  .leaderboard-page__header-rate,
+  .leaderboard-page__header-score {
+    display: none;
+  }
+
+  .leaderboard-item {
+    grid-template-columns: 50px 1fr 60px 60px;
+  }
+
+  .leaderboard-item__win-rate,
+  .leaderboard-item__score {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .leaderboard-page__tabs {
+    flex-wrap: wrap;
+  }
+
+  .leaderboard-page__tab {
+    flex: 1;
+    min-width: 80px;
+  }
+}
