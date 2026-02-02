@@ -1,0 +1,182 @@
+/**
+ * Hand 樣式定義
+ *
+ * 手牌區域組件樣式
+ */
+
+.hand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+/* === 卡牌數量 === */
+.hand__count {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.hand__count-number {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.hand__count-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* === 展開按鈕 === */
+.hand__expand-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 16px;
+  background: var(--color-primary, #3b82f6);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hand__expand-btn:hover {
+  background: var(--color-primary-dark, #2563eb);
+}
+
+/* === 卡牌容器 === */
+.hand__cards {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 180px;
+  padding-top: 40px;
+}
+
+.hand--fan .hand__cards {
+  /* 扇形布局使用負間距 */
+}
+
+.hand--grid .hand__cards {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hand__card-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  margin: 0 -15px; /* 讓卡牌重疊 */
+}
+
+.hand--grid .hand__card-wrapper {
+  margin: 0; /* Grid 模式不重疊 */
+}
+
+/* === 展開視圖 === */
+.hand__expanded-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.hand__expanded-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.hand__expanded-content h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.hand__expanded-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hand__close-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #f1f5f9;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.hand__close-btn:hover {
+  background: #e2e8f0;
+}
+
+/* === 空手牌提示 === */
+.hand--empty {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* === 響應式 === */
+@media (max-width: 768px) {
+  .hand {
+    padding: 12px;
+  }
+
+  .hand__cards {
+    min-height: 140px;
+  }
+
+  .hand__card-wrapper {
+    margin: 0 -20px;
+  }
+
+  .hand__expanded-content {
+    padding: 16px;
+    max-width: 95vw;
+  }
+
+  .hand__count {
+    padding: 3px 8px;
+    font-size: 12px;
+  }
+
+  .hand__count-number {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hand__card-wrapper {
+    margin: 0 -25px;
+  }
+
+  .hand__expanded-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+}

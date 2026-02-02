@@ -3,7 +3,7 @@
  * 此檔案由 git pre-commit hook 自動更新
  */
 
-const VERSION = '1.0.232';
+const VERSION = '1.0.233';
 const BUILD_DATE = '2026-02-02';
 
 module.exports = {
