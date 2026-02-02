@@ -35,3 +35,10 @@ export {
   PhaseTransition,
   SatisfiedAnimation,
 } from './AnimatedEvent';
+
+export { AnimationManager } from './AnimationManager';
+
+export {
+  useAnimationQueue,
+  useAnimationControl,
+} from './useAnimation';

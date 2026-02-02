@@ -1,0 +1,23 @@
+/**
+ * AnimationManager 樣式定義
+ *
+ * 動畫管理器樣式
+ */
+
+.animation-manager {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* 減少動畫模式 */
+.animation-manager--reduced * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+/* 動畫速度控制 */
+.animation-manager * {
+  animation-duration: calc(var(--animation-speed, 1) * var(--base-duration, 1s));
+}
