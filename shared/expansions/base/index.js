@@ -37,6 +37,9 @@ const {
 
 const { registerBaseRules } = require('./rules');
 
+// 匯入性狀處理器
+const { TRAIT_HANDLERS, createHandler } = require('./traits/handlers');
+
 // 向後相容：保留舊的 cards.js 匯出
 const {
   CARD_PAIRS,
@@ -46,6 +49,18 @@ const {
   generateSimpleCards,
   EXPECTED_CARD_COUNT,
 } = require('./cards.js');
+
+/**
+ * 建立所有性狀處理器實例
+ * @returns {Object<string, TraitHandler>}
+ */
+function createAllHandlerInstances() {
+  const instances = {};
+  for (const [traitType, HandlerClass] of Object.entries(TRAIT_HANDLERS)) {
+    instances[traitType] = new HandlerClass();
+  }
+  return instances;
+}
 
 /**
  * 基礎版擴充包定義
@@ -62,8 +77,11 @@ const baseExpansion = {
   requires: [],
   incompatible: [],
 
-  // 性狀定義
-  traits: TRAIT_DEFINITIONS,
+  // 性狀處理器（ExpansionRegistry 需要的是處理器實例）
+  traits: createAllHandlerInstances(),
+
+  // 性狀定義（供其他模組參考）
+  traitDefinitions: TRAIT_DEFINITIONS,
 
   // 新版卡牌（84 張）
   cards: BASE_CARDS,

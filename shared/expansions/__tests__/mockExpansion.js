@@ -4,62 +4,23 @@
  * @module expansions/__tests__/mockExpansion
  */
 
-const { EXPANSION_TYPE } = require('../manifest');
-
 /**
  * 完整的 Mock 基礎版擴充包
+ * 符合 ExpansionInterface 介面規範
  */
 const mockBaseExpansion = {
-  manifest: {
-    id: 'mock-base',
-    name: 'Mock 基礎版',
-    nameEn: 'Mock Base',
-    version: '1.0.0',
-    type: EXPANSION_TYPE.BASE,
-    dependencies: {},
-    conflicts: {},
-    minPlayers: 2,
-    maxPlayers: 4,
-    contents: {
-      cards: 12,
-      traits: 3,
-    },
-  },
+  // 必要欄位（頂層）
+  id: 'mock-base',
+  name: 'Mock 基礎版',
+  version: '1.0.0',
+  description: '用於測試的 Mock 基礎版擴充包',
 
+  // 依賴與不相容（陣列格式）
+  requires: [],
+  incompatible: [],
+
+  // 性狀處理器（不是性狀定義）
   traits: {
-    MOCK_CARNIVORE: {
-      type: 'MOCK_CARNIVORE',
-      name: 'Mock 肉食',
-      nameEn: 'Mock Carnivore',
-      foodBonus: 1,
-      category: 'carnivore',
-      description: '用於測試的肉食性狀',
-    },
-    MOCK_DEFENSE: {
-      type: 'MOCK_DEFENSE',
-      name: 'Mock 防禦',
-      nameEn: 'Mock Defense',
-      foodBonus: 0,
-      category: 'defense',
-      description: '用於測試的防禦性狀',
-    },
-    MOCK_FAT: {
-      type: 'MOCK_FAT',
-      name: 'Mock 脂肪',
-      nameEn: 'Mock Fat',
-      foodBonus: 0,
-      category: 'feeding',
-      description: '用於測試的脂肪性狀',
-    },
-  },
-
-  cards: [
-    { id: 'MOCK_001', frontTrait: 'MOCK_CARNIVORE', backTrait: 'MOCK_FAT', count: 4 },
-    { id: 'MOCK_002', frontTrait: 'MOCK_DEFENSE', backTrait: 'MOCK_FAT', count: 4 },
-    { id: 'MOCK_003', frontTrait: 'MOCK_FAT', backTrait: 'MOCK_FAT', count: 4 },
-  ],
-
-  traitHandlers: {
     MOCK_CARNIVORE: {
       traitType: 'MOCK_CARNIVORE',
       canPlace: () => ({ allowed: true }),
@@ -80,6 +41,19 @@ const mockBaseExpansion = {
       canPlace: () => ({ allowed: true }),
       getFoodBonus: () => 0,
     },
+  },
+
+  // 卡牌定義
+  cards: [
+    { id: 'MOCK_001', frontTrait: 'MOCK_CARNIVORE', backTrait: 'MOCK_FAT', count: 4 },
+    { id: 'MOCK_002', frontTrait: 'MOCK_DEFENSE', backTrait: 'MOCK_FAT', count: 4 },
+    { id: 'MOCK_003', frontTrait: 'MOCK_FAT', backTrait: 'MOCK_FAT', count: 4 },
+  ],
+
+  // 規則
+  rules: {
+    minPlayers: 2,
+    maxPlayers: 4,
   },
 
   /**
@@ -105,47 +79,21 @@ const mockBaseExpansion = {
 
 /**
  * Mock 飛行擴充包
+ * 符合 ExpansionInterface 介面規範
  */
 const mockFlightExpansion = {
-  manifest: {
-    id: 'mock-flight',
-    name: 'Mock 飛行',
-    nameEn: 'Mock Flight',
-    version: '1.0.0',
-    type: EXPANSION_TYPE.EXPANSION,
-    dependencies: { 'mock-base': '>=1.0.0' },
-    conflicts: {},
-    minPlayers: 2,
-    maxPlayers: 6,
-    contents: {
-      cards: 8,
-      traits: 2,
-    },
-  },
+  // 必要欄位（頂層）
+  id: 'mock-flight',
+  name: 'Mock 飛行',
+  version: '1.0.0',
+  description: '用於測試的 Mock 飛行擴充包',
 
+  // 依賴與不相容（陣列格式）
+  requires: ['mock-base'],
+  incompatible: [],
+
+  // 性狀處理器
   traits: {
-    MOCK_FLYING: {
-      type: 'MOCK_FLYING',
-      name: 'Mock 飛行',
-      nameEn: 'Mock Flying',
-      foodBonus: 0,
-      category: 'special',
-    },
-    MOCK_NESTING: {
-      type: 'MOCK_NESTING',
-      name: 'Mock 築巢',
-      nameEn: 'Mock Nesting',
-      foodBonus: 0,
-      category: 'special',
-    },
-  },
-
-  cards: [
-    { id: 'FLIGHT_001', frontTrait: 'MOCK_FLYING', backTrait: 'MOCK_FAT', count: 4 },
-    { id: 'FLIGHT_002', frontTrait: 'MOCK_NESTING', backTrait: 'MOCK_FAT', count: 4 },
-  ],
-
-  traitHandlers: {
     MOCK_FLYING: {
       traitType: 'MOCK_FLYING',
       canPlace: () => ({ allowed: true }),
@@ -156,6 +104,18 @@ const mockFlightExpansion = {
       canPlace: () => ({ allowed: true }),
       getFoodBonus: () => 0,
     },
+  },
+
+  // 卡牌定義
+  cards: [
+    { id: 'FLIGHT_001', frontTrait: 'MOCK_FLYING', backTrait: 'MOCK_FAT', count: 4 },
+    { id: 'FLIGHT_002', frontTrait: 'MOCK_NESTING', backTrait: 'MOCK_FAT', count: 4 },
+  ],
+
+  // 規則
+  rules: {
+    minPlayers: 2,
+    maxPlayers: 6,
   },
 
   /**
@@ -181,44 +141,37 @@ const mockFlightExpansion = {
 
 /**
  * Mock 衝突擴充包（用於測試衝突檢測）
+ * 符合 ExpansionInterface 介面規範
  */
 const mockConflictExpansion = {
-  manifest: {
-    id: 'mock-conflict',
-    name: 'Mock 衝突',
-    nameEn: 'Mock Conflict',
-    version: '1.0.0',
-    type: EXPANSION_TYPE.EXPANSION,
-    dependencies: { 'mock-base': '>=1.0.0' },
-    conflicts: { 'mock-flight': 'Cannot use with flight expansion' },
-    minPlayers: 2,
-    maxPlayers: 4,
-    contents: {
-      cards: 4,
-      traits: 1,
-    },
-  },
+  // 必要欄位（頂層）
+  id: 'mock-conflict',
+  name: 'Mock 衝突',
+  version: '1.0.0',
+  description: '用於測試衝突檢測的 Mock 擴充包',
 
+  // 依賴與不相容（陣列格式）
+  requires: ['mock-base'],
+  incompatible: ['mock-flight'],
+
+  // 性狀處理器
   traits: {
-    MOCK_GROUND: {
-      type: 'MOCK_GROUND',
-      name: 'Mock 地面',
-      nameEn: 'Mock Ground',
-      foodBonus: 0,
-      category: 'special',
-    },
-  },
-
-  cards: [
-    { id: 'CONFLICT_001', frontTrait: 'MOCK_GROUND', backTrait: 'MOCK_FAT', count: 4 },
-  ],
-
-  traitHandlers: {
     MOCK_GROUND: {
       traitType: 'MOCK_GROUND',
       canPlace: () => ({ allowed: true }),
       getFoodBonus: () => 0,
     },
+  },
+
+  // 卡牌定義
+  cards: [
+    { id: 'CONFLICT_001', frontTrait: 'MOCK_GROUND', backTrait: 'MOCK_FAT', count: 4 },
+  ],
+
+  // 規則
+  rules: {
+    minPlayers: 2,
+    maxPlayers: 4,
   },
 };
 
