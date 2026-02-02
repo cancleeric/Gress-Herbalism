@@ -1,0 +1,195 @@
+/**
+ * PhaseIndicator 樣式定義
+ *
+ * 階段指示器組件樣式
+ */
+
+.phase-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* === 回合資訊 === */
+.phase-indicator__round {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.phase-indicator__round-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.phase-indicator__round-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* === 階段進度 === */
+.phase-indicator__phases {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.phase-indicator__phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.phase-indicator__phase--active,
+.phase-indicator__phase--past {
+  opacity: 1;
+}
+
+.phase-indicator__phase-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  background: #e2e8f0;
+  transition: background-color 0.3s;
+}
+
+.phase-indicator__phase-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.phase-indicator__phase--active .phase-indicator__phase-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* === 連接線 === */
+.phase-indicator__connector {
+  width: 24px;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 4px;
+  margin-bottom: 20px;
+}
+
+.phase-indicator__connector--filled {
+  background: #10b981;
+}
+
+/* === 當前階段 === */
+.phase-indicator__current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
+}
+
+.phase-indicator__current-icon {
+  font-size: 28px;
+}
+
+.phase-indicator__current-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.phase-indicator__current-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.phase-indicator__current-desc {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* === 當前玩家 === */
+.phase-indicator__player {
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.phase-indicator__player--self {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* === 響應式 === */
+@media (max-width: 768px) {
+  .phase-indicator {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .phase-indicator__phases {
+    transform: scale(0.9);
+  }
+
+  .phase-indicator__phase-name {
+    display: none;
+  }
+
+  .phase-indicator__connector {
+    margin-bottom: 0;
+  }
+
+  .phase-indicator__round-number {
+    font-size: 24px;
+  }
+
+  .phase-indicator__current {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .phase-indicator__current-icon {
+    font-size: 24px;
+  }
+
+  .phase-indicator__current-name {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .phase-indicator__phases {
+    transform: scale(0.8);
+  }
+
+  .phase-indicator__phase-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .phase-indicator__connector {
+    width: 16px;
+  }
+
+  .phase-indicator__player {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
