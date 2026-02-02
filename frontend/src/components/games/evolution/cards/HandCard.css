@@ -1,0 +1,175 @@
+/**
+ * HandCard 樣式定義
+ *
+ * 手牌卡牌組件樣式
+ */
+
+.hand-card {
+  position: relative;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.hand-card--dragging {
+  opacity: 0.5;
+  transform: scale(1.05);
+}
+
+/* === 卡牌內容 === */
+.hand-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 8px;
+  text-align: center;
+}
+
+.hand-card__content--back {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  color: #fff;
+}
+
+.hand-card__trait-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.hand-card__trait-name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hand-card__food-bonus {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* === 提示文字 === */
+.hand-card__hint {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #64748b;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* === 面選擇器 === */
+.hand-card__side-selector {
+  position: absolute;
+  bottom: -44px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.hand-card__side-btn {
+  padding: 4px 8px;
+  font-size: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hand-card__side-btn:hover {
+  background: #f1f5f9;
+}
+
+.hand-card__side-btn--active {
+  background: var(--color-primary, #3b82f6);
+  color: #fff;
+  border-color: var(--color-primary, #3b82f6);
+}
+
+.hand-card__side-label {
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* === 操作按鈕 === */
+.hand-card__actions {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.hand-card__action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.hand-card__action-btn:hover {
+  transform: scale(1.1);
+}
+
+.hand-card__action-btn--creature {
+  background: #10b981;
+}
+
+.hand-card__action-btn--trait {
+  background: #8b5cf6;
+}
+
+/* === 響應式 === */
+@media (max-width: 768px) {
+  .hand-card__trait-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+
+  .hand-card__trait-name {
+    font-size: 10px;
+  }
+
+  .hand-card__action-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+}

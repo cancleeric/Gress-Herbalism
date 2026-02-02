@@ -6,3 +6,4 @@
 
 export { CardBase } from './CardBase';
 export { useCardInteraction } from './useCardInteraction';
+export { HandCard, DND_TYPES } from './HandCard';
