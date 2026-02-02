@@ -1,0 +1,189 @@
+/**
+ * 遊戲結束彈窗樣式
+ */
+
+.game-over-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.game-over-modal {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 500px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.game-over-modal__header {
+  padding: 32px 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.game-over-modal__header--winner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.game-over-modal__icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.game-over-modal__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.game-over-modal__winner-name {
+  margin-top: 8px;
+  font-size: 18px;
+  color: #64748b;
+}
+
+.game-over-modal__scores {
+  padding: 24px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.game-over-modal__actions {
+  display: flex;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.game-over-modal__btn {
+  flex: 1;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-over-modal__btn:hover {
+  transform: translateY(-2px);
+}
+
+.game-over-modal__btn:active {
+  transform: translateY(0);
+}
+
+.game-over-modal__btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.game-over-modal__btn--primary:hover {
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.game-over-modal__btn--secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.game-over-modal__btn--secondary:hover {
+  background: #e2e8f0;
+}
+
+/* 勝利動畫 */
+.game-over-modal__header--winner .game-over-modal__icon {
+  animation: bounce 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+
+/* 響應式 */
+@media (max-width: 640px) {
+  .game-over-modal__overlay {
+    padding: 16px;
+  }
+
+  .game-over-modal__header {
+    padding: 24px 16px;
+  }
+
+  .game-over-modal__icon {
+    font-size: 48px;
+  }
+
+  .game-over-modal__title {
+    font-size: 24px;
+  }
+
+  .game-over-modal__scores {
+    padding: 16px;
+    max-height: 300px;
+  }
+
+  .game-over-modal__actions {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .game-over-modal__btn {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .game-over-modal {
+    background: #1e293b;
+  }
+
+  .game-over-modal__header {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+  }
+
+  .game-over-modal__header--winner {
+    background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  }
+
+  .game-over-modal__title {
+    color: #f1f5f9;
+  }
+
+  .game-over-modal__winner-name {
+    color: #94a3b8;
+  }
+
+  .game-over-modal__actions {
+    border-top-color: #334155;
+  }
+
+  .game-over-modal__btn--secondary {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  .game-over-modal__btn--secondary:hover {
+    background: #475569;
+  }
+}
