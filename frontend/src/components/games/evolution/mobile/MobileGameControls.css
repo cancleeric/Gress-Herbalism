@@ -1,0 +1,254 @@
+/**
+ * 移動端遊戲控制面板樣式
+ */
+
+.mobile-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(
+    to top,
+    rgba(15, 23, 42, 0.98),
+    rgba(15, 23, 42, 0.95)
+  );
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(71, 85, 105, 0.5);
+  z-index: 1000;
+}
+
+/* 階段指示區 */
+.mobile-controls__phase {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.mobile-controls__phase-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.mobile-controls__turn-indicator {
+  font-size: 12px;
+  font-weight: 500;
+  color: #22c55e;
+  padding: 2px 8px;
+  background: rgba(34, 197, 94, 0.15);
+  border-radius: 12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 資訊區 */
+.mobile-controls__info {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.mobile-controls__stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: rgba(71, 85, 105, 0.3);
+  border-radius: 16px;
+}
+
+.mobile-controls__stat-icon {
+  font-size: 16px;
+}
+
+.mobile-controls__stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* 按鈕區 */
+.mobile-controls__buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 基礎按鈕樣式 */
+.mobile-controls__btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(71, 85, 105, 0.4);
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.mobile-controls__btn:active {
+  background: rgba(71, 85, 105, 0.6);
+}
+
+.mobile-controls__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 圖標 */
+.mobile-controls__icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* 標籤 */
+.mobile-controls__label {
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* 數量徽章 */
+.mobile-controls__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #3b82f6;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 手牌按鈕 */
+.mobile-controls__btn--hand {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.mobile-controls__btn--hand:active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* 生物按鈕 */
+.mobile-controls__btn--creatures {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.mobile-controls__btn--creatures:active {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+/* 進食按鈕 */
+.mobile-controls__btn--feed {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  min-width: 80px;
+}
+
+.mobile-controls__btn--feed:active {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+/* 攻擊按鈕 */
+.mobile-controls__btn--attack {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  min-width: 80px;
+}
+
+.mobile-controls__btn--attack:active {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+/* 跳過按鈕 */
+.mobile-controls__btn--pass {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  min-width: 80px;
+}
+
+.mobile-controls__btn--pass:active {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* 橫屏布局 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-controls {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    padding-left: calc(16px + env(safe-area-inset-left, 0px));
+    padding-right: calc(16px + env(safe-area-inset-right, 0px));
+  }
+
+  .mobile-controls__phase {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .mobile-controls__info {
+    display: none;
+  }
+
+  .mobile-controls__buttons {
+    flex-wrap: nowrap;
+  }
+
+  .mobile-controls__btn {
+    min-width: 56px;
+    min-height: 48px;
+    padding: 6px 12px;
+  }
+
+  .mobile-controls__label {
+    display: none;
+  }
+}
+
+/* 小螢幕優化 */
+@media (max-width: 360px) {
+  .mobile-controls {
+    padding: 8px;
+  }
+
+  .mobile-controls__btn {
+    min-width: 56px;
+    min-height: 48px;
+    padding: 6px 10px;
+  }
+
+  .mobile-controls__icon {
+    font-size: 20px;
+  }
+
+  .mobile-controls__label {
+    font-size: 11px;
+  }
+}

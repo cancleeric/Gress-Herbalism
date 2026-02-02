@@ -1,0 +1,352 @@
+/**
+ * 演化論遊戲響應式設計
+ *
+ * @module styles/evolution/responsive
+ */
+
+:root {
+  /* 斷點定義 */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* 間距縮放 */
+  --spacing-scale: 1;
+
+  /* 卡牌尺寸預設 */
+  --card-width-small: 60px;
+  --card-height-small: 84px;
+  --card-width-medium: 90px;
+  --card-height-medium: 126px;
+  --card-width-large: 120px;
+  --card-height-large: 168px;
+}
+
+/* === 移動端基礎 === */
+@media (max-width: 768px) {
+  :root {
+    --spacing-scale: 0.75;
+    --card-width-medium: 80px;
+    --card-height-medium: 112px;
+  }
+
+  /* 增大觸控目標 */
+  button,
+  .touchable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 遊戲板布局調整 */
+  .game-board {
+    flex-direction: column;
+    padding: 8px;
+  }
+
+  .game-board__opponents {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+  }
+
+  .game-board__center {
+    flex: 1;
+    min-height: 200px;
+  }
+
+  .game-board__self {
+    flex-direction: column;
+  }
+
+  /* 手牌區域調整 */
+  .hand {
+    max-height: 120px;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .hand .evolution-card {
+    flex-shrink: 0;
+  }
+
+  /* 生物區調整 */
+  .creature-area {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* === 小螢幕手機 === */
+@media (max-width: 480px) {
+  :root {
+    --spacing-scale: 0.6;
+    --card-width-medium: 70px;
+    --card-height-medium: 98px;
+    --card-width-small: 50px;
+    --card-height-small: 70px;
+  }
+
+  /* 更緊湊的布局 */
+  .game-board {
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .game-board__opponents {
+    max-height: 100px;
+  }
+
+  .hand {
+    max-height: 100px;
+  }
+
+  /* 控制面板調整 */
+  .game-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-bg-surface, #1e293b);
+    padding: 8px;
+    z-index: 100;
+  }
+
+  /* 隱藏非必要元素 */
+  .phase-indicator__description,
+  .player-info__details {
+    display: none;
+  }
+}
+
+/* === 橫屏模式 === */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-board {
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  .game-board__opponents {
+    flex-direction: column;
+    width: 150px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .game-board__center {
+    flex: 1;
+  }
+
+  .game-board__self {
+    flex-direction: column;
+    max-width: 40%;
+  }
+
+  .hand {
+    flex-direction: row;
+    max-height: 150px;
+    overflow-x: auto;
+  }
+
+  /* 生物區橫向 */
+  .creature-area {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+}
+
+/* === 平板橫屏 === */
+@media (min-width: 768px) and (orientation: landscape) {
+  .game-board {
+    flex-direction: row;
+  }
+
+  .game-board__opponents {
+    flex-direction: column;
+    width: 200px;
+  }
+
+  .game-board__center {
+    flex: 1;
+  }
+
+  .game-board__self {
+    width: 250px;
+    flex-direction: column;
+  }
+}
+
+/* === 觸控設備優化 === */
+@media (hover: none) and (pointer: coarse) {
+  /* 增大點擊區域 */
+  .evolution-card {
+    padding: 4px;
+  }
+
+  /* 禁用懸停效果（防止移動端 sticky hover） */
+  .evolution-card:hover {
+    transform: none;
+  }
+
+  .evolution-card--selectable:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* 點擊時的視覺反饋 */
+  .evolution-card:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+
+  /* 長按提示 */
+  .touch-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--color-text-muted, #94a3b8);
+    text-align: center;
+    padding: 4px;
+  }
+
+  /* 拖曳區域加大 */
+  .drop-zone {
+    min-height: 60px;
+    padding: 12px;
+  }
+
+  /* 按鈕間距加大 */
+  .button-group {
+    gap: 12px;
+  }
+
+  .button-group button {
+    padding: 12px 20px;
+  }
+}
+
+/* === 非觸控設備 === */
+@media (hover: hover) and (pointer: fine) {
+  .touch-hint {
+    display: none;
+  }
+}
+
+/* === 高解析度螢幕 === */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .evolution-card__face {
+    border-width: 1px;
+  }
+
+  /* 使用較細的線條 */
+  .creature-card,
+  .trait-icon {
+    border-width: 1px;
+  }
+}
+
+/* === 減少動畫偏好 === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* 禁用所有動態效果 */
+  .animated,
+  [class*="animate-"] {
+    animation: none !important;
+  }
+}
+
+/* === 深色模式 === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-card-bg: #1e293b;
+    --color-card-border: #475569;
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
+    --color-bg-surface: #0f172a;
+    --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* === 淺色模式 === */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-card-bg: #ffffff;
+    --color-card-border: #e2e8f0;
+    --color-text: #1e293b;
+    --color-text-muted: #64748b;
+    --color-bg-surface: #f8fafc;
+    --color-bg-overlay: rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* === 響應式輔助類別 === */
+
+/* 只在移動端顯示 */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* 只在桌面端顯示 */
+.desktop-only {
+  display: block;
+}
+
+/* 只在觸控設備顯示 */
+.touch-only {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch-only {
+    display: block;
+  }
+
+  .no-touch {
+    display: none;
+  }
+}
+
+/* 橫屏才顯示 */
+.landscape-only {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  .landscape-only {
+    display: block;
+  }
+
+  .portrait-only {
+    display: none;
+  }
+}
+
+/* 安全區域 (notch 等) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
