@@ -6,3 +6,4 @@
 
 export { Hand } from './Hand';
 export { PlayerBoard } from './PlayerBoard';
+export { FoodPool } from './FoodPool';
