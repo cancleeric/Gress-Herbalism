@@ -1,0 +1,52 @@
+/**
+ * TraitBadge 樣式定義
+ */
+
+.trait-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.trait-badge:hover {
+  transform: scale(1.1);
+}
+
+.trait-badge--small {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+
+.trait-badge--medium {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
+.trait-badge--large {
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+}
+
+.trait-badge--linked {
+  border: 2px solid #10b981;
+}
+
+.trait-badge__icon {
+  line-height: 1;
+}
+
+.trait-badge__link-indicator {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 8px;
+}

@@ -7,3 +7,6 @@
 export { CardBase } from './CardBase';
 export { useCardInteraction } from './useCardInteraction';
 export { HandCard, DND_TYPES } from './HandCard';
+export { CreatureCard } from './CreatureCard';
+export { FoodIndicator } from './FoodIndicator';
+export { TraitBadge } from './TraitBadge';
