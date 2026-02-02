@@ -1,10 +1,11 @@
 # 演化論第二階段 - 可擴展架構設計計畫書
 
 **文件編號**：PLAN-EVO-P2-A
-**版本**：1.0
+**版本**：1.1
 **建立日期**：2026-02-01
+**完成日期**：2026-02-02
 **負責人**：Claude Code
-**狀態**：規劃中
+**狀態**：✅ 已完成
 **工單範圍**：0317-0330
 
 ---
@@ -687,7 +688,7 @@ class CommunicationHandler extends TraitHandler {
 
 ## 五、工單詳細內容
 
-### 工單 0317：建立擴充包註冊系統
+### 工單 0317：建立擴充包註冊系統 ✅
 
 **目標**：建立 ExpansionRegistry 核心模組
 
@@ -697,83 +698,70 @@ class CommunicationHandler extends TraitHandler {
 - `shared/expansions/index.js`
 
 **驗收標準**：
-- [ ] ExpansionRegistry 可註冊擴充包
-- [ ] 支援依賴檢查
-- [ ] 支援相容性檢查
-- [ ] 單元測試通過
+- [x] ExpansionRegistry 可註冊擴充包
+- [x] 支援依賴檢查
+- [x] 支援相容性檢查
+- [x] 單元測試通過
 
 ---
 
-### 工單 0318：重構性狀定義結構
+### 工單 0318：重構性狀定義結構 ✅
 
 **目標**：將硬編碼的性狀定義改為可註冊模組
 
-**檔案**：
-- `shared/expansions/base/traits/index.js`
-- `shared/expansions/base/traits/definitions.js`
-
-**變更**：
-```javascript
-// 舊結構
-const TRAIT_DEFINITIONS = {
-  carnivore: { name: '肉食', ... }
-};
-
-// 新結構
-const traits = {
-  carnivore: new CarnivoreHandler(),
-};
-```
-
 **驗收標準**：
-- [ ] 保持向後相容
-- [ ] 所有 19 種性狀有獨立定義
-- [ ] 測試通過
+- [x] 保持向後相容
+- [x] 所有 19 種性狀有獨立定義
+- [x] 測試通過
 
 ---
 
-### 工單 0319：建立性狀處理器介面
+### 工單 0319：建立性狀處理器介面 ✅
 
 **目標**：定義 TraitHandler 抽象類別
 
-**檔案**：
-- `backend/logic/evolution/traits/TraitHandler.js`
-
-**方法**：
-- `canPlace()` - 驗證放置
-- `onPlace()` - 放置效果
-- `checkDefense()` - 防禦檢查
-- `getDefenseResponse()` - 防禦回應
-- `onFeed()` - 進食效果
-- `useAbility()` - 主動能力
-- `onExtinction()` - 滅絕效果
-- `getScoreBonus()` - 計分加成
-
 **驗收標準**：
-- [ ] 介面定義完整
-- [ ] 有詳細 JSDoc 註解
-- [ ] 有範例實作
+- [x] 介面定義完整
+- [x] 有詳細 JSDoc 註解
+- [x] 有範例實作
 
 ---
 
-### 工單 0320：實作基礎版性狀處理器
+### 工單 0320：實作基礎版性狀處理器 ✅
 
 **目標**：將 19 種性狀重構為處理器模式
 
-**檔案**：
-- `shared/expansions/base/traits/CarnivoreHandler.js`
-- `shared/expansions/base/traits/ScavengerHandler.js`
-- `shared/expansions/base/traits/SharpVisionHandler.js`
-- ... （共 19 個處理器）
-
 **驗收標準**：
-- [ ] 19 種性狀全部重構
-- [ ] 邏輯與原有實作一致
-- [ ] 測試通過
+- [x] 19 種性狀全部重構
+- [x] 邏輯與原有實作一致
+- [x] 測試通過
 
 ---
 
-### 工單 0321-0330：（略，詳見總覽）
+### 工單 0321-0329：✅ 已完成
+
+- 0321：建立規則引擎核心 ✅
+- 0322：實作基礎規則集 ✅
+- 0323：重構卡牌系統支援擴充包 ✅
+- 0324：建立效果觸發系統 ✅
+- 0325：實作事件發布訂閱系統 ✅
+- 0326：建立擴充包載入機制 ✅
+- 0327：重構遊戲初始化 ✅
+- 0328：建立擴充包驗證系統 ✅
+- 0329：單元測試更新 ✅
+
+---
+
+### 工單 0330：整合測試與架構文件 ✅
+
+**完成日期**：2026-02-02
+
+**完成內容**：
+- 建立並修復 3 個整合測試檔案（59 個測試全部通過）
+- 修正 mockExpansion.js 格式符合 ExpansionInterface
+- 修正 baseExpansion.traits 為處理器實例映射
+- 新增架構設計文件 ARCHITECTURE_EXPANSION.md
+- 新增擴充包開發指南 GUIDE_EXPANSION_DEVELOPMENT.md
 
 ---
 
