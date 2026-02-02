@@ -9,3 +9,4 @@ export { PlayerBoard } from './PlayerBoard';
 export { FoodPool } from './FoodPool';
 export { GameBoard } from './GameBoard';
 export { PhaseIndicator } from './PhaseIndicator';
+export { ActionLog } from './ActionLog';
