@@ -1,0 +1,69 @@
+/**
+ * AnimatedEvent 樣式定義
+ *
+ * 遊戲事件動畫樣式
+ */
+
+/* 通用動畫容器 */
+.attack-animation,
+.feed-animation,
+.death-animation {
+  position: fixed;
+  font-size: 48px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 攻擊動畫 */
+.attack-animation {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* 進食動畫 */
+.feed-animation {
+  font-size: 32px;
+}
+
+/* 死亡動畫 */
+.death-animation {
+  font-size: 64px;
+}
+
+/* 階段轉換 */
+.phase-transition {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.phase-transition__icon {
+  font-size: 72px;
+}
+
+.phase-transition__name {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--phase-color, #1e293b);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 飽足提示 */
+.satisfied-animation {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  color: #10b981;
+  white-space: nowrap;
+}

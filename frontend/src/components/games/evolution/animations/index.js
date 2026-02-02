@@ -19,3 +19,19 @@ export {
   useHandLayoutAnimation,
   useFlipAnimation,
 } from './useCardAnimation';
+
+export {
+  attackAnimation,
+  feedAnimation,
+  deathAnimation,
+  phaseTransitionAnimation,
+  traitActivationAnimation,
+} from './gameEventAnimations';
+
+export {
+  AttackAnimation,
+  FeedAnimation,
+  DeathAnimation,
+  PhaseTransition,
+  SatisfiedAnimation,
+} from './AnimatedEvent';
