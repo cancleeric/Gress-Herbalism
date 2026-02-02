@@ -1,0 +1,233 @@
+/**
+ * GameBoard 樣式定義
+ *
+ * 遊戲主板組件樣式
+ */
+
+.game-board {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+/* === 階段指示器 === */
+.game-board__phase {
+  grid-area: phase;
+}
+
+.game-board__phase-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.game-board__round {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.game-board__phase-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.game-board__turn-indicator {
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* === 對手區域 === */
+.game-board__opponents {
+  grid-area: opponents;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.game-board__opponent {
+  flex: 1;
+  max-width: 400px;
+}
+
+/* === 中央區域 === */
+.game-board__center {
+  grid-area: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.game-board__deck-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.game-board__deck-icon {
+  font-size: 20px;
+}
+
+.game-board__deck-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.game-board__deck-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* === 自己的區域 === */
+.game-board__self {
+  grid-area: self;
+}
+
+/* === 2人布局 === */
+.game-board--2p {
+  grid-template-areas:
+    'phase'
+    'opponents'
+    'center'
+    'self';
+  grid-template-rows: auto 1fr auto 1fr;
+}
+
+/* === 3人布局 === */
+.game-board--3p {
+  grid-template-areas:
+    'phase phase phase'
+    'opponents opponents opponents'
+    'center center center'
+    'self self self';
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* === 4人布局 === */
+.game-board--4p {
+  grid-template-areas:
+    'phase phase phase'
+    'opponent-left center opponent-right'
+    'self self self';
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.game-board--4p .game-board__opponents {
+  display: contents;
+}
+
+.game-board--4p .game-board__opponent--1 {
+  grid-area: opponent-left;
+}
+
+.game-board--4p .game-board__opponent--2 {
+  grid-area: center;
+}
+
+.game-board--4p .game-board__opponent--3 {
+  grid-area: opponent-right;
+}
+
+/* === 響應式 === */
+@media (max-width: 1024px) {
+  .game-board {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .game-board__opponent {
+    max-width: 300px;
+  }
+
+  .game-board__phase-info {
+    gap: 12px;
+    padding: 10px 20px;
+  }
+
+  .game-board__phase-name {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-board {
+    grid-template-areas:
+      'phase'
+      'opponents'
+      'center'
+      'self';
+    grid-template-columns: 1fr;
+  }
+
+  .game-board__opponents {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .game-board__opponent {
+    max-width: none;
+  }
+
+  .game-board__phase-info {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+  }
+
+  .game-board__round {
+    font-size: 12px;
+  }
+
+  .game-board__phase-name {
+    font-size: 14px;
+  }
+
+  .game-board__turn-indicator {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-board {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .game-board__deck-info {
+    padding: 6px 12px;
+  }
+
+  .game-board__deck-count {
+    font-size: 16px;
+  }
+}
