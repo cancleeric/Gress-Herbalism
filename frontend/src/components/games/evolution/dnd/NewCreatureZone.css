@@ -1,0 +1,28 @@
+/**
+ * NewCreatureZone 樣式定義
+ *
+ * 新建生物區域樣式
+ */
+
+.new-creature-zone {
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.new-creature-zone__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-creature-zone__icon {
+  font-size: 32px;
+  opacity: 0.6;
+}
+
+.new-creature-zone__text {
+  font-size: 12px;
+  color: #64748b;
+}

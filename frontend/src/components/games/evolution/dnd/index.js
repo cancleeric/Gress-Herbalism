@@ -8,3 +8,5 @@ export { DRAG_TYPES, DROP_TARGETS, DROP_RESULTS } from './dragTypes';
 export { EvolutionDndContext } from './DndContext';
 export { DragPreviewLayer } from './DragPreviewLayer';
 export { useDragPreview, useDragState } from './useDragPreview';
+export { DropZone } from './DropZone';
+export { NewCreatureZone } from './NewCreatureZone';

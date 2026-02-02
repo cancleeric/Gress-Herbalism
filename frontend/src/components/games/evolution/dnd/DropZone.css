@@ -1,0 +1,63 @@
+/**
+ * DropZone 樣式定義
+ *
+ * 通用拖放目標區域樣式
+ */
+
+.drop-zone {
+  position: relative;
+  min-height: 80px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.5);
+  transition: all 0.2s ease;
+}
+
+.drop-zone--active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.drop-zone--invalid {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.drop-zone--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.drop-zone__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 80px;
+  padding: 16px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.drop-zone__label {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.drop-zone__label--active {
+  background: #10b981;
+  color: #fff;
+}
+
+.drop-zone__label--invalid {
+  background: #ef4444;
+  color: #fff;
+}
