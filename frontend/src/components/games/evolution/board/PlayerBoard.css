@@ -1,0 +1,227 @@
+/**
+ * PlayerBoard 樣式定義
+ *
+ * 玩家區域組件樣式
+ */
+
+.player-board {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.player-board--current {
+  border-color: var(--color-primary, #3b82f6);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.player-board--self {
+  background: #eff6ff;
+}
+
+.player-board--passed {
+  opacity: 0.7;
+}
+
+.player-board--disconnected {
+  filter: grayscale(50%);
+}
+
+/* === 玩家資訊 === */
+.player-board__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.player-board__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary, #3b82f6) 0%, #60a5fa 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.player-board__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.player-board__name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-board__score {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.player-board__status {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.player-board__tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.player-board__tag--turn {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.player-board__tag--passed {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.player-board__tag--offline {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.player-board__hand-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.player-board__hand-icon {
+  font-size: 16px;
+}
+
+/* === 生物區域 === */
+.player-board__creatures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  min-height: 160px;
+  align-content: flex-start;
+}
+
+.player-board__empty {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 14px;
+  min-height: 120px;
+}
+
+/* === 手牌區域 === */
+.player-board__hand {
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+/* === 連結線 === */
+.player-board__links {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* === 緊湊模式 === */
+.player-board--compact .player-board__header {
+  padding: 8px 12px;
+}
+
+.player-board--compact .player-board__avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.player-board--compact .player-board__name {
+  font-size: 14px;
+}
+
+.player-board--compact .player-board__creatures {
+  padding: 12px;
+  min-height: 120px;
+  gap: 8px;
+}
+
+.player-board--compact .player-board__empty {
+  min-height: 80px;
+}
+
+/* === 響應式 === */
+@media (max-width: 768px) {
+  .player-board__header {
+    flex-wrap: wrap;
+  }
+
+  .player-board__status {
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .player-board__creatures {
+    gap: 8px;
+    padding: 12px;
+    min-height: 140px;
+  }
+
+  .player-board__avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .player-board__name {
+    font-size: 15px;
+  }
+
+  .player-board__hand-count {
+    padding: 3px 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-board__header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .player-board__creatures {
+    padding: 10px;
+    gap: 6px;
+  }
+}

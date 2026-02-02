@@ -5,3 +5,4 @@
  */
 
 export { Hand } from './Hand';
+export { PlayerBoard } from './PlayerBoard';
