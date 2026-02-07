@@ -1,0 +1,50 @@
+# Docker Ignore
+# 工單 0374
+
+# Git
+.git
+.gitignore
+
+# Node modules
+**/node_modules
+
+# 建置輸出
+frontend/build
+backend/dist
+
+# 測試
+**/coverage
+**/__tests__
+**/*.test.js
+**/*.spec.js
+tests/
+cypress/
+
+# 開發檔案
+.env
+.env.local
+.env.development
+.env.test
+*.log
+npm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 文件
+docs/
+*.md
+!README.md
+
+# 工單和報告
+work_orders/
+reports/
+
+# 其他
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp

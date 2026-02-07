@@ -1,0 +1,205 @@
+# 持續整合流程
+# 工單 0374
+
+name: CI
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main, develop]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Lint 檢查
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Lint Frontend
+        working-directory: frontend
+        run: npm run lint --if-present
+
+      - name: Lint Backend
+        working-directory: backend
+        run: npm run lint --if-present
+
+  # 單元測試
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        component: [frontend, backend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.component }}/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ${{ matrix.component }}
+        run: npm ci
+
+      - name: Run Tests with Coverage
+        working-directory: ${{ matrix.component }}
+        run: npm test -- --coverage --watchAll=false
+        env:
+          CI: true
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ${{ matrix.component }}/coverage
+          flags: ${{ matrix.component }}
+          fail_ci_if_error: false
+
+  # E2E 測試
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Start Backend Server
+        working-directory: backend
+        run: npm start &
+        env:
+          NODE_ENV: test
+          PORT: 3001
+
+      - name: Wait for Backend
+        run: npx wait-on http://localhost:3001 --timeout 60000
+
+      - name: Start Frontend Server
+        working-directory: frontend
+        run: npm start &
+        env:
+          REACT_APP_API_URL: http://localhost:3001
+          PORT: 3000
+
+      - name: Wait for Frontend
+        run: npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run Cypress Tests
+        working-directory: frontend
+        run: npm run cypress:run
+        env:
+          CYPRESS_BASE_URL: http://localhost:3000
+
+      - name: Upload Cypress Screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: tests/e2e/screenshots
+          retention-days: 7
+
+      - name: Upload Cypress Videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: tests/e2e/videos
+          retention-days: 7
+
+  # 建置檢查
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/build
+          retention-days: 7
+
+  # Docker 建置
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [unit-tests, build]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: nicholas-game:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

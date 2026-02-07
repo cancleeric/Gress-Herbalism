@@ -1,0 +1,105 @@
+# Nicholas Game - Docker Compose 配置
+# 工單 0374
+
+version: '3.8'
+
+services:
+  # 主應用程式
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nicholas-game
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3001
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/nicholas-game}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - nicholas-network
+
+  # MongoDB 資料庫
+  mongodb:
+    image: mongo:7
+    container_name: nicholas-mongodb
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    environment:
+      - MONGO_INITDB_DATABASE=nicholas-game
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - nicholas-network
+
+  # Redis 快取
+  redis:
+    image: redis:7-alpine
+    container_name: nicholas-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - nicholas-network
+
+  # Nginx 反向代理（可選）
+  nginx:
+    image: nginx:alpine
+    container_name: nicholas-nginx
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - nicholas-network
+    profiles:
+      - with-nginx
+
+volumes:
+  mongodb-data:
+    name: nicholas-mongodb-data
+  mongodb-config:
+    name: nicholas-mongodb-config
+  redis-data:
+    name: nicholas-redis-data
+
+networks:
+  nicholas-network:
+    name: nicholas-network
+    driver: bridge
