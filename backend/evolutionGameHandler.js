@@ -623,6 +623,89 @@ function handleDisconnect(socket, io) {
   evoPlayerSockets.delete(socket.id);
 }
 
+/**
+ * 處理玩家重連 (工單 0377)
+ * @param {Socket} socket - Socket 實例
+ * @param {Server} io - Socket.io Server 實例
+ * @param {Object} data - { roomId, playerId }
+ */
+function handleReconnect(socket, io, data) {
+  const { roomId, playerId } = data;
+
+  if (!roomId || !playerId) {
+    socket.emit('evo:error', { message: '重連參數錯誤' });
+    return;
+  }
+
+  const room = evoRooms.get(roomId);
+  if (!room) {
+    socket.emit('evo:error', { message: '房間不存在或已結束' });
+    return;
+  }
+
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) {
+    socket.emit('evo:error', { message: '找不到玩家資料' });
+    return;
+  }
+
+  console.log(`[演化論] 玩家重連: ${player.name} in ${roomId}`);
+
+  // 更新 socket 資訊
+  const oldSocketId = player.socketId;
+  player.socketId = socket.id;
+  player.isDisconnected = false;
+  player.disconnectedAt = null;
+
+  // 更新 socket 映射
+  evoPlayerSockets.delete(oldSocketId);
+  evoPlayerSockets.set(socket.id, { roomId, playerId });
+
+  // 加入 socket 房間
+  socket.join(roomId);
+
+  // 準備客戶端遊戲狀態（隱藏其他玩家手牌）
+  let clientGameState = null;
+  if (room.gameState) {
+    clientGameState = {
+      ...room.gameState,
+      players: room.gameState.players.map(p => ({
+        ...p,
+        hand: p.id === playerId
+          ? (p.hand || [])
+          : (p.hand || []).map(() => ({ hidden: true })),
+      })),
+    };
+  }
+
+  // 發送重連成功
+  socket.emit('evo:reconnected', {
+    roomId,
+    playerId,
+    room: {
+      id: room.id,
+      name: room.name,
+      phase: room.phase,
+      players: room.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        isHost: p.isHost,
+        isReady: p.isReady,
+        isDisconnected: p.isDisconnected,
+      })),
+    },
+    gameState: clientGameState,
+  });
+
+  // 通知其他玩家
+  socket.to(roomId).emit('evo:playerReconnected', {
+    playerId,
+    playerName: player.name,
+  });
+
+  broadcastGameState(io, roomId);
+}
+
 // ==================== 模組導出 ====================
 
 module.exports = {
@@ -648,6 +731,7 @@ module.exports = {
   broadcastRoomList,
   broadcastGameState,
   handleDisconnect,
+  handleReconnect,
 
   // 內部狀態（供測試使用）
   _evoRooms: evoRooms,

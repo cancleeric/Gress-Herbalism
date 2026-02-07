@@ -1219,6 +1219,9 @@ io.on('connection', (socket) => {
   socket.on('evo:respondAttack', (data) => evolutionHandler.respondAttack(socket, io, data));
   socket.on('evo:useTrait', (data) => evolutionHandler.useTrait(socket, io, data));
 
+  // 重連操作 (工單 0377)
+  socket.on('evo:reconnect', (data) => evolutionHandler.handleReconnect(socket, io, data));
+
   // ==================== 工單 0313-0316 結束 ====================
 });
 

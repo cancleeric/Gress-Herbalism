@@ -28,7 +28,7 @@ export function initSocket() {
     reconnectionDelayMax: 5000,      // 最大重連延遲 5 秒
     timeout: 20000,                   // 連線超時 20 秒
     pingInterval: 25000,              // 心跳間隔 25 秒
-    pingTimeout: 20000,               // 心跳超時 20 秒
+    pingTimeout: 30000,               // 心跳超時 30 秒（與後端一致）
   });
 
   socket.on('connect', () => {
@@ -755,3 +755,49 @@ export function onEvoError(callback) {
 }
 
 // ==================== 工單 0272 結束 ====================
+
+// ==================== 工單 0379：連線診斷功能 ====================
+
+/**
+ * 檢查 localStorage 是否可用
+ * @returns {boolean}
+ */
+function isLocalStorageAvailable() {
+  try {
+    localStorage.setItem('__socket_test__', 'test');
+    localStorage.removeItem('__socket_test__');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * 診斷連線狀態
+ * @returns {Object} 連線診斷資訊
+ */
+export function diagnoseConnection() {
+  const s = socket;
+  const savedRoom = getCurrentRoom();
+
+  return {
+    socketUrl: SOCKET_URL,
+    isConnected: s?.connected ?? false,
+    transport: s?.io?.engine?.transport?.name ?? 'unknown',
+    reconnectAttempts: s?.io?._reconnectionAttempts ?? 0,
+    hasLocalStorage: isLocalStorageAvailable(),
+    savedRoom: savedRoom ? {
+      roomId: savedRoom.roomId,
+      playerId: savedRoom.playerId,
+      gameType: savedRoom.gameType,
+    } : null,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+// 開發模式下將診斷函數掛載到 window
+if (process.env.NODE_ENV === 'development') {
+  window.diagnoseSocket = diagnoseConnection;
+}
+
+// ==================== 工單 0379 結束 ====================
