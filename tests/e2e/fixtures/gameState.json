@@ -1,0 +1,27 @@
+{
+  "initialState": {
+    "phase": "evolution",
+    "round": 1,
+    "foodPool": 0,
+    "currentPlayerId": "test-player-1"
+  },
+  "feedingState": {
+    "phase": "feeding",
+    "round": 1,
+    "foodPool": 8,
+    "currentPlayerId": "test-player-1"
+  },
+  "extinctionState": {
+    "phase": "extinction",
+    "round": 1,
+    "foodPool": 0
+  },
+  "gameEndState": {
+    "phase": "gameEnd",
+    "round": 5,
+    "scores": {
+      "test-player-1": 15,
+      "test-player-2": 12
+    }
+  }
+}

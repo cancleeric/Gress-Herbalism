@@ -8,7 +8,12 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:performance": "node --expose-gc node_modules/.bin/react-scripts test --testPathPattern=performance --testPathIgnorePatterns=/helpers/ --verbose --no-cache",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "cypress:open": "cypress open --config-file ../cypress.config.js",
+    "cypress:run": "cypress run --config-file ../cypress.config.js",
+    "cypress:run:mobile": "cypress run --config-file ../cypress.config.js --spec '../tests/e2e/mobile/**/*.spec.js'",
+    "e2e": "start-server-and-test start http://localhost:3000 cypress:run",
+    "e2e:open": "start-server-and-test start http://localhost:3000 cypress:open"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
@@ -29,7 +34,9 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.3.1",
-    "react-scripts": "5.0.1"
+    "cypress": "^13.6.0",
+    "react-scripts": "5.0.1",
+    "start-server-and-test": "^2.0.3"
   },
   "eslintConfig": {
     "extends": [

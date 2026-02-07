@@ -1,0 +1,36 @@
+{
+  "players": [
+    {
+      "id": "test-player-1",
+      "name": "測試玩家1",
+      "email": "player1@test.com"
+    },
+    {
+      "id": "test-player-2",
+      "name": "測試玩家2",
+      "email": "player2@test.com"
+    },
+    {
+      "id": "test-player-3",
+      "name": "測試玩家3",
+      "email": "player3@test.com"
+    },
+    {
+      "id": "test-player-4",
+      "name": "測試玩家4",
+      "email": "player4@test.com"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "test-room-1",
+      "name": "測試房間1",
+      "maxPlayers": 4
+    },
+    {
+      "id": "test-room-2",
+      "name": "測試房間2",
+      "maxPlayers": 2
+    }
+  ]
+}
