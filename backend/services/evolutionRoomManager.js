@@ -8,11 +8,15 @@
 
 const evolutionGameLogic = require('../logic/evolution/gameLogic');
 const { GAME_PHASES } = require('../../shared/constants/evolution');
+const { DeltaCalculator, MemoryCache, PerformanceMonitor } = require('../utils/performance');
 
 class EvolutionRoomManager {
   constructor() {
     this.rooms = new Map();
     this.playerRooms = new Map(); // playerId -> roomId 對應
+    this.stateCache = new MemoryCache({ maxSize: 100, ttl: 300000 }); // 5 分鐘快取
+    this.monitor = new PerformanceMonitor();
+    this.lastClientStates = new Map(); // 用於計算增量更新
   }
 
   /**
@@ -398,8 +402,126 @@ class EvolutionRoomManager {
 
     return clientState;
   }
+
+  /**
+   * 工單 0366：取得增量遊戲狀態
+   * 只返回自上次更新以來的變化
+   *
+   * @param {string} roomId - 房間 ID
+   * @param {string} playerId - 玩家 ID
+   * @returns {Object} { full: boolean, state: Object, delta: Object }
+   */
+  getDeltaGameState(roomId, playerId) {
+    this.monitor.start('getDeltaState');
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      this.monitor.end('getDeltaState');
+      return null;
+    }
+
+    const currentState = this.getPlayerGameState(room, playerId);
+    const cacheKey = `${roomId}:${playerId}`;
+    const lastState = this.lastClientStates.get(cacheKey);
+
+    if (!lastState) {
+      // 第一次請求，返回完整狀態
+      this.lastClientStates.set(cacheKey, currentState);
+      this.monitor.end('getDeltaState');
+      return { full: true, state: currentState, delta: null };
+    }
+
+    // 計算差異
+    const delta = DeltaCalculator.diff(lastState, currentState);
+
+    if (!delta) {
+      // 無變化
+      this.monitor.end('getDeltaState');
+      return { full: false, state: null, delta: null };
+    }
+
+    // 更新快取
+    this.lastClientStates.set(cacheKey, currentState);
+    this.monitor.end('getDeltaState');
+
+    return { full: false, state: null, delta };
+  }
+
+  /**
+   * 工單 0366：清除玩家狀態快取
+   */
+  clearPlayerStateCache(roomId, playerId) {
+    const cacheKey = `${roomId}:${playerId}`;
+    this.lastClientStates.delete(cacheKey);
+  }
+
+  /**
+   * 工單 0366：清除房間所有狀態快取
+   */
+  clearRoomStateCache(roomId) {
+    for (const key of this.lastClientStates.keys()) {
+      if (key.startsWith(`${roomId}:`)) {
+        this.lastClientStates.delete(key);
+      }
+    }
+  }
+
+  /**
+   * 工單 0366：取得效能指標
+   */
+  getPerformanceMetrics() {
+    return {
+      roomCount: this.rooms.size,
+      playerCount: this.playerRooms.size,
+      stateCacheSize: this.lastClientStates.size,
+      metrics: this.monitor.getAllMetrics()
+    };
+  }
+
+  /**
+   * 工單 0366：清理過期房間
+   * 定期調用以釋放記憶體
+   */
+  cleanupExpiredRooms(maxAge = 3600000) { // 預設 1 小時
+    const now = Date.now();
+    const expiredRooms = [];
+
+    for (const [roomId, room] of this.rooms.entries()) {
+      // 等待中的房間超過 maxAge 未活動
+      if (room.phase === 'waiting' && now - room.createdAt > maxAge) {
+        expiredRooms.push(roomId);
+        continue;
+      }
+
+      // 遊戲已結束超過 10 分鐘
+      if (room.gameState?.phase === 'gameEnd' && now - (room.gameEndAt || room.createdAt) > 600000) {
+        expiredRooms.push(roomId);
+      }
+    }
+
+    for (const roomId of expiredRooms) {
+      const room = this.rooms.get(roomId);
+      if (room) {
+        for (const player of room.players) {
+          this.playerRooms.delete(player.id);
+        }
+        this.clearRoomStateCache(roomId);
+        this.rooms.delete(roomId);
+        console.log(`[演化論] 清理過期房間: ${roomId}`);
+      }
+    }
+
+    return expiredRooms.length;
+  }
 }
 
 // 匯出單例
 const evolutionRoomManager = new EvolutionRoomManager();
+
+// 設定定期清理
+setInterval(() => {
+  evolutionRoomManager.cleanupExpiredRooms();
+  evolutionRoomManager.stateCache.cleanup();
+}, 300000); // 每 5 分鐘執行一次
+
 module.exports = evolutionRoomManager;
