@@ -6,7 +6,7 @@
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../firebase/AuthContext';
@@ -88,6 +88,9 @@ function Lobby() {
   // 當前導航
   const [activeNav, setActiveNav] = useState('rooms');
 
+  // 工單 0382：延遲顯示斷線錯誤的 timer ref
+  const disconnectTimerRef = useRef(null);
+
   // 工單 0276：移除遊戲類型選擇（現在有獨立的遊戲選擇頁面）
 
   // 工單 202601260048：單人模式相關狀態
@@ -109,10 +112,21 @@ function Lobby() {
   useEffect(() => {
     initSocket();
 
+    // 工單 0382：延遲顯示斷線錯誤，避免初始化時閃現錯誤訊息
     const unsubConnect = onConnectionChange((connected) => {
       setIsConnected(connected);
+
+      // 清除之前的延遲 timer
+      if (disconnectTimerRef.current) {
+        clearTimeout(disconnectTimerRef.current);
+        disconnectTimerRef.current = null;
+      }
+
       if (!connected) {
-        setError('與伺服器斷線，請確認後端是否啟動');
+        // 延遲 3 秒後才顯示錯誤，給予重連時間
+        disconnectTimerRef.current = setTimeout(() => {
+          setError('與伺服器斷線，請確認後端是否啟動');
+        }, 3000);
       } else {
         setError('');
       }
@@ -200,6 +214,10 @@ function Lobby() {
     });
 
     return () => {
+      // 工單 0382：清理延遲 timer
+      if (disconnectTimerRef.current) {
+        clearTimeout(disconnectTimerRef.current);
+      }
       unsubConnect();
       unsubRooms();
       unsubError();

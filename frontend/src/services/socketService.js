@@ -10,15 +10,28 @@ import { getCurrentRoom, clearCurrentRoom } from '../utils/common/localStorage';
 // 從設定檔取得後端 URL
 const SOCKET_URL = config.socketUrl;
 
+/**
+ * 連線狀態枚舉（工單 0383）
+ */
+export const ConnectionState = {
+  DISCONNECTED: 'disconnected',
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+};
+
 let socket = null;
 let connectionCallbacks = [];
 let heartbeatInterval = null;
+let connectionState = ConnectionState.DISCONNECTED;
 
 /**
  * 初始化 Socket 連線
  */
 export function initSocket() {
   if (socket) return socket;
+
+  // 工單 0383：標記為正在連線
+  connectionState = ConnectionState.CONNECTING;
 
   socket = io(SOCKET_URL, {
     transports: ['websocket', 'polling'],
@@ -33,12 +46,14 @@ export function initSocket() {
 
   socket.on('connect', () => {
     console.log('已連線到伺服器');
+    connectionState = ConnectionState.CONNECTED;
     connectionCallbacks.forEach(cb => cb(true));
     startHeartbeat();
   });
 
   socket.on('disconnect', (reason) => {
     console.log('與伺服器斷線，原因:', reason);
+    connectionState = ConnectionState.DISCONNECTED;
     connectionCallbacks.forEach(cb => cb(false));
     stopHeartbeat();
 
@@ -127,10 +142,12 @@ export function getSocket() {
  */
 export function onConnectionChange(callback) {
   connectionCallbacks.push(callback);
-  // 立即通知目前狀態
-  if (socket) {
-    callback(socket.connected);
+  // 工單 0381：只在 socket 已連線時才立即通知 true
+  // 避免連線過程中誤報斷線狀態
+  if (socket && socket.connected) {
+    callback(true);
   }
+  // 不主動調用 callback(false)，讓 disconnect 事件來處理
   return () => {
     connectionCallbacks = connectionCallbacks.filter(cb => cb !== callback);
   };
@@ -773,6 +790,14 @@ function isLocalStorageAvailable() {
 }
 
 /**
+ * 取得當前連線狀態（工單 0383）
+ * @returns {string} ConnectionState
+ */
+export function getConnectionState() {
+  return connectionState;
+}
+
+/**
  * 診斷連線狀態
  * @returns {Object} 連線診斷資訊
  */
@@ -782,6 +807,7 @@ export function diagnoseConnection() {
 
   return {
     socketUrl: SOCKET_URL,
+    connectionState: connectionState,
     isConnected: s?.connected ?? false,
     transport: s?.io?.engine?.transport?.name ?? 'unknown',
     reconnectAttempts: s?.io?._reconnectionAttempts ?? 0,
