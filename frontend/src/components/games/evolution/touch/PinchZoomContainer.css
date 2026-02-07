@@ -1,0 +1,78 @@
+/**
+ * PinchZoomContainer 樣式
+ */
+
+.pinch-zoom-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.pinch-zoom-container__content {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.pinch-zoom-container__indicator {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.pinch-zoom-container__reset {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pinch-zoom-container__reset:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pinch-zoom-container__hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0.8;
+  z-index: 50;
+}
+
+/* 觸控設備專用 */
+@media (hover: hover) and (pointer: fine) {
+  .touch-only {
+    display: none;
+  }
+}
+
+/* 隱藏提示在非觸控設備 */
+@media (hover: hover) {
+  .pinch-zoom-container__hint {
+    display: none;
+  }
+}

@@ -1,0 +1,205 @@
+/**
+ * TouchCardDetail 樣式
+ */
+
+.touch-card-detail__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  touch-action: none;
+}
+
+.touch-card-detail__popup {
+  position: absolute;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  background: var(--color-surface, #fff);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.touch-card-detail__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--color-surface-variant, #f0f0f0);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary, #666);
+  transition: background 0.2s;
+}
+
+.touch-card-detail__close:active {
+  background: var(--color-surface-variant-pressed, #ddd);
+}
+
+.touch-card-detail__sides {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.touch-card-detail__side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.touch-card-detail__side-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.touch-card-detail__trait-card {
+  background: var(--color-surface-variant, #f5f5f5);
+  border-radius: 12px;
+  padding: 12px;
+  border-left: 4px solid;
+}
+
+.touch-card-detail__trait-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.touch-card-detail__trait-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #333);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.touch-card-detail__food-bonus {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: var(--color-carnivore, #D32F2F);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.touch-card-detail__trait-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary, #666);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.touch-card-detail__divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-tertiary, #999);
+  font-size: 12px;
+}
+
+.touch-card-detail__divider::before,
+.touch-card-detail__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border, #e0e0e0);
+}
+
+.touch-card-detail__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.touch-card-detail__action {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  min-height: 60px;
+}
+
+.touch-card-detail__action:active {
+  transform: scale(0.95);
+}
+
+.touch-card-detail__action--creature {
+  background: var(--color-creature, #4CAF50);
+  color: white;
+}
+
+.touch-card-detail__action--creature:active {
+  background: #43A047;
+}
+
+.touch-card-detail__action--trait {
+  background: var(--color-trait, #7B1FA2);
+  color: white;
+}
+
+.touch-card-detail__action--trait:active {
+  background: #6A1B9A;
+}
+
+.touch-card-detail__action-icon {
+  font-size: 24px;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .touch-card-detail__popup {
+    background: var(--color-surface-dark, #2d2d2d);
+  }
+
+  .touch-card-detail__close {
+    background: var(--color-surface-variant-dark, #3d3d3d);
+    color: var(--color-text-secondary-dark, #aaa);
+  }
+
+  .touch-card-detail__trait-card {
+    background: var(--color-surface-variant-dark, #3d3d3d);
+  }
+
+  .touch-card-detail__trait-name {
+    color: var(--color-text-primary-dark, #fff);
+  }
+
+  .touch-card-detail__trait-desc {
+    color: var(--color-text-secondary-dark, #aaa);
+  }
+}

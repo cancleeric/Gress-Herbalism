@@ -1,0 +1,92 @@
+/**
+ * GestureOverlay 樣式
+ */
+
+.gesture-overlay {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 邊緣指示器 */
+.gesture-overlay__edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.gesture-overlay__edge--left {
+  left: 0;
+  background: linear-gradient(to right, rgba(76, 175, 80, 0.3), transparent);
+}
+
+.gesture-overlay__edge--right {
+  right: 0;
+  background: linear-gradient(to left, rgba(33, 150, 243, 0.3), transparent);
+}
+
+/* 觸控時顯示邊緣 */
+.gesture-overlay:active .gesture-overlay__edge {
+  opacity: 1;
+}
+
+/* 手勢提示 */
+.gesture-hint {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.gesture-hint--left {
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gesture-hint--right {
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gesture-hint--up {
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.gesture-hint--down {
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.gesture-hint__icon {
+  font-size: 28px;
+}
+
+.gesture-hint__text {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 非觸控設備隱藏 */
+@media (hover: hover) and (pointer: fine) {
+  .gesture-overlay__edge {
+    display: none;
+  }
+}
