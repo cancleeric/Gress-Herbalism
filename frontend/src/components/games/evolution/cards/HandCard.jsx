@@ -6,7 +6,7 @@
  * @module components/games/evolution/cards/HandCard
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { memo, useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useDrag } from 'react-dnd';
 import { CardBase } from './CardBase';
@@ -30,7 +30,7 @@ export const DND_TYPES = {
  * 手牌卡牌組件
  * 顯示雙面卡，可選擇正反面使用
  */
-export const HandCard = ({
+export const HandCard = memo(function HandCard({
   card,
   selected = false,
   disabled = false,
@@ -41,7 +41,7 @@ export const HandCard = ({
   selectedSide = null,
   onSideSelect,
   className = '',
-}) => {
+}) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   // 取得性狀資訊
@@ -237,7 +237,7 @@ export const HandCard = ({
       )}
     </div>
   );
-};
+});
 
 HandCard.propTypes = {
   card: PropTypes.shape({

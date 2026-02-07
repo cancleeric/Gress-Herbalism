@@ -6,7 +6,7 @@
  * @module components/games/evolution/cards/CardBase
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import './CardBase.css';
@@ -15,7 +15,7 @@ import './CardBase.css';
  * 卡牌基礎組件
  * 提供統一的卡牌外觀和基本互動
  */
-export const CardBase = ({
+export const CardBase = memo(function CardBase({
   // 內容
   frontContent,
   backContent,
@@ -46,7 +46,7 @@ export const CardBase = ({
   // 其他
   testId,
   children,
-}) => {
+}) {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = useCallback(
@@ -139,7 +139,7 @@ export const CardBase = ({
       {children}
     </motion.div>
   );
-};
+});
 
 CardBase.propTypes = {
   frontContent: PropTypes.node,

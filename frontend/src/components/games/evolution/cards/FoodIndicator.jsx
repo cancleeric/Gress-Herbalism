@@ -6,14 +6,14 @@
  * @module components/games/evolution/cards/FoodIndicator
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import './FoodIndicator.css';
 
 /**
  * 食物指示器組件
  */
-export const FoodIndicator = ({ current, max, fat = 0, fatCapacity = 0 }) => {
+export const FoodIndicator = memo(function FoodIndicator({ current, max, fat = 0, fatCapacity = 0 }) {
   const foodSlots = [];
   const fatSlots = [];
 
@@ -64,7 +64,7 @@ export const FoodIndicator = ({ current, max, fat = 0, fatCapacity = 0 }) => {
       )}
     </div>
   );
-};
+});
 
 FoodIndicator.propTypes = {
   current: PropTypes.number.isRequired,

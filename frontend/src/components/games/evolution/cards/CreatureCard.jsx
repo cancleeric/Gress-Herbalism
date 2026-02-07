@@ -6,7 +6,7 @@
  * @module components/games/evolution/cards/CreatureCard
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDrop } from 'react-dnd';
@@ -19,7 +19,7 @@ import './CreatureCard.css';
 /**
  * 生物卡牌組件
  */
-export const CreatureCard = ({
+export const CreatureCard = memo(function CreatureCard({
   creature,
   isOwn = false,
   selected = false,
@@ -33,7 +33,7 @@ export const CreatureCard = ({
   onAttack,
   onPlaceTrait,
   className = '',
-}) => {
+}) {
   // 計算狀態
   const maxFood = creature.maxFood || 1;
   const currentFood = creature.food || 0;
@@ -213,7 +213,7 @@ export const CreatureCard = ({
       </CardBase>
     </div>
   );
-};
+});
 
 CreatureCard.propTypes = {
   creature: PropTypes.shape({

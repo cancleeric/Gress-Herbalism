@@ -6,7 +6,7 @@
  * @module components/games/evolution/cards/TraitBadge
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import { TRAIT_ICONS, TRAIT_NAMES } from '../constants/traitVisuals';
 import './TraitBadge.css';
@@ -14,13 +14,13 @@ import './TraitBadge.css';
 /**
  * 性狀徽章組件
  */
-export const TraitBadge = ({
+export const TraitBadge = memo(function TraitBadge({
   traitType,
   linked = false,
   size = 'medium',
   onClick,
   showTooltip = true,
-}) => {
+}) {
   const icon = TRAIT_ICONS[traitType] || '❓';
   const name = TRAIT_NAMES[traitType] || traitType;
 
@@ -44,7 +44,7 @@ export const TraitBadge = ({
       {linked && <span className="trait-badge__link-indicator">🔗</span>}
     </div>
   );
-};
+});
 
 TraitBadge.propTypes = {
   traitType: PropTypes.string.isRequired,

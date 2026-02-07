@@ -1,0 +1,118 @@
+/**
+ * VirtualList - 虛擬滾動列表樣式
+ *
+ * @module components/common/VirtualList
+ */
+
+/* 列表容器 */
+.virtual-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+}
+
+/* 內層容器 - 維持正確的滾動高度 */
+.virtual-list__inner {
+  position: relative;
+  width: 100%;
+}
+
+/* 內容區域 - 使用 transform 定位 */
+.virtual-list__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* 列表項目 */
+.virtual-list__item {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 空狀態 */
+.virtual-list--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.virtual-list__empty-message {
+  color: var(--text-secondary, #666);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* 網格容器 */
+.virtual-grid {
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+}
+
+/* 網格內層 */
+.virtual-grid__inner {
+  position: relative;
+  width: 100%;
+}
+
+/* 網格內容 */
+.virtual-grid__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* 網格項目 */
+.virtual-grid__item {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 滾動條樣式 */
+.virtual-list::-webkit-scrollbar,
+.virtual-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.virtual-list::-webkit-scrollbar-track,
+.virtual-grid::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #f1f1f1);
+  border-radius: 4px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb,
+.virtual-grid::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #888);
+  border-radius: 4px;
+}
+
+.virtual-list::-webkit-scrollbar-thumb:hover,
+.virtual-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #555);
+}
+
+/* 效能優化：減少動畫 */
+@media (prefers-reduced-motion: reduce) {
+  .virtual-list__content,
+  .virtual-grid__content {
+    transition: none;
+  }
+}
+
+/* 行動裝置優化 */
+@media (max-width: 768px) {
+  .virtual-list::-webkit-scrollbar,
+  .virtual-grid::-webkit-scrollbar {
+    width: 4px;
+  }
+}
