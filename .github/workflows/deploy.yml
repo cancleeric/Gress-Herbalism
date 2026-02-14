@@ -4,8 +4,9 @@
 name: Deploy
 
 on:
-  push:
-    branches: [master, main]
+  # push 自動觸發已停用，避免每次推送都觸發失敗的部署
+  # push:
+  #   branches: [master, main]
   workflow_dispatch:
     inputs:
       environment:
