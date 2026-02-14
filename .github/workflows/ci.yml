@@ -4,10 +4,12 @@
 name: CI
 
 on:
-  push:
-    branches: [master, main, develop]
-  pull_request:
-    branches: [master, main, develop]
+  # push 自動觸發已停用
+  # push:
+  #   branches: [master, main, develop]
+  # pull_request:
+  #   branches: [master, main, develop]
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '18'
