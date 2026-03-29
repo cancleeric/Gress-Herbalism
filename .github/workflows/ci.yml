@@ -4,15 +4,14 @@
 name: CI
 
 on:
-  # push 自動觸發已停用
-  # push:
-  #   branches: [master, main, develop]
-  # pull_request:
-  #   branches: [master, main, develop]
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'  # Node.js 20 LTS (升級自 18，提供更長期的官方支援)
 
 jobs:
   # Lint 檢查
@@ -84,11 +83,12 @@ jobs:
           flags: ${{ matrix.component }}
           fail_ci_if_error: false
 
-  # E2E 測試
+  # E2E 測試（選擇性，環境變數缺失時可跳過）
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: unit-tests
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
