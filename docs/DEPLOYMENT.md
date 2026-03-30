@@ -1,6 +1,110 @@
 # 部署指南
 
-## 前端部署
+## Docker Compose 生產環境部署（推薦）
+
+> 完整的生產部署方式，包含 Nginx + SSL + WebSocket + 自動重啟
+
+### 前置需求
+
+- 伺服器已安裝 Docker（v24+）和 Docker Compose（v2+）
+- 已設定指向伺服器 IP 的網域 DNS（A Record）
+- 防火牆開放 80 和 443 端口
+
+### 步驟一：準備設定
+
+```bash
+# 複製環境變數範本
+cp .env.example .env
+
+# 編輯設定
+nano .env
+```
+
+`.env` 必填欄位：
+
+| 變數 | 說明 | 範例 |
+|------|------|------|
+| `DOMAIN` | 您的網域 | `example.com` |
+| `CERTBOT_EMAIL` | Let's Encrypt 通知信箱 | `admin@example.com` |
+| `MONGO_ROOT_USERNAME` | MongoDB 管理員帳號 | `admin` |
+| `MONGO_ROOT_PASSWORD` | MongoDB 管理員密碼（強密碼）| `s3cretP@ss` |
+| `REDIS_PASSWORD` | Redis 密碼 | `redis@pass` |
+| `JWT_SECRET` | JWT 簽章金鑰（64+ 字元）| `$(openssl rand -base64 64)` |
+| `ALLOWED_ORIGINS` | 允許的跨域來源 | `https://example.com` |
+
+### 步驟二：初始化 SSL 憑證
+
+```bash
+chmod +x scripts/init-letsencrypt.sh
+sudo ./scripts/init-letsencrypt.sh
+```
+
+此腳本會：
+1. 啟動 Nginx（使用臨時自簽憑證）
+2. 透過 Let's Encrypt webroot 驗證申請正式憑證
+3. 憑證每 12 小時自動更新，Nginx 每 6 小時重新載入
+
+### 步驟三：啟動所有服務
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### 步驟四：確認部署狀態
+
+```bash
+# 查看服務狀態
+docker compose -f docker-compose.prod.yml ps
+
+# 查看應用程式日誌
+docker compose -f docker-compose.prod.yml logs -f app
+
+# 健康檢查
+curl https://your-domain.com/api/health
+```
+
+### 服務架構
+
+```
+Internet → Nginx (80/443) → App (3001)
+                              ├── Backend API (/api/)
+                              ├── WebSocket (/socket.io/)
+                              └── Frontend (靜態檔案)
+
+App → MongoDB (27017, 內網)
+App → Redis (6379, 內網)
+```
+
+### 日誌管理
+
+所有容器日誌使用 `json-file` driver，自動限制大小：
+
+```bash
+# 查看 Nginx 存取日誌
+docker compose -f docker-compose.prod.yml logs nginx
+
+# 查看 Certbot 憑證更新日誌
+docker compose -f docker-compose.prod.yml logs certbot
+```
+
+### GitHub Actions 自動部署
+
+設定以下 GitHub Secrets 和 Variables 後，可使用 GitHub Actions 自動部署：
+
+**Secrets（敏感資料）：**
+- `SSH_PRIVATE_KEY` — 伺服器 SSH 私鑰
+- `STAGING_SERVER_HOST` / `PRODUCTION_SERVER_HOST` — 伺服器 IP 或主機名稱
+- `SERVER_USER` — SSH 連線使用者名稱
+
+**Variables（非敏感）：**
+- `STAGING_URL` / `PRODUCTION_URL` — 部署網址
+- `DEPLOY_PATH` — 伺服器上的專案目錄（預設 `~/nicholas-game`）
+
+部署方式：GitHub → Actions → Deploy → Run workflow
+
+---
+
+
 
 ### 建置生產版本
 

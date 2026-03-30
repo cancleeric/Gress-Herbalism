@@ -65,3 +65,11 @@ desktop.ini
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+# ===================
+# SSL 憑證（由 Certbot 管理，不提交到版本控制）
+# ===================
+certbot/conf/*
+certbot/www/*
+!certbot/conf/.gitkeep
+!certbot/www/.gitkeep

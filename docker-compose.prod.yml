@@ -1,0 +1,145 @@
+# Nicholas Game - 生產環境 Docker Compose 配置
+# 使用方式:
+#   1. 複製 .env.example 為 .env 並填入實際值
+#   2. 執行 scripts/init-letsencrypt.sh 初始化 SSL 憑證
+#   3. docker compose -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # ===== 應用程式 =====
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-cancleeric/gress-herbalism}:${IMAGE_TAG:-latest}
+    container_name: nicholas-game
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/nicholas-game?authSource=admin
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - nicholas-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ===== MongoDB 資料庫 =====
+  mongodb:
+    image: mongo:7
+    container_name: nicholas-mongodb
+    # 生產環境不對外暴露端口
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    environment:
+      - MONGO_INITDB_DATABASE=nicholas-game
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--username", "${MONGO_ROOT_USERNAME}", "--password", "${MONGO_ROOT_PASSWORD}", "--authenticationDatabase", "admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - nicholas-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ===== Redis 快取 =====
+  redis:
+    image: redis:7-alpine
+    container_name: nicholas-redis
+    # 生產環境不對外暴露端口
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - nicholas-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ===== Nginx 反向代理 =====
+  nginx:
+    image: nginx:alpine
+    container_name: nicholas-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf.template:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    # 替換環境變數後啟動，每 6 小時重新載入設定（讓憑證更新生效）
+    command:
+      - /bin/sh
+      - -c
+      - |
+        envsubst '$$DOMAIN' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+        while :; do sleep 6h & wait $${!}; nginx -s reload; done &
+        nginx -g 'daemon off;'
+    networks:
+      - nicholas-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ===== Certbot SSL 憑證自動更新 =====
+  certbot:
+    image: certbot/certbot
+    container_name: nicholas-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # 每 12 小時嘗試更新憑證
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    restart: unless-stopped
+
+volumes:
+  mongodb-data:
+    name: nicholas-mongodb-data
+  mongodb-config:
+    name: nicholas-mongodb-config
+  redis-data:
+    name: nicholas-redis-data
+
+networks:
+  nicholas-network:
+    name: nicholas-network
+    driver: bridge

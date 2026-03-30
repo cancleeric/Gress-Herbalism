@@ -1,22 +1,23 @@
 # 部署流程
-# 工單 0374
+# 功能：建置 Docker 映像 → 推送到 GHCR → SSH 部署到伺服器
 
 name: Deploy
 
 on:
-  # push 自動觸發已停用，避免每次推送都觸發失敗的部署
-  # push:
-  #   branches: [master, main]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: '部署目標環境'
         required: true
         default: 'staging'
         type: choice
         options:
           - staging
           - production
+      image_tag:
+        description: '映像標籤（留空使用 commit SHA）'
+        required: false
+        default: ''
 
 env:
   NODE_VERSION: '18'
@@ -24,15 +25,16 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 建置 Docker 映像
+  # ===== 建置並推送 Docker 映像 =====
   build-image:
-    name: Build Docker Image
+    name: Build & Push Docker Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
+      image-version: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,14 +49,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Determine image version
+        id: version
+        run: |
+          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=sha,prefix=
+            type=raw,value=${{ steps.version.outputs.tag }}
+            type=raw,value=latest,enable=${{ github.event.inputs.environment == 'production' }}
 
       - name: Build and Push
         uses: docker/build-push-action@v5
@@ -66,12 +77,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 自動部署到測試環境
+  # ===== 部署到測試環境 =====
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: build-image
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    if: github.event.inputs.environment == 'staging'
     environment:
       name: staging
       url: ${{ vars.STAGING_URL }}
@@ -79,32 +90,66 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to Staging
-        run: |
-          echo "Deploying to staging environment..."
-          echo "Image: ${{ needs.build-image.outputs.image-tag }}"
-          # 這裡可以加入實際的部署指令
-          # 例如：SSH 到伺服器、更新 Docker Compose、重啟服務等
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ vars.DEPLOY_PATH || '~/nicholas-game' }}
+
+            # 拉取最新設定
+            git pull origin ${{ github.ref_name }}
+
+            # 登入容器倉庫
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 更新映像標籤
+            export IMAGE_TAG=${{ needs.build-image.outputs.image-version }}
+            export GITHUB_REPOSITORY=${{ github.repository }}
+
+            # 拉取新映像
+            docker compose -f docker-compose.prod.yml pull app
+
+            # 滾動更新（零停機）
+            docker compose -f docker-compose.prod.yml up -d --no-deps app
+
+            # 等待健康檢查通過
+            echo "等待服務啟動..."
+            for i in $(seq 1 12); do
+              if docker compose -f docker-compose.prod.yml exec -T app wget -qO- http://localhost:3001/api/health > /dev/null 2>&1; then
+                echo "服務健康！"
+                break
+              fi
+              echo "等待中 ($i/12)..."
+              sleep 5
+            done
+
+            # 清理舊映像
+            docker image prune -f
 
       - name: Health Check
         run: |
-          echo "Performing health check..."
-          # curl --fail ${{ vars.STAGING_URL }}/api/health || exit 1
+          sleep 10
+          curl --fail --max-time 30 "${{ vars.STAGING_URL }}/api/health" || exit 1
+          echo "健康檢查通過！"
 
       - name: Notify Success
         if: success()
-        run: echo "Staging deployment successful!"
+        run: echo "✅ 測試環境部署成功：${{ vars.STAGING_URL }}"
 
       - name: Notify Failure
         if: failure()
-        run: echo "Staging deployment failed!"
+        run: echo "❌ 測試環境部署失敗"
 
-  # 手動部署到生產環境
+  # ===== 部署到生產環境 =====
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build-image, deploy-staging]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    needs: build-image
+    if: github.event.inputs.environment == 'production'
     environment:
       name: production
       url: ${{ vars.PRODUCTION_URL }}
@@ -112,30 +157,65 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to Production
-        run: |
-          echo "Deploying to production environment..."
-          echo "Image: ${{ needs.build-image.outputs.image-tag }}"
-          # 這裡可以加入實際的部署指令
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ vars.DEPLOY_PATH || '~/nicholas-game' }}
+
+            # 拉取最新設定
+            git pull origin ${{ github.ref_name }}
+
+            # 登入容器倉庫
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 更新映像標籤
+            export IMAGE_TAG=${{ needs.build-image.outputs.image-version }}
+            export GITHUB_REPOSITORY=${{ github.repository }}
+
+            # 拉取新映像
+            docker compose -f docker-compose.prod.yml pull app
+
+            # 滾動更新（零停機）
+            docker compose -f docker-compose.prod.yml up -d --no-deps app
+
+            # 等待健康檢查通過
+            echo "等待服務啟動..."
+            for i in $(seq 1 12); do
+              if docker compose -f docker-compose.prod.yml exec -T app wget -qO- http://localhost:3001/api/health > /dev/null 2>&1; then
+                echo "服務健康！"
+                break
+              fi
+              echo "等待中 ($i/12)..."
+              sleep 5
+            done
+
+            # 清理舊映像
+            docker image prune -f
 
       - name: Health Check
         run: |
-          echo "Performing health check..."
-          # curl --fail ${{ vars.PRODUCTION_URL }}/health || exit 1
+          sleep 10
+          curl --fail --max-time 30 "${{ vars.PRODUCTION_URL }}/api/health" || exit 1
+          echo "健康檢查通過！"
 
       - name: Notify Success
         if: success()
-        run: echo "Production deployment successful!"
+        run: echo "✅ 生產環境部署成功：${{ vars.PRODUCTION_URL }}"
 
       - name: Notify Failure
         if: failure()
-        run: echo "Production deployment failed!"
+        run: echo "❌ 生產環境部署失敗"
 
-  # 清理舊映像
+  # ===== 清理舊映像 =====
   cleanup:
     name: Cleanup Old Images
     runs-on: ubuntu-latest
-    needs: [deploy-staging]
+    needs: [deploy-staging, deploy-production]
     if: always()
     permissions:
       packages: write
