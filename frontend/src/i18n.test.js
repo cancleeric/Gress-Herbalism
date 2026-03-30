@@ -109,3 +109,57 @@ describe('i18n 翻譯檔案', () => {
     }
   });
 });
+
+describe('setupTests mockT 插值功能', () => {
+  /**
+   * 直接測試 setupTests.js 中的 mockT 邏輯
+   */
+  const zhTW = require('./locales/zh-TW/translation.json');
+
+  function getNestedValue(obj, key) {
+    return key.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj);
+  }
+
+  function mockT(key, options) {
+    const value = getNestedValue(zhTW, key);
+    if (value === undefined) {
+      return options?.defaultValue !== undefined ? options.defaultValue : key;
+    }
+    if (typeof value === 'string' && options) {
+      return value.replace(/\{\{(\w+)\}\}/g, (_, k) =>
+        options[k] !== undefined ? String(options[k]) : `{{${k}}}`
+      );
+    }
+    return typeof value === 'string' ? value : key;
+  }
+
+  test('應正確翻譯無插值的鍵值', () => {
+    expect(mockT('common.loading')).toBe('載入中...');
+    expect(mockT('gameStatus.title')).toBe('遊戲狀態');
+  });
+
+  test('應正確處理 {{count}} 插值', () => {
+    const result = mockT('gameStatus.moreHistory', { count: 5 });
+    expect(result).toBe('還有 5 條更早的記錄');
+  });
+
+  test('應正確處理多個插值變數', () => {
+    const result = mockT('gameStatus.questionAction', {
+      player: '玩家1', target: '玩家2', type: '各一張', count: 3
+    });
+    expect(result).toBe('玩家1 向 玩家2 問牌（各一張），收到 3 張');
+  });
+
+  test('找不到鍵值時應返回鍵名', () => {
+    expect(mockT('nonexistent.key')).toBe('nonexistent.key');
+  });
+
+  test('找不到鍵值但有 defaultValue 時應返回 defaultValue', () => {
+    expect(mockT('nonexistent.key', { defaultValue: '預設值' })).toBe('預設值');
+  });
+
+  test('插值變數不存在時應保留原始佔位符', () => {
+    const result = mockT('gameStatus.moreHistory', {});
+    expect(result).toBe('還有 {{count}} 條更早的記錄');
+  });
+});

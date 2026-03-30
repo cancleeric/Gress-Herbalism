@@ -88,7 +88,7 @@ function GameSelection() {
             <h2 className="gs-game-title">{t('gameSelection.herbalism.title')}</h2>
             <p className="gs-game-desc">
               {t('gameSelection.herbalism.desc').split('\n').map((line, i) => (
-                <span key={i}>{line}{i === 0 && <br />}</span>
+                <span key={`herbalism-desc-${i}`}>{line}{i === 0 && <br />}</span>
               ))}
             </p>
             <div className="gs-game-info">
@@ -106,7 +106,7 @@ function GameSelection() {
             <h2 className="gs-game-title">{t('gameSelection.evolution.title')}</h2>
             <p className="gs-game-desc">
               {t('gameSelection.evolution.desc').split('\n').map((line, i) => (
-                <span key={i}>{line}{i === 0 && <br />}</span>
+                <span key={`evolution-desc-${i}`}>{line}{i === 0 && <br />}</span>
               ))}
             </p>
             <div className="gs-game-info">

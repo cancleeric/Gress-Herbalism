@@ -80,6 +80,7 @@ i18n
       en: { translation: en },
       ja: { translation: ja }
     },
+    // lng: 初始語系（i18next API 屬性名稱）
     lng: initialLanguage,
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: SUPPORTED_LANGUAGES,

@@ -130,6 +130,27 @@
   }
 }
 
+/* LanguageSwitcher in login nav */
+.login-nav .language-switcher {
+  color: #2E7D32;
+}
+
+.login-nav .language-switcher-select {
+  background-color: rgba(46, 125, 50, 0.08);
+  border-color: rgba(46, 125, 50, 0.3);
+  color: #2E7D32;
+}
+
+.login-nav .language-switcher-select:hover {
+  background-color: rgba(46, 125, 50, 0.15);
+  border-color: rgba(46, 125, 50, 0.5);
+}
+
+.login-nav .language-switcher-select option {
+  background-color: #fff;
+  color: #333;
+}
+
 /* ==================== 主內容區 ==================== */
 .login-main {
   flex: 1;

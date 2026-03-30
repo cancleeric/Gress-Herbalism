@@ -52,6 +52,18 @@
   color: #333;
 }
 
+.gs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gs-header-actions .language-switcher-select {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: #ccc;
+  color: #444;
+}
+
 .gs-logout-btn {
   padding: 8px 16px;
   border: 1px solid #999;
