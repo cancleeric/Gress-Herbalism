@@ -1,0 +1,186 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "retry": "重试",
+    "close": "关闭",
+    "confirm": "确认",
+    "cancel": "取消",
+    "logout": "退出登录",
+    "guest": "访客",
+    "unknown": "未知"
+  },
+  "app": {
+    "error": "发生错误",
+    "errorDescription": "应用程序遇到问题，请刷新页面。",
+    "reload": "刷新",
+    "loading": "加载中..."
+  },
+  "login": {
+    "navTitle": "Herbalism",
+    "rules": "规则书",
+    "cards": "卡牌",
+    "about": "关于",
+    "brandTitle": "本草 Herbalism",
+    "brandSubtitle": "3-4人在线推理桌游",
+    "googleLogin": "使用 Google 账号登录",
+    "guestLogin": "访客登录",
+    "newFriend": "新朋友？",
+    "createAccount": "创建账号",
+    "loginFailed": "登录失败，请稍后再试",
+    "quote": "\"在古老的本草知识中，找出神秘药方。融合推理、策略与智慧的桌游。\"",
+    "features": {
+      "players": "3-4 位玩家",
+      "duration": "20-30 分钟",
+      "logic": "逻辑推理"
+    },
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved.",
+    "adminSetup": {
+      "title": "管理员设置步骤：",
+      "step1": "前往 Firebase Console",
+      "step2": "选择项目 → Authentication → Sign-in method",
+      "step3": "启用「Google」和「匿名」登录方式",
+      "step4": "确认 Authorized domains 包含 localhost 和生产环境域名"
+    }
+  },
+  "gameSelection": {
+    "title": "选择游戏",
+    "subtitle": "请选择您想要游玩的游戏",
+    "herbalism": {
+      "title": "本草",
+      "desc": "3-4 人推理桌游\n通过问牌和推理猜测盖牌颜色",
+      "players": "3-4 人",
+      "duration": "15-30 分钟"
+    },
+    "evolution": {
+      "title": "演化论",
+      "desc": "2-4 人策略卡牌游戏\n建立物种、演化性状、竞争食物",
+      "players": "2-4 人",
+      "duration": "45-90 分钟"
+    }
+  },
+  "lobby": {
+    "title": "游戏大厅",
+    "rooms": "房间列表",
+    "createRoom": "创建房间",
+    "joinRoom": "加入房间",
+    "roomName": "房间名称",
+    "playerCount": "玩家数量",
+    "password": "密码",
+    "privateRoom": "私人房间",
+    "noRooms": "目前没有可用的房间",
+    "connecting": "连接中...",
+    "disconnected": "与服务器断开连接，请确认后端是否启动",
+    "joinById": "以 ID 加入",
+    "enterRoomId": "输入房间 ID",
+    "enterPassword": "请输入密码",
+    "wrongPassword": "密码错误",
+    "singlePlayer": "单人游戏",
+    "nickname": "游戏昵称",
+    "enterNickname": "请输入昵称",
+    "submit": "确认",
+    "back": "返回",
+    "settings": "设置"
+  },
+  "gameStatus": {
+    "title": "游戏状态",
+    "playerStatus": "玩家状态",
+    "currentRound": "当前回合",
+    "noPlayer": "等待玩家加入...",
+    "yourTurn": "你的回合",
+    "me": "(我)",
+    "noPlayers": "暂无玩家",
+    "history": "游戏记录",
+    "noHistory": "暂无记录",
+    "moreHistory": "还有 {{count}} 条更早的记录",
+    "winner": "获胜者",
+    "noWinner": "游戏结束，没有获胜者",
+    "unknownPlayer": "未知玩家",
+    "unknownColor": "未知颜色",
+    "unknownAction": "未知动作",
+    "active": "活跃",
+    "disconnected": "断线中",
+    "eliminated": "已退出",
+    "correctGuess": "猜对了！",
+    "wrongGuess": "猜错了",
+    "questionAction": "{{player}} 向 {{target}} 问牌（{{type}}），收到 {{count}} 张",
+    "questionNoCards": "{{player}} 向 {{target}} 问牌（{{type}}），没有",
+    "guessAction": "{{player}} 猜牌 [{{colors}}] - {{result}}"
+  },
+  "gamePhase": {
+    "waiting": "等待中",
+    "playing": "进行中",
+    "finished": "已结束",
+    "followGuessing": "跟猜中",
+    "roundEnd": "回合结束",
+    "postQuestion": "问牌后"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "红色",
+      "yellow": "黄色",
+      "green": "绿色",
+      "blue": "蓝色"
+    },
+    "questionTypes": {
+      "1": "各一张",
+      "2": "其中一种全部",
+      "3": "给一张要全部"
+    },
+    "aiThinking": "思考中",
+    "colorCombinations": {
+      "red-green": "红绿",
+      "green-blue": "绿蓝",
+      "red-blue": "红蓝",
+      "red-yellow": "红黄",
+      "yellow-blue": "黄蓝",
+      "yellow-green": "黄绿"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "等待开始",
+      "evolution": "演化阶段",
+      "foodSupply": "食物供给",
+      "feeding": "进食阶段",
+      "extinction": "灭绝阶段",
+      "gameEnd": "游戏结束"
+    },
+    "traits": {
+      "carnivore": "肉食",
+      "scavenger": "腐食",
+      "keen_vision": "锐目",
+      "camouflage": "伪装",
+      "burrowing": "穴居",
+      "venom": "毒液",
+      "aquatic": "水生",
+      "agility": "敏捷",
+      "gigantism": "巨化",
+      "autotomy": "断尾",
+      "mimicry": "拟态",
+      "fat_tissue": "脂肪组织",
+      "hibernation": "冬眠",
+      "parasite": "寄生虫",
+      "piracy": "掠夺",
+      "communication": "沟通",
+      "cooperation": "合作",
+      "symbiosis": "共生",
+      "stomping": "践踏"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "languages": {
+      "zh-TW": "繁體中文",
+      "zh-CN": "简体中文",
+      "en": "English",
+      "ja": "日本語"
+    }
+  },
+  "connection": {
+    "connected": "已连接",
+    "disconnected": "已断线",
+    "reconnecting": "重新连接中..."
+  }
+}

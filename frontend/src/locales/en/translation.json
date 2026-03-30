@@ -1,0 +1,186 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "close": "Close",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "logout": "Logout",
+    "guest": "Guest",
+    "unknown": "Unknown"
+  },
+  "app": {
+    "error": "An Error Occurred",
+    "errorDescription": "The application encountered a problem. Please refresh the page.",
+    "reload": "Refresh",
+    "loading": "Loading..."
+  },
+  "login": {
+    "navTitle": "Herbalism",
+    "rules": "Rules",
+    "cards": "Cards",
+    "about": "About",
+    "brandTitle": "Herbalism",
+    "brandSubtitle": "3-4 Player Online Deduction Game",
+    "googleLogin": "Sign in with Google",
+    "guestLogin": "Play as Guest",
+    "newFriend": "New here?",
+    "createAccount": "Create Account",
+    "loginFailed": "Login failed. Please try again later.",
+    "quote": "\"Discover the secret herbal formula through ancient knowledge. A board game of deduction, strategy and wisdom.\"",
+    "features": {
+      "players": "3-4 Players",
+      "duration": "20-30 Minutes",
+      "logic": "Logic & Deduction"
+    },
+    "footer": "© 2024 Herbalism Online. All Rights Reserved.",
+    "adminSetup": {
+      "title": "Admin Setup Steps:",
+      "step1": "Go to Firebase Console",
+      "step2": "Select Project → Authentication → Sign-in method",
+      "step3": "Enable \"Google\" and \"Anonymous\" sign-in methods",
+      "step4": "Confirm Authorized domains includes localhost and production domain"
+    }
+  },
+  "gameSelection": {
+    "title": "Select Game",
+    "subtitle": "Choose a game to play",
+    "herbalism": {
+      "title": "Herbalism",
+      "desc": "3-4 Player Deduction Game\nGuess hidden card colors through questions and reasoning",
+      "players": "3-4 Players",
+      "duration": "15-30 Minutes"
+    },
+    "evolution": {
+      "title": "Evolution",
+      "desc": "2-4 Player Strategy Card Game\nBuild species, evolve traits, compete for food",
+      "players": "2-4 Players",
+      "duration": "45-90 Minutes"
+    }
+  },
+  "lobby": {
+    "title": "Game Lobby",
+    "rooms": "Rooms",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "roomName": "Room Name",
+    "playerCount": "Player Count",
+    "password": "Password",
+    "privateRoom": "Private Room",
+    "noRooms": "No rooms available",
+    "connecting": "Connecting...",
+    "disconnected": "Disconnected from server. Please check if the backend is running.",
+    "joinById": "Join by ID",
+    "enterRoomId": "Enter Room ID",
+    "enterPassword": "Enter password",
+    "wrongPassword": "Wrong password",
+    "singlePlayer": "Single Player",
+    "nickname": "Nickname",
+    "enterNickname": "Enter your nickname",
+    "submit": "Submit",
+    "back": "Back",
+    "settings": "Settings"
+  },
+  "gameStatus": {
+    "title": "Game Status",
+    "playerStatus": "Players",
+    "currentRound": "Current Turn",
+    "noPlayer": "Waiting for players...",
+    "yourTurn": "Your Turn",
+    "me": "(Me)",
+    "noPlayers": "No players yet",
+    "history": "Game Log",
+    "noHistory": "No records yet",
+    "moreHistory": "{{count}} more earlier records",
+    "winner": "Winner",
+    "noWinner": "Game ended with no winner",
+    "unknownPlayer": "Unknown Player",
+    "unknownColor": "Unknown Color",
+    "unknownAction": "Unknown Action",
+    "active": "Active",
+    "disconnected": "Disconnected",
+    "eliminated": "Eliminated",
+    "correctGuess": "Correct!",
+    "wrongGuess": "Wrong",
+    "questionAction": "{{player}} asked {{target}} ({{type}}), received {{count}} card(s)",
+    "questionNoCards": "{{player}} asked {{target}} ({{type}}), received nothing",
+    "guessAction": "{{player}} guessed [{{colors}}] - {{result}}"
+  },
+  "gamePhase": {
+    "waiting": "Waiting",
+    "playing": "In Progress",
+    "finished": "Finished",
+    "followGuessing": "Follow Guessing",
+    "roundEnd": "Round End",
+    "postQuestion": "Post Question"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "Red",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue"
+    },
+    "questionTypes": {
+      "1": "One Each",
+      "2": "All of One Color",
+      "3": "Give One, Get All"
+    },
+    "aiThinking": "Thinking",
+    "colorCombinations": {
+      "red-green": "Red-Green",
+      "green-blue": "Green-Blue",
+      "red-blue": "Red-Blue",
+      "red-yellow": "Red-Yellow",
+      "yellow-blue": "Yellow-Blue",
+      "yellow-green": "Yellow-Green"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "Waiting",
+      "evolution": "Evolution Phase",
+      "foodSupply": "Food Supply",
+      "feeding": "Feeding Phase",
+      "extinction": "Extinction Phase",
+      "gameEnd": "Game End"
+    },
+    "traits": {
+      "carnivore": "Carnivore",
+      "scavenger": "Scavenger",
+      "keen_vision": "Keen Vision",
+      "camouflage": "Camouflage",
+      "burrowing": "Burrowing",
+      "venom": "Venom",
+      "aquatic": "Aquatic",
+      "agility": "Agility",
+      "gigantism": "Gigantism",
+      "autotomy": "Autotomy",
+      "mimicry": "Mimicry",
+      "fat_tissue": "Fat Tissue",
+      "hibernation": "Hibernation",
+      "parasite": "Parasite",
+      "piracy": "Piracy",
+      "communication": "Communication",
+      "cooperation": "Cooperation",
+      "symbiosis": "Symbiosis",
+      "stomping": "Stomping"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languages": {
+      "zh-TW": "繁體中文",
+      "zh-CN": "简体中文",
+      "en": "English",
+      "ja": "日本語"
+    }
+  },
+  "connection": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "reconnecting": "Reconnecting..."
+  }
+}

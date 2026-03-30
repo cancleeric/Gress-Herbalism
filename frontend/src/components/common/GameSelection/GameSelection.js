@@ -8,7 +8,9 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../firebase/AuthContext';
+import LanguageSwitcher from '../LanguageSwitcher';
 import './GameSelection.css';
 
 /**
@@ -17,8 +19,9 @@ import './GameSelection.css';
 function GameSelection() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
-  const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || user?.email?.split('@')[0] || '訪客');
+  const displayName = user?.isAnonymous ? t('common.guest') : (user?.displayName || user?.email?.split('@')[0] || t('common.guest'));
 
   /**
    * 處理遊戲選擇
@@ -62,15 +65,18 @@ function GameSelection() {
           )}
           <span className="gs-username">{displayName}</span>
         </div>
-        <button className="gs-logout-btn" onClick={handleLogout}>
-          登出
-        </button>
+        <div className="gs-header-actions">
+          <LanguageSwitcher showLabel={false} />
+          <button className="gs-logout-btn" onClick={handleLogout}>
+            {t('common.logout')}
+          </button>
+        </div>
       </header>
 
       {/* 主內容 */}
       <main className="gs-main">
-        <h1 className="gs-title">選擇遊戲</h1>
-        <p className="gs-subtitle">請選擇您想要遊玩的遊戲</p>
+        <h1 className="gs-title">{t('gameSelection.title')}</h1>
+        <p className="gs-subtitle">{t('gameSelection.subtitle')}</p>
 
         <div className="gs-games">
           {/* 本草 */}
@@ -79,15 +85,15 @@ function GameSelection() {
             onClick={() => handleSelectGame('herbalism')}
           >
             <div className="gs-game-icon">🌿</div>
-            <h2 className="gs-game-title">本草</h2>
+            <h2 className="gs-game-title">{t('gameSelection.herbalism.title')}</h2>
             <p className="gs-game-desc">
-              3-4 人推理桌遊
-              <br />
-              透過問牌和推理猜測蓋牌顏色
+              {t('gameSelection.herbalism.desc').split('\n').map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}
             </p>
             <div className="gs-game-info">
-              <span>3-4 人</span>
-              <span>15-30 分鐘</span>
+              <span>{t('gameSelection.herbalism.players')}</span>
+              <span>{t('gameSelection.herbalism.duration')}</span>
             </div>
           </div>
 
@@ -97,15 +103,15 @@ function GameSelection() {
             onClick={() => handleSelectGame('evolution')}
           >
             <div className="gs-game-icon">🦎</div>
-            <h2 className="gs-game-title">演化論</h2>
+            <h2 className="gs-game-title">{t('gameSelection.evolution.title')}</h2>
             <p className="gs-game-desc">
-              2-4 人策略卡牌遊戲
-              <br />
-              創造生物並讓牠們在競爭中存活
+              {t('gameSelection.evolution.desc').split('\n').map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}
             </p>
             <div className="gs-game-info">
-              <span>2-4 人</span>
-              <span>30-60 分鐘</span>
+              <span>{t('gameSelection.evolution.players')}</span>
+              <span>{t('gameSelection.evolution.duration')}</span>
             </div>
           </div>
         </div>

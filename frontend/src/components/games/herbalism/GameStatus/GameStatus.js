@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import {
   GAME_PHASE_WAITING,
@@ -18,15 +19,6 @@ import {
 import './GameStatus.css';
 
 /**
- * 遊戲階段對應的中文名稱
- */
-const PHASE_NAMES = {
-  [GAME_PHASE_WAITING]: '等待中',
-  [GAME_PHASE_PLAYING]: '進行中',
-  [GAME_PHASE_FINISHED]: '已結束'
-};
-
-/**
  * 當前玩家顯示組件
  *
  * @param {Object} props - 組件屬性
@@ -35,22 +27,24 @@ const PHASE_NAMES = {
  * @returns {JSX.Element} 當前玩家顯示
  */
 function CurrentPlayerDisplay({ currentPlayer, isYourTurn }) {
+  const { t } = useTranslation();
+
   if (!currentPlayer) {
     return (
       <div className="current-player-display">
-        <h4>當前回合</h4>
-        <p className="no-player">等待玩家加入...</p>
+        <h4>{t('gameStatus.currentRound')}</h4>
+        <p className="no-player">{t('gameStatus.noPlayer')}</p>
       </div>
     );
   }
 
   return (
     <div className={`current-player-display ${isYourTurn ? 'your-turn' : ''}`}>
-      <h4>當前回合</h4>
+      <h4>{t('gameStatus.currentRound')}</h4>
       <div className="current-player-name">
         <span className="player-indicator"></span>
         <span>{currentPlayer.name}</span>
-        {isYourTurn && <span className="your-turn-badge">你的回合</span>}
+        {isYourTurn && <span className="your-turn-badge">{t('gameStatus.yourTurn')}</span>}
       </div>
     </div>
   );
@@ -74,18 +68,20 @@ CurrentPlayerDisplay.propTypes = {
  * @returns {JSX.Element} 玩家狀態列表
  */
 function PlayerStatusList({ players, currentPlayerIndex, myPlayerId }) {
+  const { t } = useTranslation();
+
   if (!players || players.length === 0) {
     return (
       <div className="player-status-list">
-        <h4>玩家狀態</h4>
-        <p className="no-players">尚無玩家</p>
+        <h4>{t('gameStatus.playerStatus')}</h4>
+        <p className="no-players">{t('gameStatus.noPlayers')}</p>
       </div>
     );
   }
 
   return (
     <div className="player-status-list">
-      <h4>玩家狀態</h4>
+      <h4>{t('gameStatus.playerStatus')}</h4>
       <ul className="players-list">
         {players.map((player, index) => (
           <li
@@ -94,11 +90,11 @@ function PlayerStatusList({ players, currentPlayerIndex, myPlayerId }) {
           >
             <span className="player-name">
               {player.name}
-              {player.id === myPlayerId && <span className="me-badge">(我)</span>}
+              {player.id === myPlayerId && <span className="me-badge">{t('gameStatus.me')}</span>}
             </span>
             <span className={`player-status ${player.isActive ? (player.isDisconnected ? 'disconnected' : 'active') : 'inactive'}`}>
               {/* 工單 0079：顯示斷線狀態 */}
-              {!player.isActive ? '已退出' : (player.isDisconnected ? '斷線中' : '活躍')}
+              {!player.isActive ? t('gameStatus.eliminated') : (player.isDisconnected ? t('gameStatus.disconnected') : t('gameStatus.active'))}
             </span>
             {index === currentPlayerIndex && player.isActive && (
               <span className="turn-indicator">●</span>
@@ -130,12 +126,13 @@ PlayerStatusList.propTypes = {
  * @returns {JSX.Element} 遊戲階段顯示
  */
 function GamePhaseDisplay({ gamePhase, winner, players }) {
-  const phaseName = PHASE_NAMES[gamePhase] || gamePhase;
+  const { t } = useTranslation();
+  const phaseName = t(`gamePhase.${gamePhase}`, { defaultValue: gamePhase });
   const winnerPlayer = winner ? players?.find(p => p.id === winner) : null;
 
   return (
     <div className={`game-phase-display phase-${gamePhase}`}>
-      <h4>遊戲狀態</h4>
+      <h4>{t('gameStatus.title')}</h4>
       <div className="phase-badge">
         {phaseName}
       </div>
@@ -143,10 +140,10 @@ function GamePhaseDisplay({ gamePhase, winner, players }) {
         <div className="game-result">
           {winnerPlayer ? (
             <p className="winner-announcement">
-              🏆 獲勝者: <strong>{winnerPlayer.name}</strong>
+              🏆 {t('gameStatus.winner')}: <strong>{winnerPlayer.name}</strong>
             </p>
           ) : (
-            <p className="no-winner">遊戲結束，沒有獲勝者</p>
+            <p className="no-winner">{t('gameStatus.noWinner')}</p>
           )}
         </div>
       )}
@@ -161,32 +158,14 @@ GamePhaseDisplay.propTypes = {
 };
 
 /**
- * 顏色名稱對照
- */
-const COLOR_NAMES = {
-  red: '紅色',
-  yellow: '黃色',
-  green: '綠色',
-  blue: '藍色'
-};
-
-/**
- * 問牌類型描述
- */
-const QUESTION_TYPE_NAMES = {
-  1: '各一張',
-  2: '其中一種全部',
-  3: '給一張要全部'
-};
-
-/**
  * 格式化顏色列表
  * @param {Array} colors - 顏色陣列
+ * @param {Function} t - 翻譯函數
  * @returns {string} 格式化後的顏色名稱
  */
-function formatColors(colors) {
-  if (!colors || colors.length === 0) return '未知顏色';
-  return colors.map(c => COLOR_NAMES[c] || c).join('、');
+function formatColors(colors, t) {
+  if (!colors || colors.length === 0) return t('gameStatus.unknownColor');
+  return colors.map(c => t(`herbalism.colors.${c}`, { defaultValue: c })).join('、');
 }
 
 /**
@@ -194,34 +173,33 @@ function formatColors(colors) {
  *
  * @param {Object} entry - 歷史記錄條目
  * @param {Array} players - 玩家列表
+ * @param {Function} t - 翻譯函數
  * @returns {string} 格式化後的文字
  */
-function formatHistoryEntry(entry, players) {
+function formatHistoryEntry(entry, players, t) {
   const player = players?.find(p => p.id === entry.playerId);
-  const playerName = player?.name || '未知玩家';
+  const playerName = player?.name || t('gameStatus.unknownPlayer');
 
   if (entry.type === ACTION_TYPE_QUESTION) {
     const targetPlayer = players?.find(p => p.id === entry.targetPlayerId);
-    const targetName = targetPlayer?.name || '未知玩家';
-    // 不顯示問牌顏色，避免洩漏策略資訊
+    const targetName = targetPlayer?.name || t('gameStatus.unknownPlayer');
     const transferredCount = entry.cardsTransferred ?? entry.result?.cardsReceived?.length ?? 0;
-    const questionTypeName = QUESTION_TYPE_NAMES[entry.questionType] || '';
+    const questionTypeName = t(`herbalism.questionTypes.${entry.questionType}`, { defaultValue: '' });
 
-    // 不再顯示 chosenColor，避免洩漏被問牌者選擇的顏色
     if (transferredCount === 0) {
-      return `${playerName} 向 ${targetName} 問牌（${questionTypeName}），沒有`;
+      return t('gameStatus.questionNoCards', { player: playerName, target: targetName, type: questionTypeName });
     }
 
-    return `${playerName} 向 ${targetName} 問牌（${questionTypeName}），收到 ${transferredCount} 張`;
+    return t('gameStatus.questionAction', { player: playerName, target: targetName, type: questionTypeName, count: transferredCount });
   }
 
   if (entry.type === ACTION_TYPE_GUESS) {
-    const colors = formatColors(entry.guessedColors);
-    const result = entry.isCorrect ? '猜對了！' : '猜錯了';
-    return `${playerName} 猜牌 [${colors}] - ${result}`;
+    const colors = formatColors(entry.guessedColors, t);
+    const result = entry.isCorrect ? t('gameStatus.correctGuess') : t('gameStatus.wrongGuess');
+    return t('gameStatus.guessAction', { player: playerName, colors, result });
   }
 
-  return '未知動作';
+  return t('gameStatus.unknownAction');
 }
 
 /**
@@ -234,11 +212,13 @@ function formatHistoryEntry(entry, players) {
  * @returns {JSX.Element} 遊戲歷史記錄
  */
 function GameHistoryList({ history, players, maxItems = 10 }) {
+  const { t } = useTranslation();
+
   if (!history || history.length === 0) {
     return (
       <div className="game-history-list">
-        <h4>遊戲記錄</h4>
-        <p className="no-history">尚無記錄</p>
+        <h4>{t('gameStatus.history')}</h4>
+        <p className="no-history">{t('gameStatus.noHistory')}</p>
       </div>
     );
   }
@@ -248,7 +228,7 @@ function GameHistoryList({ history, players, maxItems = 10 }) {
 
   return (
     <div className="game-history-list">
-      <h4>遊戲記錄 ({history.length})</h4>
+      <h4>{t('gameStatus.history')} ({history.length})</h4>
       <ul className="history-list">
         {recentHistory.map((entry, index) => (
           <li
@@ -259,14 +239,14 @@ function GameHistoryList({ history, players, maxItems = 10 }) {
               {entry.type === ACTION_TYPE_QUESTION ? '❓' : '🎯'}
             </span>
             <span className="history-text">
-              {formatHistoryEntry(entry, players)}
+              {formatHistoryEntry(entry, players, t)}
             </span>
           </li>
         ))}
       </ul>
       {history.length > maxItems && (
         <p className="more-history">
-          還有 {history.length - maxItems} 條更早的記錄
+          {t('gameStatus.moreHistory', { count: history.length - maxItems })}
         </p>
       )}
     </div>

@@ -10,6 +10,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
@@ -22,11 +23,12 @@ import './styles/App.css';
  */
 function ProtectedRoute({ children }) {
   const { isLoggedIn, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="app-loading">
-        <p>載入中...</p>
+        <p>{t('common.loading')}</p>
       </div>
     );
   }
@@ -59,10 +61,10 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="error-boundary">
-          <h1>發生錯誤</h1>
-          <p>應用程式遇到問題，請重新整理頁面。</p>
+          <h1>{this.props.errorTitle || '發生錯誤'}</h1>
+          <p>{this.props.errorDescription || '應用程式遇到問題，請重新整理頁面。'}</p>
           <button onClick={() => window.location.reload()}>
-            重新整理
+            {this.props.reloadLabel || '重新整理'}
           </button>
         </div>
       );
@@ -70,6 +72,22 @@ class ErrorBoundary extends React.Component {
 
     return this.props.children;
   }
+}
+
+/**
+ * 含 i18n 的錯誤邊界包裹組件
+ */
+function ErrorBoundaryWithI18n({ children }) {
+  const { t } = useTranslation();
+  return (
+    <ErrorBoundary
+      errorTitle={t('app.error')}
+      errorDescription={t('app.errorDescription')}
+      reloadLabel={t('app.reload')}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }
 
 /**
@@ -161,9 +179,10 @@ function AppContent() {
  * 載入中顯示組件（工單 0117）
  */
 function LoadingView() {
+  const { t } = useTranslation();
   return (
     <div className="app-loading">
-      <p>載入中...</p>
+      <p>{t('common.loading')}</p>
     </div>
   );
 }
@@ -178,13 +197,13 @@ function App() {
   return (
     <Provider store={store}>
       <PersistGate loading={<LoadingView />} persistor={persistor}>
-        <ErrorBoundary>
+        <ErrorBoundaryWithI18n>
           <AuthProvider>
             <Router>
               <AppContent />
             </Router>
           </AuthProvider>
-        </ErrorBoundary>
+        </ErrorBoundaryWithI18n>
       </PersistGate>
     </Provider>
   );

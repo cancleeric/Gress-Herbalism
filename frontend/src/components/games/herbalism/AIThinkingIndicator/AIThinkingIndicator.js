@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 import './AIThinkingIndicator.css';
 
 /**
@@ -8,12 +9,14 @@ import './AIThinkingIndicator.css';
  * 當 AI 玩家正在思考時顯示動畫效果
  */
 function AIThinkingIndicator({ isThinking, aiName, size = 'medium' }) {
+  const { t } = useTranslation();
+
   if (!isThinking) return null;
 
   return (
     <span className={`ai-thinking-indicator ai-thinking-${size}`}>
       <span className="thinking-text">
-        {aiName ? `${aiName} ` : ''}思考中
+        {aiName ? `${aiName} ` : ''}{t('herbalism.aiThinking')}
       </span>
       <span className="thinking-dots">
         <span className="dot">.</span>

@@ -1,0 +1,186 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "close": "閉じる",
+    "confirm": "確認",
+    "cancel": "キャンセル",
+    "logout": "ログアウト",
+    "guest": "ゲスト",
+    "unknown": "不明"
+  },
+  "app": {
+    "error": "エラーが発生しました",
+    "errorDescription": "アプリケーションに問題が発生しました。ページを更新してください。",
+    "reload": "更新",
+    "loading": "読み込み中..."
+  },
+  "login": {
+    "navTitle": "Herbalism",
+    "rules": "ルール",
+    "cards": "カード",
+    "about": "について",
+    "brandTitle": "本草 Herbalism",
+    "brandSubtitle": "3〜4人オンライン推理ボードゲーム",
+    "googleLogin": "Googleアカウントでログイン",
+    "guestLogin": "ゲストとしてプレイ",
+    "newFriend": "初めての方？",
+    "createAccount": "アカウントを作成",
+    "loginFailed": "ログインに失敗しました。後でもう一度お試しください。",
+    "quote": "「古代の本草の知識の中に、神秘の薬方を見つけよう。推理・戦略・知恵が融合したボードゲーム。」",
+    "features": {
+      "players": "3〜4人",
+      "duration": "20〜30分",
+      "logic": "論理推理"
+    },
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved.",
+    "adminSetup": {
+      "title": "管理者設定手順：",
+      "step1": "Firebase Consoleにアクセス",
+      "step2": "プロジェクト → Authentication → ログイン方法を選択",
+      "step3": "「Google」と「匿名」ログインを有効化",
+      "step4": "Authorized domainsにlocalhostと本番環境ドメインが含まれることを確認"
+    }
+  },
+  "gameSelection": {
+    "title": "ゲームを選択",
+    "subtitle": "プレイするゲームを選んでください",
+    "herbalism": {
+      "title": "本草",
+      "desc": "3〜4人推理ボードゲーム\n質問と推理で隠しカードの色を当てよう",
+      "players": "3〜4人",
+      "duration": "15〜30分"
+    },
+    "evolution": {
+      "title": "進化論",
+      "desc": "2〜4人戦略カードゲーム\n種を作り、形質を進化させ、食料を競え",
+      "players": "2〜4人",
+      "duration": "45〜90分"
+    }
+  },
+  "lobby": {
+    "title": "ゲームロビー",
+    "rooms": "部屋一覧",
+    "createRoom": "部屋を作成",
+    "joinRoom": "部屋に参加",
+    "roomName": "部屋名",
+    "playerCount": "プレイヤー数",
+    "password": "パスワード",
+    "privateRoom": "プライベートルーム",
+    "noRooms": "利用可能な部屋がありません",
+    "connecting": "接続中...",
+    "disconnected": "サーバーから切断されました。バックエンドが起動しているか確認してください。",
+    "joinById": "IDで参加",
+    "enterRoomId": "部屋IDを入力",
+    "enterPassword": "パスワードを入力",
+    "wrongPassword": "パスワードが違います",
+    "singlePlayer": "一人プレイ",
+    "nickname": "ニックネーム",
+    "enterNickname": "ニックネームを入力",
+    "submit": "確認",
+    "back": "戻る",
+    "settings": "設定"
+  },
+  "gameStatus": {
+    "title": "ゲーム状態",
+    "playerStatus": "プレイヤー状態",
+    "currentRound": "現在のターン",
+    "noPlayer": "プレイヤーを待っています...",
+    "yourTurn": "あなたのターン",
+    "me": "（私）",
+    "noPlayers": "プレイヤーなし",
+    "history": "ゲームログ",
+    "noHistory": "記録なし",
+    "moreHistory": "さらに{{count}}件の記録",
+    "winner": "優勝者",
+    "noWinner": "ゲーム終了、優勝者なし",
+    "unknownPlayer": "不明なプレイヤー",
+    "unknownColor": "不明な色",
+    "unknownAction": "不明なアクション",
+    "active": "アクティブ",
+    "disconnected": "切断中",
+    "eliminated": "退出済み",
+    "correctGuess": "正解！",
+    "wrongGuess": "不正解",
+    "questionAction": "{{player}}が{{target}}に質問（{{type}}）、{{count}}枚受け取った",
+    "questionNoCards": "{{player}}が{{target}}に質問（{{type}}）、カードなし",
+    "guessAction": "{{player}}が[{{colors}}]を推理 - {{result}}"
+  },
+  "gamePhase": {
+    "waiting": "待機中",
+    "playing": "進行中",
+    "finished": "終了",
+    "followGuessing": "追い推理中",
+    "roundEnd": "ラウンド終了",
+    "postQuestion": "質問後"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "赤",
+      "yellow": "黄",
+      "green": "緑",
+      "blue": "青"
+    },
+    "questionTypes": {
+      "1": "各1枚",
+      "2": "一色全部",
+      "3": "1枚渡して全部もらう"
+    },
+    "aiThinking": "思考中",
+    "colorCombinations": {
+      "red-green": "赤緑",
+      "green-blue": "緑青",
+      "red-blue": "赤青",
+      "red-yellow": "赤黄",
+      "yellow-blue": "黄青",
+      "yellow-green": "黄緑"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "待機中",
+      "evolution": "進化フェーズ",
+      "foodSupply": "食料供給",
+      "feeding": "摂食フェーズ",
+      "extinction": "絶滅フェーズ",
+      "gameEnd": "ゲーム終了"
+    },
+    "traits": {
+      "carnivore": "肉食",
+      "scavenger": "腐食動物",
+      "keen_vision": "鋭い視力",
+      "camouflage": "カモフラージュ",
+      "burrowing": "穴居",
+      "venom": "毒液",
+      "aquatic": "水生",
+      "agility": "敏捷性",
+      "gigantism": "巨大化",
+      "autotomy": "自切",
+      "mimicry": "擬態",
+      "fat_tissue": "脂肪組織",
+      "hibernation": "冬眠",
+      "parasite": "寄生虫",
+      "piracy": "略奪",
+      "communication": "コミュニケーション",
+      "cooperation": "協力",
+      "symbiosis": "共生",
+      "stomping": "踏みつけ"
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "languages": {
+      "zh-TW": "繁體中文",
+      "zh-CN": "简体中文",
+      "en": "English",
+      "ja": "日本語"
+    }
+  },
+  "connection": {
+    "connected": "接続済み",
+    "disconnected": "切断済み",
+    "reconnecting": "再接続中..."
+  }
+}
