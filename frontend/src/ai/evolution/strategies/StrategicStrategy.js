@@ -306,7 +306,7 @@ class StrategicStrategy extends BasicStrategy {
 
     if (validTargets.length === 0) return null;
 
-    // 選擇攻擊價值最低的目標（消滅對手的弱小生物，減少其得分）
+    // 選擇攻擊價值最低的目標（升序排列後 index[0] = 最低，即最弱的生物）
     validTargets.sort((a, b) => a.attackValue - b.attackValue);
     const target = validTargets[0];
 

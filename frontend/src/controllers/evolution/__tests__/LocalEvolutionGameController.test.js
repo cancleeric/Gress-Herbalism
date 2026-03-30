@@ -47,7 +47,7 @@ jest.mock('../../../shared/evolutionConstants', () => ({
     massive: { name: '巨化', foodBonus: 1, cardCount: 4 },
     tailLoss: { name: '斷尾', foodBonus: 0, cardCount: 4 },
     mimicry: { name: '擬態', foodBonus: 0, cardCount: 4 },
-    fatTissue: { name: '脂肪', foodBonus: 1, cardCount: 4 },
+    fatTissue: { name: '脂肪組織', foodBonus: 1, cardCount: 4 },
     hibernation: { name: '冬眠', foodBonus: 0, cardCount: 4 },
     parasite: { name: '寄生蟲', foodBonus: 2, cardCount: 4 },
     robbery: { name: '掠奪', foodBonus: 0, cardCount: 4 },
