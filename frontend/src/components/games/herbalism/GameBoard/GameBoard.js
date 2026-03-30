@@ -5,7 +5,7 @@
  * @description 顯示遊戲桌面，包含蓋牌區域和遊戲進行狀態
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
 import {
   GAME_PHASE_WAITING,
@@ -24,7 +24,7 @@ import './GameBoard.css';
  * @param {number} props.index - 卡牌索引
  * @returns {JSX.Element} 蓋牌組件
  */
-function HiddenCard({ card, isRevealed, index }) {
+const HiddenCard = memo(function HiddenCard({ card, isRevealed, index }) {
   const cardClass = isRevealed && card
     ? `hidden-card revealed card-${card.color}`
     : 'hidden-card';
@@ -48,7 +48,7 @@ function HiddenCard({ card, isRevealed, index }) {
       </div>
     </div>
   );
-}
+});
 
 /**
  * 遊戲桌面組件

@@ -21,7 +21,6 @@ export const ConnectionState = {
 
 let socket = null;
 let connectionCallbacks = [];
-let heartbeatInterval = null;
 let connectionState = ConnectionState.DISCONNECTED;
 
 /**
@@ -40,7 +39,7 @@ export function initSocket() {
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,      // 最大重連延遲 5 秒
     timeout: 20000,                   // 連線超時 20 秒
-    pingInterval: 25000,              // 心跳間隔 25 秒
+    pingInterval: 25000,              // 心跳間隔 25 秒（Socket.io 內建）
     pingTimeout: 30000,               // 心跳超時 30 秒（與後端一致）
   });
 
@@ -48,14 +47,13 @@ export function initSocket() {
     console.log('已連線到伺服器');
     connectionState = ConnectionState.CONNECTED;
     connectionCallbacks.forEach(cb => cb(true));
-    startHeartbeat();
+    // 使用 Socket.io 內建 ping/pong，不再啟動額外心跳定時器
   });
 
   socket.on('disconnect', (reason) => {
     console.log('與伺服器斷線，原因:', reason);
     connectionState = ConnectionState.DISCONNECTED;
     connectionCallbacks.forEach(cb => cb(false));
-    stopHeartbeat();
 
     // 如果是伺服器斷開，嘗試重連
     if (reason === 'io server disconnect') {
@@ -98,33 +96,10 @@ export function initSocket() {
   });
 
   // 接收伺服器心跳回應
-  socket.on('pong', () => {
-    // 心跳正常
-  });
+  // Socket.io 內建 ping/pong 已透過 pingInterval/pingTimeout 設定處理心跳
+  // 無需額外的應用層心跳定時器
 
   return socket;
-}
-
-/**
- * 啟動心跳機制
- */
-function startHeartbeat() {
-  stopHeartbeat();
-  heartbeatInterval = setInterval(() => {
-    if (socket && socket.connected) {
-      socket.emit('ping');
-    }
-  }, 15000); // 工單 0185：每 15 秒發送心跳（原 30 秒）
-}
-
-/**
- * 停止心跳機制
- */
-function stopHeartbeat() {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    heartbeatInterval = null;
-  }
 }
 
 /**

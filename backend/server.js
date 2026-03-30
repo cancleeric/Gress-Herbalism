@@ -2052,4 +2052,35 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`伺服器運行在 port ${PORT}`);
   console.log(`區域網路玩家請連線到: http://<你的IP>:${PORT}`);
+  startMemoryMonitoring();
 });
+
+/**
+ * 後端記憶體使用監測
+ * 定期記錄 heap 使用量，協助偵測記憶體洩漏
+ */
+function startMemoryMonitoring() {
+  const INTERVAL_MS = (parseInt(process.env.MEMORY_MONITOR_INTERVAL_MS, 10) || 5 * 60) * 1000;
+  const WARNING_THRESHOLD_MB = 400;   // heap 超過 400MB 時警告
+
+  let lastHeapMB = 0;
+
+  setInterval(() => {
+    const mem = process.memoryUsage();
+    const heapUsedMB = mem.heapUsed / 1024 / 1024;
+    const heapTotalMB = mem.heapTotal / 1024 / 1024;
+    const rssMB = mem.rss / 1024 / 1024;
+    const growthMB = heapUsedMB - lastHeapMB;
+
+    const logLevel = heapUsedMB > WARNING_THRESHOLD_MB ? 'WARN' : 'INFO';
+    console.log(
+      `[Memory ${logLevel}] heapUsed=${heapUsedMB.toFixed(1)}MB heapTotal=${heapTotalMB.toFixed(1)}MB rss=${rssMB.toFixed(1)}MB growth=${growthMB.toFixed(1)}MB`
+    );
+
+    if (heapUsedMB > WARNING_THRESHOLD_MB) {
+      console.warn('[Memory] heap 使用量超過警告閾值，請檢查是否有記憶體洩漏。');
+    }
+
+    lastHeapMB = heapUsedMB;
+  }, INTERVAL_MS);
+}

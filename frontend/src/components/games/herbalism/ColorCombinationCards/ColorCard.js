@@ -6,7 +6,7 @@
  * @updated 2026-01-31 工單 0215：將 emoji + 條紋替換為卡片圖片
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 
 /**
  * 單張顏色組合牌組件
@@ -25,7 +25,7 @@ import React from 'react';
  * @param {Function} props.onDisabledClick - 點擊禁用牌時的回調
  * @returns {JSX.Element} 顏色組合牌組件
  */
-function ColorCard({
+const ColorCard = memo(function ColorCard({
   card,
   selected = false,
   disabled = false,
@@ -103,6 +103,6 @@ function ColorCard({
       )}
     </div>
   );
-}
+});
 
 export default ColorCard;

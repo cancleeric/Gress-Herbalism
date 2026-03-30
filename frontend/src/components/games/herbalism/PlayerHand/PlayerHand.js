@@ -5,7 +5,7 @@
  * @description 顯示玩家自己的手牌
  */
 
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import PropTypes from 'prop-types';
 import './PlayerHand.css';
 
@@ -20,7 +20,7 @@ import './PlayerHand.css';
  * @param {number} props.index - 卡牌索引
  * @returns {JSX.Element} 卡牌組件
  */
-function Card({ card, isSelected = false, isSelectable = false, onClick = null, index = 0 }) {
+const Card = memo(function Card({ card, isSelected = false, isSelectable = false, onClick = null, index = 0 }) {
   const cardClass = [
     'hand-card',
     `card-${card.color}`,
@@ -62,7 +62,7 @@ function Card({ card, isSelected = false, isSelectable = false, onClick = null, 
       <span className="card-color-label">{card.color}</span>
     </div>
   );
-}
+});
 
 Card.propTypes = {
   card: PropTypes.shape({

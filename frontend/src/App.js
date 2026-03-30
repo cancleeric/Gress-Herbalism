@@ -4,18 +4,27 @@
  * @module App
  * 工單 0059 - 加入 Firebase 登入
  * 工單 0060 - 加入個人資料和排行榜
+ * 效能優化 - React.lazy code splitting，減少首次載入 bundle 大小
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
-import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
-import { GameRoom } from './components/games/herbalism';
-import { EvolutionRoom } from './components/games/evolution';
+import { Login, ConnectionStatus } from './components/common';
 import './styles/App.css';
+
+// 使用 React.lazy 延遲載入非首屏所需的大型組件，減少初始 bundle 大小
+const Lobby = lazy(() => import('./components/common/Lobby'));
+const Profile = lazy(() => import('./components/common/Profile'));
+const Leaderboard = lazy(() => import('./components/common/Leaderboard'));
+const Friends = lazy(() => import('./components/common/Friends'));
+const GameSelection = lazy(() => import('./components/common/GameSelection'));
+const EvolutionLobbyPage = lazy(() => import('./components/common/EvolutionLobbyPage'));
+const GameRoom = lazy(() => import('./components/games/herbalism/GameRoom'));
+const EvolutionRoom = lazy(() => import('./components/games/evolution/EvolutionRoom'));
 
 /**
  * 受保護路由組件 - 需要登入才能訪問
@@ -73,6 +82,17 @@ class ErrorBoundary extends React.Component {
 }
 
 /**
+ * 路由載入中的佔位組件
+ */
+function RouteLoadingFallback() {
+  return (
+    <div className="app-loading">
+      <p>載入中...</p>
+    </div>
+  );
+}
+
+/**
  * 應用內容組件 - 包含路由邏輯
  * 工單 0119：新增 ConnectionStatus 組件
  * 工單 0276：新增遊戲選擇頁面和各遊戲大廳路由
@@ -81,6 +101,7 @@ function AppContent() {
   return (
     <div className="app">
       <ConnectionStatus />
+      <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         {/* 工單 0276：遊戲選擇頁面 */}
@@ -153,6 +174,7 @@ function AppContent() {
           }
         />
       </Routes>
+      </Suspense>
     </div>
   );
 }
