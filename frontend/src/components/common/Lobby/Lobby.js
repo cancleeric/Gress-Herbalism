@@ -649,7 +649,7 @@ function Lobby() {
   const handleSendChat = (e) => {
     e.preventDefault();
     if (!chatInput.trim() || !nickname.trim()) return;
-    sendLobbyMessage(nickname.trim() || displayName, chatInput.trim());
+    sendLobbyMessage(nickname.trim(), chatInput.trim());
     setChatInput('');
   };
 

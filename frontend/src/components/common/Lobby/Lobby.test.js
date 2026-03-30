@@ -54,33 +54,15 @@ const renderWithProviders = (component) => {
 // 全域 beforeEach：為新增的 socket 函數設定預設 mock
 beforeEach(() => {
   // 新增 socket 函數（大廳改版），預設返回空清理函數
-  if (socketService.onQuickMatchFound) {
-    socketService.onQuickMatchFound.mockReturnValue(() => {});
-  }
-  if (socketService.onQuickMatchWaiting) {
-    socketService.onQuickMatchWaiting.mockReturnValue(() => {});
-  }
-  if (socketService.onQuickMatchCancelled) {
-    socketService.onQuickMatchCancelled.mockReturnValue(() => {});
-  }
-  if (socketService.onLobbyMessage) {
-    socketService.onLobbyMessage.mockReturnValue(() => {});
-  }
-  if (socketService.requestQuickMatch) {
-    socketService.requestQuickMatch.mockReturnValue(undefined);
-  }
-  if (socketService.cancelQuickMatch) {
-    socketService.cancelQuickMatch.mockReturnValue(undefined);
-  }
-  if (socketService.sendLobbyMessage) {
-    socketService.sendLobbyMessage.mockReturnValue(undefined);
-  }
-  if (socketService.requestRoomList) {
-    socketService.requestRoomList.mockReturnValue(undefined);
-  }
-  if (socketService.emitPlayerRefreshing) {
-    socketService.emitPlayerRefreshing.mockReturnValue(undefined);
-  }
+  socketService.onQuickMatchFound.mockReturnValue(() => {});
+  socketService.onQuickMatchWaiting.mockReturnValue(() => {});
+  socketService.onQuickMatchCancelled.mockReturnValue(() => {});
+  socketService.onLobbyMessage.mockReturnValue(() => {});
+  socketService.requestQuickMatch.mockReturnValue(undefined);
+  socketService.cancelQuickMatch.mockReturnValue(undefined);
+  socketService.sendLobbyMessage.mockReturnValue(undefined);
+  socketService.requestRoomList.mockReturnValue(undefined);
+  socketService.emitPlayerRefreshing.mockReturnValue(undefined);
 });
 
 describe('Lobby - 頁面渲染', () => {

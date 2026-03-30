@@ -1300,12 +1300,13 @@ io.on('connection', (socket) => {
   // ==================== 大廳聊天 ====================
 
   socket.on('lobbyMessage', ({ playerName, message }) => {
+    if (typeof playerName !== 'string' || typeof message !== 'string') return;
     if (!message || !playerName) return;
-    const trimmed = String(message).trim().slice(0, 200);
+    const trimmed = message.trim().slice(0, 200);
     if (!trimmed) return;
 
     io.emit('lobbyMessage', {
-      playerName: String(playerName).slice(0, 20),
+      playerName: playerName.trim().slice(0, 20),
       message: trimmed,
       timestamp: new Date().toISOString()
     });
