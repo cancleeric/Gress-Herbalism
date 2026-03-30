@@ -64,6 +64,14 @@ export async function getLeaderboard(orderBy = 'total_score', limit = 10) {
 }
 
 /**
+ * 取得遊戲回放資料
+ * @param {string} gameId - 遊戲 ID
+ */
+export async function getReplay(gameId) {
+  return apiRequest(`/api/replay/${gameId}`);
+}
+
+/**
  * 健康檢查
  */
 export async function healthCheck() {
@@ -75,5 +83,6 @@ export default {
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
+  getReplay,
   healthCheck,
 };

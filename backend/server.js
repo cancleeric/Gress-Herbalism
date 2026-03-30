@@ -26,6 +26,9 @@ const {
   updatePlayerGameStats,
 } = require('./db/supabase');
 
+// 回放服務
+const { replayService } = require('./services/evolution/replayService');
+
 // 工單 0061 - 好友服務
 const friendService = require('./services/friendService');
 const invitationService = require('./services/invitationService');
@@ -128,6 +131,24 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
 
     const history = await getPlayerHistory(playerId, limit);
     res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==================== 回放 API ====================
+
+// 取得指定遊戲的回放資料
+app.get('/api/replay/:gameId', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const replay = await replayService.getReplay(gameId);
+
+    if (!replay) {
+      return res.status(404).json({ success: false, message: '找不到回放資料' });
+    }
+
+    res.json({ success: true, data: replay });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

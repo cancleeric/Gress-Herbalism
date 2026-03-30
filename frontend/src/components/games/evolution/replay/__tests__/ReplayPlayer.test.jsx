@@ -164,6 +164,70 @@ describe('ReplayPlayer', () => {
     });
   });
 
+  describe('步進控制', () => {
+    it('should render prev and next step buttons', () => {
+      render(<ReplayPlayer events={mockEvents} />);
+      expect(screen.getByRole('button', { name: '上一步' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '下一步' })).toBeInTheDocument();
+    });
+
+    it('should disable prev button at start', () => {
+      render(<ReplayPlayer events={mockEvents} />);
+      expect(screen.getByRole('button', { name: '上一步' })).toBeDisabled();
+    });
+
+    it('should disable next button at end', () => {
+      render(<ReplayPlayer events={[{ type: 'game_start', timestamp: 1000 }]} />);
+      expect(screen.getByRole('button', { name: '下一步' })).toBeDisabled();
+    });
+
+    it('should advance index on next step click', () => {
+      render(<ReplayPlayer events={mockEvents} />);
+      expect(screen.getByText('1 / 4')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: '下一步' }));
+      expect(screen.getByText('2 / 4')).toBeInTheDocument();
+    });
+
+    it('should go back on prev step click', () => {
+      render(<ReplayPlayer events={mockEvents} />);
+
+      // 先前進兩步
+      fireEvent.click(screen.getByRole('button', { name: '下一步' }));
+      fireEvent.click(screen.getByRole('button', { name: '下一步' }));
+      expect(screen.getByText('3 / 4')).toBeInTheDocument();
+
+      // 再退回一步
+      fireEvent.click(screen.getByRole('button', { name: '上一步' }));
+      expect(screen.getByText('2 / 4')).toBeInTheDocument();
+    });
+  });
+
+  describe('關鍵時刻', () => {
+    it('should export KEY_EVENT_TYPES', () => {
+      const { KEY_EVENT_TYPES } = require('../ReplayPlayer');
+      expect(KEY_EVENT_TYPES.has('attack')).toBe(true);
+      expect(KEY_EVENT_TYPES.has('extinction')).toBe(true);
+      expect(KEY_EVENT_TYPES.has('game_end')).toBe(true);
+    });
+
+    it('should show key event badge for key events', () => {
+      const keyEvents = [
+        { type: 'attack', timestamp: 1000, data: {} },
+      ];
+      render(<ReplayPlayer events={keyEvents} />);
+      expect(screen.getByText(/精彩時刻/)).toBeInTheDocument();
+    });
+
+    it('should not show key event badge for normal events', () => {
+      const normalEvents = [
+        { type: 'phase_change', timestamp: 1000, data: {} },
+      ];
+      render(<ReplayPlayer events={normalEvents} />);
+      expect(screen.queryByText(/精彩時刻/)).not.toBeInTheDocument();
+    });
+  });
+
   describe('常數匯出', () => {
     it('should export PLAYBACK_STATES', () => {
       expect(PLAYBACK_STATES.IDLE).toBe('idle');

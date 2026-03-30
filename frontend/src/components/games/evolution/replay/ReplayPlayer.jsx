@@ -22,6 +22,17 @@ const PLAYBACK_STATES = {
 const SPEED_OPTIONS = [0.5, 1, 1.5, 2, 4];
 
 /**
+ * 關鍵事件類型（標記精彩時刻）
+ */
+const KEY_EVENT_TYPES = new Set([
+  'attack',
+  'defense',
+  'extinction',
+  'game_end',
+  'food_reveal',
+]);
+
+/**
  * 遊戲回放播放器
  */
 function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
@@ -33,6 +44,7 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
   const totalEvents = events?.length || 0;
   const progress = totalEvents > 0 ? (currentIndex / totalEvents) * 100 : 0;
   const currentEvent = events?.[currentIndex] || null;
+  const isKeyEvent = currentEvent && KEY_EVENT_TYPES.has(currentEvent.type);
 
   /**
    * 播放下一個事件
@@ -102,6 +114,28 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
   );
 
   /**
+   * 上一步
+   */
+  const stepBack = useCallback(() => {
+    clearTimeout(timerRef.current);
+    if (playbackState === PLAYBACK_STATES.PLAYING) {
+      setPlaybackState(PLAYBACK_STATES.PAUSED);
+    }
+    seekTo(currentIndex - 1);
+  }, [currentIndex, seekTo, playbackState]);
+
+  /**
+   * 下一步
+   */
+  const stepForward = useCallback(() => {
+    clearTimeout(timerRef.current);
+    if (playbackState === PLAYBACK_STATES.PLAYING) {
+      setPlaybackState(PLAYBACK_STATES.PAUSED);
+    }
+    seekTo(currentIndex + 1);
+  }, [currentIndex, seekTo, playbackState]);
+
+  /**
    * 切換播放/暫停
    */
   const togglePlayPause = useCallback(() => {
@@ -167,10 +201,31 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
           className="replay-player__progress-bar"
           style={{ width: `${progress}%` }}
         />
+        {/* 關鍵時刻標記 */}
+        {events.map((event, idx) =>
+          KEY_EVENT_TYPES.has(event.type) ? (
+            <div
+              key={idx}
+              className="replay-player__key-marker"
+              style={{ left: `${(idx / totalEvents) * 100}%` }}
+              title={event.type}
+            />
+          ) : null
+        )}
       </div>
 
       {/* 控制列 */}
       <div className="replay-player__controls">
+        {/* 上一步按鈕 */}
+        <button
+          className="replay-player__btn replay-player__btn--step"
+          onClick={stepBack}
+          disabled={currentIndex === 0}
+          aria-label="上一步"
+        >
+          ⏮
+        </button>
+
         {/* 播放/暫停按鈕 */}
         <button
           className="replay-player__btn replay-player__btn--play"
@@ -178,6 +233,16 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
           aria-label={playbackState === PLAYBACK_STATES.PLAYING ? '暫停' : '播放'}
         >
           {playbackState === PLAYBACK_STATES.PLAYING ? '⏸' : '▶'}
+        </button>
+
+        {/* 下一步按鈕 */}
+        <button
+          className="replay-player__btn replay-player__btn--step"
+          onClick={stepForward}
+          disabled={currentIndex >= totalEvents - 1}
+          aria-label="下一步"
+        >
+          ⏭
         </button>
 
         {/* 停止按鈕 */}
@@ -210,7 +275,8 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
 
       {/* 當前事件資訊 */}
       {currentEvent && (
-        <div className="replay-player__event-info">
+        <div className={`replay-player__event-info ${isKeyEvent ? 'replay-player__event-info--key' : ''}`}>
+          {isKeyEvent && <span className="replay-player__key-badge">⭐ 精彩時刻</span>}
           <span className="replay-player__event-type">{currentEvent.type}</span>
         </div>
       )}
@@ -235,5 +301,6 @@ ReplayPlayer.propTypes = {
   className: PropTypes.string,
 };
 
-export { ReplayPlayer, PLAYBACK_STATES, SPEED_OPTIONS };
+export { ReplayPlayer, PLAYBACK_STATES, SPEED_OPTIONS, KEY_EVENT_TYPES };
 export default ReplayPlayer;
+

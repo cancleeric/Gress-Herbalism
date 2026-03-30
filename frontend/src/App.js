@@ -12,7 +12,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
-import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
+import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage, ReplayList, ReplayViewer } from './components/common';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
 import './styles/App.css';
@@ -151,6 +151,20 @@ function AppContent() {
               <Friends />
             </ProtectedRoute>
           }
+        />
+        {/* 回放列表頁面 */}
+        <Route
+          path="/replays"
+          element={
+            <ProtectedRoute>
+              <ReplayList />
+            </ProtectedRoute>
+          }
+        />
+        {/* 回放檢視頁面（支援分享連結，無需登入） */}
+        <Route
+          path="/replay/:gameId"
+          element={<ReplayViewer />}
         />
       </Routes>
     </div>
