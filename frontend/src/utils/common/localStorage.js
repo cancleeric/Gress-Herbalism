@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   NICKNAME: 'gress_nickname',        // 工單 0122：遊戲暱稱
   PLAYER_SETTINGS: 'gress_player_settings',
   CURRENT_ROOM: 'gress_current_room',  // 工單 0079：重連資訊
+  RECENT_PLAYERS: 'gress_recent_players',  // 最近遊玩的玩家
 };
 
 /**
@@ -179,3 +180,37 @@ export function clearCurrentRoom() {
 }
 
 export { STORAGE_KEYS };
+
+// ==================== 最近遊玩的玩家 ====================
+
+const MAX_RECENT_PLAYERS = 10;
+
+/**
+ * 記錄一位最近遊玩過的玩家
+ * @param {{ id: string, name: string, photoURL?: string }} player
+ */
+export function addRecentPlayer(player) {
+  if (!player || !player.id || !player.name) return;
+  try {
+    const existing = getRecentPlayers();
+    const filtered = existing.filter(p => p.id !== player.id);
+    const updated = [{ id: player.id, name: player.name, photoURL: player.photoURL || null }, ...filtered].slice(0, MAX_RECENT_PLAYERS);
+    localStorage.setItem(STORAGE_KEYS.RECENT_PLAYERS, JSON.stringify(updated));
+  } catch (e) {
+    console.warn('無法儲存最近玩家:', e);
+  }
+}
+
+/**
+ * 取得最近遊玩的玩家列表
+ * @returns {Array<{ id: string, name: string, photoURL?: string }>}
+ */
+export function getRecentPlayers() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.RECENT_PLAYERS);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.warn('無法讀取最近玩家:', e);
+    return [];
+  }
+}

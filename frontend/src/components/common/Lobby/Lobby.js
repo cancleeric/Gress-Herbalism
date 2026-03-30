@@ -6,7 +6,7 @@
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../firebase/AuthContext';
@@ -27,7 +27,14 @@ import {
   joinRoom,
   attemptReconnect,
   emitPlayerRefreshing,
-  requestRoomList
+  requestRoomList,
+  requestQuickMatch,
+  cancelQuickMatch,
+  onQuickMatchFound,
+  onQuickMatchWaiting,
+  onQuickMatchCancelled,
+  sendLobbyMessage,
+  onLobbyMessage
 } from '../../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
 import VersionInfo from '../VersionInfo';
@@ -36,10 +43,18 @@ import {
   getNickname,
   getCurrentRoom,
   clearCurrentRoom,
-  saveCurrentRoom
+  saveCurrentRoom,
+  addRecentPlayer,
+  getRecentPlayers
 } from '../../../utils/common/localStorage';
 import { getPlayerNameError, getRoomPasswordError } from '../../../utils/common/validation';
 import { AIPlayerSelector } from '../../games/herbalism/GameSetup';
+import {
+  getFriends,
+  getGameInvitations,
+  respondToGameInvitation,
+  sendGameInvitation
+} from '../../../services/friendService';
 import './Lobby.css';
 
 /**
@@ -100,6 +115,30 @@ function Lobby() {
     difficulties: [AI_DIFFICULTY.MEDIUM, AI_DIFFICULTY.MEDIUM]
   });
 
+  // 遊戲類型篩選
+  const [gameTypeFilter, setGameTypeFilter] = useState('herbalism');
+
+  // 快速配對
+  const [isQuickMatching, setIsQuickMatching] = useState(false);
+  const [quickMatchQueueSize, setQuickMatchQueueSize] = useState(0);
+
+  // 好友在線狀態
+  const [onlineFriends, setOnlineFriends] = useState([]);
+
+  // 遊戲邀請
+  const [pendingInvitations, setPendingInvitations] = useState([]);
+
+  // 最近遊玩的玩家
+  const [recentPlayers, setRecentPlayers] = useState([]);
+
+  // 大廳聊天
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const chatEndRef = useRef(null);
+
+  // 當前已創建的房間 ID（用於發送邀請）
+  const [currentRoomId, setCurrentRoomId] = useState(null);
+
   // 載入時讀取儲存的暱稱
   useEffect(() => {
     const savedNickname = getNickname();
@@ -150,6 +189,18 @@ function Lobby() {
         playerId: playerId,
         playerName: nickname.trim()
       });
+
+      setCurrentRoomId(gameId);
+
+      // 記錄同房間玩家為最近遊玩
+      if (gameState.players) {
+        gameState.players.forEach(p => {
+          if (p.id !== playerId) {
+            addRecentPlayer({ id: p.id, name: p.name, photoURL: p.photoURL });
+          }
+        });
+        setRecentPlayers(getRecentPlayers());
+      }
 
       dispatch(updateGameState({
         gameId,
@@ -228,6 +279,93 @@ function Lobby() {
       unsubReconnectFailed();
     };
   }, [dispatch, navigate, playerId, rooms, nickname]);
+
+  // 快速配對事件訂閱
+  useEffect(() => {
+    const unsubFound = onQuickMatchFound(({ gameId, gameState }) => {
+      setIsQuickMatching(false);
+      saveCurrentRoom({ roomId: gameId, playerId, playerName: nickname.trim() });
+      setCurrentRoomId(gameId);
+      dispatch(updateGameState({
+        gameId,
+        players: gameState.players,
+        maxPlayers: gameState.maxPlayers,
+        gamePhase: gameState.gamePhase,
+        currentPlayerId: playerId
+      }));
+      navigate(`/game/${gameId}`);
+    });
+
+    const unsubWaiting = onQuickMatchWaiting(({ queueSize }) => {
+      setQuickMatchQueueSize(queueSize);
+    });
+
+    const unsubCancelled = onQuickMatchCancelled(() => {
+      setIsQuickMatching(false);
+      setQuickMatchQueueSize(0);
+    });
+
+    return () => {
+      unsubFound();
+      unsubWaiting();
+      unsubCancelled();
+    };
+  }, [dispatch, navigate, playerId, nickname]);
+
+  // 大廳聊天訊息訂閱
+  useEffect(() => {
+    const unsubChat = onLobbyMessage((msg) => {
+      setChatMessages(prev => [...prev.slice(-99), msg]);
+    });
+    return () => unsubChat();
+  }, []);
+
+  // 聊天訊息自動滾到底部
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  // 載入好友在線狀態
+  const loadOnlineFriends = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      const friends = await getFriends(user.uid);
+      const online = friends.filter(({ friend }) =>
+        friend.presence?.status === 'online' || friend.presence?.status === 'in_game'
+      );
+      setOnlineFriends(online);
+    } catch (err) {
+      console.error('[Lobby] 載入好友狀態失敗:', err);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    loadOnlineFriends();
+    const timer = setInterval(loadOnlineFriends, 30000);
+    return () => clearInterval(timer);
+  }, [loadOnlineFriends]);
+
+  // 載入遊戲邀請
+  const loadInvitations = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      const invitations = await getGameInvitations(user.uid);
+      setPendingInvitations(invitations);
+    } catch (err) {
+      console.error('[Lobby] 載入邀請失敗:', err);
+    }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    loadInvitations();
+    const timer = setInterval(loadInvitations, 10000);
+    return () => clearInterval(timer);
+  }, [loadInvitations]);
+
+  // 載入最近遊玩的玩家
+  useEffect(() => {
+    setRecentPlayers(getRecentPlayers());
+  }, []);
 
   // 嘗試重連
   useEffect(() => {
@@ -477,6 +615,100 @@ function Lobby() {
     });
   };
 
+  /**
+   * 快速配對
+   */
+  const handleQuickMatch = () => {
+    if (!validateNicknameInput()) return;
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
+      return;
+    }
+    saveNickname(nickname.trim());
+    setIsQuickMatching(true);
+    setQuickMatchQueueSize(1);
+    const player = {
+      id: playerId,
+      name: nickname.trim(),
+      firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+      photoURL: user?.photoURL || null,
+    };
+    requestQuickMatch(player, 'herbalism', MIN_PLAYERS);
+  };
+
+  /**
+   * 取消快速配對
+   */
+  const handleCancelQuickMatch = () => {
+    cancelQuickMatch('herbalism');
+  };
+
+  /**
+   * 發送聊天訊息
+   */
+  const handleSendChat = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !nickname.trim()) return;
+    sendLobbyMessage(nickname.trim() || displayName, chatInput.trim());
+    setChatInput('');
+  };
+
+  /**
+   * 接受遊戲邀請
+   */
+  const handleAcceptInvitation = async (invitation) => {
+    if (!user?.uid) return;
+    try {
+      await respondToGameInvitation(invitation.id, user.uid, 'accept');
+      setPendingInvitations(prev => prev.filter(inv => inv.id !== invitation.id));
+      if (invitation.room_id) {
+        handleQuickJoin(invitation.room_id);
+      }
+    } catch (err) {
+      console.error('[Lobby] 接受邀請失敗:', err);
+    }
+  };
+
+  /**
+   * 拒絕遊戲邀請
+   */
+  const handleRejectInvitation = async (invitationId) => {
+    if (!user?.uid) return;
+    try {
+      await respondToGameInvitation(invitationId, user.uid, 'reject');
+      setPendingInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+    } catch (err) {
+      console.error('[Lobby] 拒絕邀請失敗:', err);
+    }
+  };
+
+  /**
+   * 邀請好友加入房間
+   */
+  const handleInviteFriend = async (friendId) => {
+    if (!user?.uid) return;
+    if (!currentRoomId) {
+      setError('請先創建房間，再邀請好友加入');
+      return;
+    }
+    try {
+      await sendGameInvitation(user.uid, friendId, currentRoomId);
+      alert('邀請已發送！');
+    } catch (err) {
+      console.error('[Lobby] 發送邀請失敗:', err);
+      alert(err.message || '邀請發送失敗');
+    }
+  };
+
+  /**
+   * 篩選後的房間列表
+   */
+  const filteredRooms = rooms.filter(room => {
+    const type = room.gameType || 'herbalism';
+    if (gameTypeFilter === 'all') return true;
+    return type === gameTypeFilter;
+  });
+
   return (
     <div className="lobby">
       {/* 重連中覆蓋層 */}
@@ -588,6 +820,39 @@ function Lobby() {
             </div>
           )}
 
+          {/* 遊戲邀請通知 */}
+          {pendingInvitations.length > 0 && (
+            <div className="invitations-panel">
+              <h3 className="invitations-title">
+                <span className="material-symbols-outlined">mail</span>
+                遊戲邀請
+              </h3>
+              {pendingInvitations.map(inv => (
+                <div key={inv.id} className="invitation-item">
+                  <div className="invitation-info">
+                    <span className="invitation-from">
+                      {inv.from_user?.display_name || '玩家'} 邀請你加入遊戲
+                    </span>
+                  </div>
+                  <div className="invitation-actions">
+                    <button
+                      className="inv-accept-btn"
+                      onClick={() => handleAcceptInvitation(inv)}
+                    >
+                      接受
+                    </button>
+                    <button
+                      className="inv-reject-btn"
+                      onClick={() => handleRejectInvitation(inv.id)}
+                    >
+                      拒絕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* 工單 0276：返回遊戲選擇頁面 */}
           <button
             className="back-to-selection-btn"
@@ -597,18 +862,44 @@ function Lobby() {
             返回遊戲選擇
           </button>
 
-          {/* 創建房間按鈕 */}
-          <button
-            className="create-room-btn"
-            onClick={() => {
-              setCreateRoomError('');
-              setShowCreateModal(true);
-            }}
-            disabled={!isConnected || isLoading}
-          >
-            <span className="material-symbols-outlined">add_circle</span>
-            創建新房間
-          </button>
+          {/* 操作按鈕列 */}
+          <div className="action-buttons-row">
+            {/* 創建房間按鈕 */}
+            <button
+              className="create-room-btn"
+              onClick={() => {
+                setCreateRoomError('');
+                setShowCreateModal(true);
+              }}
+              disabled={!isConnected || isLoading}
+            >
+              <span className="material-symbols-outlined">add_circle</span>
+              創建新房間
+            </button>
+
+            {/* 快速配對按鈕 */}
+            {isQuickMatching ? (
+              <div className="quick-match-waiting">
+                <div className="quick-match-spinner"></div>
+                <span>配對中（{quickMatchQueueSize}/{MIN_PLAYERS}）...</span>
+                <button
+                  className="cancel-match-btn"
+                  onClick={handleCancelQuickMatch}
+                >
+                  取消
+                </button>
+              </div>
+            ) : (
+              <button
+                className="quick-match-btn"
+                onClick={handleQuickMatch}
+                disabled={!isConnected || isLoading}
+              >
+                <span className="material-symbols-outlined">bolt</span>
+                快速配對
+              </button>
+            )}
+          </div>
 
           {/* 加入房間區域 */}
           <div className="join-room-section">
@@ -635,10 +926,34 @@ function Lobby() {
             </button>
           </div>
 
+          {/* 遊戲類型篩選 */}
+          <div className="game-type-filter">
+            <button
+              className={`filter-btn ${gameTypeFilter === 'herbalism' ? 'active' : ''}`}
+              onClick={() => setGameTypeFilter('herbalism')}
+            >
+              <span className="material-symbols-outlined">eco</span>
+              本草
+            </button>
+            <button
+              className={`filter-btn ${gameTypeFilter === 'evolution' ? 'active' : ''}`}
+              onClick={() => setGameTypeFilter('evolution')}
+            >
+              <span className="material-symbols-outlined">science</span>
+              演化論
+            </button>
+            <button
+              className={`filter-btn ${gameTypeFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setGameTypeFilter('all')}
+            >
+              <span className="material-symbols-outlined">apps</span>
+              全部
+            </button>
+          </div>
+
           {/* 房間列表表格 */}
-          {/* 工單 0276：只顯示本草房間 */}
           <div className="room-table-container">
-            {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').length === 0 ? (
+            {filteredRooms.length === 0 ? (
               <div className="no-rooms">
                 <span className="material-symbols-outlined">meeting_room</span>
                 目前沒有可用的房間，點擊上方按鈕創建新房間
@@ -648,15 +963,14 @@ function Lobby() {
                 <thead>
                   <tr>
                     <th>房間名稱</th>
-                    <th>ID</th>
+                    <th>類型</th>
                     <th>玩家</th>
                     <th>狀態</th>
                     <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* 工單 0276：只顯示本草房間 */}
-                  {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').map((room) => (
+                  {filteredRooms.map((room) => (
                     <tr key={room.id}>
                       <td>
                         <span className="room-name">
@@ -667,7 +981,9 @@ function Lobby() {
                         </span>
                       </td>
                       <td>
-                        <span className="room-id">{room.id}</span>
+                        <span className={`game-type-badge ${room.gameType || 'herbalism'}`}>
+                          {room.gameType === 'evolution' ? '演化論' : '本草'}
+                        </span>
                       </td>
                       <td>
                         <span className="room-players">
@@ -700,6 +1016,64 @@ function Lobby() {
             )}
           </div>
 
+          {/* 好友在線狀態 */}
+          {onlineFriends.length > 0 && (
+            <div className="online-friends-panel">
+              <h3 className="panel-title">
+                <span className="material-symbols-outlined">group</span>
+                好友在線 ({onlineFriends.length})
+              </h3>
+              <div className="online-friends-list">
+                {onlineFriends.map(({ friend }) => (
+                  <div key={friend.id} className="online-friend-item">
+                    <div className="friend-avatar-small">
+                      {friend.avatar_url ? (
+                        <img src={friend.avatar_url} alt="" />
+                      ) : (
+                        <div className="avatar-placeholder-small">
+                          {(friend.display_name || '?')[0]}
+                        </div>
+                      )}
+                      <span className={`status-dot-small ${friend.presence?.status === 'in_game' ? 'in-game' : 'online'}`}></span>
+                    </div>
+                    <div className="friend-name-small">{friend.display_name}</div>
+                    <div className="friend-status-text">
+                      {friend.presence?.status === 'in_game' ? '遊戲中' : '線上'}
+                    </div>
+                    <button
+                      className="invite-friend-btn"
+                      onClick={() => handleInviteFriend(friend.id)}
+                      title="邀請加入"
+                    >
+                      <span className="material-symbols-outlined">person_add</span>
+                      邀請
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 最近遊玩的玩家 */}
+          {recentPlayers.length > 0 && (
+            <div className="recent-players-panel">
+              <h3 className="panel-title">
+                <span className="material-symbols-outlined">history</span>
+                最近遊玩
+              </h3>
+              <div className="recent-players-list">
+                {recentPlayers.slice(0, 5).map((player) => (
+                  <div key={player.id} className="recent-player-item">
+                    <div className="avatar-placeholder-small">
+                      {(player.name || '?')[0]}
+                    </div>
+                    <span className="recent-player-name">{player.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 工單 202601260048：單人模式區 */}
           <div className="single-player-section">
             <button
@@ -709,6 +1083,44 @@ function Lobby() {
               <span className="material-symbols-outlined">smart_toy</span>
               單人模式
             </button>
+          </div>
+
+          {/* 大廳聊天室 */}
+          <div className="lobby-chat">
+            <h3 className="panel-title">
+              <span className="material-symbols-outlined">forum</span>
+              大廳聊天
+            </h3>
+            <div className="chat-messages">
+              {chatMessages.length === 0 && (
+                <div className="chat-empty">暫無訊息，來說點什麼吧！</div>
+              )}
+              {chatMessages.map((msg, idx) => (
+                <div key={idx} className="chat-message">
+                  <span className="chat-player-name">{msg.playerName}：</span>
+                  <span className="chat-text">{msg.message}</span>
+                </div>
+              ))}
+              <div ref={chatEndRef}></div>
+            </div>
+            <form className="chat-input-form" onSubmit={handleSendChat}>
+              <input
+                className="chat-input"
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="輸入訊息..."
+                maxLength={200}
+                disabled={!isConnected || !nickname.trim()}
+              />
+              <button
+                type="submit"
+                className="chat-send-btn"
+                disabled={!isConnected || !chatInput.trim() || !nickname.trim()}
+              >
+                <span className="material-symbols-outlined">send</span>
+              </button>
+            </form>
           </div>
         </main>
       </div>

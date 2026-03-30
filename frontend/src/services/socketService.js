@@ -827,3 +827,69 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ==================== 工單 0379 結束 ====================
+
+// ==================== 快速配對 ====================
+
+/**
+ * 加入快速配對佇列
+ * @param {Object} player - 玩家資訊
+ * @param {string} gameType - 遊戲類型（'herbalism' | 'evolution'）
+ * @param {number} minPlayers - 最少玩家數
+ */
+export function requestQuickMatch(player, gameType = 'herbalism', minPlayers = 3) {
+  const s = getSocket();
+  s.emit('quickMatch', { player, gameType, minPlayers });
+}
+
+/**
+ * 取消快速配對
+ * @param {string} gameType - 遊戲類型
+ */
+export function cancelQuickMatch(gameType = 'herbalism') {
+  const s = getSocket();
+  s.emit('cancelQuickMatch', { gameType });
+}
+
+/**
+ * 監聽配對成功
+ */
+export function onQuickMatchFound(callback) {
+  return safeOn('quickMatchFound', callback);
+}
+
+/**
+ * 監聽等待配對中（佇列更新）
+ */
+export function onQuickMatchWaiting(callback) {
+  return safeOn('quickMatchWaiting', callback);
+}
+
+/**
+ * 監聽取消配對確認
+ */
+export function onQuickMatchCancelled(callback) {
+  return safeOn('quickMatchCancelled', callback);
+}
+
+// ==================== 快速配對結束 ====================
+
+// ==================== 大廳聊天 ====================
+
+/**
+ * 發送大廳聊天訊息
+ * @param {string} playerName - 玩家名稱
+ * @param {string} message - 訊息內容
+ */
+export function sendLobbyMessage(playerName, message) {
+  const s = getSocket();
+  s.emit('lobbyMessage', { playerName, message });
+}
+
+/**
+ * 監聽大廳聊天訊息
+ */
+export function onLobbyMessage(callback) {
+  return safeOn('lobbyMessage', callback);
+}
+
+// ==================== 大廳聊天結束 ====================

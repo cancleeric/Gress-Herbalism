@@ -478,6 +478,12 @@ function broadcastGameState(gameId) {
   }
 }
 
+// ==================== 快速配對佇列 ====================
+// Map<gameType, Array<{socketId, id, name, firebaseUid, photoURL}>>
+const quickMatchQueues = new Map();
+
+// ==================== 快速配對佇列結束 ====================
+
 io.on('connection', (socket) => {
   // 工單 0109：連線日誌增強
   console.log(`[連線] 新連線: ${socket.id}`);
@@ -1191,6 +1197,15 @@ io.on('connection', (socket) => {
       }
     }
 
+    // 快速配對：斷線時從等待佇列移除
+    quickMatchQueues.forEach((queue, gameType) => {
+      const idx = queue.findIndex(q => q.socketId === socket.id);
+      if (idx !== -1) {
+        queue.splice(idx, 1);
+        console.log(`[快速配對] 玩家斷線，從佇列移除 (${gameType})`);
+      }
+    });
+
     // 工單 0109：連線日誌增強
     console.log(`[連線] 斷線: ${socket.id}, 原因: ${reason}`);
   });
@@ -1199,6 +1214,104 @@ io.on('connection', (socket) => {
   socket.on('reconnect', ({ roomId, playerId, playerName }) => {
     handlePlayerReconnect(socket, roomId, playerId, playerName);
   });
+
+  // ==================== 快速配對 ====================
+
+  socket.on('quickMatch', ({ player, gameType = 'herbalism', minPlayers = 3 }) => {
+    if (!quickMatchQueues.has(gameType)) {
+      quickMatchQueues.set(gameType, []);
+    }
+
+    const queue = quickMatchQueues.get(gameType);
+
+    // 移除同一 socket 已在佇列中的舊紀錄
+    const existingIdx = queue.findIndex(q => q.socketId === socket.id);
+    if (existingIdx !== -1) queue.splice(existingIdx, 1);
+
+    queue.push({ ...player, socketId: socket.id });
+    console.log(`[快速配對] 玩家 ${player.name} 加入佇列 (${gameType}), 佇列大小: ${queue.length}`);
+
+    if (queue.length >= minPlayers) {
+      const matched = queue.splice(0, minPlayers);
+      const gameId = generateGameId();
+
+      const roomState = {
+        gameId,
+        players: matched.map((p, idx) => ({
+          id: p.id,
+          name: p.name,
+          firebaseUid: p.firebaseUid || null,
+          photoURL: p.photoURL || null,
+          socketId: p.socketId,
+          hand: [],
+          isActive: true,
+          isCurrentTurn: false,
+          isHost: idx === 0,
+          score: 0
+        })),
+        hiddenCards: [],
+        currentPlayerIndex: 0,
+        gamePhase: 'waiting',
+        winner: null,
+        gameHistory: [],
+        maxPlayers: minPlayers,
+        currentRound: 0,
+        scores: {},
+        winningScore: 7,
+        roundHistory: [],
+        password: null,
+        isPrivate: false,
+        predictions: [],
+        gameType
+      };
+
+      gameRooms.set(gameId, roomState);
+
+      matched.forEach(p => {
+        const pSocket = io.sockets.sockets.get(p.socketId);
+        if (pSocket) {
+          pSocket.join(gameId);
+          playerSockets.set(p.socketId, { gameId, playerId: p.id });
+          pSocket.emit('quickMatchFound', { gameId, gameState: roomState });
+        }
+      });
+
+      broadcastRoomList();
+      console.log(`[快速配對] 配對成功！房間 ${gameId}，玩家: ${matched.map(p => p.name).join(', ')}`);
+    } else {
+      socket.emit('quickMatchWaiting', { queueSize: queue.length, minPlayers });
+    }
+  });
+
+  socket.on('cancelQuickMatch', ({ gameType = 'herbalism' } = {}) => {
+    if (quickMatchQueues.has(gameType)) {
+      const queue = quickMatchQueues.get(gameType);
+      const idx = queue.findIndex(q => q.socketId === socket.id);
+      if (idx !== -1) {
+        queue.splice(idx, 1);
+        console.log(`[快速配對] 玩家取消配對 (${gameType}), 佇列大小: ${queue.length}`);
+      }
+    }
+    socket.emit('quickMatchCancelled');
+  });
+
+  // ==================== 快速配對結束 ====================
+
+  // ==================== 大廳聊天 ====================
+
+  socket.on('lobbyMessage', ({ playerName, message }) => {
+    if (!message || !playerName) return;
+    const trimmed = String(message).trim().slice(0, 200);
+    if (!trimmed) return;
+
+    io.emit('lobbyMessage', {
+      playerName: String(playerName).slice(0, 20),
+      message: trimmed,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // ==================== 大廳聊天結束 ====================
 
   // ==================== 工單 0313-0316：演化論遊戲 Socket 事件（使用新模組） ====================
 

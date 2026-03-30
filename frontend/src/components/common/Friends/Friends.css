@@ -370,6 +370,22 @@
   background: rgba(255, 179, 0, 0.1);
 }
 
+.invite-game-btn {
+  padding: 8px 16px;
+  background: #2f7f34;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.invite-game-btn:hover {
+  opacity: 0.85;
+}
+
 /* ==================== 搜尋區 ==================== */
 .search-section {
   display: flex;

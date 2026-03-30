@@ -14,6 +14,7 @@ import {
   sendFriendRequest,
   respondToFriendRequest,
   removeFriend,
+  sendGameInvitation,
 } from '../../../services/friendService';
 import './Friends.css';
 
@@ -27,6 +28,10 @@ function Friends() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // 好友邀請遊戲：從 URL query 讀取目前房間 ID（當從遊戲大廳導航過來時）
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentRoomId = urlParams.get('roomId');
 
   const loadFriends = useCallback(async () => {
     if (!user?.uid) return;
@@ -114,6 +119,20 @@ function Friends() {
       setFriends(prev => prev.filter(f => f.friend.id !== friendId));
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const handleInviteToGame = async (friendId) => {
+    if (!user?.uid) return;
+    if (!currentRoomId) {
+      alert('請先回到大廳並創建房間，再邀請好友加入');
+      return;
+    }
+    try {
+      await sendGameInvitation(user.uid, friendId, currentRoomId);
+      alert('遊戲邀請已發送！');
+    } catch (err) {
+      alert(err.message || '邀請發送失敗');
     }
   };
 
@@ -212,6 +231,15 @@ function Friends() {
                         </span>
                       </div>
                       <div className="friend-actions">
+                        {friend.presence?.status !== 'offline' && (
+                          <button
+                            className="invite-game-btn"
+                            onClick={() => handleInviteToGame(friend.id)}
+                            title="邀請加入遊戲"
+                          >
+                            邀請
+                          </button>
+                        )}
                         <button
                           className="remove-btn"
                           onClick={() => handleRemoveFriend(friend.id)}

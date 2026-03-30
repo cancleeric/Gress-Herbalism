@@ -13,11 +13,19 @@ import { gameReducer } from '../../../store/gameStore';
 import * as socketService from '../../../services/socketService';
 
 // Mock socketService
-jest.mock('../../services/socketService');
+jest.mock('../../../services/socketService');
+
+// Mock friendService（大廳改版新增）
+jest.mock('../../../services/friendService', () => ({
+  getFriends: jest.fn().mockResolvedValue([]),
+  getGameInvitations: jest.fn().mockResolvedValue([]),
+  respondToGameInvitation: jest.fn().mockResolvedValue({}),
+  sendGameInvitation: jest.fn().mockResolvedValue({}),
+}));
 
 // Mock useAuth
 const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
-jest.mock('../../firebase/AuthContext', () => ({
+jest.mock('../../../firebase/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }));
 
@@ -42,6 +50,38 @@ const renderWithProviders = (component) => {
     </Provider>
   );
 };
+
+// 全域 beforeEach：為新增的 socket 函數設定預設 mock
+beforeEach(() => {
+  // 新增 socket 函數（大廳改版），預設返回空清理函數
+  if (socketService.onQuickMatchFound) {
+    socketService.onQuickMatchFound.mockReturnValue(() => {});
+  }
+  if (socketService.onQuickMatchWaiting) {
+    socketService.onQuickMatchWaiting.mockReturnValue(() => {});
+  }
+  if (socketService.onQuickMatchCancelled) {
+    socketService.onQuickMatchCancelled.mockReturnValue(() => {});
+  }
+  if (socketService.onLobbyMessage) {
+    socketService.onLobbyMessage.mockReturnValue(() => {});
+  }
+  if (socketService.requestQuickMatch) {
+    socketService.requestQuickMatch.mockReturnValue(undefined);
+  }
+  if (socketService.cancelQuickMatch) {
+    socketService.cancelQuickMatch.mockReturnValue(undefined);
+  }
+  if (socketService.sendLobbyMessage) {
+    socketService.sendLobbyMessage.mockReturnValue(undefined);
+  }
+  if (socketService.requestRoomList) {
+    socketService.requestRoomList.mockReturnValue(undefined);
+  }
+  if (socketService.emitPlayerRefreshing) {
+    socketService.emitPlayerRefreshing.mockReturnValue(undefined);
+  }
+});
 
 describe('Lobby - 頁面渲染', () => {
   beforeEach(() => {
@@ -92,7 +132,8 @@ describe('Lobby - 頁面渲染', () => {
   test('應顯示側邊欄標題「本草」', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      // 使用 getAllByText 因為篩選器也有「本草」文字
+      expect(screen.getAllByText('本草').length).toBeGreaterThan(0);
     });
   });
 
@@ -507,7 +548,7 @@ describe('Lobby - 房間列表功能', () => {
   test('顯示房間列表', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getAllByText('本草').length).toBeGreaterThan(0);
     });
 
     // 模擬收到房間列表
@@ -527,7 +568,7 @@ describe('Lobby - 房間列表功能', () => {
   test('點擊房間表格加入按鈕應加入該房間', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getAllByText('本草').length).toBeGreaterThan(0);
     });
 
     // 先輸入玩家名稱
