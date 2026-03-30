@@ -1,0 +1,132 @@
+/**
+ * 成就解鎖通知樣式
+ */
+
+/* 容器：固定右下角，垂直排列 */
+.achievement-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+/* 單一 Toast */
+.achievement-toast {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg-secondary, #2a2a2a);
+  border-left: 4px solid #9e9e9e;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  min-width: 280px;
+  max-width: 360px;
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.achievement-toast--visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 稀有度邊框 */
+.achievement-toast--common   { border-left-color: #9e9e9e; }
+.achievement-toast--rare     { border-left-color: #2196F3; }
+.achievement-toast--legendary {
+  border-left-color: #FFD700;
+  animation: achievement-toast-legendary-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes achievement-toast-legendary-glow {
+  from { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); }
+  to   { box-shadow: 0 4px 24px rgba(255, 215, 0, 0.4); }
+}
+
+/* 圖示 */
+.achievement-toast__icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+/* 文字 */
+.achievement-toast__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.achievement-toast__title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary, #aaa);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.achievement-toast__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 稀有度標籤 */
+.achievement-toast__rarity {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.achievement-toast__rarity--common   { color: #bdbdbd; }
+.achievement-toast__rarity--rare     { color: #64b5f6; }
+.achievement-toast__rarity--legendary { color: #FFD700; }
+
+/* 點數 */
+.achievement-toast__points {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-gold, #FFD700);
+  flex-shrink: 0;
+}
+
+/* 關閉按鈕 */
+.achievement-toast__close {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.achievement-toast__close:hover {
+  color: var(--text-primary, #fff);
+}
+
+/* 行動裝置 */
+@media (max-width: 480px) {
+  .achievement-toast-container {
+    bottom: 16px;
+    right: 8px;
+    left: 8px;
+  }
+
+  .achievement-toast {
+    min-width: unset;
+    max-width: 100%;
+  }
+}

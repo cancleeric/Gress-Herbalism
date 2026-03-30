@@ -13,6 +13,15 @@ const ACHIEVEMENT_CATEGORIES = {
 };
 
 /**
+ * 成就稀有度
+ */
+const ACHIEVEMENT_RARITIES = {
+  COMMON: 'common', // 普通
+  RARE: 'rare', // 稀有
+  LEGENDARY: 'legendary', // 傳說
+};
+
+/**
  * 成就定義
  */
 const ACHIEVEMENTS = {
@@ -26,6 +35,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.MILESTONE,
     condition: { type: 'games_played', value: 1 },
     points: 10,
+    rarity: ACHIEVEMENT_RARITIES.COMMON,
     hidden: false,
   },
   FIRST_WIN: {
@@ -37,6 +47,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.MILESTONE,
     condition: { type: 'games_won', value: 1 },
     points: 10,
+    rarity: ACHIEVEMENT_RARITIES.COMMON,
     hidden: false,
   },
   VETERAN: {
@@ -48,6 +59,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.MILESTONE,
     condition: { type: 'games_played', value: 10 },
     points: 20,
+    rarity: ACHIEVEMENT_RARITIES.COMMON,
     hidden: false,
   },
   CHAMPION: {
@@ -59,6 +71,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.MILESTONE,
     condition: { type: 'games_won', value: 10 },
     points: 50,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: false,
   },
 
@@ -72,6 +85,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.GAMEPLAY,
     condition: { type: 'kills_in_game', value: 5 },
     points: 30,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: false,
   },
   PACIFIST: {
@@ -83,6 +97,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.GAMEPLAY,
     condition: { type: 'win_without_kills', value: true },
     points: 40,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: true,
   },
   CREATURE_MASTER: {
@@ -94,6 +109,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.GAMEPLAY,
     condition: { type: 'creatures_in_game', value: 8 },
     points: 30,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: false,
   },
   PERFECT_SCORE: {
@@ -105,6 +121,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.GAMEPLAY,
     condition: { type: 'score_in_game', value: 40 },
     points: 50,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: false,
   },
   SURVIVOR: {
@@ -116,6 +133,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.GAMEPLAY,
     condition: { type: 'all_survived', value: true },
     points: 35,
+    rarity: ACHIEVEMENT_RARITIES.COMMON,
     hidden: false,
   },
   QUICK_WIN: {
@@ -127,6 +145,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.GAMEPLAY,
     condition: { type: 'win_in_rounds', value: 5 },
     points: 45,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: true,
   },
 
@@ -140,6 +159,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.COLLECTION,
     condition: { type: 'total_traits', value: 100 },
     points: 40,
+    rarity: ACHIEVEMENT_RARITIES.RARE,
     hidden: false,
   },
   CREATURE_BREEDER: {
@@ -151,6 +171,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.COLLECTION,
     condition: { type: 'total_creatures', value: 50 },
     points: 30,
+    rarity: ACHIEVEMENT_RARITIES.COMMON,
     hidden: false,
   },
   SERIAL_KILLER: {
@@ -162,6 +183,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.COLLECTION,
     condition: { type: 'total_kills', value: 25 },
     points: 30,
+    rarity: ACHIEVEMENT_RARITIES.COMMON,
     hidden: false,
   },
 
@@ -175,6 +197,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.SPECIAL,
     condition: { type: 'perfect_game', value: true },
     points: 100,
+    rarity: ACHIEVEMENT_RARITIES.LEGENDARY,
     hidden: true,
   },
   HIGH_WIN_RATE: {
@@ -186,6 +209,7 @@ const ACHIEVEMENTS = {
     category: ACHIEVEMENT_CATEGORIES.SPECIAL,
     condition: { type: 'win_rate', value: 60, minGames: 20 },
     points: 100,
+    rarity: ACHIEVEMENT_RARITIES.LEGENDARY,
     hidden: false,
   },
 };
@@ -220,6 +244,7 @@ function getAchievementsByCategory(category) {
 
 module.exports = {
   ACHIEVEMENT_CATEGORIES,
+  ACHIEVEMENT_RARITIES,
   ACHIEVEMENTS,
   getAchievementById,
   getVisibleAchievements,

@@ -2,26 +2,67 @@
  * 個人資料頁面
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { StatsCardGroup } from '../../components/games/evolution/stats';
+import AchievementDetailModal from '../../components/games/evolution/achievements/AchievementDetailModal';
 import './ProfilePage.css';
+
+const CATEGORY_TABS = [
+  { key: 'all', label: '全部' },
+  { key: 'milestone', label: '里程碑' },
+  { key: 'gameplay', label: '遊戲玩法' },
+  { key: 'collection', label: '收集類' },
+  { key: 'special', label: '特殊成就' },
+];
+
+const RARITY_LABELS = {
+  common: '普通',
+  rare: '稀有',
+  legendary: '傳說',
+};
 
 /**
  * 成就徽章
  */
-function AchievementBadge({ achievement }) {
+function AchievementBadge({ achievement, onClick }) {
+  const rarity = achievement.rarity || 'common';
+  const rarityLabel = RARITY_LABELS[rarity];
+  const hasProgress =
+    !achievement.unlocked &&
+    achievement.progress !== undefined &&
+    achievement.progress > 0;
+
   return (
-    <div
-      className={`achievement-badge ${achievement.unlocked ? '' : 'achievement-badge--locked'}`}
+    <button
+      className={`achievement-badge achievement-badge--${rarity} ${achievement.unlocked ? '' : 'achievement-badge--locked'}`}
       title={achievement.description}
+      onClick={() => onClick && onClick(achievement)}
+      aria-label={`成就：${achievement.name}${achievement.unlocked ? '（已解鎖）' : '（未解鎖）'}`}
     >
       <span className="achievement-badge__icon">{achievement.icon}</span>
       <span className="achievement-badge__name">{achievement.name}</span>
-      {achievement.unlocked && (
+      <span className={`achievement-badge__rarity achievement-badge__rarity--${rarity}`}>
+        {rarityLabel}
+      </span>
+      {achievement.unlocked ? (
         <span className="achievement-badge__points">+{achievement.points}</span>
-      )}
-    </div>
+      ) : hasProgress ? (
+        <div className="achievement-badge__progress-bar" role="progressbar" aria-valuenow={achievement.progress} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="achievement-badge__progress-fill"
+            style={{ width: `${achievement.progress}%` }}
+          />
+        </div>
+      ) : null}
+      {!achievement.unlocked &&
+        achievement.currentValue !== undefined &&
+        achievement.targetValue !== undefined && (
+          <span className="achievement-badge__progress-text">
+            {achievement.currentValue}/{achievement.targetValue}
+          </span>
+        )}
+    </button>
   );
 }
 
@@ -33,7 +74,13 @@ AchievementBadge.propTypes = {
     icon: PropTypes.string.isRequired,
     points: PropTypes.number,
     unlocked: PropTypes.bool,
+    rarity: PropTypes.oneOf(['common', 'rare', 'legendary']),
+    category: PropTypes.string,
+    progress: PropTypes.number,
+    currentValue: PropTypes.number,
+    targetValue: PropTypes.number,
   }).isRequired,
+  onClick: PropTypes.func,
 };
 
 /**
@@ -91,6 +138,25 @@ function ProfilePage({
   className,
 }) {
   const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
+
+  const handleAchievementClick = useCallback((achievement) => {
+    setSelectedAchievement(achievement);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setSelectedAchievement(null);
+  }, []);
+
+  const handleShare = useCallback((achievement) => {
+    const text = `我在演化論：物種起源中解鎖了成就「${achievement.name}」！🏅 +${achievement.points} 點`;
+    if (navigator.share) {
+      navigator.share({ title: '成就解鎖', text }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+  }, []);
 
   // 統計卡片資料
   const statsCards = stats
@@ -104,6 +170,12 @@ function ProfilePage({
       ]
     : [];
 
+  // 依類別過濾成就
+  const filteredAchievements =
+    selectedCategory === 'all'
+      ? achievements
+      : achievements?.filter((a) => a.category === selectedCategory);
+
   // 成就進度
   const unlockedCount = achievements?.filter((a) => a.unlocked).length || 0;
   const totalCount = achievements?.length || 0;
@@ -113,8 +185,8 @@ function ProfilePage({
 
   // 顯示的成就
   const displayedAchievements = showAllAchievements
-    ? achievements
-    : achievements?.slice(0, 6);
+    ? filteredAchievements
+    : filteredAchievements?.slice(0, 6);
 
   if (loading) {
     return (
@@ -175,24 +247,52 @@ function ProfilePage({
           </span>
         </div>
 
+        {/* 類別篩選頁籤 */}
+        <div className="profile-page__achievement-tabs" role="tablist">
+          {CATEGORY_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              role="tab"
+              aria-selected={selectedCategory === tab.key}
+              className={`profile-page__achievement-tab ${selectedCategory === tab.key ? 'profile-page__achievement-tab--active' : ''}`}
+              onClick={() => {
+                setSelectedCategory(tab.key);
+                setShowAllAchievements(false);
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="profile-page__achievement-grid">
           {displayedAchievements?.map((achievement) => (
             <AchievementBadge
               key={achievement.id}
               achievement={achievement}
+              onClick={handleAchievementClick}
             />
           ))}
         </div>
 
-        {achievements && achievements.length > 6 && (
+        {filteredAchievements && filteredAchievements.length > 6 && (
           <button
             className="profile-page__show-more"
             onClick={() => setShowAllAchievements(!showAllAchievements)}
           >
-            {showAllAchievements ? '顯示較少' : `顯示全部 (${totalCount})`}
+            {showAllAchievements ? '顯示較少' : `顯示全部 (${filteredAchievements.length})`}
           </button>
         )}
       </section>
+
+      {/* 成就詳情彈窗 */}
+      {selectedAchievement && (
+        <AchievementDetailModal
+          achievement={selectedAchievement}
+          onClose={handleModalClose}
+          onShare={handleShare}
+        />
+      )}
 
       {/* 遊戲歷史 */}
       <section className="profile-page__history">
@@ -238,6 +338,11 @@ ProfilePage.propTypes = {
       icon: PropTypes.string,
       points: PropTypes.number,
       unlocked: PropTypes.bool,
+      rarity: PropTypes.oneOf(['common', 'rare', 'legendary']),
+      category: PropTypes.string,
+      progress: PropTypes.number,
+      currentValue: PropTypes.number,
+      targetValue: PropTypes.number,
     })
   ),
   /** 遊戲歷史 */

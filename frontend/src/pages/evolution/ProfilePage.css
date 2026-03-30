@@ -159,7 +159,37 @@
   color: var(--text-primary, #fff);
 }
 
-/* 成就徽章 */
+/* 成就類別頁籤 */
+.profile-page__achievement-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.profile-page__achievement-tab {
+  padding: 6px 14px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-secondary, #aaa);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profile-page__achievement-tab:hover {
+  background: var(--bg-secondary, #2a2a2a);
+  color: var(--text-primary, #fff);
+}
+
+.profile-page__achievement-tab--active {
+  background: var(--color-primary, #4CAF50);
+  border-color: var(--color-primary, #4CAF50);
+  color: #fff;
+}
+
+/* 成就徽章（擴充） */
 .achievement-badge {
   display: flex;
   flex-direction: column;
@@ -168,11 +198,24 @@
   background: var(--bg-secondary, #2a2a2a);
   border-radius: 8px;
   text-align: center;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid transparent;
+  cursor: pointer;
+  width: 100%;
 }
 
 .achievement-badge:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 稀有度邊框 */
+.achievement-badge--rare {
+  border-color: rgba(33, 150, 243, 0.4);
+}
+
+.achievement-badge--legendary {
+  border-color: rgba(255, 215, 0, 0.4);
 }
 
 .achievement-badge--locked {
@@ -192,9 +235,45 @@
   margin-bottom: 4px;
 }
 
+/* 稀有度文字 */
+.achievement-badge__rarity {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.achievement-badge__rarity--common   { color: #9e9e9e; }
+.achievement-badge__rarity--rare     { color: #64b5f6; }
+.achievement-badge__rarity--legendary { color: #FFD700; }
+
 .achievement-badge__points {
   font-size: 11px;
   color: var(--color-gold, #FFD700);
+}
+
+/* 進度條（在徽章內） */
+.achievement-badge__progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-tertiary, #3a3a3a);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.achievement-badge__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.achievement-badge__progress-text {
+  font-size: 10px;
+  color: var(--text-secondary, #aaa);
+  margin-top: 2px;
 }
 
 /* 遊戲歷史區塊 */
