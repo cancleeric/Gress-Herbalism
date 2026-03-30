@@ -13,7 +13,7 @@ const {
   isOnlyOnePlayerLeft,
   checkWinCondition,
   validateQuestionAction
-} = require('../../logic/gameLogic');
+} = require('../../logic/herbalism/gameLogic');
 
 describe('gameLogic', () => {
   describe('常數', () => {
