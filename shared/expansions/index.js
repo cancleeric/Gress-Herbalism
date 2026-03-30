@@ -62,6 +62,9 @@ const {
 // 載入 base 擴充包
 const { baseExpansion } = require('./base');
 
+// 載入 deep-sea 擴充包
+const { deepSeaExpansion } = require('./deepSea');
+
 /**
  * 全域擴充包註冊表單例
  * 用於應用程式範圍內的擴充包管理
@@ -114,4 +117,8 @@ module.exports = {
 
   // 全域單例
   globalRegistry,
+
+  // 擴充包
+  baseExpansion,
+  deepSeaExpansion,
 };
