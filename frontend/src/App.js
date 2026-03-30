@@ -14,7 +14,7 @@ import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
 import { GameRoom } from './components/games/herbalism';
-import { EvolutionRoom } from './components/games/evolution';
+import { EvolutionRoom, LocalEvolutionRoom } from './components/games/evolution';
 import './styles/App.css';
 
 /**
@@ -107,6 +107,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <EvolutionLobbyPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* 演化論單人模式（vs AI）路由 - 必須在 :roomId 路由之前 */}
+        <Route
+          path="/game/evolution/local-game"
+          element={
+            <ProtectedRoute>
+              <LocalEvolutionRoom />
             </ProtectedRoute>
           }
         />

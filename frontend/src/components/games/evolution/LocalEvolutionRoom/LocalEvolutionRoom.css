@@ -1,0 +1,501 @@
+/**
+ * 演化論本地遊戲房間樣式
+ */
+
+.local-evo-room {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: 'Noto Sans TC', sans-serif;
+  overflow: hidden;
+}
+
+.local-evo-error,
+.local-evo-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  font-size: 3rem;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 頂部標題 */
+.local-evo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.phase-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.phase-badge {
+  background: #4CAF50;
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.round-info {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.food-pool {
+  background: rgba(255, 200, 100, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.ai-thinking {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #64b5f6;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.ai-thinking .dots span {
+  animation: blink 1.2s infinite;
+  font-weight: bold;
+}
+.ai-thinking .dots span:nth-child(2) { animation-delay: 0.2s; }
+.ai-thinking .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.my-turn-indicator {
+  color: #ffeb3b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-back {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.btn-back:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* 主要區域 */
+.local-evo-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 玩家板面網格 */
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.player-board {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem;
+  transition: border-color 0.2s;
+}
+
+.player-board.current-turn {
+  border-color: #ffeb3b;
+  box-shadow: 0 0 12px rgba(255, 235, 59, 0.3);
+}
+
+.player-board.my-board {
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.player-board-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.player-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.player-stats {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.player-score { color: #ffeb3b; }
+.turn-indicator { color: #ffeb3b; font-size: 1rem; }
+
+.creatures-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 60px;
+}
+
+.no-creatures {
+  font-size: 0.8rem;
+  opacity: 0.5;
+  align-self: center;
+}
+
+/* 生物卡片 */
+.creature-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem;
+  min-width: 120px;
+  max-width: 150px;
+  transition: all 0.2s;
+}
+
+.creature-card.fed {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.15);
+}
+
+.creature-card.hibernating {
+  border-color: #64b5f6;
+  background: rgba(100, 181, 246, 0.1);
+}
+
+.creature-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.creature-id { font-size: 1rem; }
+.fed-badge { color: #4CAF50; font-size: 0.75rem; }
+.hibernate-badge { font-size: 0.8rem; }
+
+.creature-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-bottom: 0.35rem;
+  min-height: 20px;
+}
+
+.trait-chip {
+  background: rgba(100, 181, 246, 0.25);
+  border: 1px solid rgba(100, 181, 246, 0.5);
+  color: #e3f2fd;
+  padding: 0.1rem 0.35rem;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.no-traits {
+  font-size: 0.65rem;
+  opacity: 0.4;
+}
+
+.creature-food {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-bottom: 0.35rem;
+}
+
+.creature-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.creature-actions button {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.creature-actions button:hover { opacity: 0.85; }
+
+.btn-feed { background: #4CAF50; color: #fff; }
+.btn-attack { background: #f44336; color: #fff; }
+.btn-hibernate { background: #64b5f6; color: #fff; }
+.btn-trait { background: #7e57c2; color: #fff; }
+
+/* 攻擊目標選擇器 */
+.attack-targets {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 250px;
+  max-width: 90vw;
+}
+
+.btn-target {
+  background: rgba(244, 67, 54, 0.2);
+  border: 1px solid rgba(244, 67, 54, 0.5);
+  color: #fff;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.8rem;
+  transition: background 0.2s;
+}
+.btn-target:hover { background: rgba(244, 67, 54, 0.4); }
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 我的手牌區 */
+.my-hand-section {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.my-hand-section h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.hand-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.hand-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+  text-align: center;
+}
+
+.hand-card:hover { border-color: rgba(100, 181, 246, 0.7); }
+.hand-card.selected { border-color: #ffeb3b; background: rgba(255, 235, 59, 0.15); }
+
+.card-trait { font-size: 0.8rem; font-weight: 500; }
+
+.hand-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-create-creature {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-pass {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.selected-hint {
+  font-size: 0.78rem;
+  color: #ffeb3b;
+  margin: 0.35rem 0 0;
+}
+
+/* 食物/滅絕 overlay */
+.food-phase-overlay,
+.extinction-overlay {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.dice-result {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+/* 進食提示 */
+.feeding-hint {
+  background: rgba(255, 235, 59, 0.1);
+  border: 1px solid rgba(255, 235, 59, 0.3);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.btn-pass-sm {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 0 0.25rem;
+  font-size: 0.8rem;
+}
+
+/* 事件日誌 */
+.event-log {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  max-height: 100px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.event-log h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+.event-log ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.event-log li {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* 遊戲結束 */
+.game-end-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.game-end-modal {
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 2rem;
+  min-width: 300px;
+  text-align: center;
+}
+
+.game-end-modal h2 { margin: 0 0 1rem; }
+
+.final-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.score-row.winner {
+  background: rgba(255, 235, 59, 0.15);
+  border: 1px solid rgba(255, 235, 59, 0.4);
+}
+
+.score-row .player-name { flex: 1; text-align: left; }
+.score-row .score { font-weight: 700; color: #ffeb3b; }
+.winner-badge { font-size: 1.2rem; }
+
+.btn-primary {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}

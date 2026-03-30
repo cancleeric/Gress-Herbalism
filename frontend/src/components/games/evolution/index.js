@@ -7,3 +7,4 @@
 
 export { default as EvolutionRoom } from './EvolutionRoom';
 export { default as EvolutionLobby } from './EvolutionLobby';
+export { default as LocalEvolutionRoom } from './LocalEvolutionRoom';

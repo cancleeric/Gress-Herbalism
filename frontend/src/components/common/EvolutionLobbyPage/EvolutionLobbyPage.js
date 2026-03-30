@@ -25,6 +25,11 @@ import {
   getNickname
 } from '../../../utils/common/localStorage';
 import { getPlayerNameError } from '../../../utils/common/validation';
+import {
+  AI_DIFFICULTY,
+  ALL_AI_DIFFICULTIES,
+  getAIDifficultyDescription
+} from '../../../shared/constants';
 import VersionInfo from '../VersionInfo';
 import '../Lobby/Lobby.css';
 import './EvolutionLobbyPage.css';
@@ -52,6 +57,10 @@ function EvolutionLobbyPage() {
 
   // 當前導航
   const [activeNav, setActiveNav] = useState('rooms');
+
+  // 單人模式（vs AI）狀態
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiConfig, setAIConfig] = useState({ aiCount: 1, difficulties: [AI_DIFFICULTY.MEDIUM] });
 
   // 載入暱稱
   useEffect(() => {
@@ -215,6 +224,57 @@ function EvolutionLobbyPage() {
    */
   const canJoinRoom = (room) => {
     return room.playerCount < (room.maxPlayers || 4);
+  };
+
+  /**
+   * 開始單人模式（vs AI）
+   */
+  const handleStartVsAI = () => {
+    if (!nickname.trim()) {
+      setError('請輸入遊戲暱稱');
+      return;
+    }
+
+    saveNickname(nickname.trim());
+
+    const params = new URLSearchParams({
+      mode: 'single',
+      aiCount: aiConfig.aiCount.toString(),
+      difficulties: aiConfig.difficulties.join(','),
+      playerName: nickname.trim(),
+      playerId
+    });
+
+    navigate(`/game/evolution/local-game?${params.toString()}`, {
+      state: {
+        aiConfig,
+        playerName: nickname.trim(),
+        playerId
+      }
+    });
+  };
+
+  /**
+   * 更新 AI 難度設定
+   */
+  const handleAIDifficultyChange = (index, difficulty) => {
+    setAIConfig(prev => {
+      const newDifficulties = [...prev.difficulties];
+      newDifficulties[index] = difficulty;
+      return { ...prev, difficulties: newDifficulties };
+    });
+  };
+
+  /**
+   * 更新 AI 數量
+   */
+  const handleAICountChange = (count) => {
+    setAIConfig(prev => {
+      const newDiffs = [...prev.difficulties];
+      while (newDiffs.length < count) newDiffs.push(AI_DIFFICULTY.MEDIUM);
+      newDiffs.length = count;
+      return { aiCount: count, difficulties: newDiffs };
+    });
   };
 
   return (
@@ -424,6 +484,17 @@ function EvolutionLobbyPage() {
               </table>
             )}
           </div>
+
+          {/* 單人模式（vs AI）入口 */}
+          <div className="single-player-section">
+            <button
+              className="single-player-btn"
+              onClick={() => setShowAIModal(true)}
+            >
+              <span className="material-symbols-outlined">smart_toy</span>
+              單人模式（vs AI）
+            </button>
+          </div>
         </main>
       </div>
 
@@ -523,6 +594,65 @@ function EvolutionLobbyPage() {
 
             {/* 底部金色橫條 */}
             <div className="crm-bottom-accent"></div>
+          </div>
+        </div>
+      )}
+
+      {/* 單人模式（vs AI）設定 Modal */}
+      {showAIModal && (
+        <div className="modal-overlay">
+          <div className="modal ai-modal">
+            <h3>演化論單人模式</h3>
+            <p className="modal-description">選擇 AI 對手數量和難度，與電腦對戰</p>
+
+            <div className="ai-count-section">
+              <label>AI 對手數量</label>
+              <select
+                className="ai-count-select"
+                value={aiConfig.aiCount}
+                onChange={(e) => handleAICountChange(parseInt(e.target.value, 10))}
+              >
+                <option value={1}>1 個 AI（2 人遊戲）</option>
+                <option value={2}>2 個 AI（3 人遊戲）</option>
+                <option value={3}>3 個 AI（4 人遊戲）</option>
+              </select>
+            </div>
+
+            <div className="ai-difficulty-section">
+              <h4>各 AI 難度設定</h4>
+              {aiConfig.difficulties.map((diff, idx) => (
+                <div key={idx} className="ai-difficulty-row">
+                  <span className="ai-name">AI {idx + 1}</span>
+                  <select
+                    className="difficulty-select"
+                    value={diff}
+                    onChange={(e) => handleAIDifficultyChange(idx, e.target.value)}
+                  >
+                    {ALL_AI_DIFFICULTIES.map((d) => (
+                      <option key={d} value={d}>
+                        {d === AI_DIFFICULTY.EASY ? '簡單' :
+                         d === AI_DIFFICULTY.MEDIUM ? '中等' : '困難'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <div className="difficulty-info">
+              <p style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '0.5rem' }}>
+                {getAIDifficultyDescription(aiConfig.difficulties[0])}
+              </p>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowAIModal(false)}>
+                取消
+              </button>
+              <button className="btn btn-primary" onClick={handleStartVsAI}>
+                開始遊戲
+              </button>
+            </div>
           </div>
         </div>
       )}
