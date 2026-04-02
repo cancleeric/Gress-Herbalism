@@ -12,6 +12,7 @@ on:
 
 env:
   NODE_VERSION: '20'
+  CYPRESS_INSTALL_BINARY: '0'
 
 jobs:
   # Lint 檢查
