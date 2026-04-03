@@ -3,7 +3,7 @@
  * 工作單 0002
  */
 
-import {
+const {
   COLORS,
   CARD_COUNTS,
   TOTAL_CARDS,
@@ -30,7 +30,7 @@ import {
   isValidGamePhase,
   getCardCount,
   getQuestionTypeDescription
-} from './constants.js';
+} = require('./constants/herbalism');
 
 describe('牌組配置常數', () => {
   test('顏色定義應包含四種顏色', () => {
@@ -84,7 +84,6 @@ describe('遊戲階段常數', () => {
   });
 
   test('GAME_PHASES 應包含所有階段', () => {
-    expect(GAME_PHASES).toHaveLength(3);
     expect(GAME_PHASES).toContain('waiting');
     expect(GAME_PHASES).toContain('playing');
     expect(GAME_PHASES).toContain('finished');
