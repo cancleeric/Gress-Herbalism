@@ -1,0 +1,160 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "logout": "登出",
+    "back_to_lobby": "← 返回大厅",
+    "guest": "访客",
+    "error": "错误"
+  },
+  "login": {
+    "title": "本草 Herbalism",
+    "subtitle": "3-4人在线推理桌游",
+    "google_login": "使用 Google 账号登录",
+    "guest_login": "访客登录",
+    "login_failed": "登录失败，请稍后再试",
+    "admin_config_title": "管理员设置步骤：",
+    "new_here": "新朋友？",
+    "create_account": "创建账号",
+    "quote": "在古老的本草知识中，找出神秘药方。融合推理、策略与智慧的桌游。",
+    "players": "3-4 位玩家",
+    "duration": "20-30 分钟",
+    "logic": "逻辑推理",
+    "rules": "规则书",
+    "cards": "卡牌",
+    "about": "关于",
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "game_selection": {
+    "title": "选择游戏",
+    "subtitle": "请选择您想要游玩的游戏",
+    "herbalism_title": "本草",
+    "herbalism_desc": "3-4 人推理桌游",
+    "herbalism_desc2": "通过问牌和推理猜测盖牌颜色",
+    "herbalism_players": "3-4 人",
+    "herbalism_duration": "15-30 分钟",
+    "evolution_title": "演化论",
+    "evolution_desc": "2-4 人策略卡牌游戏",
+    "evolution_desc2": "创造生物并让它们在竞争中存活",
+    "evolution_players": "2-4 人",
+    "evolution_duration": "30-60 分钟",
+    "profile": "个人资料",
+    "friends": "好友",
+    "leaderboard": "排行榜",
+    "language": "语言"
+  },
+  "profile": {
+    "title": "个人资料",
+    "guest_account": "访客账号",
+    "guest_message": "登录 Google 账号以解锁完整功能",
+    "save_records": "保存游戏记录与统计数据",
+    "view_stats": "查看个人胜率与最高分",
+    "use_friends": "使用好友功能",
+    "leaderboard": "登上排行榜",
+    "go_google_login": "前往 Google 登录",
+    "back_to_lobby": "返回大厅",
+    "stats_title": "游戏统计",
+    "total_games": "总场数",
+    "wins": "胜利",
+    "win_rate": "胜率",
+    "total_score": "总得分",
+    "highest_score": "最高分",
+    "recent_games": "最近游戏",
+    "no_records": "还没有游戏记录",
+    "score": "得分：",
+    "player_game": "人游戏 · 局"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "back": "← 返回大厅",
+    "load_failed": "加载排行榜失败"
+  },
+  "lobby": {
+    "server_disconnected": "与服务器断线，请确认后端是否启动",
+    "reconnect_failed": "重连失败：{{message}}",
+    "not_connected": "尚未连接到服务器",
+    "enter_room_id": "请输入房间 ID"
+  },
+  "connection": {
+    "reconnected": "重连成功！",
+    "reconnecting": "重新连接中... (第 {{count}} 次尝试)",
+    "disconnected": "连接已中断"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "红色",
+      "yellow": "黄色",
+      "green": "绿色",
+      "blue": "蓝色"
+    },
+    "phases": {
+      "waiting": "等待中",
+      "in_progress": "进行中",
+      "finished": "已结束"
+    },
+    "question_types": {
+      "one_each": "各一张",
+      "all_of_one": "其中一种全部",
+      "give_one_get_all": "给一张要全部"
+    },
+    "game_status": {
+      "current_turn": "当前回合",
+      "waiting_players": "等待玩家加入...",
+      "your_turn": "你的回合",
+      "player_status": "玩家状态",
+      "no_players": "尚无玩家",
+      "me": "(我)",
+      "exited": "已退出",
+      "disconnected": "断线中",
+      "active": "活跃",
+      "game_status": "游戏状态",
+      "no_winner": "游戏结束，没有获胜者",
+      "winner": "🏆 获胜者: {{name}}",
+      "game_history": "游戏记录",
+      "no_history": "尚无记录",
+      "more_history": "还有 {{count}} 条更早的记录"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "等待开始",
+      "evolution": "演化阶段",
+      "foodSupply": "食物供给",
+      "feeding": "进食阶段",
+      "extinction": "灭绝阶段",
+      "gameEnd": "游戏结束"
+    },
+    "traits": {
+      "carnivore": "肉食",
+      "scavenger": "腐食",
+      "sharpVision": "锐目",
+      "camouflage": "伪装",
+      "burrowing": "穴居",
+      "poisonous": "毒液",
+      "aquatic": "水生",
+      "agile": "敏捷",
+      "massive": "巨化",
+      "tailLoss": "断尾",
+      "mimicry": "拟态",
+      "fatTissue": "脂肪组织",
+      "hibernation": "冬眠",
+      "parasite": "寄生虫",
+      "robbery": "掠夺",
+      "communication": "沟通",
+      "cooperation": "合作",
+      "symbiosis": "共生",
+      "trampling": "践踏"
+    }
+  },
+  "ai": {
+    "difficulty": {
+      "easy": "简单 - 适合新手",
+      "medium": "中等 - 平衡挑战",
+      "hard": "困难 - 高级玩家"
+    },
+    "level": {
+      "beginner": "初学者",
+      "intermediate": "中级",
+      "expert": "专家"
+    }
+  }
+}

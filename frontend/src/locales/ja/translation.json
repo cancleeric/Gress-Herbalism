@@ -1,0 +1,160 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "logout": "ログアウト",
+    "back_to_lobby": "← ロビーに戻る",
+    "guest": "ゲスト",
+    "error": "エラー"
+  },
+  "login": {
+    "title": "本草 Herbalism",
+    "subtitle": "3-4人オンライン推理ボードゲーム",
+    "google_login": "Googleアカウントでログイン",
+    "guest_login": "ゲストログイン",
+    "login_failed": "ログインに失敗しました。しばらくしてから再試行してください",
+    "admin_config_title": "管理者設定手順：",
+    "new_here": "初めての方？",
+    "create_account": "アカウント作成",
+    "quote": "古代の本草知識から神秘的な薬を発見。推理、戦略、知恵を融合したボードゲーム。",
+    "players": "3-4人プレイヤー",
+    "duration": "20-30分",
+    "logic": "論理的推理",
+    "rules": "ルール",
+    "cards": "カード",
+    "about": "について",
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "game_selection": {
+    "title": "ゲーム選択",
+    "subtitle": "プレイしたいゲームを選んでください",
+    "herbalism_title": "本草",
+    "herbalism_desc": "3-4人推理ボードゲーム",
+    "herbalism_desc2": "カードの質問と推理で隠されたカードの色を当てる",
+    "herbalism_players": "3-4人",
+    "herbalism_duration": "15-30分",
+    "evolution_title": "進化論",
+    "evolution_desc": "2-4人ストラテジーカードゲーム",
+    "evolution_desc2": "生き物を作り、競争の中で生き残らせよう",
+    "evolution_players": "2-4人",
+    "evolution_duration": "30-60分",
+    "profile": "プロフィール",
+    "friends": "フレンド",
+    "leaderboard": "リーダーボード",
+    "language": "言語"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "guest_account": "ゲストアカウント",
+    "guest_message": "Googleアカウントでサインインして全機能を解放",
+    "save_records": "ゲーム記録と統計を保存",
+    "view_stats": "個人勝率とハイスコアを確認",
+    "use_friends": "フレンド機能を使う",
+    "leaderboard": "リーダーボードに登る",
+    "go_google_login": "Googleログインへ",
+    "back_to_lobby": "ロビーに戻る",
+    "stats_title": "ゲーム統計",
+    "total_games": "総ゲーム数",
+    "wins": "勝利",
+    "win_rate": "勝率",
+    "total_score": "総スコア",
+    "highest_score": "最高スコア",
+    "recent_games": "最近のゲーム",
+    "no_records": "ゲーム記録がまだありません",
+    "score": "スコア：",
+    "player_game": "人ゲーム · ラウンド"
+  },
+  "leaderboard": {
+    "title": "リーダーボード",
+    "back": "← ロビーに戻る",
+    "load_failed": "リーダーボードの読み込みに失敗しました"
+  },
+  "lobby": {
+    "server_disconnected": "サーバーから切断されました。バックエンドが起動しているか確認してください",
+    "reconnect_failed": "再接続失敗：{{message}}",
+    "not_connected": "サーバーに接続されていません",
+    "enter_room_id": "ルームIDを入力してください"
+  },
+  "connection": {
+    "reconnected": "再接続しました！",
+    "reconnecting": "再接続中... ({{count}}回目の試行)",
+    "disconnected": "接続が切断されました"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "赤",
+      "yellow": "黄",
+      "green": "緑",
+      "blue": "青"
+    },
+    "phases": {
+      "waiting": "待機中",
+      "in_progress": "進行中",
+      "finished": "終了"
+    },
+    "question_types": {
+      "one_each": "各1枚",
+      "all_of_one": "同色全部",
+      "give_one_get_all": "1枚渡して全部取る"
+    },
+    "game_status": {
+      "current_turn": "現在のターン",
+      "waiting_players": "プレイヤーを待っています...",
+      "your_turn": "あなたのターン",
+      "player_status": "プレイヤー状態",
+      "no_players": "プレイヤーなし",
+      "me": "(自分)",
+      "exited": "退出済み",
+      "disconnected": "切断中",
+      "active": "アクティブ",
+      "game_status": "ゲーム状態",
+      "no_winner": "ゲーム終了、勝者なし",
+      "winner": "🏆 勝者: {{name}}",
+      "game_history": "ゲーム履歴",
+      "no_history": "記録なし",
+      "more_history": "さらに {{count}} 件の記録"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "開始待ち",
+      "evolution": "進化フェーズ",
+      "foodSupply": "食料供給",
+      "feeding": "摂食フェーズ",
+      "extinction": "絶滅フェーズ",
+      "gameEnd": "ゲーム終了"
+    },
+    "traits": {
+      "carnivore": "肉食",
+      "scavenger": "腐食",
+      "sharpVision": "鋭い目",
+      "camouflage": "カモフラージュ",
+      "burrowing": "穴居",
+      "poisonous": "毒液",
+      "aquatic": "水生",
+      "agile": "敏捷",
+      "massive": "巨大化",
+      "tailLoss": "尻尾切り",
+      "mimicry": "擬態",
+      "fatTissue": "脂肪組織",
+      "hibernation": "冬眠",
+      "parasite": "寄生虫",
+      "robbery": "略奪",
+      "communication": "コミュニケーション",
+      "cooperation": "協力",
+      "symbiosis": "共生",
+      "trampling": "踏みつけ"
+    }
+  },
+  "ai": {
+    "difficulty": {
+      "easy": "簡単 - 初心者向け",
+      "medium": "普通 - バランスの取れた挑戦",
+      "hard": "難しい - 上級者向け"
+    },
+    "level": {
+      "beginner": "初心者",
+      "intermediate": "中級",
+      "expert": "エキスパート"
+    }
+  }
+}

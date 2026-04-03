@@ -8,8 +8,16 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../firebase/AuthContext';
 import './GameSelection.css';
+
+const LANGUAGES = [
+  { code: 'zh-TW', label: '繁中' },
+  { code: 'zh-CN', label: '简中' },
+  { code: 'en', label: 'EN' },
+  { code: 'ja', label: '日本語' },
+];
 
 /**
  * 遊戲選擇頁面組件
@@ -17,8 +25,9 @@ import './GameSelection.css';
 function GameSelection() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
 
-  const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || user?.email?.split('@')[0] || '訪客');
+  const displayName = user?.isAnonymous ? t('common.guest') : (user?.displayName || user?.email?.split('@')[0] || t('common.guest'));
 
   /**
    * 處理遊戲選擇
@@ -62,15 +71,29 @@ function GameSelection() {
           )}
           <span className="gs-username">{displayName}</span>
         </div>
-        <button className="gs-logout-btn" onClick={handleLogout}>
-          登出
-        </button>
+        <div className="gs-header-actions">
+          <div className="gs-language-switcher">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                className={`gs-lang-btn${i18n.language === lang.code ? ' active' : ''}`}
+                onClick={() => i18n.changeLanguage(lang.code)}
+                aria-label={lang.label}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+          <button className="gs-logout-btn" onClick={handleLogout}>
+            {t('common.logout')}
+          </button>
+        </div>
       </header>
 
       {/* 主內容 */}
       <main className="gs-main">
-        <h1 className="gs-title">選擇遊戲</h1>
-        <p className="gs-subtitle">請選擇您想要遊玩的遊戲</p>
+        <h1 className="gs-title">{t('game_selection.title')}</h1>
+        <p className="gs-subtitle">{t('game_selection.subtitle')}</p>
 
         <div className="gs-games">
           {/* 本草 */}
@@ -79,15 +102,15 @@ function GameSelection() {
             onClick={() => handleSelectGame('herbalism')}
           >
             <div className="gs-game-icon">🌿</div>
-            <h2 className="gs-game-title">本草</h2>
+            <h2 className="gs-game-title">{t('game_selection.herbalism_title')}</h2>
             <p className="gs-game-desc">
-              3-4 人推理桌遊
+              {t('game_selection.herbalism_desc')}
               <br />
-              透過問牌和推理猜測蓋牌顏色
+              {t('game_selection.herbalism_desc2')}
             </p>
             <div className="gs-game-info">
-              <span>3-4 人</span>
-              <span>15-30 分鐘</span>
+              <span>{t('game_selection.herbalism_players')}</span>
+              <span>{t('game_selection.herbalism_duration')}</span>
             </div>
           </div>
 
@@ -97,15 +120,15 @@ function GameSelection() {
             onClick={() => handleSelectGame('evolution')}
           >
             <div className="gs-game-icon">🦎</div>
-            <h2 className="gs-game-title">演化論</h2>
+            <h2 className="gs-game-title">{t('game_selection.evolution_title')}</h2>
             <p className="gs-game-desc">
-              2-4 人策略卡牌遊戲
+              {t('game_selection.evolution_desc')}
               <br />
-              創造生物並讓牠們在競爭中存活
+              {t('game_selection.evolution_desc2')}
             </p>
             <div className="gs-game-info">
-              <span>2-4 人</span>
-              <span>30-60 分鐘</span>
+              <span>{t('game_selection.evolution_players')}</span>
+              <span>{t('game_selection.evolution_duration')}</span>
             </div>
           </div>
         </div>
@@ -117,21 +140,21 @@ function GameSelection() {
             onClick={() => navigate('/profile')}
           >
             <span className="material-symbols-outlined">person</span>
-            個人資料
+            {t('game_selection.profile')}
           </button>
           <button
             className="gs-nav-btn"
             onClick={() => navigate('/friends')}
           >
             <span className="material-symbols-outlined">group</span>
-            好友
+            {t('game_selection.friends')}
           </button>
           <button
             className="gs-nav-btn"
             onClick={() => navigate('/leaderboard')}
           >
             <span className="material-symbols-outlined">leaderboard</span>
-            排行榜
+            {t('game_selection.leaderboard')}
           </button>
         </div>
       </main>

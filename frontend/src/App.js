@@ -16,6 +16,7 @@ import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSele
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
 import './styles/App.css';
+import './i18n';
 
 /**
  * 受保護路由組件 - 需要登入才能訪問

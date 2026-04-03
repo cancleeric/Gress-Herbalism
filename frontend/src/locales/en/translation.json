@@ -1,0 +1,160 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "logout": "Logout",
+    "back_to_lobby": "← Back to Lobby",
+    "guest": "Guest",
+    "error": "Error"
+  },
+  "login": {
+    "title": "Herbalism",
+    "subtitle": "3-4 Player Online Deduction Game",
+    "google_login": "Sign in with Google",
+    "guest_login": "Guest Login",
+    "login_failed": "Login failed, please try again later",
+    "admin_config_title": "Admin Configuration Steps:",
+    "new_here": "New here?",
+    "create_account": "Create Account",
+    "quote": "Discover mysterious herbal recipes in ancient knowledge. A board game blending deduction, strategy, and wisdom.",
+    "players": "3-4 Players",
+    "duration": "20-30 Minutes",
+    "logic": "Logic & Deduction",
+    "rules": "Rules",
+    "cards": "Cards",
+    "about": "About",
+    "footer": "© 2024 Herbalism Online. All Rights Reserved."
+  },
+  "game_selection": {
+    "title": "Select Game",
+    "subtitle": "Choose a game you want to play",
+    "herbalism_title": "Herbalism",
+    "herbalism_desc": "3-4 Player Deduction Game",
+    "herbalism_desc2": "Deduce hidden card colors through questioning",
+    "herbalism_players": "3-4 Players",
+    "herbalism_duration": "15-30 Min",
+    "evolution_title": "Evolution",
+    "evolution_desc": "2-4 Player Strategy Card Game",
+    "evolution_desc2": "Create creatures and help them survive competition",
+    "evolution_players": "2-4 Players",
+    "evolution_duration": "30-60 Min",
+    "profile": "Profile",
+    "friends": "Friends",
+    "leaderboard": "Leaderboard",
+    "language": "Language"
+  },
+  "profile": {
+    "title": "Profile",
+    "guest_account": "Guest Account",
+    "guest_message": "Sign in with Google to unlock full features",
+    "save_records": "Save game records and statistics",
+    "view_stats": "View personal win rate and high score",
+    "use_friends": "Use friend features",
+    "leaderboard": "Join the leaderboard",
+    "go_google_login": "Go to Google Login",
+    "back_to_lobby": "Back to Lobby",
+    "stats_title": "Game Statistics",
+    "total_games": "Total Games",
+    "wins": "Wins",
+    "win_rate": "Win Rate",
+    "total_score": "Total Score",
+    "highest_score": "Highest Score",
+    "recent_games": "Recent Games",
+    "no_records": "No game records yet",
+    "score": "Score:",
+    "player_game": "player game · round"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "back": "← Back to Lobby",
+    "load_failed": "Failed to load leaderboard"
+  },
+  "lobby": {
+    "server_disconnected": "Disconnected from server, check if backend is running",
+    "reconnect_failed": "Reconnection failed: {{message}}",
+    "not_connected": "Not connected to server",
+    "enter_room_id": "Please enter room ID"
+  },
+  "connection": {
+    "reconnected": "Reconnected successfully!",
+    "reconnecting": "Reconnecting... (Attempt {{count}})",
+    "disconnected": "Connection lost"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "Red",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue"
+    },
+    "phases": {
+      "waiting": "Waiting",
+      "in_progress": "In Progress",
+      "finished": "Finished"
+    },
+    "question_types": {
+      "one_each": "One of each",
+      "all_of_one": "All of one color",
+      "give_one_get_all": "Give one, get all"
+    },
+    "game_status": {
+      "current_turn": "Current Turn",
+      "waiting_players": "Waiting for players...",
+      "your_turn": "Your Turn",
+      "player_status": "Player Status",
+      "no_players": "No players yet",
+      "me": "(Me)",
+      "exited": "Exited",
+      "disconnected": "Disconnected",
+      "active": "Active",
+      "game_status": "Game Status",
+      "no_winner": "Game ended, no winner",
+      "winner": "🏆 Winner: {{name}}",
+      "game_history": "Game History",
+      "no_history": "No records",
+      "more_history": "{{count}} earlier records"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "Waiting to Start",
+      "evolution": "Evolution Phase",
+      "foodSupply": "Food Supply",
+      "feeding": "Feeding Phase",
+      "extinction": "Extinction Phase",
+      "gameEnd": "Game Over"
+    },
+    "traits": {
+      "carnivore": "Carnivore",
+      "scavenger": "Scavenger",
+      "sharpVision": "Sharp Vision",
+      "camouflage": "Camouflage",
+      "burrowing": "Burrowing",
+      "poisonous": "Poisonous",
+      "aquatic": "Aquatic",
+      "agile": "Agile",
+      "massive": "Massive",
+      "tailLoss": "Tail Loss",
+      "mimicry": "Mimicry",
+      "fatTissue": "Fat Tissue",
+      "hibernation": "Hibernation",
+      "parasite": "Parasite",
+      "robbery": "Robbery",
+      "communication": "Communication",
+      "cooperation": "Cooperation",
+      "symbiosis": "Symbiosis",
+      "trampling": "Trampling"
+    }
+  },
+  "ai": {
+    "difficulty": {
+      "easy": "Easy - Good for beginners",
+      "medium": "Medium - Balanced challenge",
+      "hard": "Hard - Advanced players"
+    },
+    "level": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "expert": "Expert"
+    }
+  }
+}
