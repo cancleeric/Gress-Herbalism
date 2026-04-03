@@ -7,7 +7,7 @@ import React from 'react';
 import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from './GameRoom';
 import { gameReducer, initialState, clearPersistedState } from '../../../../store/gameStore';
 import { getCurrentRoom, clearCurrentRoom } from '../../../../utils/common/localStorage';
@@ -15,26 +15,26 @@ import * as gameService from '../../../../services/gameService';
 import * as socketService from '../../../../services/socketService';
 
 // Mock gameService
-jest.mock('../../services/gameService');
+jest.mock('../../../../services/gameService');
 
 // Mock socketService
-jest.mock('../../services/socketService');
+jest.mock('../../../../services/socketService');
 
 // Mock useAuth（工單 0123）
 const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
-jest.mock('../../firebase/AuthContext', () => ({
+jest.mock('../../../../firebase/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }));
 
 // Mock localStorage utils（工單 0200）
-jest.mock('../../utils/localStorage', () => ({
+jest.mock('../../../../utils/common/localStorage', () => ({
   getCurrentRoom: jest.fn(),
   clearCurrentRoom: jest.fn()
 }));
 
 // Partial mock gameStore — 保留 reducer，mock clearPersistedState（工單 0200）
-jest.mock('../../store/gameStore', () => {
-  const actual = jest.requireActual('../../store/gameStore');
+jest.mock('../../../../store/gameStore', () => {
+  const actual = jest.requireActual('../../../../store/gameStore');
   return {
     ...actual,
     clearPersistedState: jest.fn()
@@ -53,7 +53,11 @@ jest.mock('react-router-dom', () => ({
 
 // 測試用 wrapper
 const renderWithProviders = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-  const store = createStore(gameReducer, preloadedState);
+  const testReducer = combineReducers({ herbalism: gameReducer });
+  const wrappedState = preloadedState && preloadedState.herbalism
+    ? preloadedState
+    : { herbalism: preloadedState };
+  const store = createStore(testReducer, wrappedState);
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={[`/game/${gameId}`]}>
@@ -424,7 +428,7 @@ describe('GameRoom - 工作單 0023', () => {
 
       fireEvent.click(screen.getByText('離開房間'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/lobby/herbalism');
     });
   });
 
@@ -1134,7 +1138,11 @@ describe('GameRoom - 工作單 0023', () => {
   describe('重連邏輯（工單 0200）', () => {
     // Helper: render with store access for verifying dispatch results
     const renderWithStore = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-      const store = createStore(gameReducer, preloadedState);
+      const testReducer = combineReducers({ herbalism: gameReducer });
+      const wrappedState = preloadedState && preloadedState.herbalism
+        ? preloadedState
+        : { herbalism: preloadedState };
+      const store = createStore(testReducer, wrappedState);
       const result = render(
         <Provider store={store}>
           <MemoryRouter initialEntries={[`/game/${gameId}`]}>
@@ -1251,7 +1259,7 @@ describe('GameRoom - 工作單 0023', () => {
           });
         });
 
-        const state = store.getState();
+        const state = store.getState().herbalism;
         expect(state.gameId).toBe('test_room');
         expect(state.players).toEqual(mockReconnState.players);
         expect(state.maxPlayers).toBe(4);
@@ -1284,7 +1292,7 @@ describe('GameRoom - 工作單 0023', () => {
           });
         });
 
-        const state = store.getState();
+        const state = store.getState().herbalism;
         expect(state).toMatchObject({
           gameId: 'room_123',
           players: mockReconnState.players,
@@ -1349,7 +1357,7 @@ describe('GameRoom - 工作單 0023', () => {
 
         expect(clearCurrentRoom).toHaveBeenCalled();
         expect(clearPersistedState).toHaveBeenCalled();
-        expect(mockNavigate).toHaveBeenCalledWith('/');
+        expect(mockNavigate).toHaveBeenCalledWith('/lobby/herbalism');
       });
     });
 

@@ -125,7 +125,7 @@ jobs:
           PORT: 3001
 
       - name: Wait for Backend
-        run: npx wait-on http://localhost:3001 --timeout 60000
+        run: npx wait-on http://localhost:3001/api/health --timeout 60000
 
       - name: Start Frontend Server
         working-directory: frontend

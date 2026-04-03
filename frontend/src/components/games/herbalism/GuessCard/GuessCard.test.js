@@ -12,7 +12,7 @@ import { gameReducer } from '../../../../store/gameStore';
 import * as gameService from '../../../../services/gameService';
 
 // Mock gameService
-jest.mock('../../services/gameService');
+jest.mock('../../../../services/gameService');
 
 describe('GuessCard - 工作單 0021, 0129', () => {
   describe('渲染', () => {
