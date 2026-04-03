@@ -1,0 +1,160 @@
+/**
+ * 成就解鎖通知 Toast 樣式
+ */
+
+/* 容器 — 固定在右下角 */
+.achievement-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* 單個 Toast */
+.achievement-toast {
+  pointer-events: all;
+  width: 300px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  border-left: 4px solid #94a3b8;
+}
+
+/* 稀有度邊框色 */
+.achievement-toast.rarity--common {
+  border-left-color: #94a3b8;
+}
+
+.achievement-toast.rarity--rare {
+  border-left-color: #60a5fa;
+  background: linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%);
+}
+
+.achievement-toast.rarity--legendary {
+  border-left-color: #fbbf24;
+  background: linear-gradient(135deg, #1e293b 0%, #3b2a0e 100%);
+  box-shadow: 0 8px 32px rgba(251, 191, 36, 0.2);
+}
+
+/* 關閉按鈕 */
+.achievement-toast__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.achievement-toast__close:hover {
+  color: #f1f5f9;
+}
+
+/* 頭部 */
+.achievement-toast__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.achievement-toast__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+/* 稀有度標籤 */
+.achievement-toast__rarity {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.achievement-toast__rarity.rarity--common {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+.achievement-toast__rarity.rarity--rare {
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+}
+
+.achievement-toast__rarity.rarity--legendary {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+/* 本體 */
+.achievement-toast__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.achievement-toast__icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.achievement-toast__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.achievement-toast__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.achievement-toast__desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.achievement-toast__points {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+/* 響應式 */
+@media (max-width: 480px) {
+  .achievement-toast-container {
+    bottom: 16px;
+    right: 8px;
+    left: 8px;
+  }
+
+  .achievement-toast {
+    width: 100%;
+  }
+}

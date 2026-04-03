@@ -118,8 +118,109 @@
   }
 }
 
+/* 新解鎖成就區 */
+.game-over-modal__achievements {
+  padding: 20px 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.game-over-modal__achievements-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.game-over-modal__achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-over-modal__achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border-left: 3px solid #94a3b8;
+}
+
+.game-over-modal__achievement-item.rarity--rare {
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.game-over-modal__achievement-item.rarity--legendary {
+  border-left-color: #d97706;
+  background: #fffbeb;
+}
+
+.game-over-modal__achievement-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.game-over-modal__achievement-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-over-modal__achievement-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.game-over-modal__achievement-desc {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.game-over-modal__achievement-points {
+  font-size: 14px;
+  font-weight: 700;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .game-over-modal__achievements-title {
+    color: #f1f5f9;
+  }
+
+  .game-over-modal__achievement-item {
+    background: #334155;
+  }
+
+  .game-over-modal__achievement-item.rarity--rare {
+    background: #1e3a5f;
+  }
+
+  .game-over-modal__achievement-item.rarity--legendary {
+    background: #3b2a0e;
+  }
+
+  .game-over-modal__achievement-name {
+    color: #f1f5f9;
+  }
+
+  .game-over-modal__achievement-desc {
+    color: #94a3b8;
+  }
+}
+
 /* 響應式 */
 @media (max-width: 640px) {
+  .game-over-modal__achievements {
+    padding: 16px;
+  }
+}
   .game-over-modal__overlay {
     padding: 16px;
   }
