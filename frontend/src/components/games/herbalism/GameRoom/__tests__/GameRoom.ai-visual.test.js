@@ -41,7 +41,7 @@ const mockGetState = jest.fn().mockReturnValue({
 });
 const mockGetCurrentPlayer = jest.fn().mockReturnValue({ id: 'ai-1', name: 'AI-Easy', isAI: true });
 
-jest.mock('../../../controllers/LocalGameController', () => {
+jest.mock('../../../../../controllers/herbalism/LocalGameController', () => {
   return class MockLocalGameController {
     constructor() {
       this.startGame = mockStartGame;
@@ -56,7 +56,7 @@ jest.mock('../../../controllers/LocalGameController', () => {
 });
 
 // Mock socketService
-jest.mock('../../../services/socketService', () => ({
+jest.mock('../../../../../services/socketService', () => ({
   onGameState: jest.fn(() => jest.fn()),
   onError: jest.fn(() => jest.fn()),
   onHiddenCardsRevealed: jest.fn(() => jest.fn()),
@@ -89,14 +89,14 @@ jest.mock('../../../services/socketService', () => ({
 }));
 
 // 工單 0161：Mock useAuth
-jest.mock('../../../firebase/AuthContext', () => ({
+jest.mock('../../../../../firebase/AuthContext', () => ({
   useAuth: () => ({
     user: { displayName: null, isAnonymous: true, photoURL: null }
   })
 }));
 
 // Mock localStorage
-jest.mock('../../../utils/localStorage', () => ({
+jest.mock('../../../../../utils/common/localStorage', () => ({
   clearCurrentRoom: jest.fn(),
   saveCurrentRoom: jest.fn(),
   getCurrentRoom: jest.fn()
