@@ -58,7 +58,7 @@ jest.mock('../../services/socketService', () => {
   };
 });
 
-jest.mock('../../controllers/LocalGameController');
+jest.mock('../../controllers/herbalism/LocalGameController');
 
 // 工單 0161：Mock useAuth
 jest.mock('../../firebase/AuthContext', () => ({

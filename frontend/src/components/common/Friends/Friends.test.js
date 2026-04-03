@@ -17,7 +17,7 @@ jest.mock('react-router-dom', () => ({
 
 // Mock useAuth
 let mockUser = { uid: 'test-uid', displayName: '測試用戶' };
-jest.mock('../../firebase', () => ({
+jest.mock('../../../firebase', () => ({
   useAuth: () => ({ user: mockUser }),
 }));
 
@@ -29,7 +29,7 @@ const mockSendFriendRequest = jest.fn();
 const mockRespondToFriendRequest = jest.fn();
 const mockRemoveFriend = jest.fn();
 
-jest.mock('../../services/friendService', () => ({
+jest.mock('../../../services/friendService', () => ({
   getFriends: (...args) => mockGetFriends(...args),
   getFriendRequests: (...args) => mockGetFriendRequests(...args),
   searchPlayers: (...args) => mockSearchPlayers(...args),
