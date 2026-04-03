@@ -74,6 +74,7 @@ class HerbalismReplayService {
   recordEvent(gameId, type, data) {
     const buffer = this.eventBuffers.get(gameId);
     if (!buffer) {
+      console.warn(`[HerbalismReplayService] Attempted to record event for non-existent game: ${gameId}`);
       return;
     }
 

@@ -10,6 +10,15 @@ import ReplayPlayer from '../../components/games/evolution/replay/ReplayPlayer';
 import { getEvolutionReplay, getHerbalismReplay } from '../../services/replayApi';
 import './ReplayViewPage.css';
 
+/** 事件日誌保留的最大條數 */
+const MAX_EVENT_LOG_SIZE = 50;
+
+/** ID 截斷輔助函式 */
+function truncateId(id, length = 6) {
+  if (!id) return '—';
+  return `${id.slice(0, length)}...`;
+}
+
 /**
  * 演化論事件類型顯示名稱
  */
@@ -63,14 +72,14 @@ function EvolutionEventDetail({ event }) {
     case 'create_creature':
       return (
         <div className="replay-view__event-detail">
-          <span>玩家 {data?.playerId?.slice(0, 6)}... 建立了生物 #{data?.creatureId?.slice(0, 6)}...</span>
+          <span>玩家 {truncateId(data?.playerId)} 建立了生物 #{truncateId(data?.creatureId)}</span>
         </div>
       );
     case 'add_trait':
       return (
         <div className="replay-view__event-detail">
           <span>
-            玩家 {data?.playerId?.slice(0, 6)}... 為生物 #{data?.creatureId?.slice(0, 6)}... 新增性狀：
+            玩家 {truncateId(data?.playerId)} 為生物 #{truncateId(data?.creatureId)} 新增性狀：
             <strong>{data?.traitType}</strong>
           </span>
         </div>
@@ -79,7 +88,7 @@ function EvolutionEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail replay-view__event-detail--highlight">
           <span>
-            ⚔️ {data?.attackerId?.slice(0, 6)}... 的生物攻擊 {data?.targetId?.slice(0, 6)}... 的生物
+            ⚔️ {truncateId(data?.attackerId)} 的生物攻擊 {truncateId(data?.targetId)} 的生物
             {data?.success !== undefined && (
               <strong>{data.success ? ' — 成功！' : ' — 失敗'}</strong>
             )}
@@ -90,7 +99,7 @@ function EvolutionEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail replay-view__event-detail--highlight">
           <span>
-            🛡️ {data?.defenderId?.slice(0, 6)}... 的生物使用 <strong>{data?.traitUsed}</strong> 防禦
+            🛡️ {truncateId(data?.defenderId)} 的生物使用 <strong>{data?.traitUsed}</strong> 防禦
             {data?.success !== undefined && (
               <strong>{data.success ? ' — 成功！' : ' — 失敗'}</strong>
             )}
@@ -101,7 +110,7 @@ function EvolutionEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail replay-view__event-detail--danger">
           <span>
-            💀 玩家 {data?.playerId?.slice(0, 6)}... 的生物滅絕（原因：{data?.reason || '未知'}）
+            💀 玩家 {truncateId(data?.playerId)} 的生物滅絕（原因：{data?.reason || '未知'}）
           </span>
         </div>
       );
@@ -123,7 +132,7 @@ function EvolutionEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail">
           <span>
-            玩家 {data?.playerId?.slice(0, 6)}... 的生物進食（{data?.foodType}）
+            玩家 {truncateId(data?.playerId)} 的生物進食（{data?.foodType}）
           </span>
         </div>
       );
@@ -150,7 +159,7 @@ function HerbalismEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail">
           <span>
-            玩家 {data?.askingPlayerId?.slice(0, 6)}... 向 {data?.targetPlayerId?.slice(0, 6)}... 問牌
+            玩家 {truncateId(data?.askingPlayerId)} 向 {truncateId(data?.targetPlayerId)} 問牌
             （第 {data?.round} 局）
           </span>
         </div>
@@ -159,7 +168,7 @@ function HerbalismEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail">
           <span>
-            玩家 {data?.targetPlayerId?.slice(0, 6)}... 給出{' '}
+            玩家 {truncateId(data?.targetPlayerId)} 給出{' '}
             <strong style={{ color: data?.chosenColor === 'red' ? '#f44' : data?.chosenColor }}>
               {data?.chosenColor}
             </strong>{' '}
@@ -171,7 +180,7 @@ function HerbalismEventDetail({ event }) {
       return (
         <div className="replay-view__event-detail replay-view__event-detail--highlight">
           <span>
-            🎯 玩家 {data?.guessingPlayerId?.slice(0, 6)}... 猜測：
+            🎯 玩家 {truncateId(data?.guessingPlayerId)} 猜測：
             <strong>{(data?.guessedColors || []).join('、')}</strong>
           </span>
         </div>
@@ -259,7 +268,7 @@ function ReplayViewPage() {
     setCurrentEvent(event);
     setEventLog((prev) => {
       const newLog = [...prev, { ...event, index }];
-      return newLog.slice(-50); // 保留最近50條記錄
+      return newLog.slice(-MAX_EVENT_LOG_SIZE);
     });
   }, []);
 

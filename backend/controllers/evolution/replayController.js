@@ -50,7 +50,6 @@ async function getUserGameHistory(req, res) {
   try {
     const { userId } = req.params;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
-    const offset = parseInt(req.query.offset) || 0;
 
     if (!userId) {
       return res.status(400).json({
@@ -72,7 +71,6 @@ async function getUserGameHistory(req, res) {
       data: historyWithReplayStatus,
       pagination: {
         limit,
-        offset,
         total: history.length,
       },
     });

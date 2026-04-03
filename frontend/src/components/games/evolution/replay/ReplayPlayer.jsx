@@ -49,6 +49,14 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
     ? KEY_EVENT_TYPES.has(currentEvent.type) || currentEvent.isKeyMoment
     : false;
 
+  // 預先計算關鍵時刻位置，避免每次渲染重算
+  const keyMomentMarkers = React.useMemo(() => {
+    if (!events) return [];
+    return events
+      .map((event, idx) => ({ idx, type: event.type, isKeyMoment: event.isKeyMoment }))
+      .filter((item) => KEY_EVENT_TYPES.has(item.type) || item.isKeyMoment);
+  }, [events]);
+
   /**
    * 播放下一個事件
    */
@@ -210,16 +218,14 @@ function ReplayPlayer({ events, onEventPlay, onComplete, className }) {
           style={{ width: `${progress}%` }}
         />
         {/* 關鍵時刻標記 */}
-        {events.map((event, idx) =>
-          KEY_EVENT_TYPES.has(event.type) || event.isKeyMoment ? (
-            <div
-              key={idx}
-              className="replay-player__key-marker"
-              style={{ left: `${(idx / totalEvents) * 100}%` }}
-              title={event.type}
-            />
-          ) : null
-        )}
+        {keyMomentMarkers.map((marker) => (
+          <div
+            key={marker.idx}
+            className="replay-player__key-marker"
+            style={{ left: `${(marker.idx / totalEvents) * 100}%` }}
+            title={marker.type}
+          />
+        ))}
       </div>
 
       {/* 控制列 */}

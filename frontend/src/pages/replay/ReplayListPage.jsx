@@ -79,7 +79,7 @@ function GameHistoryCard({ record, onWatchReplay }) {
         <button
           className="replay-list__btn replay-list__btn--share"
           onClick={() => {
-            const url = `${window.location.origin}/replay/${gameId}`;
+            const url = `${window.location.origin}/replay/${gameId}?type=evolution`;
             navigator.clipboard?.writeText(url);
           }}
           disabled={!gameId}
