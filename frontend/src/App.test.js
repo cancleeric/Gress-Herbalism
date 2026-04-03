@@ -25,7 +25,7 @@ jest.mock('./components/common', () => ({
   Lobby: function MockLobby() {
     return <div className="lobby"><h1>本草 Herbalism</h1><p>3-4 人推理卡牌遊戲</p></div>;
   },
-  GameSelection: function MockGameSelection() { return <div>GameSelection</div>; },
+  GameSelection: function MockGameSelection() { return <div className="lobby"><h1>本草 Herbalism</h1><p>3-4 人推理卡牌遊戲</p></div>; },
   EvolutionLobbyPage: function MockEvolutionLobbyPage() { return <div>EvolutionLobbyPage</div>; },
   Profile: function MockProfile() { return <div>Profile</div>; },
   Leaderboard: function MockLeaderboard() { return <div>Leaderboard</div>; },

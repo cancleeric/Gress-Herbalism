@@ -16,7 +16,7 @@ jest.mock('react-router-dom', () => ({
 
 // Mock apiService
 const mockGetLeaderboard = jest.fn();
-jest.mock('../../services/apiService', () => ({
+jest.mock('../../../services/apiService', () => ({
   getLeaderboard: (...args) => mockGetLeaderboard(...args),
 }));
 

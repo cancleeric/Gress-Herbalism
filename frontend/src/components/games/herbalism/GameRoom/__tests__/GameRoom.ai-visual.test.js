@@ -12,14 +12,14 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from '../GameRoom';
 import { gameReducer, initialState } from '../../../../../store/gameStore';
 
 // Mock useAIPlayers to simulate AI thinking state
 const mockUseAIPlayers = jest.fn();
 
-jest.mock('../../../hooks/useAIPlayers', () => ({
+jest.mock('../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: (config) => mockUseAIPlayers(config)
 }));
@@ -144,7 +144,8 @@ describe('GameRoom AI 視覺回饋', () => {
       currentPlayerId: 'human-1',
       hiddenCards: [{ color: 'green' }, { color: 'yellow' }]
     };
-    testStore = createStore(gameReducer, stateWithAIPlayers);
+    const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+    testStore = createStore(rootReducer, { herbalism: stateWithAIPlayers });
 
     // Default mock implementation
     mockUseAIPlayers.mockReturnValue({

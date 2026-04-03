@@ -8,12 +8,12 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from '../GameRoom';
 import { gameReducer, initialState } from '../../../../../store/gameStore';
 
 // Mock useAIPlayers
-jest.mock('../../../hooks/useAIPlayers', () => ({
+jest.mock('../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: () => ({
     aiPlayers: [
@@ -117,7 +117,8 @@ jest.mock('../../../utils/localStorage', () => ({
 
 describe('GameRoom 本地模式', () => {
   test('應該在本地模式下初始化', () => {
-    const store = createStore(gameReducer, initialState);
+    const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+    const store = createStore(rootReducer, { herbalism: initialState });
 
     const { container } = render(
       <Provider store={store}>
