@@ -19,6 +19,12 @@ const PREFERRED_DEFENSE_TRAITS = [
   'mimicry'      // 擬態
 ];
 
+/** 有防禦的生物決定強化而非新增生物的機率 */
+const REINFORCE_PROBABILITY = 0.5;
+
+/** 觸發新增生物的機率（當所有生物都已有防禦時） */
+const NEW_CREATURE_PROBABILITY = 0.4;
+
 /**
  * 防禦型策略
  *
@@ -69,7 +75,7 @@ class DefenseStrategy {
     }
 
     // 所有生物都有防禦性狀 → 繼續強化或建立新生物（機率各半）
-    if (Math.random() < 0.5 && hand.length > 1) {
+    if (Math.random() < REINFORCE_PROBABILITY && hand.length > 1) {
       // 加更多防禦性狀給防禦最少的生物
       const sorted = [...creatures].sort(
         (a, b) => this._defenseCount(a) - this._defenseCount(b)
@@ -82,7 +88,7 @@ class DefenseStrategy {
     }
 
     // 建立新生物
-    if (Math.random() < 0.4) {
+    if (Math.random() < NEW_CREATURE_PROBABILITY) {
       return { type: EVOLUTION_ACTION.CREATE_CREATURE, cardId: randomCard.id };
     }
 

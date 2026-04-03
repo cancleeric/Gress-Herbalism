@@ -24,6 +24,9 @@ export const FEEDING_ACTION = {
   PASS: 'pass'
 };
 
+/** 每回合主動跳過的機率 */
+const PASS_PROBABILITY = 0.33;
+
 /**
  * 基礎隨機策略
  *
@@ -52,8 +55,8 @@ class BasicStrategy {
 
     if (hand.length === 0) return { type: EVOLUTION_ACTION.PASS };
 
-    // 33% 機率跳過
-    if (Math.random() < 0.33) return { type: EVOLUTION_ACTION.PASS };
+    // 隨機跳過
+    if (Math.random() < PASS_PROBABILITY) return { type: EVOLUTION_ACTION.PASS };
 
     const randomCard = hand[Math.floor(Math.random() * hand.length)];
 

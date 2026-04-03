@@ -8,8 +8,14 @@
 
 import { EVOLUTION_ACTION, FEEDING_ACTION } from './BasicStrategy';
 
+/** 手牌中用於建立生物的比例上限 */
+const HAND_TO_CREATURE_RATIO = 0.6;
+
 /** 防禦性狀（用於評估攻擊難度） */
 const DEFENSE_TRAITS = ['camouflage', 'burrowing', 'poisonous', 'aquatic', 'agile'];
+
+/** 評估防禦性狀降低目標得分的係數 */
+const DEFENSE_PENALTY_WEIGHT = 0.5;
 
 /**
  * 肉食攻擊策略
@@ -40,7 +46,7 @@ class CarnivoreStrategy {
     if (hand.length === 0) return { type: EVOLUTION_ACTION.PASS };
 
     // 前 3 張手牌中至多 2 張用來建立生物
-    const maxCreatures = Math.min(2, Math.ceil(hand.length * 0.6));
+    const maxCreatures = Math.min(2, Math.ceil(hand.length * HAND_TO_CREATURE_RATIO));
     if (creatures.length < maxCreatures) {
       const card = hand[Math.floor(Math.random() * hand.length)];
       return { type: EVOLUTION_ACTION.CREATE_CREATURE, cardId: card.id };
@@ -138,7 +144,7 @@ class CarnivoreStrategy {
         ).length;
         const traitCount = (creature.traits || []).length;
         // 分數 = 性狀數 - 防禦分（高性狀但高防禦也值得攻擊）
-        const score = traitCount - defenseCount * 0.5;
+        const score = traitCount - defenseCount * DEFENSE_PENALTY_WEIGHT;
         if (score > bestScore) {
           bestScore = score;
           best = { playerId, creatureId: creature.id };

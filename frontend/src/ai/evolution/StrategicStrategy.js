@@ -9,6 +9,12 @@
 
 import { EVOLUTION_ACTION, FEEDING_ACTION } from './BasicStrategy';
 
+/** 觸發跳過的平均性狀數閾值 */
+const IDEAL_AVG_TRAITS = 2;
+
+/** 性狀已足夠時跳過的機率 */
+const BALANCED_PASS_PROBABILITY = 0.4;
+
 /**
  * 策略型策略
  *
@@ -59,7 +65,7 @@ class StrategicStrategy {
 
     // 若已有足夠性狀，考慮跳過
     const avgTraits = creatures.reduce((sum, c) => sum + (c.traits || []).length, 0) / creatures.length;
-    if (avgTraits >= 2 && Math.random() < 0.4) {
+    if (avgTraits >= IDEAL_AVG_TRAITS && Math.random() < BALANCED_PASS_PROBABILITY) {
       return { type: EVOLUTION_ACTION.PASS };
     }
 
