@@ -11,7 +11,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from '../../components/games/herbalism/GameRoom/GameRoom';
 import useAIPlayers from '../../hooks/herbalism/useAIPlayers';
 import LocalGameController from '../../controllers/herbalism/LocalGameController';
@@ -83,12 +83,12 @@ jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
  * 創建測試用的 Redux store
  */
 const createTestStore = (initialState = {}) => {
-  const mergedInitialState = {
+  const mergedHerbalismState = {
     ...defaultInitialState,
     ...initialState
   };
-
-  return createStore(gameReducer, mergedInitialState);
+  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+  return createStore(rootReducer, { herbalism: mergedHerbalismState });
 };
 
 // 引入 socketService mock 以便在 beforeEach 重新設定實作

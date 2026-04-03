@@ -16,7 +16,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from '../../components/games/herbalism/GameRoom/GameRoom';
 import AIPlayerSelector from '../../components/games/herbalism/GameSetup/AIPlayerSelector';
 import LocalGameController from '../../controllers/herbalism/LocalGameController';
@@ -86,12 +86,12 @@ jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
  * 創建測試用的 Redux store
  */
 const createTestStore = (initialState = {}) => {
-  const mergedInitialState = {
+  const mergedHerbalismState = {
     ...defaultInitialState,
     ...initialState
   };
-
-  return createStore(gameReducer, mergedInitialState);
+  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+  return createStore(rootReducer, { herbalism: mergedHerbalismState });
 };
 
 describe('單人模式 E2E 測試', () => {
