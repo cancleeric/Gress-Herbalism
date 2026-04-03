@@ -4,6 +4,19 @@
 
 這是一款 3-4 人玩的推理桌遊網頁版，玩家需要透過問牌和推理來猜測桌面上的兩張蓋牌顏色。第一個正確猜出蓋牌顏色的玩家獲勝。
 
+## GitHub 工作流程
+
+- 功能開發：從 issue 建立分支，先 push 分支，再開 Draft PR。
+- 驗證基準：以 GitHub Actions checks 為主，本機操作只作為輔助，不作為完成依據。
+- 核心目標：讓 GitHub 雲端 Copilot 能沿著既有 branch、Draft PR 與 checks 持續作業。
+
+### 目前雲端續作主線
+
+- CI 基線工單 #24 已完成，對應 PR #28 已 merged。
+- 目前活躍 issue：#10 測試覆蓋率擴充
+- 目前活躍 PR：#29 test: expand coverage for issue #10
+- 後續測試擴充應沿著 PR #29 持續推進，不再回頭使用已關閉的 PR #27 作為續作入口。
+
 ### 遊戲特色
 
 - **14 張牌**：紅色 2 張、黃色 3 張、綠色 4 張、藍色 5 張
@@ -51,14 +64,14 @@ gress/
 
 ```bash
 cd frontend
-npm install
+npm ci
 ```
 
 ### 後端（如需要）
 
 ```bash
 cd backend
-npm install
+npm ci
 ```
 
 ## 執行方式
