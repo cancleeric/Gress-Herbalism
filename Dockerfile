@@ -41,7 +41,6 @@ COPY --from=frontend-builder /app/frontend/build ./frontend/build
 
 # 複製共用檔案
 COPY shared/ ./shared/
-COPY package.json ./
 
 # 設定環境變數
 ENV NODE_ENV=production
