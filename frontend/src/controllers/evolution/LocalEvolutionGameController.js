@@ -20,7 +20,8 @@ const PHASES = {
 
 /** 勝利分數（牌庫耗盡後的最後一局結束時計算） */
 const INITIAL_HAND_SIZE = 3;
-const CARDS_PER_ROUND_FORMULA = 3; // 每回合發牌：存活生物數 + 此值（至少 3 張）
+/** 每回合發牌基礎張數（發牌 = 存活生物數 + 此值，至少 INITIAL_HAND_SIZE 張） */
+const CARDS_PER_ROUND_BASE = 3;
 
 // 卡牌性狀類型（對應後端 TRAIT_TYPES）
 const TRAIT_TYPES = {
@@ -241,7 +242,8 @@ function performAttack(gameState, attackerPlayerId, attackerCreatureId, defender
   let killed = true;
   let updatedDefenderCreatures = defenderPlayer.creatures.filter(c => c.id !== defenderCreatureId);
 
-  // 毒液：攻擊者下一回合開始時消亡（在本地實現中立即標記）
+  // 毒液：攻擊者下一回合開始時消亡。
+  // 簡化實作：立即標記 poisoned，在滅絕階段結算時移除。
   let attackerDiesFromPoison = hasTrait(defenderCreature, TRAIT_TYPES.POISONOUS);
 
   // 攻擊者獲得食物（等於被殺生物的 population）
@@ -412,7 +414,7 @@ class LocalEvolutionGameController {
 
     for (const [pid, player] of Object.entries(updatedPlayers)) {
       const creatureCount = player.creatures.length;
-      const cardsToDraw = Math.max(INITIAL_HAND_SIZE, creatureCount + CARDS_PER_ROUND_FORMULA);
+      const cardsToDraw = Math.max(INITIAL_HAND_SIZE, creatureCount + CARDS_PER_ROUND_BASE);
 
       if (this.deck.length === 0) {
         this.deckEmpty = true;
@@ -788,15 +790,12 @@ class LocalEvolutionGameController {
         surviving: survivingClean
       };
 
+      // 棄掉剩餘手牌（演化論規則：每局結束後棄掉未用的牌）
       updatedPlayers[pid] = {
         ...player,
-        creatures: survivingClean
+        creatures: survivingClean,
+        hand: []
       };
-    }
-
-    // 棄掉剩餘手牌（演化論規則：每局結束後棄掉未用的牌）
-    for (const [pid, player] of Object.entries(updatedPlayers)) {
-      updatedPlayers[pid] = { ...player, hand: [] };
     }
 
     this.gameState = {

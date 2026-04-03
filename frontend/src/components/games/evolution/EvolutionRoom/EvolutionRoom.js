@@ -105,7 +105,7 @@ function EvolutionRoom() {
   // 工單 0284：生成穩定的玩家 ID
   const [myPlayerId] = useState(() => {
     if (isLocalMode && localConfig) return localConfig.playerId;
-    return `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    return `player_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
   });
 
   // Redux 狀態
@@ -219,7 +219,7 @@ function EvolutionRoom() {
     setAIThinking(true);
     setThinkingAIName(aiInstance.name);
 
-    const timerId = setTimeout(async () => {
+    const aiTurnDelayTimer = setTimeout(async () => {
       try {
         const action = await aiInstance.takeTurn(evolutionState);
         console.log(`[EvolutionRoom] AI ${aiInstance.name} 動作:`, action);
@@ -235,7 +235,7 @@ function EvolutionRoom() {
       }
     }, 300);
 
-    return () => clearTimeout(timerId);
+    return () => clearTimeout(aiTurnDelayTimer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocalMode, evolutionState.currentPlayerId, evolutionState.phase]);
 

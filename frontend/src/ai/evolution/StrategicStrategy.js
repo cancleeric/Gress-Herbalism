@@ -9,10 +9,18 @@
 
 import { EVOLUTION_ACTION, FEEDING_ACTION } from './BasicStrategy';
 
-/** 觸發跳過的平均性狀數閾值 */
+/**
+ * 觸發跳過的平均性狀數閾值
+ * 當每隻生物平均性狀數達到此值時，AI 傾向跳過演化動作，
+ * 因為繼續加性狀的邊際得分效益降低（邊際 +1 分 vs 保留資源）。
+ */
 const IDEAL_AVG_TRAITS = 2;
 
-/** 性狀已足夠時跳過的機率 */
+/**
+ * 性狀已足夠時跳過的機率 (40%)
+ * 保留一定的隨機性，避免 AI 行為過於可預測。
+ * 60% 機率仍繼續進化，40% 選擇提前跳過。
+ */
 const BALANCED_PASS_PROBABILITY = 0.4;
 
 /**
