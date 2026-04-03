@@ -200,7 +200,7 @@ describe('單人模式 URL 參數解析測試', () => {
       }, { timeout: 2000 });
 
       // 驗證遊戲狀態被初始化為單人模式
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
     });
@@ -449,7 +449,7 @@ describe('單人模式 URL 參數解析測試', () => {
       expect(LocalGameController).toHaveBeenCalled();
 
       // 驗證遊戲狀態正確
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
       expect(state.players.length).toBeGreaterThanOrEqual(1);
