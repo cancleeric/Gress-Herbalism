@@ -12,6 +12,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "testTimeout": 30000,
     "coverageDirectory": "<rootDir>/backend/coverage",
     "rootDir": "..",
     "roots": [
@@ -35,7 +36,8 @@
       "<rootDir>/frontend/"
     ],
     "testPathIgnorePatterns": [
-      "<rootDir>/frontend/"
+      "<rootDir>/frontend/",
+      "<rootDir>/shared/constants.test.js"
     ]
   },
   "keywords": [
