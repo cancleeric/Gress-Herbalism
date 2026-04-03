@@ -30,6 +30,7 @@ function AchievementBadge({ achievement, onClick }) {
       className={`achievement-badge ${achievement.unlocked ? '' : 'achievement-badge--locked'} ${rarity.className}`}
       title={achievement.description}
       onClick={() => onClick && onClick(achievement)}
+      aria-haspopup="dialog"
       data-testid="achievement-badge"
     >
       <span className="achievement-badge__icon">{achievement.icon}</span>
@@ -136,8 +137,10 @@ function ProfilePage({
     if (navigator.share) {
       try {
         await navigator.share({ title: '成就解鎖', text });
-      } catch {
-        // ignore cancel
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('分享失敗', err);
+        }
       }
     } else if (navigator.clipboard) {
       await navigator.clipboard.writeText(text);

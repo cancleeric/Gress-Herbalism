@@ -126,7 +126,7 @@ export function AchievementDetailModal({ achievement, isOpen, onClose, onShare }
                     style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                   />
                 </div>
-                {achievement.currentValue !== undefined && achievement.targetValue !== undefined && (
+                {achievement.currentValue != null && achievement.targetValue != null && (
                   <p className="achievement-detail__progress-text">
                     {achievement.currentValue} / {achievement.targetValue}
                   </p>

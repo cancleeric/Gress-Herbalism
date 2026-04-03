@@ -103,8 +103,7 @@ export function AchievementToastContainer({ achievements, onDismiss }) {
   return (
     <div className="achievement-toast-container" data-testid="achievement-toast-container">
       <AnimatePresence>
-        {achievements &&
-          achievements.map((ach) => (
+        {achievements?.map((ach) => (
             <AchievementToastItem
               key={ach.id}
               achievement={ach}
