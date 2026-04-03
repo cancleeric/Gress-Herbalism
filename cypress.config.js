@@ -5,7 +5,7 @@
  * 工單 0367
  */
 
-const { defineConfig } = require('cypress');
+const { defineConfig } = require(require('path').join(__dirname, 'frontend/node_modules/cypress'));
 
 module.exports = defineConfig({
   e2e: {
