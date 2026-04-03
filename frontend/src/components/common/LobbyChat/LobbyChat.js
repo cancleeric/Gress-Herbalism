@@ -32,21 +32,23 @@ function LobbyChat({ player, isConnected }) {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  const messageIdsRef = useRef(new Set());
+
   useEffect(() => {
     if (!isConnected) return;
 
     requestLobbyChat();
 
     const unsubHistory = onLobbyChatHistory((history) => {
-      setMessages(history || []);
+      const msgs = history || [];
+      messageIdsRef.current = new Set(msgs.map(m => m.id));
+      setMessages(msgs);
     });
 
     const unsubMessage = onLobbyChatMessage((msg) => {
-      setMessages(prev => {
-        // 避免重複（由 requestLobbyChat history 帶入的舊訊息）
-        if (prev.some(m => m.id === msg.id)) return prev;
-        return [...prev, msg];
-      });
+      if (messageIdsRef.current.has(msg.id)) return;
+      messageIdsRef.current.add(msg.id);
+      setMessages(prev => [...prev, msg]);
     });
 
     return () => {

@@ -441,8 +441,8 @@ function GameRoom() {
             ...saved.filter(s => !playersToAdd.some(o => o.name === s.name)),
           ].slice(0, 10);
           localStorage.setItem('recentPlayers', JSON.stringify(merged));
-        } catch {
-          // ignore
+        } catch (err) {
+          console.warn('[GameRoom] 儲存最近玩家失敗:', err);
         }
       }
     });

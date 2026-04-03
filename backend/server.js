@@ -363,10 +363,12 @@ const matchQueues = {
   evolution: [],
 };
 const HERBALISM_MATCH_SIZE = 3; // 本草最低配對人數
+const EVOLUTION_MATCH_SIZE = 2; // 演化論最低配對人數
 
 // 大廳聊天訊息（Issue #4，保留最新 50 則）
 const lobbyChatMessages = [];
 const LOBBY_CHAT_MAX = 50;
+let lobbyChatCounter = 0; // 累計計數器，確保唯一 ID
 
 // 工單 0079：斷線重連計時器
 const disconnectTimeouts = new Map();
@@ -536,7 +538,7 @@ io.on('connection', (socket) => {
     console.log(`[配對] ${player?.name || socket.id} 加入 ${type} 配對隊列（${queue.length} 人）`);
 
     // 嘗試配對
-    const matchSize = type === 'herbalism' ? HERBALISM_MATCH_SIZE : 2;
+    const matchSize = type === 'herbalism' ? HERBALISM_MATCH_SIZE : EVOLUTION_MATCH_SIZE;
     if (queue.length >= matchSize) {
       const matched = queue.splice(0, matchSize);
       const gameId = generateGameId();
@@ -605,7 +607,7 @@ io.on('connection', (socket) => {
     if (!trimmed) return;
 
     const chatMsg = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: `msg_${Date.now()}_${++lobbyChatCounter}`,
       player: { name: player?.name || '匿名', photoURL: player?.photoURL || null },
       message: trimmed,
       timestamp: new Date().toISOString(),

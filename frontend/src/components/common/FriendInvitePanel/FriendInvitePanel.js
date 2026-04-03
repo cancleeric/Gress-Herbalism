@@ -26,6 +26,12 @@ function FriendInvitePanel({ currentRoomId, gameType, onJoinRoom }) {
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sendingTo, setSendingTo] = useState(null);
+  const [notification, setNotification] = useState(null); // { type: 'success'|'error', message }
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   const loadFriends = useCallback(async () => {
     if (!user?.uid) return;
@@ -64,9 +70,9 @@ function FriendInvitePanel({ currentRoomId, gameType, onJoinRoom }) {
     setSendingTo(friendId);
     try {
       await sendGameInvitation(user.uid, friendId, currentRoomId);
-      alert('邀請已發送！');
+      showNotification('success', '邀請已發送！');
     } catch (err) {
-      alert(err.message || '邀請發送失敗');
+      showNotification('error', err.message || '邀請發送失敗');
     } finally {
       setSendingTo(null);
     }
@@ -81,7 +87,7 @@ function FriendInvitePanel({ currentRoomId, gameType, onJoinRoom }) {
         onJoinRoom && onJoinRoom(result?.roomId || roomId);
       }
     } catch (err) {
-      alert(err.message || '操作失敗');
+      showNotification('error', err.message || '操作失敗');
     }
   };
 
@@ -109,6 +115,13 @@ function FriendInvitePanel({ currentRoomId, gameType, onJoinRoom }) {
 
   return (
     <div className="friend-invite-panel">
+      {/* 通知訊息 */}
+      {notification && (
+        <div className={`fip-notification fip-notification-${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
+
       {/* 待處理邀請 */}
       {invitations.length > 0 && (
         <div className="fip-invitations">
