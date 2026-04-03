@@ -20,33 +20,28 @@ describe('E2E 測試框架驗證', () => {
   });
 
   describe('自訂命令', () => {
-    beforeEach(() => {
-      cy.visit('/login');
-    });
-
     it('login 命令應該可用', () => {
-      // 測試 login 命令存在
-      expect(Cypress.Commands._commands.login).to.exist;
+      expect(cy.login).to.be.a('function');
     });
 
     it('createRoom 命令應該可用', () => {
-      expect(Cypress.Commands._commands.createRoom).to.exist;
+      expect(cy.createRoom).to.be.a('function');
     });
 
     it('pass 命令應該可用', () => {
-      expect(Cypress.Commands._commands.pass).to.exist;
+      expect(cy.pass).to.be.a('function');
     });
 
     it('longPress 命令應該可用', () => {
-      expect(Cypress.Commands._commands.longPress).to.exist;
+      expect(cy.longPress).to.be.a('function');
     });
 
     it('swipe 命令應該可用', () => {
-      expect(Cypress.Commands._commands.swipe).to.exist;
+      expect(cy.swipe).to.be.a('function');
     });
 
     it('pinch 命令應該可用', () => {
-      expect(Cypress.Commands._commands.pinch).to.exist;
+      expect(cy.pinch).to.be.a('function');
     });
   });
 
@@ -76,7 +71,8 @@ describe('E2E 測試框架驗證', () => {
     });
 
     it('手機視窗應該正確', () => {
-      cy.viewport('iphone-12');
+      // 使用數字尺寸（390x844 為 iPhone 12 尺寸）
+      cy.viewport(390, 844);
       cy.visit('/login');
       cy.window().then((win) => {
         expect(win.innerWidth).to.be.lessThan(500);
@@ -110,11 +106,11 @@ describe('E2E 測試框架驗證', () => {
 
   describe('網路模擬', () => {
     it('goOffline 命令應該可用', () => {
-      expect(Cypress.Commands._commands.goOffline).to.exist;
+      expect(cy.goOffline).to.be.a('function');
     });
 
     it('goOnline 命令應該可用', () => {
-      expect(Cypress.Commands._commands.goOnline).to.exist;
+      expect(cy.goOnline).to.be.a('function');
     });
   });
 });
