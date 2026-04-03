@@ -8,5 +8,8 @@
 // 匯出 herbalism 模組
 export * as herbalism from './herbalism';
 
+// 匯出 evolution 模組
+export * as evolution from './evolution';
+
 // 向後相容：直接匯出本草 AI
 export * from './herbalism';
