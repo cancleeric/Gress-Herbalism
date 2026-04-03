@@ -5,8 +5,7 @@
 
 const TraitHandler = require('../../../../../backend/logic/evolution/traits/TraitHandler');
 const { DEEP_SEA_TRAIT_TYPES, DEEP_SEA_TRAIT_DEFINITIONS } = require('../definitions');
-
-const SCHOOLING_MIN_CREATURES = 3;
+const { DEEP_SEA_RULES } = require('../../rules');
 
 /**
  * 群游性狀處理器
@@ -40,12 +39,11 @@ class SchoolingHandler extends TraitHandler {
 
     const creatureCount = ownerPlayer.creatures?.length || 0;
 
-    if (creatureCount >= SCHOOLING_MIN_CREATURES) {
+    if (creatureCount >= DEEP_SEA_RULES.schoolingMinCreatures) {
       return {
         canAttack: false,
         reason: `群游生物：玩家擁有 ${creatureCount} 隻生物，此生物受到群游保護無法被攻擊`,
-      };
-    }
+      };    }
 
     return { canAttack: true, reason: '' };
   }
