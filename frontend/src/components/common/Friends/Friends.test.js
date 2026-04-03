@@ -438,7 +438,7 @@ describe('Friends 組件', () => {
       });
 
       fireEvent.click(screen.getByText(/返回大廳/));
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
   });
 

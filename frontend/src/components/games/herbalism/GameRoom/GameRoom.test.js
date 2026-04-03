@@ -7,7 +7,7 @@ import React from 'react';
 import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from './GameRoom';
 import { gameReducer, initialState, clearPersistedState } from '../../../../store/gameStore';
 import { getCurrentRoom, clearCurrentRoom } from '../../../../utils/common/localStorage';
@@ -53,7 +53,8 @@ jest.mock('react-router-dom', () => ({
 
 // 測試用 wrapper
 const renderWithProviders = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-  const store = createStore(gameReducer, preloadedState);
+  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+  const store = createStore(rootReducer, { herbalism: preloadedState });
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={[`/game/${gameId}`]}>

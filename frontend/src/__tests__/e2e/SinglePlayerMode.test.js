@@ -17,8 +17,8 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { Provider } from 'react-redux';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { createStore } from 'redux';
-import GameRoom from '../../components/GameRoom/GameRoom';
-import AIPlayerSelector from '../../components/GameSetup/AIPlayerSelector';
+import GameRoom from '../../components/games/herbalism/GameRoom/GameRoom';
+import AIPlayerSelector from '../../components/games/herbalism/GameSetup/AIPlayerSelector';
 import LocalGameController from '../../controllers/herbalism/LocalGameController';
 import useAIPlayers from '../../hooks/herbalism/useAIPlayers';
 import { gameReducer, initialState as defaultInitialState } from '../../store/gameStore';
@@ -77,7 +77,7 @@ jest.mock('../../utils/localStorage', () => ({
 }));
 
 // Mock useAIPlayers hook
-jest.mock('../../hooks/useAIPlayers', () => ({
+jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: jest.fn()
 }));
