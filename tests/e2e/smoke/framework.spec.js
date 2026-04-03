@@ -7,21 +7,21 @@
 
 describe('E2E 測試框架驗證', () => {
   describe('基本功能', () => {
-    it('應該能訪問首頁', () => {
-      cy.visit('/');
+    it('應該能訪問登入頁', () => {
+      cy.visit('/login');
       cy.get('body').should('be.visible');
     });
 
-    it('應該能載入演化論頁面', () => {
-      cy.visit('/evolution');
-      cy.get('.evolution-lobby, .evolution-page, [data-testid="evolution-container"]')
-        .should('exist');
+    it('應該能載入演化論頁面（需要登入）', () => {
+      // 未登入狀態下應重導向到 /login
+      cy.visit('/lobby/evolution');
+      cy.url().should('include', '/login');
     });
   });
 
   describe('自訂命令', () => {
     beforeEach(() => {
-      cy.visit('/evolution');
+      cy.visit('/login');
     });
 
     it('login 命令應該可用', () => {
@@ -69,7 +69,7 @@ describe('E2E 測試框架驗證', () => {
   describe('視窗設定', () => {
     it('桌面視窗應該正確', () => {
       cy.viewport(1280, 720);
-      cy.visit('/evolution');
+      cy.visit('/login');
       cy.window().then((win) => {
         expect(win.innerWidth).to.be.at.least(1200);
       });
@@ -77,7 +77,7 @@ describe('E2E 測試框架驗證', () => {
 
     it('手機視窗應該正確', () => {
       cy.viewport('iphone-12');
-      cy.visit('/evolution');
+      cy.visit('/login');
       cy.window().then((win) => {
         expect(win.innerWidth).to.be.lessThan(500);
       });
@@ -85,7 +85,7 @@ describe('E2E 測試框架驗證', () => {
 
     it('平板視窗應該正確', () => {
       cy.viewport('ipad-2');
-      cy.visit('/evolution');
+      cy.visit('/login');
       cy.window().then((win) => {
         expect(win.innerWidth).to.be.at.least(700);
       });
@@ -94,7 +94,7 @@ describe('E2E 測試框架驗證', () => {
 
   describe('錯誤處理', () => {
     it('應該忽略 ResizeObserver 錯誤', () => {
-      cy.visit('/evolution');
+      cy.visit('/login');
 
       // 觸發 ResizeObserver 錯誤
       cy.window().then((win) => {

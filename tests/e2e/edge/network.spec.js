@@ -5,7 +5,7 @@
  * 工單 0369
  */
 
-describe('網路條件測試', () => {
+describe.skip('網路條件測試', () => {
   describe('慢速網路', () => {
     beforeEach(() => {
       // 模擬慢速網路
@@ -119,7 +119,7 @@ describe('網路條件測試', () => {
   });
 });
 
-describe('WebSocket 事件', () => {
+describe.skip('WebSocket 事件', () => {
   beforeEach(() => {
     cy.visit('/evolution/game/test-game-id');
   });

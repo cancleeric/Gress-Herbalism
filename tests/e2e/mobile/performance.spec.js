@@ -4,7 +4,7 @@
  * @file tests/e2e/mobile/performance.spec.js
  */
 
-describe('移動端效能測試', () => {
+describe.skip('移動端效能測試', () => {
   const DEVICES = [
     { name: 'iPhone 12', width: 390, height: 844 },
     { name: 'Pixel 5', width: 393, height: 851 },

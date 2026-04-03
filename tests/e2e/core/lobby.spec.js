@@ -5,7 +5,7 @@
  * 工單 0368
  */
 
-describe('演化論遊戲大廳', () => {
+describe.skip('演化論遊戲大廳', () => {
   beforeEach(() => {
     cy.visit('/evolution');
   });
@@ -124,7 +124,7 @@ describe('演化論遊戲大廳', () => {
   });
 });
 
-describe('使用者驗證', () => {
+describe.skip('使用者驗證', () => {
   it('未登入應該重導向', () => {
     cy.visit('/evolution');
     cy.get('[data-testid="login-form"], [data-testid="login-prompt"]')

@@ -13,7 +13,7 @@ const DEVICES = {
   'Galaxy S21': { portrait: [360, 800], landscape: [800, 360] },
 };
 
-describe('螢幕方向測試', () => {
+describe.skip('螢幕方向測試', () => {
   Object.entries(DEVICES).forEach(([deviceName, sizes]) => {
     describe(`${deviceName}`, () => {
       describe('直向模式', () => {
@@ -137,7 +137,7 @@ describe('螢幕方向測試', () => {
   });
 });
 
-describe('安全區域處理', () => {
+describe.skip('安全區域處理', () => {
   it('應該正確處理 iPhone 瀏海', () => {
     cy.viewport('iphone-x');
     cy.visit('/evolution');

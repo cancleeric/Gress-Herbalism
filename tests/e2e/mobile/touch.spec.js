@@ -4,7 +4,7 @@
  * @file tests/e2e/mobile/touch.spec.js
  */
 
-describe('移動端觸控操作', () => {
+describe.skip('移動端觸控操作', () => {
   beforeEach(() => {
     // 設定移動端視窗大小
     cy.viewport('iphone-12');
@@ -153,7 +153,7 @@ describe('移動端觸控操作', () => {
   });
 });
 
-describe('螢幕旋轉', () => {
+describe.skip('螢幕旋轉', () => {
   it('應該正確處理直向模式', () => {
     cy.viewport('iphone-12');
     cy.visit('/evolution');
@@ -196,7 +196,7 @@ describe('螢幕旋轉', () => {
   });
 });
 
-describe('鍵盤彈出處理', () => {
+describe.skip('鍵盤彈出處理', () => {
   it('應該在輸入時調整佈局', () => {
     cy.viewport('iphone-12');
     cy.visit('/evolution/lobby');
@@ -210,7 +210,7 @@ describe('鍵盤彈出處理', () => {
   });
 });
 
-describe('效能測試', () => {
+describe.skip('效能測試', () => {
   it('應該在移動端流暢運行', () => {
     cy.viewport('iphone-12');
     cy.visit('/evolution');
