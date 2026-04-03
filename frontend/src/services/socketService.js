@@ -826,4 +826,80 @@ if (process.env.NODE_ENV === 'development') {
   window.diagnoseSocket = diagnoseConnection;
 }
 
+// ==================== Issue #4：快速配對 ====================
+
+/**
+ * 加入快速配對隊列
+ * @param {string} gameType - 'herbalism' | 'evolution'
+ * @param {Object} player - 玩家資訊
+ */
+export function joinMatchQueue(gameType, player) {
+  const s = getSocket();
+  if (s) s.emit('joinMatchQueue', { gameType, player });
+}
+
+/**
+ * 離開快速配對隊列
+ * @param {string} gameType - 'herbalism' | 'evolution'
+ */
+export function leaveMatchQueue(gameType) {
+  const s = getSocket();
+  if (s) s.emit('leaveMatchQueue', { gameType });
+}
+
+/**
+ * 監聽成功加入配對隊列
+ */
+export function onMatchQueueJoined(callback) {
+  return safeOn('matchQueueJoined', callback);
+}
+
+/**
+ * 監聽離開配對隊列確認
+ */
+export function onMatchQueueLeft(callback) {
+  return safeOn('matchQueueLeft', callback);
+}
+
+/**
+ * 監聽配對成功
+ */
+export function onMatchFound(callback) {
+  return safeOn('matchFound', callback);
+}
+
+// ==================== Issue #4：大廳聊天 ====================
+
+/**
+ * 發送大廳聊天訊息
+ * @param {string} message - 訊息內容
+ * @param {Object} player - 傳送玩家資訊
+ */
+export function sendLobbyChatMessage(message, player) {
+  const s = getSocket();
+  if (s) s.emit('lobbyChatMessage', { message, player });
+}
+
+/**
+ * 請求大廳聊天歷史
+ */
+export function requestLobbyChat() {
+  const s = getSocket();
+  if (s) s.emit('requestLobbyChat');
+}
+
+/**
+ * 監聽大廳聊天訊息
+ */
+export function onLobbyChatMessage(callback) {
+  return safeOn('lobbyChatMessage', callback);
+}
+
+/**
+ * 監聽大廳聊天歷史
+ */
+export function onLobbyChatHistory(callback) {
+  return safeOn('lobbyChatHistory', callback);
+}
+
 // ==================== 工單 0379 結束 ====================

@@ -357,6 +357,17 @@ const postQuestionStates = new Map();
 // 工單 0207：猜牌結果全員確認追蹤
 const guessResultConfirmations = new Map();
 
+// 快速配對隊列（Issue #4）
+const matchQueues = {
+  herbalism: [],  // [{ socketId, player, joinedAt }]
+  evolution: [],
+};
+const HERBALISM_MATCH_SIZE = 3; // 本草最低配對人數
+
+// 大廳聊天訊息（Issue #4，保留最新 50 則）
+const lobbyChatMessages = [];
+const LOBBY_CHAT_MAX = 50;
+
 // 工單 0079：斷線重連計時器
 const disconnectTimeouts = new Map();
 const DISCONNECT_TIMEOUT = 60000; // 60 秒（遊戲中）
@@ -509,6 +520,108 @@ io.on('connection', (socket) => {
         console.error('[線上狀態] setPresence 錯誤:', err.message);
       }
     }
+  });
+
+  // Issue #4：加入快速配對隊列
+  socket.on('joinMatchQueue', ({ gameType, player }) => {
+    const type = gameType === 'evolution' ? 'evolution' : 'herbalism';
+    const queue = matchQueues[type];
+
+    // 移除舊的同玩家記錄（防重複）
+    const idx = queue.findIndex(e => e.socketId === socket.id);
+    if (idx !== -1) queue.splice(idx, 1);
+
+    queue.push({ socketId: socket.id, player, joinedAt: Date.now() });
+    socket.emit('matchQueueJoined', { gameType: type, queueSize: queue.length });
+    console.log(`[配對] ${player?.name || socket.id} 加入 ${type} 配對隊列（${queue.length} 人）`);
+
+    // 嘗試配對
+    const matchSize = type === 'herbalism' ? HERBALISM_MATCH_SIZE : 2;
+    if (queue.length >= matchSize) {
+      const matched = queue.splice(0, matchSize);
+      const gameId = generateGameId();
+
+      // 創建新房間
+      const players = matched.map((entry, i) => ({
+        ...entry.player,
+        socketId: entry.socketId,
+        hand: [],
+        isActive: true,
+        isCurrentTurn: i === 0,
+        isHost: i === 0,
+        score: 0,
+      }));
+
+      const roomState = {
+        gameId,
+        players,
+        hiddenCards: [],
+        currentPlayerIndex: 0,
+        gamePhase: 'waiting',
+        winner: null,
+        gameHistory: [],
+        maxPlayers: matchSize,
+        currentRound: 0,
+        scores: {},
+        winningScore: 7,
+        roundHistory: [],
+        password: null,
+        isPrivate: false,
+        predictions: [],
+        gameType: type,
+      };
+
+      gameRooms.set(gameId, roomState);
+      matched.forEach(entry => {
+        const s = io.sockets.sockets.get(entry.socketId);
+        if (s) {
+          playerSockets.set(entry.socketId, { gameId, playerId: entry.player.id });
+          s.join(gameId);
+          s.emit('matchFound', { gameId, gameState: roomState, gameType: type });
+        }
+      });
+
+      broadcastRoomList();
+      console.log(`[配對] ${type} 配對成功，房間 ${gameId}，${matchSize} 位玩家`);
+    }
+  });
+
+  // Issue #4：離開快速配對隊列
+  socket.on('leaveMatchQueue', ({ gameType }) => {
+    const type = gameType === 'evolution' ? 'evolution' : 'herbalism';
+    const queue = matchQueues[type];
+    const idx = queue.findIndex(e => e.socketId === socket.id);
+    if (idx !== -1) {
+      queue.splice(idx, 1);
+      socket.emit('matchQueueLeft', { gameType: type });
+      console.log(`[配對] ${socket.id} 離開 ${type} 配對隊列`);
+    }
+  });
+
+  // Issue #4：大廳聊天訊息
+  socket.on('lobbyChatMessage', ({ message, player }) => {
+    if (!message || typeof message !== 'string') return;
+    const trimmed = message.trim().slice(0, 200);
+    if (!trimmed) return;
+
+    const chatMsg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      player: { name: player?.name || '匿名', photoURL: player?.photoURL || null },
+      message: trimmed,
+      timestamp: new Date().toISOString(),
+    };
+
+    lobbyChatMessages.push(chatMsg);
+    if (lobbyChatMessages.length > LOBBY_CHAT_MAX) {
+      lobbyChatMessages.shift();
+    }
+
+    io.emit('lobbyChatMessage', chatMsg);
+  });
+
+  // Issue #4：請求大廳聊天歷史
+  socket.on('requestLobbyChat', () => {
+    socket.emit('lobbyChatHistory', lobbyChatMessages);
   });
 
   // 創建房間
@@ -1172,6 +1285,12 @@ io.on('connection', (socket) => {
 
   // 斷線處理
   socket.on('disconnect', async (reason) => {
+    // Issue #4：清理配對隊列
+    Object.values(matchQueues).forEach(queue => {
+      const idx = queue.findIndex(e => e.socketId === socket.id);
+      if (idx !== -1) queue.splice(idx, 1);
+    });
+
     // 本草遊戲斷線處理
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {

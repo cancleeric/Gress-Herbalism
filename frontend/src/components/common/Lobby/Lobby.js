@@ -1,6 +1,7 @@
 /**
  * 遊戲大廳組件
  * 重新設計：側邊欄佈局（基於 Google Stitch 設計 - 提示詞 2）
+ * Issue #4：新增快速配對、好友面板、大廳聊天、最近玩家
  *
  * @module Lobby
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
@@ -27,10 +28,17 @@ import {
   joinRoom,
   attemptReconnect,
   emitPlayerRefreshing,
-  requestRoomList
+  requestRoomList,
+  joinMatchQueue,
+  leaveMatchQueue,
+  onMatchQueueJoined,
+  onMatchQueueLeft,
+  onMatchFound,
 } from '../../../services/socketService';
 import { MIN_PLAYERS, MAX_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
 import VersionInfo from '../VersionInfo';
+import LobbyChat from '../LobbyChat';
+import FriendInvitePanel from '../FriendInvitePanel';
 import {
   saveNickname,
   getNickname,
@@ -88,6 +96,17 @@ function Lobby() {
   // 當前導航
   const [activeNav, setActiveNav] = useState('rooms');
 
+  // Issue #4：快速配對狀態
+  const [isInMatchQueue, setIsInMatchQueue] = useState(false);
+  const [matchQueueSize, setMatchQueueSize] = useState(0);
+
+  // Issue #4：側面板（好友 / 聊天）
+  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [sidePanelTab, setSidePanelTab] = useState('friends'); // 'friends' | 'chat'
+
+  // Issue #4：最近一起玩的玩家（localStorage）
+  const [recentPlayers, setRecentPlayers] = useState([]);
+
   // 工單 0382：延遲顯示斷線錯誤的 timer ref
   const disconnectTimerRef = useRef(null);
 
@@ -105,6 +124,13 @@ function Lobby() {
     const savedNickname = getNickname();
     if (savedNickname) {
       setNickname(savedNickname);
+    }
+    // Issue #4：載入最近玩家
+    try {
+      const saved = localStorage.getItem('recentPlayers');
+      if (saved) setRecentPlayers(JSON.parse(saved));
+    } catch {
+      // ignore
     }
   }, []);
 
@@ -213,6 +239,31 @@ function Lobby() {
       setError(`重連失敗：${message}`);
     });
 
+    // Issue #4：快速配對事件訂閱
+    const unsubQueueJoined = onMatchQueueJoined(({ queueSize }) => {
+      setMatchQueueSize(queueSize);
+      setIsInMatchQueue(true);
+    });
+
+    const unsubQueueLeft = onMatchQueueLeft(() => {
+      setIsInMatchQueue(false);
+      setMatchQueueSize(0);
+    });
+
+    const unsubMatchFound = onMatchFound(({ gameId, gameState }) => {
+      setIsInMatchQueue(false);
+      setMatchQueueSize(0);
+      saveCurrentRoom({ roomId: gameId, playerId, playerName: nickname.trim() });
+      dispatch(updateGameState({
+        gameId,
+        players: gameState.players,
+        maxPlayers: gameState.maxPlayers,
+        gamePhase: gameState.gamePhase,
+        currentPlayerId: playerId,
+      }));
+      navigate(`/game/${gameId}`);
+    });
+
     return () => {
       // 工單 0382：清理延遲 timer
       if (disconnectTimerRef.current) {
@@ -226,6 +277,9 @@ function Lobby() {
       unsubPassword();
       unsubReconnected();
       unsubReconnectFailed();
+      unsubQueueJoined();
+      unsubQueueLeft();
+      unsubMatchFound();
     };
   }, [dispatch, navigate, playerId, rooms, nickname]);
 
@@ -477,6 +531,30 @@ function Lobby() {
     });
   };
 
+  /**
+   * Issue #4：加入 / 離開快速配對
+   */
+  const handleToggleMatchQueue = () => {
+    if (!validateNicknameInput()) return;
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
+      return;
+    }
+
+    if (isInMatchQueue) {
+      leaveMatchQueue('herbalism');
+    } else {
+      saveNickname(nickname.trim());
+      const player = {
+        id: playerId,
+        name: nickname.trim(),
+        firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+        photoURL: user?.photoURL || null,
+      };
+      joinMatchQueue('herbalism', player);
+    }
+  };
+
   return (
     <div className="lobby">
       {/* 重連中覆蓋層 */}
@@ -512,11 +590,21 @@ function Lobby() {
             <span className="material-symbols-outlined">person</span>
           </button>
           <button
-            className={`sidebar-nav-item ${activeNav === 'friends' ? 'active' : ''}`}
-            onClick={() => navigate('/friends')}
-            title="好友"
+            className={`sidebar-nav-item ${showSidePanel ? 'active' : ''}`}
+            onClick={() => {
+              setShowSidePanel(prev => !prev);
+              setSidePanelTab('friends');
+            }}
+            title="好友與聊天"
           >
             <span className="material-symbols-outlined">group</span>
+          </button>
+          <button
+            className={`sidebar-nav-item`}
+            onClick={() => navigate('/friends')}
+            title="好友管理"
+          >
+            <span className="material-symbols-outlined">manage_accounts</span>
           </button>
           <button
             className={`sidebar-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
@@ -551,11 +639,23 @@ function Lobby() {
             )}
             <p className="lobby-user-name">{displayName}</p>
           </div>
-{!isConnected && (
-            <span className="connection-status disconnected">
-              未連線
-            </span>
-          )}
+          <div className="lobby-header-actions">
+            {/* Issue #4：側面板切換按鈕 */}
+            <button
+              className={`lobby-panel-toggle ${showSidePanel ? 'active' : ''}`}
+              onClick={() => setShowSidePanel(prev => !prev)}
+              title="好友 / 聊天"
+            >
+              <span className="material-symbols-outlined">
+                {showSidePanel ? 'close' : 'chat'}
+              </span>
+            </button>
+            {!isConnected && (
+              <span className="connection-status disconnected">
+                未連線
+              </span>
+            )}
+          </div>
         </header>
 
         {/* 主內容 */}
@@ -608,6 +708,20 @@ function Lobby() {
           >
             <span className="material-symbols-outlined">add_circle</span>
             創建新房間
+          </button>
+
+          {/* Issue #4：快速配對按鈕 */}
+          <button
+            className={`quick-match-btn ${isInMatchQueue ? 'in-queue' : ''}`}
+            onClick={handleToggleMatchQueue}
+            disabled={!isConnected || isLoading}
+          >
+            <span className="material-symbols-outlined">
+              {isInMatchQueue ? 'hourglass_top' : 'bolt'}
+            </span>
+            {isInMatchQueue
+              ? `配對中…（${matchQueueSize} 人等待）`
+              : '快速配對'}
           </button>
 
           {/* 加入房間區域 */}
@@ -710,8 +824,80 @@ function Lobby() {
               單人模式
             </button>
           </div>
+
+          {/* Issue #4：最近一起玩的玩家 */}
+          {recentPlayers.length > 0 && (
+            <div className="recent-players-section">
+              <div className="recent-players-title">
+                <span className="material-symbols-outlined">history</span>
+                最近一起玩的玩家
+              </div>
+              <div className="recent-players-list">
+                {recentPlayers.slice(0, 5).map((p, idx) => (
+                  <div key={idx} className="recent-player-chip">
+                    <div className="recent-player-avatar">
+                      {p.photoURL ? (
+                        <img src={p.photoURL} alt={p.name} referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="recent-avatar-placeholder">{(p.name || '?')[0]}</div>
+                      )}
+                    </div>
+                    <span className="recent-player-name">{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       </div>
+
+      {/* Issue #4：側面板（好友 / 聊天） */}
+      {showSidePanel && (
+        <aside className="lobby-side-panel">
+          <div className="side-panel-tabs">
+            <button
+              className={`side-panel-tab ${sidePanelTab === 'friends' ? 'active' : ''}`}
+              onClick={() => setSidePanelTab('friends')}
+            >
+              <span className="material-symbols-outlined">group</span>
+              好友
+            </button>
+            <button
+              className={`side-panel-tab ${sidePanelTab === 'chat' ? 'active' : ''}`}
+              onClick={() => setSidePanelTab('chat')}
+            >
+              <span className="material-symbols-outlined">forum</span>
+              聊天
+            </button>
+            <button
+              className="side-panel-close"
+              onClick={() => setShowSidePanel(false)}
+              title="關閉"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div className="side-panel-content">
+            {sidePanelTab === 'friends' && (
+              <FriendInvitePanel
+                currentRoomId={null}
+                gameType="herbalism"
+                onJoinRoom={(roomId) => handleQuickJoin(roomId)}
+              />
+            )}
+            {sidePanelTab === 'chat' && (
+              <LobbyChat
+                player={{
+                  name: nickname.trim() || displayName,
+                  photoURL: user?.photoURL || null,
+                }}
+                isConnected={isConnected}
+              />
+            )}
+          </div>
+        </aside>
+      )}
 
       {/* 手機版底部導航 */}
       <nav className="mobile-nav">

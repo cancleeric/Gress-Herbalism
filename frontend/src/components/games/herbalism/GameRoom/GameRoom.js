@@ -428,6 +428,23 @@ function GameRoom() {
         maxPlayers: newState.maxPlayers
       }));
       setIsLoading(false);
+
+      // Issue #4：遊戲結束時儲存最近玩家
+      if (newState.gamePhase === GAME_PHASE_FINISHED && newState.players) {
+        try {
+          const saved = JSON.parse(localStorage.getItem('recentPlayers') || '[]');
+          const playersToAdd = newState.players
+            .filter(p => p.name && !p.isAI)
+            .map(p => ({ name: p.name, photoURL: p.photoURL || null }));
+          const merged = [
+            ...playersToAdd,
+            ...saved.filter(s => !playersToAdd.some(o => o.name === s.name)),
+          ].slice(0, 10);
+          localStorage.setItem('recentPlayers', JSON.stringify(merged));
+        } catch {
+          // ignore
+        }
+      }
     });
 
     // 監聽錯誤（工單 0150 改善）

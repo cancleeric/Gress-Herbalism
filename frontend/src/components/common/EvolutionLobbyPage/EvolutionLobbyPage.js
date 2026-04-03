@@ -4,6 +4,7 @@
  * @module EvolutionLobbyPage
  * @description 演化論遊戲專用的大廳，包含房間列表和創建功能
  * 工單 0276 - UI 與本草大廳相同
+ * Issue #4 - 快速配對、好友面板、大廳聊天
  */
 
 import React, { useState, useEffect } from 'react';
@@ -18,7 +19,12 @@ import {
   onEvoRoomCreated,
   onEvoJoinedRoom,
   onEvoRoomListUpdated,
-  onEvoError
+  onEvoError,
+  joinMatchQueue,
+  leaveMatchQueue,
+  onMatchQueueJoined,
+  onMatchQueueLeft,
+  onMatchFound,
 } from '../../../services/socketService';
 import {
   saveNickname,
@@ -26,6 +32,8 @@ import {
 } from '../../../utils/common/localStorage';
 import { getPlayerNameError } from '../../../utils/common/validation';
 import VersionInfo from '../VersionInfo';
+import LobbyChat from '../LobbyChat';
+import FriendInvitePanel from '../FriendInvitePanel';
 import '../Lobby/Lobby.css';
 import './EvolutionLobbyPage.css';
 
@@ -53,10 +61,27 @@ function EvolutionLobbyPage() {
   // 當前導航
   const [activeNav, setActiveNav] = useState('rooms');
 
+  // Issue #4：快速配對狀態
+  const [isInMatchQueue, setIsInMatchQueue] = useState(false);
+  const [matchQueueSize, setMatchQueueSize] = useState(0);
+
+  // Issue #4：側面板
+  const [showSidePanel, setShowSidePanel] = useState(false);
+  const [sidePanelTab, setSidePanelTab] = useState('friends');
+
+  // Issue #4：最近玩家
+  const [recentPlayers, setRecentPlayers] = useState([]);
+
   // 載入暱稱
   useEffect(() => {
     const saved = getNickname();
     if (saved) setNickname(saved);
+    try {
+      const savedPlayers = localStorage.getItem('recentPlayers');
+      if (savedPlayers) setRecentPlayers(JSON.parse(savedPlayers));
+    } catch {
+      // ignore
+    }
   }, []);
 
   // Socket 連線
@@ -108,6 +133,28 @@ function EvolutionLobbyPage() {
       setIsLoading(false);
     });
 
+    // Issue #4：快速配對事件
+    const unsubQueueJoined = onMatchQueueJoined(({ queueSize }) => {
+      setMatchQueueSize(queueSize);
+      setIsInMatchQueue(true);
+    });
+
+    const unsubQueueLeft = onMatchQueueLeft(() => {
+      setIsInMatchQueue(false);
+      setMatchQueueSize(0);
+    });
+
+    const unsubMatchFound = onMatchFound(({ gameId, gameType, gameState }) => {
+      setIsInMatchQueue(false);
+      setMatchQueueSize(0);
+      if (gameType === 'evolution') {
+        // 演化論配對
+        navigate(`/game/evolution/${gameId}`, {
+          state: { room: gameState, isCreator: false }
+        });
+      }
+    });
+
     // 請求房間列表
     evoRequestRoomList();
 
@@ -117,6 +164,9 @@ function EvolutionLobbyPage() {
       unsubCreated();
       unsubJoined();
       unsubError();
+      unsubQueueJoined();
+      unsubQueueLeft();
+      unsubMatchFound();
     };
   }, [navigate]);
 
@@ -217,6 +267,30 @@ function EvolutionLobbyPage() {
     return room.playerCount < (room.maxPlayers || 4);
   };
 
+  /**
+   * Issue #4：加入 / 離開快速配對
+   */
+  const handleToggleMatchQueue = () => {
+    if (!validateNicknameInput()) return;
+    if (!isConnected) {
+      setError('尚未連線到伺服器');
+      return;
+    }
+
+    if (isInMatchQueue) {
+      leaveMatchQueue('evolution');
+    } else {
+      saveNickname(nickname.trim());
+      const player = {
+        id: playerId,
+        name: nickname.trim(),
+        firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
+        photoURL: user?.photoURL || null,
+      };
+      joinMatchQueue('evolution', player);
+    }
+  };
+
   return (
     <div className="lobby evolution-theme">
       {/* 側邊欄 */}
@@ -242,11 +316,21 @@ function EvolutionLobbyPage() {
             <span className="material-symbols-outlined">person</span>
           </button>
           <button
-            className={`sidebar-nav-item ${activeNav === 'friends' ? 'active' : ''}`}
-            onClick={() => navigate('/friends')}
-            title="好友"
+            className={`sidebar-nav-item ${showSidePanel ? 'active' : ''}`}
+            onClick={() => {
+              setShowSidePanel(prev => !prev);
+              setSidePanelTab('friends');
+            }}
+            title="好友與聊天"
           >
             <span className="material-symbols-outlined">group</span>
+          </button>
+          <button
+            className={`sidebar-nav-item`}
+            onClick={() => navigate('/friends')}
+            title="好友管理"
+          >
+            <span className="material-symbols-outlined">manage_accounts</span>
           </button>
           <button
             className={`sidebar-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
@@ -281,11 +365,22 @@ function EvolutionLobbyPage() {
             )}
             <p className="lobby-user-name">{displayName}</p>
           </div>
-          {!isConnected && (
-            <span className="connection-status disconnected">
-              未連線
-            </span>
-          )}
+          <div className="lobby-header-actions">
+            <button
+              className={`lobby-panel-toggle ${showSidePanel ? 'active' : ''}`}
+              onClick={() => setShowSidePanel(prev => !prev)}
+              title="好友 / 聊天"
+            >
+              <span className="material-symbols-outlined">
+                {showSidePanel ? 'close' : 'chat'}
+              </span>
+            </button>
+            {!isConnected && (
+              <span className="connection-status disconnected">
+                未連線
+              </span>
+            )}
+          </div>
         </header>
 
         {/* 主內容 */}
@@ -338,6 +433,20 @@ function EvolutionLobbyPage() {
           >
             <span className="material-symbols-outlined">add_circle</span>
             創建新房間
+          </button>
+
+          {/* Issue #4：快速配對按鈕 */}
+          <button
+            className={`quick-match-btn ${isInMatchQueue ? 'in-queue' : ''}`}
+            onClick={handleToggleMatchQueue}
+            disabled={!isConnected || isLoading}
+          >
+            <span className="material-symbols-outlined">
+              {isInMatchQueue ? 'hourglass_top' : 'bolt'}
+            </span>
+            {isInMatchQueue
+              ? `配對中…（${matchQueueSize} 人等待）`
+              : '快速配對'}
           </button>
 
           {/* 加入房間區域 */}
@@ -424,8 +533,80 @@ function EvolutionLobbyPage() {
               </table>
             )}
           </div>
+
+          {/* Issue #4：最近玩家 */}
+          {recentPlayers.length > 0 && (
+            <div className="recent-players-section">
+              <div className="recent-players-title">
+                <span className="material-symbols-outlined">history</span>
+                最近一起玩的玩家
+              </div>
+              <div className="recent-players-list">
+                {recentPlayers.slice(0, 5).map((p, idx) => (
+                  <div key={idx} className="recent-player-chip">
+                    <div className="recent-player-avatar">
+                      {p.photoURL ? (
+                        <img src={p.photoURL} alt={p.name} referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="recent-avatar-placeholder">{(p.name || '?')[0]}</div>
+                      )}
+                    </div>
+                    <span className="recent-player-name">{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       </div>
+
+      {/* Issue #4：側面板（好友 / 聊天） */}
+      {showSidePanel && (
+        <aside className="lobby-side-panel">
+          <div className="side-panel-tabs">
+            <button
+              className={`side-panel-tab ${sidePanelTab === 'friends' ? 'active' : ''}`}
+              onClick={() => setSidePanelTab('friends')}
+            >
+              <span className="material-symbols-outlined">group</span>
+              好友
+            </button>
+            <button
+              className={`side-panel-tab ${sidePanelTab === 'chat' ? 'active' : ''}`}
+              onClick={() => setSidePanelTab('chat')}
+            >
+              <span className="material-symbols-outlined">forum</span>
+              聊天
+            </button>
+            <button
+              className="side-panel-close"
+              onClick={() => setShowSidePanel(false)}
+              title="關閉"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div className="side-panel-content">
+            {sidePanelTab === 'friends' && (
+              <FriendInvitePanel
+                currentRoomId={null}
+                gameType="evolution"
+                onJoinRoom={(roomId) => handleJoinRoom(roomId)}
+              />
+            )}
+            {sidePanelTab === 'chat' && (
+              <LobbyChat
+                player={{
+                  name: nickname.trim() || displayName,
+                  photoURL: user?.photoURL || null,
+                }}
+                isConnected={isConnected}
+              />
+            )}
+          </div>
+        </aside>
+      )}
 
       {/* 手機版底部導航 */}
       <nav className="mobile-nav">
@@ -532,5 +713,6 @@ function EvolutionLobbyPage() {
     </div>
   );
 }
+
 
 export default EvolutionLobbyPage;

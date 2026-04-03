@@ -1,0 +1,237 @@
+/**
+ * 好友邀請面板樣式
+ * Issue #4
+ */
+
+.friend-invite-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-light, #FFF8E1);
+  border-radius: 12px;
+  border: 1px solid rgba(47, 127, 52, 0.2);
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.fip-loading {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted, #6b806c);
+  font-size: 13px;
+}
+
+.fip-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-dark, #1a4a1d);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(47, 127, 52, 0.15);
+  margin-bottom: 4px;
+}
+
+.fip-section-title .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.fip-invitations {
+  margin-bottom: 8px;
+}
+
+.fip-invitation-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(197, 160, 89, 0.4);
+  margin-bottom: 6px;
+}
+
+.fip-inv-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fip-inv-sender {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark, #131613);
+}
+
+.fip-inv-label {
+  font-size: 11px;
+  color: var(--text-muted, #6b806c);
+}
+
+.fip-inv-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.fip-accept-btn,
+.fip-reject-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.fip-accept-btn {
+  background: var(--primary, #2f7f34);
+  color: #fff;
+}
+
+.fip-reject-btn {
+  background: #e8d5b7;
+  color: var(--text-dark, #131613);
+}
+
+.fip-accept-btn:hover,
+.fip-reject-btn:hover {
+  opacity: 0.85;
+}
+
+.fip-empty {
+  text-align: center;
+  color: var(--text-muted, #6b806c);
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+.fip-friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fip-friend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.fip-friend-item:hover {
+  background: rgba(47, 127, 52, 0.06);
+}
+
+.fip-friend-avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+}
+
+.fip-friend-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.fip-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary, #2f7f34);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fip-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-light, #FFF8E1);
+}
+
+.fip-status-dot.status-online {
+  background: #4CAF50;
+}
+
+.fip-status-dot.status-in-game {
+  background: #FF9800;
+}
+
+.fip-status-dot.status-offline {
+  background: #bdbdbd;
+}
+
+.fip-friend-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fip-friend-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark, #131613);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fip-friend-status {
+  font-size: 11px;
+}
+
+.fip-friend-status.status-online { color: #4CAF50; }
+.fip-friend-status.status-in-game { color: #FF9800; }
+.fip-friend-status.status-offline { color: #bdbdbd; }
+
+.fip-invite-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary, #2f7f34);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.fip-invite-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #1a4a1d);
+}
+
+.fip-invite-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fip-invite-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+@keyframes fip-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fip-sending {
+  animation: fip-spin 1s linear infinite;
+}
