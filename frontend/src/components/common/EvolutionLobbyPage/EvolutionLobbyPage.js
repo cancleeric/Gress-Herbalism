@@ -53,6 +53,11 @@ function EvolutionLobbyPage() {
   // 當前導航
   const [activeNav, setActiveNav] = useState('rooms');
 
+  // 單人模式相關狀態
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiDifficulty, setAIDifficulty] = useState('medium');
+  const [aiCount, setAICount] = useState(1);
+
   // 載入暱稱
   useEffect(() => {
     const saved = getNickname();
@@ -215,6 +220,34 @@ function EvolutionLobbyPage() {
    */
   const canJoinRoom = (room) => {
     return room.playerCount < (room.maxPlayers || 4);
+  };
+
+  /**
+   * 開始單人模式（vs AI）
+   */
+  const handleStartSinglePlayer = () => {
+    if (!nickname.trim()) {
+      setError('請輸入遊戲暱稱');
+      return;
+    }
+
+    saveNickname(nickname.trim());
+
+    const params = new URLSearchParams({
+      mode: 'single',
+      aiCount: aiCount.toString(),
+      difficulty: aiDifficulty,
+      playerName: nickname.trim(),
+      playerId
+    });
+
+    navigate(`/game/evolution/local-game?${params.toString()}`, {
+      state: {
+        aiConfig: { aiCount, difficulty: aiDifficulty },
+        playerName: nickname.trim(),
+        playerId
+      }
+    });
   };
 
   return (
@@ -424,6 +457,17 @@ function EvolutionLobbyPage() {
               </table>
             )}
           </div>
+
+          {/* 單人模式區 */}
+          <div className="single-player-section">
+            <button
+              className="single-player-btn"
+              onClick={() => setShowAIModal(true)}
+            >
+              <span className="material-symbols-outlined">smart_toy</span>
+              單人模式（vs AI）
+            </button>
+          </div>
         </main>
       </div>
 
@@ -522,6 +566,71 @@ function EvolutionLobbyPage() {
             </div>
 
             {/* 底部金色橫條 */}
+            <div className="crm-bottom-accent"></div>
+          </div>
+        </div>
+      )}
+
+      {/* AI 設定 Modal */}
+      {showAIModal && (
+        <div className="modal-overlay" onClick={() => setShowAIModal(false)}>
+          <div className="create-room-modal" onClick={e => e.stopPropagation()}>
+            <span className="material-symbols-outlined crm-decor-top">smart_toy</span>
+
+            <div className="crm-header">
+              <span className="material-symbols-outlined crm-header-icon">smart_toy</span>
+              <h2 className="crm-title">單人模式</h2>
+              <p className="crm-subtitle">設定 AI 對手難度</p>
+            </div>
+
+            <div className="crm-form">
+              <div className="crm-input-group">
+                <label htmlFor="aiCount">AI 玩家數量</label>
+                <select
+                  id="aiCount"
+                  className="crm-select"
+                  value={aiCount}
+                  onChange={(e) => setAICount(parseInt(e.target.value, 10))}
+                >
+                  <option value={1}>1 位 AI</option>
+                  <option value={2}>2 位 AI</option>
+                  <option value={3}>3 位 AI</option>
+                </select>
+              </div>
+
+              <div className="crm-input-group">
+                <label htmlFor="aiDifficulty">AI 難度</label>
+                <select
+                  id="aiDifficulty"
+                  className="crm-select"
+                  value={aiDifficulty}
+                  onChange={(e) => setAIDifficulty(e.target.value)}
+                >
+                  <option value="easy">簡單（隨機）</option>
+                  <option value="medium">中等（策略型）</option>
+                  <option value="hard">困難（肉食攻擊型）</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="crm-actions">
+              <button
+                type="button"
+                className="crm-btn crm-btn-cancel"
+                onClick={() => setShowAIModal(false)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="crm-btn crm-btn-confirm"
+                onClick={handleStartSinglePlayer}
+              >
+                <span className="material-symbols-outlined">play_arrow</span>
+                開始遊戲
+              </button>
+            </div>
+
             <div className="crm-bottom-accent"></div>
           </div>
         </div>

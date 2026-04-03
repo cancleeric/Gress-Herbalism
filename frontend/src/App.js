@@ -119,7 +119,6 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-        {/* 本草遊戲路由 */}
         <Route
           path="/game/:gameId"
           element={

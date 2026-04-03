@@ -10,6 +10,7 @@ export * as herbalism from './herbalism';
 
 // 匯出 evolution 模組
 export * as evolution from './evolution';
+export { createEvolutionAIPlayer, EVOLUTION_AI_STRATEGY, EvolutionAIPlayer } from './evolution';
 
 // 向後相容：直接匯出本草 AI
 export * from './herbalism';

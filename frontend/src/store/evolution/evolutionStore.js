@@ -48,7 +48,8 @@ const initialState = {
 
   // 遊戲結果
   gameResult: null,
-  scores: null
+  scores: null,
+  winnerId: null
 };
 
 /**
@@ -75,6 +76,14 @@ const evolutionSlice = createSlice({
       state.foodPool = gs.foodPool;
       state.diceResult = gs.diceResult || [];
       state.pendingResponse = gs.pendingResponse;
+
+      // 本地模式：同步得分和勝者資訊
+      if (gs.scores !== undefined) {
+        state.scores = gs.scores;
+      }
+      if (gs.winnerId !== undefined) {
+        state.winnerId = gs.winnerId;
+      }
 
       // 更新自己的資訊
       if (state.myPlayerId && gs.players[state.myPlayerId]) {

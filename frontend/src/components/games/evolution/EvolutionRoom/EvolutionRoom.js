@@ -5,7 +5,7 @@
  * 工單 0274：連接 Socket.io
  */
 
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import React, { useEffect, useCallback, useState, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -43,6 +43,9 @@ import {
   onEvoTraitUsed,
   onEvoError
 } from '../../../../services/socketService';
+import LocalEvolutionGameController from '../../../../controllers/evolution/LocalEvolutionGameController';
+import { createEvolutionAIPlayer } from '../../../../ai/evolution';
+import AIThinkingIndicator from '../../herbalism/AIThinkingIndicator/AIThinkingIndicator';
 import './EvolutionRoom.css';
 
 // 階段名稱對照
@@ -65,17 +68,45 @@ function EvolutionRoom() {
   const { roomId } = useParams();
   const { user } = useAuth();
 
-  // 工單 0280：從 location state 取得房間資料
+  // ==================== 本地模式檢測 ====================
+  const isLocalMode = roomId === 'local-game';
+
+  // 從 location state 或 URL params 取得 AI 設定
+  const getLocalConfig = () => {
+    if (!isLocalMode) return null;
+    const params = new URLSearchParams(location.search);
+    const state = location.state;
+    return {
+      aiCount: state?.aiConfig?.aiCount || parseInt(params.get('aiCount') || '1', 10),
+      difficulty: state?.aiConfig?.difficulty || params.get('difficulty') || 'medium',
+      playerName: state?.playerName || params.get('playerName') || '玩家',
+      playerId: state?.playerId || params.get('playerId') || `player_${Date.now()}`
+    };
+  };
+  const localConfig = getLocalConfig();
+
+  // 本地遊戲控制器（單人模式）
+  const localControllerRef = useRef(null);
+
+  // AI 玩家實例
+  const aiPlayersRef = useRef([]);
+  const [aiThinking, setAIThinking] = useState(false);
+  const [thinkingAIName, setThinkingAIName] = useState('');
+
+  // ==================== 工單 0280：從 location state 取得房間資料 ====================
   const initialRoomData = location.state?.room;
   const isCreator = location.state?.isCreator;
 
   // 本地狀態
   // 工單 0280：使用 location state 中的房間資料初始化
   const [room, setRoom] = useState(initialRoomData || null);
-  const [isJoined, setIsJoined] = useState(!!initialRoomData);
+  const [isJoined, setIsJoined] = useState(!!initialRoomData || isLocalMode);
   const [error, setError] = useState(null);
   // 工單 0284：生成穩定的玩家 ID
-  const [myPlayerId] = useState(() => `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
+  const [myPlayerId] = useState(() => {
+    if (isLocalMode && localConfig) return localConfig.playerId;
+    return `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  });
 
   // Redux 狀態
   const evolutionState = useSelector(selectEvolutionState);
@@ -103,9 +134,116 @@ function EvolutionRoom() {
     dispatch(evolutionActions.setMyPlayerId(playerId));
   }, [user, room, myPlayerId, dispatch]);
 
+  // ==================== 本地模式初始化 ====================
+  useEffect(() => {
+    if (!isLocalMode || !localConfig) return;
+    if (localControllerRef.current) return;
+
+    console.log('[EvolutionRoom] 初始化本地遊戲，設定:', localConfig);
+
+    // 設定自己的 ID
+    dispatch(evolutionActions.setMyPlayerId(localConfig.playerId));
+
+    // 建立 AI 玩家實例
+    const aiPlayers = [];
+    for (let i = 0; i < localConfig.aiCount; i++) {
+      const ai = createEvolutionAIPlayer(
+        `ai-${i + 1}`,
+        null,
+        localConfig.difficulty
+      );
+      aiPlayers.push(ai);
+    }
+    aiPlayersRef.current = aiPlayers;
+
+    // 人類玩家定義
+    const humanPlayerDef = {
+      id: localConfig.playerId,
+      name: localConfig.playerName,
+      isAI: false
+    };
+
+    // 所有玩家（人 + AI）
+    const allPlayerDefs = [
+      humanPlayerDef,
+      ...aiPlayers.map(ai => ({ id: ai.id, name: ai.name, isAI: true }))
+    ];
+
+    // 建立本地遊戲控制器
+    const controller = new LocalEvolutionGameController({
+      players: allPlayerDefs,
+      onStateChange: (newState) => {
+        // 將本地遊戲狀態映射到 Redux store 格式
+        dispatch(evolutionActions.setGameState({
+          ...newState,
+          myPlayerId: localConfig.playerId
+        }));
+      },
+      onEvent: (event) => {
+        console.log('[EvolutionRoom] 本地事件:', event.type);
+        // 記錄到 action log
+        dispatch(evolutionActions.addLog({ ...event }));
+      }
+    });
+
+    localControllerRef.current = controller;
+    controller.startGame();
+    console.log('[EvolutionRoom] 本地遊戲已開始');
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocalMode]);
+
+  // ==================== 自動觸發 AI 回合（本地模式） ====================
+
+  useEffect(() => {
+    if (!isLocalMode || !localControllerRef.current) return;
+
+    const currentPlayerId = evolutionState.currentPlayerId;
+    if (!currentPlayerId) return;
+
+    const isAITurn = currentPlayerId.startsWith('ai-');
+    if (!isAITurn) return;
+
+    const phase = evolutionState.phase;
+    if (phase !== 'evolution' && phase !== 'feeding') return;
+
+    // 檢查 AI 是否已 pass
+    const currentPlayer = evolutionState.players?.[currentPlayerId];
+    if (!currentPlayer) return;
+    if (phase === 'evolution' && currentPlayer.hasPassedEvolution) return;
+    if (phase === 'feeding' && currentPlayer.hasPassedFeeding) return;
+
+    const aiInstance = aiPlayersRef.current.find(ai => ai.id === currentPlayerId);
+    if (!aiInstance || aiInstance.isThinking) return;
+
+    setAIThinking(true);
+    setThinkingAIName(aiInstance.name);
+
+    const timerId = setTimeout(async () => {
+      try {
+        const action = await aiInstance.takeTurn(evolutionState);
+        console.log(`[EvolutionRoom] AI ${aiInstance.name} 動作:`, action);
+
+        if (localControllerRef.current) {
+          await localControllerRef.current.handleAction(action, currentPlayerId);
+        }
+      } catch (err) {
+        console.error('[EvolutionRoom] AI 回合錯誤:', err);
+      } finally {
+        setAIThinking(false);
+        setThinkingAIName('');
+      }
+    }, 300);
+
+    return () => clearTimeout(timerId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocalMode, evolutionState.currentPlayerId, evolutionState.phase]);
+
   // 加入房間
   // 工單 0280, 0284：避免房主重複加入，使用 firebaseUid 識別
   useEffect(() => {
+    // 本地模式不需要加入房間
+    if (isLocalMode) return;
     if (!roomId || !user?.uid || isJoined) return;
 
     // 工單 0284：使用 firebaseUid 判斷是否已在房間中
@@ -123,10 +261,12 @@ function EvolutionRoom() {
       firebaseUid: user.uid,
       photoURL: user?.photoURL || null
     });
-  }, [roomId, user, isJoined, isCreator, room, myPlayerId]);
+  }, [roomId, user, isJoined, isCreator, room, myPlayerId, isLocalMode]);
 
-  // Socket 事件監聽
+  // Socket 事件監聽（多人模式）
   useEffect(() => {
+    // 本地模式不需要 Socket 事件
+    if (isLocalMode) return;
     // 監聽加入房間成功
     const unsubJoinedRoom = onEvoJoinedRoom(({ roomId: joinedRoomId, room: joinedRoom }) => {
       console.log('[EvolutionRoom] 已加入房間:', joinedRoomId);
@@ -244,51 +384,78 @@ function EvolutionRoom() {
 
   // 處理出牌為生物
   const handlePlayAsCreature = useCallback((cardId) => {
-    if (!cardId || !roomId || !currentPlayerId) return;
+    if (!cardId || !currentPlayerId) return;
     console.log('[EvolutionRoom] 創造生物:', cardId);
-    evoCreateCreature(roomId, currentPlayerId, cardId);
+    if (isLocalMode && localControllerRef.current) {
+      localControllerRef.current.handleAction({ type: 'createCreature', cardId }, currentPlayerId);
+    } else {
+      evoCreateCreature(roomId, currentPlayerId, cardId);
+    }
     dispatch(evolutionActions.clearSelections());
-  }, [roomId, currentPlayerId, dispatch]);
+  }, [roomId, currentPlayerId, isLocalMode, dispatch]);
 
   // 處理出牌為性狀
   const handlePlayAsTrait = useCallback((cardId, creatureId, linkedCreatureId = null) => {
-    if (!cardId || !creatureId || !roomId || !currentPlayerId) return;
+    if (!cardId || !creatureId || !currentPlayerId) return;
     console.log('[EvolutionRoom] 賦予性狀:', cardId, creatureId, linkedCreatureId);
-    evoAddTrait(roomId, currentPlayerId, cardId, creatureId, linkedCreatureId);
+    if (isLocalMode && localControllerRef.current) {
+      localControllerRef.current.handleAction({ type: 'addTrait', cardId, creatureId }, currentPlayerId);
+    } else {
+      evoAddTrait(roomId, currentPlayerId, cardId, creatureId, linkedCreatureId);
+    }
     dispatch(evolutionActions.clearSelections());
-  }, [roomId, currentPlayerId, dispatch]);
+  }, [roomId, currentPlayerId, isLocalMode, dispatch]);
 
   // 處理進食
   const handleFeed = useCallback((creatureId) => {
-    if (!creatureId || !roomId || !currentPlayerId) return;
+    if (!creatureId || !currentPlayerId) return;
     console.log('[EvolutionRoom] 進食:', creatureId);
-    evoFeedCreature(roomId, currentPlayerId, creatureId);
-  }, [roomId, currentPlayerId]);
+    if (isLocalMode && localControllerRef.current) {
+      localControllerRef.current.handleAction({ type: 'feed', creatureId }, currentPlayerId);
+    } else {
+      evoFeedCreature(roomId, currentPlayerId, creatureId);
+    }
+  }, [roomId, currentPlayerId, isLocalMode]);
 
   // 處理攻擊
-  const handleAttack = useCallback((attackerId, defenderId) => {
-    if (!attackerId || !defenderId || !roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 攻擊:', attackerId, defenderId);
-    evoAttack(roomId, currentPlayerId, attackerId, defenderId);
-  }, [roomId, currentPlayerId]);
+  const handleAttack = useCallback((attackerCreatureId, targetCreatureId, targetPlayerId) => {
+    if (!attackerCreatureId || !targetCreatureId || !currentPlayerId) return;
+    console.log('[EvolutionRoom] 攻擊:', attackerCreatureId, targetCreatureId);
+    if (isLocalMode && localControllerRef.current) {
+      localControllerRef.current.handleAction({
+        type: 'attack',
+        attackerCreatureId,
+        targetCreatureId,
+        targetPlayerId: targetPlayerId || evolutionState.currentPlayerId
+      }, currentPlayerId);
+    } else {
+      evoAttack(roomId, currentPlayerId, attackerCreatureId, targetCreatureId);
+    }
+  }, [roomId, currentPlayerId, isLocalMode, evolutionState.currentPlayerId]);
 
   // 處理跳過
   const handlePass = useCallback(() => {
-    if (!roomId || !currentPlayerId) return;
+    if (!currentPlayerId) return;
     console.log('[EvolutionRoom] 跳過');
-    evoPassEvolution(roomId, currentPlayerId);
-  }, [roomId, currentPlayerId]);
+    if (isLocalMode && localControllerRef.current) {
+      localControllerRef.current.handleAction({ type: 'pass' }, currentPlayerId);
+    } else {
+      evoPassEvolution(roomId, currentPlayerId);
+    }
+  }, [roomId, currentPlayerId, isLocalMode]);
 
   // 處理防禦回應
   const handleDefenseResponse = useCallback((responseType, traitId = null, targetId = null) => {
-    if (!roomId || !currentPlayerId) return;
+    if (!currentPlayerId) return;
     console.log('[EvolutionRoom] 防禦回應:', responseType, traitId, targetId);
-    evoRespondAttack(roomId, currentPlayerId, {
-      type: responseType,
-      traitId,
-      targetId
-    });
-  }, [roomId, currentPlayerId]);
+    if (!isLocalMode) {
+      evoRespondAttack(roomId, currentPlayerId, {
+        type: responseType,
+        traitId,
+        targetId
+      });
+    }
+  }, [roomId, currentPlayerId, isLocalMode]);
 
   // 處理使用性狀能力
   const handleUseTrait = useCallback((creatureId, traitType, targetId = null) => {
@@ -314,8 +481,8 @@ function EvolutionRoom() {
     p => p.id !== evolutionState.myPlayerId
   );
 
-  // 等待中 - 顯示房間等待介面
-  if (phase === 'waiting') {
+  // 等待中 - 顯示房間等待介面（多人模式才需要等待）
+  if (phase === 'waiting' && !isLocalMode) {
     return (
       <EvolutionLobby
         roomId={roomId}
@@ -332,6 +499,13 @@ function EvolutionRoom() {
       {error && (
         <div className="error-toast">
           {error}
+        </div>
+      )}
+
+      {/* AI 思考指示器 */}
+      {isLocalMode && aiThinking && (
+        <div className="ai-thinking-banner">
+          <AIThinkingIndicator isThinking={aiThinking} aiName={thinkingAIName} size="medium" />
         </div>
       )}
 
@@ -533,23 +707,30 @@ function EvolutionRoom() {
       )}
 
       {/* 遊戲結束 */}
-      {phase === 'gameEnd' && evolutionState.scores && (
+      {(phase === 'gameEnd' || phase === 'game_end') && (evolutionState.scores || evolutionState.winnerId) && (
         <div className="game-result-modal">
           <div className="modal-content">
             <h2>遊戲結束</h2>
             <div className="scores">
-              {Object.entries(evolutionState.scores).map(([playerId, score]) => (
-                <div key={playerId} className="score-row">
-                  <span className="player-name">{players[playerId]?.name}</span>
+              {evolutionState.scores && Object.entries(evolutionState.scores).map(([pid, score]) => (
+                <div key={pid} className="score-row">
+                  <span className="player-name">
+                    {evolutionState.players?.[pid]?.name || players[pid]?.name || pid}
+                    {evolutionState.players?.[pid]?.isAI ? ' 🤖' : ''}
+                  </span>
                   <span className="score">{typeof score === 'object' ? score.total : score} 分</span>
                 </div>
               ))}
             </div>
-            {evolutionState.gameResult && (
+            {(evolutionState.winnerId || evolutionState.gameResult) && (
               <div className="winner">
-                {evolutionState.gameResult.tied
+                {evolutionState.gameResult?.tied
                   ? '平手！'
-                  : `獲勝者: ${players[evolutionState.gameResult.winnerId]?.name}`}
+                  : `獲勝者: ${
+                    evolutionState.players?.[evolutionState.winnerId]?.name ||
+                    players[evolutionState.winnerId]?.name ||
+                    evolutionState.winnerId
+                  }`}
               </div>
             )}
             <button onClick={() => navigate('/lobby/evolution')}>返回大廳</button>
