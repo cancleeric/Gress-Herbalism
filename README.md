@@ -4,6 +4,15 @@
 
 這是一款 3-4 人玩的推理桌遊網頁版，玩家需要透過問牌和推理來猜測桌面上的兩張蓋牌顏色。第一個正確猜出蓋牌顏色的玩家獲勝。
 
+## 協作目標
+
+核心目標：協助 GitHub 雲端 Copilot 能沿著既有 branch、Draft PR 與 GitHub Actions checks 持續作業，不中斷、不退回本機主導流程。
+
+- 主要目標是讓 GitHub 上的 Copilot、Pull Request 與 GitHub Actions 可以持續接手作業，不依賴單次本機完成後再回推。
+- 所有開發工作優先採用 GitHub-first 流程：先建立分支、先推送遠端、先開 Draft PR，再沿著 PR 持續迭代。
+- 驗證結果以 GitHub Actions checks 為主；本機操作若有發生，只能視為排查輔助，不作為完成依據。
+- 目前正在處理的基線工單是 Issue #24，對應 Draft PR #27，目標是先恢復穩定的 CI 基線，讓雲端 Copilot 可以繼續接手後續修補。
+
 ### 遊戲特色
 
 - **14 張牌**：紅色 2 張、黃色 3 張、綠色 4 張、藍色 5 張
@@ -51,14 +60,14 @@ gress/
 
 ```bash
 cd frontend
-npm install
+npm ci
 ```
 
 ### 後端（如需要）
 
 ```bash
 cd backend
-npm install
+npm ci
 ```
 
 ## 執行方式
@@ -104,13 +113,29 @@ npm run dev
 
 專案開發按照工作單進行，詳細工作單請參考 [work_orders/](./work_orders/) 目錄。
 
+### 目前雲端基線
+
+- GitHub Actions 已重新啟用 `push` 與 `pull_request` 觸發。
+- CI 統一使用 Node.js 20。
+- 前端與後端安裝流程以 lockfile 搭配 `npm ci` 為準。
+- E2E 目前保留在流程中，但暫時為非阻塞檢查，先優先恢復 lint、unit test、build 的穩定度。
+- 後續功能修補與相容層調整，應直接延續既有 PR 與 checks，不應重新回到「本機做完再一次推送」的流程。
+
 ## 專案規劃
 
 詳細專案規劃請參考 [PROJECT_PLAN.md](./PROJECT_PLAN.md)
 
 ## 測試
 
-### 執行測試
+### GitHub Actions 驗證項目
+
+- Lint Check
+- Unit Tests（frontend / backend）
+- Build Check
+- Docker Build
+- E2E Tests（目前為非阻塞）
+
+### 本機指令
 
 ```bash
 cd frontend
@@ -124,7 +149,7 @@ cd frontend
 npm test -- --coverage --watchAll=false
 ```
 
-當前測試狀態：**476 個測試全部通過**
+README 不再維護靜態測試通過數字；最新狀態請直接以 GitHub PR checks 與 Actions 執行結果為準。
 
 ## 文檔
 
