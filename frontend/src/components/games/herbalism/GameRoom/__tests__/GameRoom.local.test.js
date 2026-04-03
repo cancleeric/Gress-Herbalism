@@ -13,7 +13,7 @@ import GameRoom from '../GameRoom';
 import { gameReducer, initialState } from '../../../../../store/gameStore';
 
 // Mock useAIPlayers
-jest.mock('../../../../hooks/herbalism/useAIPlayers', () => ({
+jest.mock('../../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: () => ({
     aiPlayers: [

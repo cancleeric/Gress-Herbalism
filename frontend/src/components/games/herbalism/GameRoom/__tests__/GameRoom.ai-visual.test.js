@@ -19,7 +19,7 @@ import { gameReducer, initialState } from '../../../../../store/gameStore';
 // Mock useAIPlayers to simulate AI thinking state
 const mockUseAIPlayers = jest.fn();
 
-jest.mock('../../../../hooks/herbalism/useAIPlayers', () => ({
+jest.mock('../../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: (config) => mockUseAIPlayers(config)
 }));
