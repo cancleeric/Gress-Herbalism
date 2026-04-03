@@ -6,9 +6,9 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-# 安裝依賴
+# 安裝所有依賴（含 devDependencies，build 需要 react-scripts）
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # 複製原始碼並建置
 COPY frontend/ ./
