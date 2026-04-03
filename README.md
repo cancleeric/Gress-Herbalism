@@ -6,6 +6,8 @@
 
 ## 協作目標
 
+核心目標：協助 GitHub 雲端 Copilot 能沿著既有 branch、Draft PR 與 GitHub Actions checks 持續作業，不中斷、不退回本機主導流程。
+
 - 主要目標是讓 GitHub 上的 Copilot、Pull Request 與 GitHub Actions 可以持續接手作業，不依賴單次本機完成後再回推。
 - 所有開發工作優先採用 GitHub-first 流程：先建立分支、先推送遠端、先開 Draft PR，再沿著 PR 持續迭代。
 - 驗證結果以 GitHub Actions checks 為主；本機操作若有發生，只能視為排查輔助，不作為完成依據。
