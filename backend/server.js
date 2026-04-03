@@ -37,6 +37,12 @@ const presenceService = require('./services/presenceService');
 // 工單 0313-0316 - 演化論遊戲處理（新模組）
 const evolutionHandler = require('./evolutionGameHandler');
 
+// 回放路由
+const replayRouter = require('./routes/evolution/replay');
+
+// 本草遊戲回放服務
+const { herbalismReplayService, HERBALISM_EVENT_TYPES } = require('./services/herbalism/replayService');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -61,6 +67,21 @@ app.use(cors({
 app.use(express.json());
 
 // ==================== API 路由 ====================
+
+// 演化論遊戲回放路由
+app.use('/api/evolution/replays', replayRouter);
+
+// 本草遊戲回放端點
+app.get('/api/herbalism/replays/:gameId', (req, res) => {
+  const { gameId } = req.params;
+  const replay = herbalismReplayService.getReplay(gameId);
+
+  if (!replay) {
+    return res.status(404).json({ success: false, message: '找不到本草回放資料' });
+  }
+
+  res.json({ success: true, data: replay });
+});
 
 // 取得排行榜
 app.get('/api/leaderboard', async (req, res) => {
@@ -663,6 +684,9 @@ io.on('connection', (socket) => {
     broadcastGameState(gameId);
     broadcastRoomList();
     console.log(`遊戲開始: ${gameId}, 第 ${gameState.currentRound} 局`);
+
+    // 開始回放記錄
+    herbalismReplayService.startRecording(gameId, { players: gameState.players });
   });
 
   // 處理遊戲動作
@@ -685,6 +709,23 @@ io.on('connection', (socket) => {
     });
 
     if (result.success) {
+      // 記錄問牌事件（用於回放）
+      if (action.type === 'askCard') {
+        herbalismReplayService.recordAskCard(
+          gameId,
+          action.playerId,
+          action.targetPlayerId,
+          gameState.currentRound
+        );
+      } else if (action.type === 'guessCards') {
+        herbalismReplayService.recordGuessCards(
+          gameId,
+          action.playerId,
+          action.guessedColors,
+          gameState.currentRound
+        );
+      }
+
       // 檢查是否需要等待被要牌玩家選擇顏色
       if (result.requireColorChoice) {
         // 儲存等待狀態
@@ -1044,6 +1085,20 @@ io.on('connection', (socket) => {
         predictionResults: result.predictionResults || [],
         continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
       });
+
+      // 記錄猜牌結果（用於回放）
+      herbalismReplayService.recordGuessResult(
+        gameId,
+        result.isCorrect,
+        followState.guessingPlayerId,
+        result.hiddenCards,
+        result.scoreChanges
+      );
+
+      // 遊戲結束時記錄
+      if (result.gameState.gamePhase === 'finished') {
+        herbalismReplayService.recordGameEnd(gameId, result.gameState.scores, null);
+      }
 
       // 工單 0207：初始化全員確認追蹤
       const allPlayerIds = gameState.players.map(p => p.id);

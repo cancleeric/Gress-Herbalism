@@ -22,8 +22,9 @@
   background: var(--bg-tertiary, #3a3a3a);
   border-radius: 4px;
   cursor: pointer;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 12px;
+  position: relative;
 }
 
 .replay-player__progress-bar {
@@ -33,11 +34,23 @@
   transition: width 0.1s ease;
 }
 
+/* 關鍵時刻標記 */
+.replay-player__key-marker {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 14px;
+  background: var(--color-accent, #FFD700);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 /* 控制列 */
 .replay-player__controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* 按鈕 */
@@ -53,16 +66,25 @@
   transition: background-color 0.2s, transform 0.1s;
 }
 
-.replay-player__btn:hover {
+.replay-player__btn:hover:not(:disabled) {
   background: var(--color-primary, #4CAF50);
 }
 
-.replay-player__btn:active {
+.replay-player__btn:active:not(:disabled) {
   transform: scale(0.95);
+}
+
+.replay-player__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .replay-player__btn--play {
   background: var(--color-primary, #4CAF50);
+}
+
+.replay-player__btn--step {
+  font-size: 14px;
 }
 
 /* 事件計數 */
@@ -108,12 +130,26 @@
   padding: 8px;
   background: var(--bg-tertiary, #3a3a3a);
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replay-player__event-info--key {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .replay-player__event-type {
   font-size: 12px;
   color: var(--text-secondary, #aaa);
   text-transform: uppercase;
+}
+
+.replay-player__key-badge {
+  font-size: 12px;
+  color: var(--color-accent, #FFD700);
+  margin-left: auto;
 }
 
 /* 響應式 */

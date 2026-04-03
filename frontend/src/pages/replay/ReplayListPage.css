@@ -1,0 +1,197 @@
+/**
+ * 遊戲回放列表頁面樣式
+ */
+
+.replay-list-page {
+  min-height: 100vh;
+  background: var(--bg-primary, #1a1a1a);
+  color: var(--text-primary, #fff);
+  padding: 0;
+}
+
+/* 標頭 */
+.replay-list__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--bg-secondary, #2a2a2a);
+  border-bottom: 1px solid var(--border-color, #444);
+}
+
+.replay-list__back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.replay-list__back-btn:hover {
+  color: var(--text-primary, #fff);
+  background: var(--bg-tertiary, #3a3a3a);
+}
+
+.replay-list__title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+/* 主內容 */
+.replay-list__main {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.replay-list__loading,
+.replay-list__empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-secondary, #aaa);
+}
+
+.replay-list__empty p {
+  margin: 8px 0;
+}
+
+.replay-list__error {
+  text-align: center;
+  padding: 24px;
+  color: var(--color-error, #f44336);
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.replay-list__retry-btn {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 16px;
+  background: var(--color-primary, #4CAF50);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 對局卡片網格 */
+.replay-list__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* 單一對局卡片 */
+.replay-list__card {
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--border-color, #444);
+  transition: border-color 0.2s;
+}
+
+.replay-list__card:hover {
+  border-color: var(--color-primary, #4CAF50);
+}
+
+.replay-list__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.replay-list__game-id {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.replay-list__status {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.replay-list__status--finished {
+  background: rgba(76, 175, 80, 0.2);
+  color: var(--color-primary, #4CAF50);
+}
+
+.replay-list__status--playing {
+  background: rgba(255, 193, 7, 0.2);
+  color: #FFC107;
+}
+
+.replay-list__card-body {
+  margin-bottom: 12px;
+}
+
+.replay-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary, #aaa);
+}
+
+.replay-list__card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 按鈕 */
+.replay-list__btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.replay-list__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.replay-list__btn--watch {
+  background: var(--color-primary, #4CAF50);
+  color: #fff;
+  flex: 1;
+}
+
+.replay-list__btn--watch:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.replay-list__btn--share {
+  background: var(--bg-tertiary, #3a3a3a);
+  color: var(--text-secondary, #aaa);
+  border: 1px solid var(--border-color, #444);
+}
+
+.replay-list__btn--share:hover:not(:disabled) {
+  color: var(--text-primary, #fff);
+}
+
+/* 響應式 */
+@media (max-width: 600px) {
+  .replay-list__header {
+    padding: 12px 16px;
+  }
+
+  .replay-list__main {
+    padding: 16px;
+  }
+
+  .replay-list__grid {
+    grid-template-columns: 1fr;
+  }
+}

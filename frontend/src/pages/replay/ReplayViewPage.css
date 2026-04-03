@@ -1,0 +1,247 @@
+/**
+ * 遊戲回放觀看頁面樣式
+ */
+
+.replay-view-page {
+  min-height: 100vh;
+  background: var(--bg-primary, #1a1a1a);
+  color: var(--text-primary, #fff);
+}
+
+/* 標頭 */
+.replay-view__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--bg-secondary, #2a2a2a);
+  border-bottom: 1px solid var(--border-color, #444);
+}
+
+.replay-view__back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+  white-space: nowrap;
+}
+
+.replay-view__back-btn:hover {
+  color: var(--text-primary, #fff);
+  background: var(--bg-tertiary, #3a3a3a);
+}
+
+.replay-view__title-area {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.replay-view__title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.replay-view__game-id {
+  font-size: 12px;
+  color: var(--text-secondary, #aaa);
+}
+
+.replay-view__share-btn {
+  padding: 8px 16px;
+  background: var(--bg-tertiary, #3a3a3a);
+  color: var(--text-secondary, #aaa);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.replay-view__share-btn:hover {
+  color: var(--text-primary, #fff);
+  border-color: var(--color-primary, #4CAF50);
+}
+
+/* 主內容 */
+.replay-view__main {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.replay-view__loading,
+.replay-view__error {
+  text-align: center;
+  padding: 48px;
+}
+
+.replay-view__loading {
+  color: var(--text-secondary, #aaa);
+}
+
+.replay-view__error {
+  color: var(--color-error, #f44336);
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+}
+
+.replay-view__retry-btn {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 16px;
+  background: var(--color-primary, #4CAF50);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 回放內容佈局 */
+.replay-view__content {
+  display: grid;
+  gap: 24px;
+}
+
+/* 播放器區塊 */
+.replay-view__player-section {
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.replay-view__player {
+  max-width: 100%;
+}
+
+/* 章節標題 */
+.replay-view__section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #aaa);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 12px;
+}
+
+/* 當前事件 */
+.replay-view__current-event {
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid var(--color-primary, #4CAF50);
+}
+
+/* 事件詳情 */
+.replay-view__event-detail {
+  font-size: 14px;
+  color: var(--text-primary, #fff);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.replay-view__event-detail--highlight {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.replay-view__event-detail--danger {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.replay-view__event-detail--success {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: var(--color-primary, #4CAF50);
+}
+
+.replay-view__scores {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.replay-view__scores li {
+  padding: 4px 0;
+  color: var(--text-secondary, #aaa);
+}
+
+/* 事件日誌 */
+.replay-view__event-log {
+  background: var(--bg-secondary, #2a2a2a);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.replay-view__log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.replay-view__log-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-secondary, #aaa);
+}
+
+.replay-view__log-item:hover {
+  background: var(--bg-tertiary, #3a3a3a);
+}
+
+.replay-view__log-item--key {
+  color: var(--text-primary, #fff);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.replay-view__log-index {
+  font-size: 11px;
+  color: var(--text-muted, #666);
+  min-width: 30px;
+}
+
+.replay-view__log-type {
+  flex: 1;
+}
+
+.replay-view__log-key {
+  font-size: 12px;
+}
+
+/* 響應式 */
+@media (max-width: 600px) {
+  .replay-view__header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .replay-view__title-area {
+    order: -1;
+    width: 100%;
+  }
+
+  .replay-view__main {
+    padding: 16px;
+  }
+
+  .replay-view__player-section {
+    padding: 16px;
+  }
+}
