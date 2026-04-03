@@ -1,0 +1,155 @@
+/**
+ * 擴充包選擇組件樣式
+ */
+
+.expansion-selector {
+  padding: 16px;
+  background: var(--bg-secondary, #1a1a2e);
+  border-radius: 12px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.expansion-selector__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 4px;
+}
+
+.expansion-selector__hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  margin: 0 0 12px;
+}
+
+.expansion-selector__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 擴充包卡片 */
+.expansion-card {
+  background: var(--bg-card, rgba(255, 255, 255, 0.05));
+  border: 2px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.expansion-card:hover:not(.expansion-card--disabled):not(.expansion-card--required) {
+  border-color: var(--color-primary, #3b82f6);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.expansion-card--enabled {
+  border-color: var(--color-success, #10b981);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.expansion-card--required {
+  border-color: var(--color-warning, #f59e0b);
+  cursor: default;
+}
+
+.expansion-card--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 卡片標頭 */
+.expansion-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.expansion-card__icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.expansion-card__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.expansion-card__name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.expansion-card__name-en {
+  font-size: 0.75rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.5));
+}
+
+.expansion-card__toggle {
+  flex-shrink: 0;
+}
+
+.expansion-card__toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-success, #10b981);
+}
+
+.expansion-card__required-badge {
+  font-size: 0.75rem;
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--color-warning, #f59e0b);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* 描述和統計 */
+.expansion-card__description {
+  font-size: 0.82rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.expansion-card__stats {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  margin-bottom: 8px;
+}
+
+/* 新增性狀展示 */
+.expansion-card__traits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.expansion-card__traits-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+.expansion-card__trait-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.expansion-card__trait-badge {
+  font-size: 0.78rem;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--color-primary, #93c5fd);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}

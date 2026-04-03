@@ -21,6 +21,9 @@
 // 匯入新模組以確保相容性
 const baseExpansionModule = require('../expansions/base');
 
+// 匯入深海擴充包常數
+const deepSeaExpansionModule = require('../expansions/deepSea');
+
 /**
  * 性狀類別定義（從新模組匯入）
  * @see module:expansions/base/traits/definitions
@@ -635,4 +638,9 @@ module.exports = {
 
   // 新增：擴充包模組存取
   baseExpansion: baseExpansionModule.baseExpansion,
+
+  // 深海生態擴充包
+  deepSeaExpansion: deepSeaExpansionModule.deepSeaExpansion,
+  DEEP_SEA_TRAIT_TYPES: deepSeaExpansionModule.DEEP_SEA_TRAIT_TYPES,
+  DEEP_SEA_TRAIT_DEFINITIONS: deepSeaExpansionModule.DEEP_SEA_TRAIT_DEFINITIONS,
 };
