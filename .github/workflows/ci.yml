@@ -138,10 +138,10 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Run Cypress Tests
-        working-directory: frontend
-        run: npm run cypress:run
+        run: frontend/node_modules/.bin/cypress run --config-file cypress.config.js
         env:
           CYPRESS_BASE_URL: http://localhost:3000
+          NODE_PATH: ${{ github.workspace }}/frontend/node_modules
 
       - name: Upload Cypress Screenshots
         uses: actions/upload-artifact@v4
