@@ -152,7 +152,7 @@ describe('ProfilePage', () => {
       expect(screen.getByText('70 點')).toBeInTheDocument();
     });
 
-    it('should render first 6 achievements by default', () => {
+    it('should render all achievements', () => {
       render(<ProfilePage achievements={mockAchievements} />);
 
       expect(screen.getByText('新手上路')).toBeInTheDocument();
@@ -161,24 +161,13 @@ describe('ProfilePage', () => {
       expect(screen.getByText('肉食達人')).toBeInTheDocument();
       expect(screen.getByText('生存大師')).toBeInTheDocument();
       expect(screen.getByText('策略家')).toBeInTheDocument();
-      expect(screen.queryByText('傳奇玩家')).not.toBeInTheDocument();
+      expect(screen.getByText('傳奇玩家')).toBeInTheDocument();
     });
 
-    it('should toggle show all achievements', () => {
+    it('should render category tabs', () => {
       render(<ProfilePage achievements={mockAchievements} />);
 
-      const showMoreBtn = screen.getByText('顯示全部 (7)');
-      fireEvent.click(showMoreBtn);
-
-      expect(screen.getByText('傳奇玩家')).toBeInTheDocument();
-      expect(screen.getByText('顯示較少')).toBeInTheDocument();
-    });
-
-    it('should not show toggle button when 6 or fewer achievements', () => {
-      const fewAchievements = mockAchievements.slice(0, 5);
-      render(<ProfilePage achievements={fewAchievements} />);
-
-      expect(screen.queryByText(/顯示全部/)).not.toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /全部/ })).toBeInTheDocument();
     });
   });
 

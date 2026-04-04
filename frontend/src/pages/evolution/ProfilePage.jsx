@@ -2,9 +2,11 @@
  * 個人資料頁面
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { StatsCardGroup } from '../../components/games/evolution/stats';
+import AchievementList from '../../components/common/AchievementList';
+import AchievementDetail from '../../components/common/AchievementDetail';
 import './ProfilePage.css';
 
 /**
@@ -90,7 +92,7 @@ function ProfilePage({
   onRefresh,
   className,
 }) {
-  const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
 
   // 統計卡片資料
   const statsCards = stats
@@ -110,11 +112,6 @@ function ProfilePage({
   const totalPoints = achievements
     ?.filter((a) => a.unlocked)
     .reduce((sum, a) => sum + (a.points || 0), 0) || 0;
-
-  // 顯示的成就
-  const displayedAchievements = showAllAchievements
-    ? achievements
-    : achievements?.slice(0, 6);
 
   if (loading) {
     return (
@@ -175,23 +172,10 @@ function ProfilePage({
           </span>
         </div>
 
-        <div className="profile-page__achievement-grid">
-          {displayedAchievements?.map((achievement) => (
-            <AchievementBadge
-              key={achievement.id}
-              achievement={achievement}
-            />
-          ))}
-        </div>
-
-        {achievements && achievements.length > 6 && (
-          <button
-            className="profile-page__show-more"
-            onClick={() => setShowAllAchievements(!showAllAchievements)}
-          >
-            {showAllAchievements ? '顯示較少' : `顯示全部 (${totalCount})`}
-          </button>
-        )}
+        <AchievementList
+          achievements={achievements}
+          onSelect={setSelectedAchievement}
+        />
       </section>
 
       {/* 遊戲歷史 */}
@@ -208,6 +192,14 @@ function ProfilePage({
           <p className="profile-page__empty">尚無遊戲記錄</p>
         )}
       </section>
+
+      {/* 成就詳情彈窗 */}
+      {selectedAchievement && (
+        <AchievementDetail
+          achievement={selectedAchievement}
+          onClose={() => setSelectedAchievement(null)}
+        />
+      )}
     </div>
   );
 }
