@@ -1,0 +1,248 @@
+{
+  "common": {
+    "appTitle": "Herbalism",
+    "loading": "Loading...",
+    "guest": "Guest",
+    "logout": "Logout",
+    "profile": "Profile",
+    "friends": "Friends",
+    "leaderboard": "Leaderboard",
+    "cancel": "Cancel",
+    "backToLobby": "← Back to Lobby",
+    "avatar": "Avatar",
+    "player": "Player",
+    "unknownPlayer": "Unknown Player",
+    "copyright": "© 2024 Herbalism Online. All Rights Reserved."
+  },
+  "language": {
+    "switcher": "Language",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  },
+  "app": {
+    "error": {
+      "title": "An Error Occurred",
+      "message": "The application encountered a problem. Please refresh the page.",
+      "reload": "Refresh"
+    }
+  },
+  "login": {
+    "nav": {
+      "rules": "Rules",
+      "cards": "Cards",
+      "about": "About"
+    },
+    "subtitle": "Online Deduction Board Game for 3-4 Players",
+    "googleLoginBtn": "Sign in with Google",
+    "guestLoginBtn": "Guest Login",
+    "newUser": "New here?",
+    "createAccount": "Create Account",
+    "introQuote": "Discover the mystery formula in ancient herbal wisdom. A board game blending deduction, strategy, and intellect.",
+    "feature": {
+      "players": "3-4 Players",
+      "duration": "20-30 Minutes",
+      "logic": "Logic Deduction"
+    },
+    "error": {
+      "defaultError": "Login failed, please try again later",
+      "adminSetup": "Admin Setup Steps:",
+      "firebaseConsole": "Go to Firebase Console",
+      "step2": "Select Project → Authentication → Sign-in method",
+      "step3": "Enable 'Google' and 'Anonymous' sign-in methods",
+      "step4": "Confirm Authorized domains includes localhost and production domain"
+    }
+  },
+  "gameSelection": {
+    "title": "Select Game",
+    "subtitle": "Please select the game you want to play"
+  },
+  "games": {
+    "herbalism": {
+      "name": "Herbalism",
+      "desc1": "Deduction Board Game for 3-4 Players",
+      "desc2": "Guess hidden card colors through questions and deduction",
+      "players": "3-4 Players",
+      "duration": "15-30 Minutes"
+    },
+    "evolution": {
+      "name": "Evolution",
+      "desc1": "Strategy Card Game for 2-4 Players",
+      "desc2": "Create creatures and help them survive competition",
+      "players": "2-4 Players",
+      "duration": "30-60 Minutes"
+    }
+  },
+  "lobby": {
+    "title": "Herbalism",
+    "nav": {
+      "rooms": "Game Lobby",
+      "profile": "Profile",
+      "friends": "Friends",
+      "leaderboard": "Leaderboard",
+      "lobbyShort": "Lobby",
+      "profileShort": "Profile",
+      "leaderboardShort": "Rank"
+    },
+    "connectionStatus": {
+      "disconnected": "Disconnected"
+    },
+    "nicknameLabel": "Game Nickname",
+    "nicknamePlaceholder": "Enter your in-game nickname (2-12 characters)",
+    "welcomeBack": "Welcome back, {{nickname}}!",
+    "backToSelection": "Back to Game Selection",
+    "createNewRoom": "Create New Room",
+    "joinRoomPlaceholder": "Enter Room ID",
+    "joinBtn": "Join",
+    "singlePlayer": "Single Player",
+    "reconnecting": "Attempting to reconnect...",
+    "noRooms": "No rooms available. Click the button above to create a new room.",
+    "roomStatus": {
+      "waiting": "Waiting",
+      "full": "Full"
+    },
+    "roomAction": {
+      "join": "Join",
+      "full": "Full"
+    },
+    "table": {
+      "roomName": "Room Name",
+      "id": "ID",
+      "players": "Players",
+      "status": "Status",
+      "action": "Action"
+    },
+    "error": {
+      "notConnected": "Not connected to server",
+      "invalidNickname": "Please enter a game nickname",
+      "disconnected": "Disconnected from server. Please check if backend is running.",
+      "noRoomId": "Please enter a Room ID"
+    },
+    "modal": {
+      "createRoom": {
+        "title": "Create New Room",
+        "subtitle": "Configure room settings to start the game"
+      },
+      "creating": "Creating...",
+      "createBtn": "Create Room",
+      "privateRoom": "Private Room",
+      "passwordRequired": "\"{{roomName}}\" requires a password to join",
+      "passwordPlaceholder": "Enter room password",
+      "joining": "Joining...",
+      "singlePlayer": {
+        "title": "Single Player Settings",
+        "desc": "Choose the number and difficulty of AI opponents"
+      },
+      "startGame": "Start Game"
+    },
+    "form": {
+      "playerCount": "Player Count",
+      "3players": "3 Players",
+      "4players": "4 Players",
+      "privateRoom": "Set as Private Room",
+      "password": "Room Password",
+      "passwordPlaceholder": "Enter password"
+    }
+  },
+  "profile": {
+    "backToLobby": "← Back to Lobby",
+    "guestAccount": "Guest Account",
+    "anonymous": {
+      "hint": "Sign in with Google to unlock full features",
+      "benefit1": "Save game records and statistics",
+      "benefit2": "View personal win rate and high score",
+      "benefit3": "Use friend features",
+      "benefit4": "Appear on the leaderboard",
+      "goLogin": "Go to Google Login"
+    },
+    "stats": {
+      "title": "Game Statistics",
+      "gamesPlayed": "Total Games",
+      "wins": "Wins",
+      "winRate": "Win Rate",
+      "totalScore": "Total Score",
+      "highestScore": "Highest Score"
+    },
+    "history": {
+      "title": "Recent Games",
+      "noRecords": "No game records yet",
+      "score": "Score: ",
+      "players": " players",
+      "rounds": " rounds"
+    },
+    "retry": "Reload",
+    "error": {
+      "statsLoadFailed": "Failed to load statistics",
+      "historyLoadFailed": "Failed to load history",
+      "loadFailed": "Failed to load data, please try again later"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "backToLobby": "← Back to Lobby",
+    "sortBy": {
+      "wins": "Wins",
+      "winRate": "Win Rate",
+      "totalScore": "Total Score"
+    },
+    "empty": {
+      "title": "No Rankings Yet",
+      "hint": "Complete a game to appear on the leaderboard"
+    },
+    "table": {
+      "rank": "Rank",
+      "player": "Player",
+      "games": "Games",
+      "wins": "Wins",
+      "winRate": "Win Rate",
+      "totalScore": "Total Score"
+    },
+    "error": {
+      "loadFailed": "Failed to load leaderboard"
+    }
+  },
+  "friends": {
+    "title": "Friend Management",
+    "backToLobby": "← Back to Lobby",
+    "tab": {
+      "friends": "Friends ({{count}})",
+      "requests": "Requests",
+      "search": "Search"
+    },
+    "empty": {
+      "title": "No friends yet",
+      "hint": "Search for players to add as friends!"
+    },
+    "status": {
+      "online": "Online",
+      "inGame": "In Game",
+      "offline": "Offline"
+    },
+    "stats": "{{wins}} wins / {{games}} games",
+    "playerStats": "{{wins}} wins · {{winRate}}% win rate",
+    "button": {
+      "remove": "Remove",
+      "addFriend": "Add Friend",
+      "accept": "Accept",
+      "reject": "Reject"
+    },
+    "requests": {
+      "empty": "No pending friend requests"
+    },
+    "searchPlaceholder": "Search by player nickname...",
+    "searchBtn": "Search",
+    "searching": "Searching...",
+    "noResults": "No matching players found",
+    "error": {
+      "searchFailed": "Search failed",
+      "loadFailed": "Failed to load friends",
+      "requestsFailed": "Failed to load requests"
+    }
+  },
+  "connectionStatus": {
+    "reconnectSuccess": "Reconnected successfully!",
+    "reconnecting": "Reconnecting... (Attempt {{attempt}})",
+    "disconnected": "Connection lost"
+  }
+}

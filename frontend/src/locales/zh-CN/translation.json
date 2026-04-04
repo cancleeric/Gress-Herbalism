@@ -1,0 +1,248 @@
+{
+  "common": {
+    "appTitle": "本草 Herbalism",
+    "loading": "加载中...",
+    "guest": "访客",
+    "logout": "登出",
+    "profile": "个人资料",
+    "friends": "好友",
+    "leaderboard": "排行榜",
+    "cancel": "取消",
+    "backToLobby": "← 返回大厅",
+    "avatar": "头像",
+    "player": "玩家",
+    "unknownPlayer": "未知玩家",
+    "copyright": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "language": {
+    "switcher": "语言",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  },
+  "app": {
+    "error": {
+      "title": "发生错误",
+      "message": "应用程序遇到问题，请重新刷新页面。",
+      "reload": "刷新"
+    }
+  },
+  "login": {
+    "nav": {
+      "rules": "规则书",
+      "cards": "卡牌",
+      "about": "关于"
+    },
+    "subtitle": "3-4人在线推理桌游",
+    "googleLoginBtn": "使用 Google 账号登录",
+    "guestLoginBtn": "访客登录",
+    "newUser": "新朋友？",
+    "createAccount": "创建账号",
+    "introQuote": "在古老的本草知识中，找出神秘药方。融合推理、策略与智慧的桌游。",
+    "feature": {
+      "players": "3-4 位玩家",
+      "duration": "20-30 分钟",
+      "logic": "逻辑推理"
+    },
+    "error": {
+      "defaultError": "登录失败，请稍后再试",
+      "adminSetup": "管理员设置步骤：",
+      "firebaseConsole": "前往 Firebase Console",
+      "step2": "选择项目 → Authentication → Sign-in method",
+      "step3": "启用「Google」和「匿名」登录方式",
+      "step4": "确认 Authorized domains 包含 localhost 和生产环境域名"
+    }
+  },
+  "gameSelection": {
+    "title": "选择游戏",
+    "subtitle": "请选择您想要游玩的游戏"
+  },
+  "games": {
+    "herbalism": {
+      "name": "本草",
+      "desc1": "3-4 人推理桌游",
+      "desc2": "通过问牌和推理猜测盖牌颜色",
+      "players": "3-4 人",
+      "duration": "15-30 分钟"
+    },
+    "evolution": {
+      "name": "演化论",
+      "desc1": "2-4 人策略卡牌游戏",
+      "desc2": "创造生物并让它们在竞争中存活",
+      "players": "2-4 人",
+      "duration": "30-60 分钟"
+    }
+  },
+  "lobby": {
+    "title": "本草",
+    "nav": {
+      "rooms": "游戏大厅",
+      "profile": "个人资料",
+      "friends": "好友",
+      "leaderboard": "排行榜",
+      "lobbyShort": "大厅",
+      "profileShort": "个人",
+      "leaderboardShort": "排行"
+    },
+    "connectionStatus": {
+      "disconnected": "未连线"
+    },
+    "nicknameLabel": "游戏昵称",
+    "nicknamePlaceholder": "请输入游戏中显示的昵称（2-12 字符）",
+    "welcomeBack": "欢迎回来，{{nickname}}！",
+    "backToSelection": "返回游戏选择",
+    "createNewRoom": "创建新房间",
+    "joinRoomPlaceholder": "输入房间 ID",
+    "joinBtn": "加入",
+    "singlePlayer": "单人模式",
+    "reconnecting": "正在尝试重新连线...",
+    "noRooms": "目前没有可用的房间，点击上方按钮创建新房间",
+    "roomStatus": {
+      "waiting": "等待中",
+      "full": "已满"
+    },
+    "roomAction": {
+      "join": "加入",
+      "full": "已满"
+    },
+    "table": {
+      "roomName": "房间名称",
+      "id": "ID",
+      "players": "玩家",
+      "status": "状态",
+      "action": "操作"
+    },
+    "error": {
+      "notConnected": "尚未连线到服务器",
+      "invalidNickname": "请输入游戏昵称",
+      "disconnected": "与服务器断线，请确认后端是否启动",
+      "noRoomId": "请输入房间 ID"
+    },
+    "modal": {
+      "createRoom": {
+        "title": "创建新房间",
+        "subtitle": "设定房间参数后开始游戏"
+      },
+      "creating": "创建中...",
+      "createBtn": "创建房间",
+      "privateRoom": "私人房间",
+      "passwordRequired": "「{{roomName}}」需要密码才能加入",
+      "passwordPlaceholder": "请输入房间密码",
+      "joining": "加入中...",
+      "singlePlayer": {
+        "title": "单人模式设定",
+        "desc": "选择 AI 对手的数量和难度"
+      },
+      "startGame": "开始游戏"
+    },
+    "form": {
+      "playerCount": "玩家数量",
+      "3players": "3人",
+      "4players": "4人",
+      "privateRoom": "设为私人房间",
+      "password": "房间密码",
+      "passwordPlaceholder": "请输入密码"
+    }
+  },
+  "profile": {
+    "backToLobby": "← 返回大厅",
+    "guestAccount": "访客账号",
+    "anonymous": {
+      "hint": "登录 Google 账号以解锁完整功能",
+      "benefit1": "保存游戏记录与统计数据",
+      "benefit2": "查看个人胜率与最高分",
+      "benefit3": "使用好友功能",
+      "benefit4": "登上排行榜",
+      "goLogin": "前往 Google 登录"
+    },
+    "stats": {
+      "title": "游戏统计",
+      "gamesPlayed": "总场数",
+      "wins": "胜利",
+      "winRate": "胜率",
+      "totalScore": "总得分",
+      "highestScore": "最高分"
+    },
+    "history": {
+      "title": "最近游戏",
+      "noRecords": "还没有游戏记录",
+      "score": "得分：",
+      "players": "人游戏",
+      "rounds": "局"
+    },
+    "retry": "重新加载",
+    "error": {
+      "statsLoadFailed": "加载统计资料失败",
+      "historyLoadFailed": "加载历史资料失败",
+      "loadFailed": "加载资料失败，请稍后再试"
+    }
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "backToLobby": "← 返回大厅",
+    "sortBy": {
+      "wins": "胜场数",
+      "winRate": "胜率",
+      "totalScore": "总得分"
+    },
+    "empty": {
+      "title": "暂无排行资料",
+      "hint": "完成游戏后就会出现在排行榜上"
+    },
+    "table": {
+      "rank": "排名",
+      "player": "玩家",
+      "games": "场数",
+      "wins": "胜场",
+      "winRate": "胜率",
+      "totalScore": "总分"
+    },
+    "error": {
+      "loadFailed": "加载排行榜失败"
+    }
+  },
+  "friends": {
+    "title": "好友管理",
+    "backToLobby": "← 返回大厅",
+    "tab": {
+      "friends": "好友 ({{count}})",
+      "requests": "请求",
+      "search": "搜尋"
+    },
+    "empty": {
+      "title": "还没有好友",
+      "hint": "去搜索页面找玩家加好友吧！"
+    },
+    "status": {
+      "online": "在线",
+      "inGame": "游戏中",
+      "offline": "离线"
+    },
+    "stats": "{{wins}} 胜 / {{games}} 场",
+    "playerStats": "{{wins}} 胜 · {{winRate}}% 胜率",
+    "button": {
+      "remove": "删除",
+      "addFriend": "加好友",
+      "accept": "接受",
+      "reject": "拒绝"
+    },
+    "requests": {
+      "empty": "没有待处理的好友请求"
+    },
+    "searchPlaceholder": "输入玩家昵称搜索...",
+    "searchBtn": "搜索",
+    "searching": "搜索中...",
+    "noResults": "找不到符合的玩家",
+    "error": {
+      "searchFailed": "搜索失败",
+      "loadFailed": "加载好友失败",
+      "requestsFailed": "加载请求失败"
+    }
+  },
+  "connectionStatus": {
+    "reconnectSuccess": "重连成功！",
+    "reconnecting": "重新连线中... (第 {{attempt}} 次尝试)",
+    "disconnected": "连线已中断"
+  }
+}

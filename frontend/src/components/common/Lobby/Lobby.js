@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../firebase/AuthContext';
 import {
   updateGameState
@@ -50,6 +51,7 @@ import './Lobby.css';
 function Lobby() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();  // 從 Auth Context 取得登入資訊
 
   // 本地狀態
@@ -125,7 +127,7 @@ function Lobby() {
       if (!connected) {
         // 延遲 3 秒後才顯示錯誤，給予重連時間
         disconnectTimerRef.current = setTimeout(() => {
-          setError('與伺服器斷線，請確認後端是否啟動');
+          setError(t('lobby.error.disconnected'));
         }, 3000);
       } else {
         setError('');
@@ -274,7 +276,7 @@ function Lobby() {
   const handleCreateRoom = () => {
     if (!validateNicknameInput()) return;
     if (!isConnected) {
-      setError('尚未連線到伺服器');
+      setError(t('lobby.error.notConnected'));
       return;
     }
 
@@ -307,7 +309,7 @@ function Lobby() {
   const handleQuickJoin = (selectedRoomId, roomIsPrivate = false, roomName = '') => {
     if (!validateNicknameInput()) return;
     if (!isConnected) {
-      setError('尚未連線到伺服器');
+      setError(t('lobby.error.notConnected'));
       return;
     }
 
@@ -340,12 +342,12 @@ function Lobby() {
    */
   const handleJoinByRoomId = () => {
     if (!joinRoomId.trim()) {
-      setError('請輸入房間 ID');
+      setError(t('lobby.error.noRoomId'));
       return;
     }
     if (!validateNicknameInput()) return;
     if (!isConnected) {
-      setError('尚未連線到伺服器');
+      setError(t('lobby.error.notConnected'));
       return;
     }
 
@@ -379,7 +381,7 @@ function Lobby() {
    */
   const handlePasswordSubmit = () => {
     if (!inputPassword) {
-      setPasswordError('請輸入密碼');
+      setPasswordError(t('lobby.form.passwordPlaceholder'));
       return;
     }
 
@@ -449,7 +451,7 @@ function Lobby() {
    */
   const handleStartSinglePlayer = () => {
     if (!nickname.trim()) {
-      setError('請輸入遊戲暱稱');
+      setError(t('lobby.error.invalidNickname'));
       return;
     }
 
@@ -484,7 +486,7 @@ function Lobby() {
         <div className="modal-overlay">
           <div className="modal reconnecting-modal">
             <div className="reconnecting-spinner"></div>
-            <p>正在嘗試重新連線...</p>
+            <p>{t('lobby.reconnecting')}</p>
           </div>
         </div>
       )}
@@ -494,34 +496,34 @@ function Lobby() {
         <div className="sidebar-logo">
           <span className="material-symbols-outlined">eco</span>
         </div>
-        <h1 className="sidebar-title">本草</h1>
+        <h1 className="sidebar-title">{t('lobby.title')}</h1>
 
         <nav className="sidebar-nav">
           <button
             className={`sidebar-nav-item ${activeNav === 'rooms' ? 'active' : ''}`}
             onClick={() => setActiveNav('rooms')}
-            title="遊戲大廳"
+            title={t('lobby.nav.rooms')}
           >
             <span className="material-symbols-outlined">meeting_room</span>
           </button>
           <button
             className={`sidebar-nav-item ${activeNav === 'profile' ? 'active' : ''}`}
             onClick={() => navigate('/profile')}
-            title="個人資料"
+            title={t('lobby.nav.profile')}
           >
             <span className="material-symbols-outlined">person</span>
           </button>
           <button
             className={`sidebar-nav-item ${activeNav === 'friends' ? 'active' : ''}`}
             onClick={() => navigate('/friends')}
-            title="好友"
+            title={t('lobby.nav.friends')}
           >
             <span className="material-symbols-outlined">group</span>
           </button>
           <button
             className={`sidebar-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
             onClick={() => navigate('/leaderboard')}
-            title="排行榜"
+            title={t('lobby.nav.leaderboard')}
           >
             <span className="material-symbols-outlined">leaderboard</span>
           </button>
@@ -553,7 +555,7 @@ function Lobby() {
           </div>
 {!isConnected && (
             <span className="connection-status disconnected">
-              未連線
+              {t('lobby.connectionStatus.disconnected')}
             </span>
           )}
         </header>
@@ -562,7 +564,7 @@ function Lobby() {
         <main className="lobby-content">
           {/* 遊戲暱稱輸入 */}
           <div className="nickname-section">
-            <label className="nickname-label" htmlFor="nickname">遊戲暱稱</label>
+            <label className="nickname-label" htmlFor="nickname">{t('lobby.nicknameLabel')}</label>
             <input
               id="nickname"
               className="nickname-input"
@@ -572,12 +574,12 @@ function Lobby() {
                 setNickname(e.target.value);
                 setError('');
               }}
-              placeholder="請輸入遊戲中顯示的暱稱（2-12 字元）"
+              placeholder={t('lobby.nicknamePlaceholder')}
               maxLength={12}
               disabled={isLoading}
             />
             {nickname && getNickname() && nickname === getNickname() && (
-              <span className="welcome-message">歡迎回來，{nickname}！</span>
+              <span className="welcome-message">{t('lobby.welcomeBack', { nickname })}</span>
             )}
           </div>
 
@@ -594,7 +596,7 @@ function Lobby() {
             onClick={() => navigate('/')}
           >
             <span className="material-symbols-outlined">arrow_back</span>
-            返回遊戲選擇
+            {t('lobby.backToSelection')}
           </button>
 
           {/* 創建房間按鈕 */}
@@ -607,7 +609,7 @@ function Lobby() {
             disabled={!isConnected || isLoading}
           >
             <span className="material-symbols-outlined">add_circle</span>
-            創建新房間
+            {t('lobby.createNewRoom')}
           </button>
 
           {/* 加入房間區域 */}
@@ -617,7 +619,7 @@ function Lobby() {
               type="text"
               value={joinRoomId}
               onChange={(e) => setJoinRoomId(e.target.value)}
-              placeholder="輸入房間 ID"
+              placeholder={t('lobby.joinRoomPlaceholder')}
               disabled={isLoading}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -631,7 +633,7 @@ function Lobby() {
               disabled={!isConnected || isLoading || !joinRoomId.trim()}
             >
               <span className="material-symbols-outlined">login</span>
-              加入
+              {t('lobby.joinBtn')}
             </button>
           </div>
 
@@ -641,17 +643,17 @@ function Lobby() {
             {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').length === 0 ? (
               <div className="no-rooms">
                 <span className="material-symbols-outlined">meeting_room</span>
-                目前沒有可用的房間，點擊上方按鈕創建新房間
+                {t('lobby.noRooms')}
               </div>
             ) : (
               <table className="room-table">
                 <thead>
                   <tr>
-                    <th>房間名稱</th>
+                    <th>{t('lobby.table.roomName')}</th>
                     <th>ID</th>
-                    <th>玩家</th>
-                    <th>狀態</th>
-                    <th>操作</th>
+                    <th>{t('lobby.table.players')}</th>
+                    <th>{t('lobby.table.status')}</th>
+                    <th>{t('lobby.table.action')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -678,7 +680,7 @@ function Lobby() {
                       </td>
                       <td>
                         <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
-                          {canJoinRoom(room) ? '等待中' : '已滿'}
+                          {canJoinRoom(room) ? t('lobby.roomStatus.waiting') : t('lobby.roomStatus.full')}
                         </span>
                       </td>
                       <td>
@@ -690,7 +692,7 @@ function Lobby() {
                           <span className="material-symbols-outlined">
                             {canJoinRoom(room) ? 'login' : 'block'}
                           </span>
-                          {canJoinRoom(room) ? '加入' : '已滿'}
+                          {canJoinRoom(room) ? t('lobby.joinBtn') : t('lobby.roomStatus.full')}
                         </button>
                       </td>
                     </tr>
@@ -707,7 +709,7 @@ function Lobby() {
               onClick={handleOpenAIModal}
             >
               <span className="material-symbols-outlined">smart_toy</span>
-              單人模式
+              {t('lobby.singlePlayer')}
             </button>
           </div>
         </main>
@@ -720,28 +722,28 @@ function Lobby() {
           onClick={() => setActiveNav('rooms')}
         >
           <span className="material-symbols-outlined">meeting_room</span>
-          大廳
+          {t('lobby.nav.lobbyShort')}
         </button>
         <button
           className={`mobile-nav-item ${activeNav === 'profile' ? 'active' : ''}`}
           onClick={() => navigate('/profile')}
         >
           <span className="material-symbols-outlined">person</span>
-          個人
+          {t('lobby.nav.profileShort')}
         </button>
         <button
           className={`mobile-nav-item ${activeNav === 'friends' ? 'active' : ''}`}
           onClick={() => navigate('/friends')}
         >
           <span className="material-symbols-outlined">group</span>
-          好友
+          {t('lobby.nav.friends')}
         </button>
         <button
           className={`mobile-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
           onClick={() => navigate('/leaderboard')}
         >
           <span className="material-symbols-outlined">leaderboard</span>
-          排行
+          {t('lobby.nav.leaderboardShort')}
         </button>
       </nav>
 
@@ -756,15 +758,15 @@ function Lobby() {
             {/* 頂部區域 */}
             <div className="crm-header">
               <span className="material-symbols-outlined crm-header-icon">add_circle</span>
-              <h2 className="crm-title">創建新房間</h2>
-              <p className="crm-subtitle">設定房間參數後開始遊戲</p>
+              <h2 className="crm-title">{t('lobby.modal.createRoom.title')}</h2>
+              <p className="crm-subtitle">{t('lobby.modal.createRoom.subtitle')}</p>
             </div>
 
             {/* 表單區域 */}
             <div className="crm-form">
               {/* 玩家數量 */}
               <div className="crm-input-group">
-                <label htmlFor="createPlayerCount">玩家數量</label>
+                <label htmlFor="createPlayerCount">{t('lobby.form.playerCount')}</label>
                 <select
                   id="createPlayerCount"
                   className="crm-select"
@@ -772,8 +774,8 @@ function Lobby() {
                   onChange={(e) => setPlayerCount(parseInt(e.target.value, 10))}
                   disabled={isLoading}
                 >
-                  <option value={3}>3人</option>
-                  <option value={4}>4人</option>
+                  <option value={3}>{t('lobby.form.3players')}</option>
+                  <option value={4}>{t('lobby.form.4players')}</option>
                 </select>
               </div>
 
@@ -793,7 +795,7 @@ function Lobby() {
                     }}
                     disabled={isLoading}
                   />
-                  <label htmlFor="privateToggle" className="crm-checkbox-label">設為私人房間</label>
+                  <label htmlFor="privateToggle" className="crm-checkbox-label">{t('lobby.form.privateRoom')}</label>
                 </div>
                 <span className="material-symbols-outlined crm-checkbox-icon">lock</span>
               </div>
@@ -801,7 +803,7 @@ function Lobby() {
               {/* 房間密碼（條件顯示）*/}
               {isPrivate && (
                 <div className="crm-password-group">
-                  <label htmlFor="createRoomPassword">房間密碼</label>
+                  <label htmlFor="createRoomPassword">{t('lobby.form.password')}</label>
                   <div className="crm-password-wrapper">
                     <input
                       id="createRoomPassword"
@@ -812,7 +814,7 @@ function Lobby() {
                         setRoomPassword(e.target.value);
                         setCreateRoomError('');
                       }}
-                      placeholder="請輸入密碼"
+                      placeholder={t('lobby.form.passwordPlaceholder')}
                       maxLength={16}
                       disabled={isLoading}
                     />
@@ -837,7 +839,7 @@ function Lobby() {
                 onClick={() => setShowCreateModal(false)}
                 disabled={isLoading}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -846,7 +848,7 @@ function Lobby() {
                 disabled={isLoading || !isConnected}
               >
                 <span className="material-symbols-outlined">done_all</span>
-                {isLoading ? '創建中...' : '創建房間'}
+                {isLoading ? t('lobby.modal.creating') : t('lobby.modal.createBtn')}
               </button>
             </div>
 
@@ -862,9 +864,9 @@ function Lobby() {
           <div className="modal password-modal">
             <h3>
               <span className="material-symbols-outlined">lock</span>
-              私人房間
+              {t('lobby.modal.privateRoom')}
             </h3>
-            <p>「{pendingRoomName}」需要密碼才能加入</p>
+            <p>{t('lobby.modal.passwordRequired', { roomName: pendingRoomName })}</p>
 
             <div className="input-group">
               <input
@@ -874,7 +876,7 @@ function Lobby() {
                   setInputPassword(e.target.value);
                   setPasswordError('');
                 }}
-                placeholder="請輸入房間密碼"
+                placeholder={t('lobby.modal.passwordPlaceholder')}
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -893,14 +895,14 @@ function Lobby() {
                 className="btn btn-secondary"
                 onClick={handlePasswordCancel}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handlePasswordSubmit}
                 disabled={isLoading}
               >
-                {isLoading ? '加入中...' : '加入'}
+                {isLoading ? t('lobby.modal.joining') : t('lobby.joinBtn')}
               </button>
             </div>
           </div>
@@ -911,9 +913,9 @@ function Lobby() {
       {showAIModal && (
         <div className="modal-overlay">
           <div className="modal ai-modal">
-            <h3>單人模式設定</h3>
+            <h3>{t('lobby.modal.singlePlayer.title')}</h3>
             <p className="modal-description">
-              選擇 AI 對手的數量和難度
+              {t('lobby.modal.singlePlayer.desc')}
             </p>
 
             <AIPlayerSelector onConfigChange={handleAIConfigChange} />
@@ -923,13 +925,13 @@ function Lobby() {
                 className="btn btn-secondary"
                 onClick={handleCloseAIModal}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handleStartSinglePlayer}
               >
-                開始遊戲
+                {t('lobby.modal.startGame')}
               </button>
             </div>
           </div>

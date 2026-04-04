@@ -6,11 +6,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getLeaderboard } from '../../../services/apiService';
 import './Leaderboard.css';
 
 function Leaderboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [leaderboard, setLeaderboard] = useState([]);
   const [sortBy, setSortBy] = useState('games_won');
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ function Leaderboard() {
         {/* 導航欄 */}
         <header className="leaderboard-nav">
           <button className="back-btn" onClick={handleBack}>
-            ← 返回大廳
+            {t('leaderboard.backToLobby')}
           </button>
           <div className="nav-brand">
             <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -77,7 +79,7 @@ function Leaderboard() {
 
         <main className="leaderboard-main">
           <div className="leaderboard-card">
-            <h1 className="leaderboard-title">排行榜</h1>
+            <h1 className="leaderboard-title">{t('leaderboard.title')}</h1>
 
             {/* 排序選項 */}
             <div className="sort-tabs">
@@ -85,43 +87,43 @@ function Leaderboard() {
                 className={`sort-tab ${sortBy === 'games_won' ? 'active' : ''}`}
                 onClick={() => setSortBy('games_won')}
               >
-                勝場數
+                {t('leaderboard.sortBy.wins')}
               </button>
               <button
                 className={`sort-tab ${sortBy === 'win_rate' ? 'active' : ''}`}
                 onClick={() => setSortBy('win_rate')}
               >
-                勝率
+                {t('leaderboard.sortBy.winRate')}
               </button>
               <button
                 className={`sort-tab ${sortBy === 'total_score' ? 'active' : ''}`}
                 onClick={() => setSortBy('total_score')}
               >
-                總得分
+                {t('leaderboard.sortBy.totalScore')}
               </button>
             </div>
 
-            {error && <div className="leaderboard-error">{error}</div>}
+            {error && <div className="leaderboard-error">{t('leaderboard.error.loadFailed')}</div>}
 
             {/* 排行榜列表 */}
             {loading ? (
-              <div className="leaderboard-loading">載入中...</div>
+              <div className="leaderboard-loading">{t('common.loading')}</div>
             ) : leaderboard.length === 0 ? (
               <div className="leaderboard-empty">
-                <p>暫無排行資料</p>
-                <p className="hint">完成遊戲後就會出現在排行榜上</p>
+                <p>{t('leaderboard.empty.title')}</p>
+                <p className="hint">{t('leaderboard.empty.hint')}</p>
               </div>
             ) : (
               <div className="leaderboard-table-wrapper">
                 <table className="leaderboard-table">
                   <thead>
                     <tr>
-                      <th className="col-rank">排名</th>
-                      <th className="col-player">玩家</th>
-                      <th className="col-games">場數</th>
-                      <th className="col-wins">勝場</th>
-                      <th className="col-rate">勝率</th>
-                      <th className="col-score">總分</th>
+                      <th className="col-rank">{t('leaderboard.table.rank')}</th>
+                      <th className="col-player">{t('leaderboard.table.player')}</th>
+                      <th className="col-games">{t('leaderboard.table.games')}</th>
+                      <th className="col-wins">{t('leaderboard.table.wins')}</th>
+                      <th className="col-rate">{t('leaderboard.table.winRate')}</th>
+                      <th className="col-score">{t('leaderboard.table.totalScore')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -158,7 +160,7 @@ function Leaderboard() {
         </main>
 
         <footer className="leaderboard-footer">
-          <p>© 2024 本草 Herbalism Online. All Rights Reserved.</p>
+          <p>{t('common.copyright')}</p>
         </footer>
       </div>
     </div>

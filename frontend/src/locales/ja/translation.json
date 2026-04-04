@@ -1,0 +1,248 @@
+{
+  "common": {
+    "appTitle": "本草 Herbalism",
+    "loading": "読み込み中...",
+    "guest": "ゲスト",
+    "logout": "ログアウト",
+    "profile": "プロフィール",
+    "friends": "フレンド",
+    "leaderboard": "ランキング",
+    "cancel": "キャンセル",
+    "backToLobby": "← ロビーに戻る",
+    "avatar": "アバター",
+    "player": "プレイヤー",
+    "unknownPlayer": "不明なプレイヤー",
+    "copyright": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "language": {
+    "switcher": "言語",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  },
+  "app": {
+    "error": {
+      "title": "エラーが発生しました",
+      "message": "アプリケーションに問題が発生しました。ページを更新してください。",
+      "reload": "更新"
+    }
+  },
+  "login": {
+    "nav": {
+      "rules": "ルール",
+      "cards": "カード",
+      "about": "概要"
+    },
+    "subtitle": "3〜4人オンライン推理ボードゲーム",
+    "googleLoginBtn": "Googleアカウントでログイン",
+    "guestLoginBtn": "ゲストログイン",
+    "newUser": "初めての方？",
+    "createAccount": "アカウント作成",
+    "introQuote": "古代の本草知識の中から、神秘的な処方を見つけよう。推理・戦略・知恵を融合したボードゲーム。",
+    "feature": {
+      "players": "3〜4人",
+      "duration": "20〜30分",
+      "logic": "論理推理"
+    },
+    "error": {
+      "defaultError": "ログインに失敗しました。後でもう一度お試しください",
+      "adminSetup": "管理者設定手順：",
+      "firebaseConsole": "Firebase Consoleへ",
+      "step2": "プロジェクト選択 → Authentication → ログイン方法",
+      "step3": "「Google」と「匿名」ログインを有効化",
+      "step4": "Authorized domainsにlocalhostと本番ドメインが含まれていることを確認"
+    }
+  },
+  "gameSelection": {
+    "title": "ゲームを選択",
+    "subtitle": "プレイしたいゲームを選択してください"
+  },
+  "games": {
+    "herbalism": {
+      "name": "本草",
+      "desc1": "3〜4人推理ボードゲーム",
+      "desc2": "質問と推理で隠されたカードの色を当てる",
+      "players": "3〜4人",
+      "duration": "15〜30分"
+    },
+    "evolution": {
+      "name": "進化論",
+      "desc1": "2〜4人戦略カードゲーム",
+      "desc2": "生物を作り、競争で生き残らせよう",
+      "players": "2〜4人",
+      "duration": "30〜60分"
+    }
+  },
+  "lobby": {
+    "title": "本草",
+    "nav": {
+      "rooms": "ゲームロビー",
+      "profile": "プロフィール",
+      "friends": "フレンド",
+      "leaderboard": "ランキング",
+      "lobbyShort": "ロビー",
+      "profileShort": "個人",
+      "leaderboardShort": "順位"
+    },
+    "connectionStatus": {
+      "disconnected": "未接続"
+    },
+    "nicknameLabel": "ゲームニックネーム",
+    "nicknamePlaceholder": "ゲームで表示するニックネームを入力（2〜12文字）",
+    "welcomeBack": "おかえりなさい、{{nickname}}！",
+    "backToSelection": "ゲーム選択に戻る",
+    "createNewRoom": "新しいルームを作成",
+    "joinRoomPlaceholder": "ルームIDを入力",
+    "joinBtn": "参加",
+    "singlePlayer": "シングルプレイ",
+    "reconnecting": "再接続を試みています...",
+    "noRooms": "利用可能なルームがありません。上のボタンをクリックして新しいルームを作成してください。",
+    "roomStatus": {
+      "waiting": "待機中",
+      "full": "満員"
+    },
+    "roomAction": {
+      "join": "参加",
+      "full": "満員"
+    },
+    "table": {
+      "roomName": "ルーム名",
+      "id": "ID",
+      "players": "プレイヤー",
+      "status": "状態",
+      "action": "操作"
+    },
+    "error": {
+      "notConnected": "サーバーに接続されていません",
+      "invalidNickname": "ゲームニックネームを入力してください",
+      "disconnected": "サーバーから切断されました。バックエンドが起動しているか確認してください。",
+      "noRoomId": "ルームIDを入力してください"
+    },
+    "modal": {
+      "createRoom": {
+        "title": "新しいルームを作成",
+        "subtitle": "ルーム設定を行ってゲームを開始"
+      },
+      "creating": "作成中...",
+      "createBtn": "ルームを作成",
+      "privateRoom": "プライベートルーム",
+      "passwordRequired": "「{{roomName}}」に参加するにはパスワードが必要です",
+      "passwordPlaceholder": "ルームパスワードを入力",
+      "joining": "参加中...",
+      "singlePlayer": {
+        "title": "シングルプレイ設定",
+        "desc": "AIの数と難易度を選択"
+      },
+      "startGame": "ゲーム開始"
+    },
+    "form": {
+      "playerCount": "プレイヤー数",
+      "3players": "3人",
+      "4players": "4人",
+      "privateRoom": "プライベートルームに設定",
+      "password": "ルームパスワード",
+      "passwordPlaceholder": "パスワードを入力"
+    }
+  },
+  "profile": {
+    "backToLobby": "← ロビーに戻る",
+    "guestAccount": "ゲストアカウント",
+    "anonymous": {
+      "hint": "Googleアカウントでログインして全機能を解放",
+      "benefit1": "ゲーム記録と統計を保存",
+      "benefit2": "個人の勝率と最高スコアを確認",
+      "benefit3": "フレンド機能を使用",
+      "benefit4": "ランキングに登場",
+      "goLogin": "Googleログインへ"
+    },
+    "stats": {
+      "title": "ゲーム統計",
+      "gamesPlayed": "総試合数",
+      "wins": "勝利",
+      "winRate": "勝率",
+      "totalScore": "総スコア",
+      "highestScore": "最高スコア"
+    },
+    "history": {
+      "title": "最近のゲーム",
+      "noRecords": "まだゲーム記録がありません",
+      "score": "スコア：",
+      "players": "人プレイ",
+      "rounds": "ラウンド"
+    },
+    "retry": "再読み込み",
+    "error": {
+      "statsLoadFailed": "統計の読み込みに失敗しました",
+      "historyLoadFailed": "履歴の読み込みに失敗しました",
+      "loadFailed": "データの読み込みに失敗しました。後でもう一度お試しください"
+    }
+  },
+  "leaderboard": {
+    "title": "ランキング",
+    "backToLobby": "← ロビーに戻る",
+    "sortBy": {
+      "wins": "勝利数",
+      "winRate": "勝率",
+      "totalScore": "総スコア"
+    },
+    "empty": {
+      "title": "ランキングデータなし",
+      "hint": "ゲームを完了するとランキングに表示されます"
+    },
+    "table": {
+      "rank": "順位",
+      "player": "プレイヤー",
+      "games": "試合数",
+      "wins": "勝利",
+      "winRate": "勝率",
+      "totalScore": "総スコア"
+    },
+    "error": {
+      "loadFailed": "ランキングの読み込みに失敗しました"
+    }
+  },
+  "friends": {
+    "title": "フレンド管理",
+    "backToLobby": "← ロビーに戻る",
+    "tab": {
+      "friends": "フレンド ({{count}})",
+      "requests": "リクエスト",
+      "search": "検索"
+    },
+    "empty": {
+      "title": "フレンドがいません",
+      "hint": "検索ページでプレイヤーを探してフレンド追加しましょう！"
+    },
+    "status": {
+      "online": "オンライン",
+      "inGame": "ゲーム中",
+      "offline": "オフライン"
+    },
+    "stats": "{{wins}} 勝 / {{games}} 試合",
+    "playerStats": "{{wins}} 勝 · {{winRate}}% 勝率",
+    "button": {
+      "remove": "削除",
+      "addFriend": "フレンド追加",
+      "accept": "承認",
+      "reject": "拒否"
+    },
+    "requests": {
+      "empty": "保留中のフレンドリクエストはありません"
+    },
+    "searchPlaceholder": "プレイヤーのニックネームで検索...",
+    "searchBtn": "検索",
+    "searching": "検索中...",
+    "noResults": "該当するプレイヤーが見つかりません",
+    "error": {
+      "searchFailed": "検索に失敗しました",
+      "loadFailed": "フレンドの読み込みに失敗しました",
+      "requestsFailed": "リクエストの読み込みに失敗しました"
+    }
+  },
+  "connectionStatus": {
+    "reconnectSuccess": "再接続成功！",
+    "reconnecting": "再接続中... ({{attempt}} 回目の試行)",
+    "disconnected": "接続が切断されました"
+  }
+}

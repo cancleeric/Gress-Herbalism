@@ -1,0 +1,33 @@
+.language-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.language-switcher__label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.language-switcher__select {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.2s;
+}
+
+.language-switcher__select:hover,
+.language-switcher__select:focus {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.language-switcher__select option {
+  background: #2c1810;
+  color: #fff;
+}

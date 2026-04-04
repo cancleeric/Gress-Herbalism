@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../firebase';
 import {
   searchPlayers,
@@ -19,6 +20,7 @@ import './Friends.css';
 
 function Friends() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('friends');
   const [friends, setFriends] = useState([]);
@@ -143,7 +145,7 @@ function Friends() {
         {/* 導航欄 */}
         <header className="friends-nav">
           <button className="back-btn" onClick={handleBack}>
-            ← 返回大廳
+            {t('friends.backToLobby')}
           </button>
           <div className="nav-brand">
             <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -155,7 +157,7 @@ function Friends() {
 
         <main className="friends-main">
           <div className="friends-card">
-            <h1 className="friends-title">好友管理</h1>
+            <h1 className="friends-title">{t('friends.title')}</h1>
 
             {/* 標籤頁 */}
             <div className="friends-tabs">
@@ -163,13 +165,13 @@ function Friends() {
                 className={`tab-btn ${activeTab === 'friends' ? 'active' : ''}`}
                 onClick={() => setActiveTab('friends')}
               >
-                好友 ({friends.length})
+                {t('friends.tab.friends', { count: friends.length })}
               </button>
               <button
                 className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
                 onClick={() => setActiveTab('requests')}
               >
-                請求
+                {t('friends.tab.requests')}
                 {requests.length > 0 && (
                   <span className="badge">{requests.length}</span>
                 )}
@@ -178,7 +180,7 @@ function Friends() {
                 className={`tab-btn ${activeTab === 'search' ? 'active' : ''}`}
                 onClick={() => setActiveTab('search')}
               >
-                搜尋
+                {t('friends.tab.search')}
               </button>
             </div>
 
@@ -189,8 +191,8 @@ function Friends() {
               <div className="friends-list">
                 {friends.length === 0 ? (
                   <div className="empty-state">
-                    <p>還沒有好友</p>
-                    <p className="hint">去搜尋頁面找玩家加好友吧！</p>
+                    <p>{t('friends.empty.title')}</p>
+                    <p className="hint">{t('friends.empty.hint')}</p>
                   </div>
                 ) : (
                   friends.map(({ friend }) => (
@@ -216,7 +218,7 @@ function Friends() {
                           className="remove-btn"
                           onClick={() => handleRemoveFriend(friend.id)}
                         >
-                          刪除
+                          {t('friends.button.remove')}
                         </button>
                       </div>
                     </div>
@@ -230,7 +232,7 @@ function Friends() {
               <div className="requests-list">
                 {requests.length === 0 ? (
                   <div className="empty-state">
-                    <p>沒有待處理的好友請求</p>
+                    <p>{t('friends.requests.empty')}</p>
                   </div>
                 ) : (
                   requests.map((request) => (
@@ -257,13 +259,13 @@ function Friends() {
                           className="accept-btn"
                           onClick={() => handleRespondRequest(request.id, 'accept')}
                         >
-                          接受
+                          {t('friends.button.accept')}
                         </button>
                         <button
                           className="reject-btn"
                           onClick={() => handleRespondRequest(request.id, 'reject')}
                         >
-                          拒絕
+                          {t('friends.button.reject')}
                         </button>
                       </div>
                     </div>
@@ -280,7 +282,7 @@ function Friends() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="輸入玩家暱稱搜尋..."
+                    placeholder={t('friends.searchPlaceholder')}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <button
@@ -288,14 +290,14 @@ function Friends() {
                     onClick={handleSearch}
                     disabled={loading || searchQuery.length < 2}
                   >
-                    {loading ? '搜尋中...' : '搜尋'}
+                    {loading ? t('friends.searching') : t('friends.searchBtn')}
                   </button>
                 </div>
 
                 <div className="search-results">
                   {searchResults.length === 0 && searchQuery.length >= 2 && !loading && (
                     <div className="empty-state">
-                      <p>找不到符合的玩家</p>
+                      <p>{t('friends.noResults')}</p>
                     </div>
                   )}
                   {searchResults.map((player) => (
@@ -319,7 +321,7 @@ function Friends() {
                         className="add-btn"
                         onClick={() => handleSendRequest(player.id)}
                       >
-                        加好友
+                        {t('friends.button.addFriend')}
                       </button>
                     </div>
                   ))}
@@ -330,7 +332,7 @@ function Friends() {
         </main>
 
         <footer className="friends-footer">
-          <p>© 2024 本草 Herbalism Online. All Rights Reserved.</p>
+          <p>{t('common.copyright')}</p>
         </footer>
       </div>
     </div>

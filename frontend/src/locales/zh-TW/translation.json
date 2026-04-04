@@ -1,0 +1,248 @@
+{
+  "common": {
+    "appTitle": "本草 Herbalism",
+    "loading": "載入中...",
+    "guest": "訪客",
+    "logout": "登出",
+    "profile": "個人資料",
+    "friends": "好友",
+    "leaderboard": "排行榜",
+    "cancel": "取消",
+    "backToLobby": "← 返回大廳",
+    "avatar": "頭像",
+    "player": "玩家",
+    "unknownPlayer": "未知玩家",
+    "copyright": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "language": {
+    "switcher": "語言",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  },
+  "app": {
+    "error": {
+      "title": "發生錯誤",
+      "message": "應用程式遇到問題，請重新整理頁面。",
+      "reload": "重新整理"
+    }
+  },
+  "login": {
+    "nav": {
+      "rules": "規則書",
+      "cards": "卡牌",
+      "about": "關於"
+    },
+    "subtitle": "3-4人線上推理桌遊",
+    "googleLoginBtn": "使用 Google 帳號登入",
+    "guestLoginBtn": "訪客登入",
+    "newUser": "新朋友？",
+    "createAccount": "創建帳號",
+    "introQuote": "在古老的本草知識中，找出神秘藥方。融合推理、策略與智慧的桌遊。",
+    "feature": {
+      "players": "3-4 位玩家",
+      "duration": "20-30 分鐘",
+      "logic": "邏輯推理"
+    },
+    "error": {
+      "defaultError": "登入失敗，請稍後再試",
+      "adminSetup": "管理員設定步驟：",
+      "firebaseConsole": "前往 Firebase Console",
+      "step2": "選擇專案 → Authentication → Sign-in method",
+      "step3": "啟用「Google」和「匿名」登入方式",
+      "step4": "確認 Authorized domains 包含 localhost 和生產環境網域"
+    }
+  },
+  "gameSelection": {
+    "title": "選擇遊戲",
+    "subtitle": "請選擇您想要遊玩的遊戲"
+  },
+  "games": {
+    "herbalism": {
+      "name": "本草",
+      "desc1": "3-4 人推理桌遊",
+      "desc2": "透過問牌和推理猜測蓋牌顏色",
+      "players": "3-4 人",
+      "duration": "15-30 分鐘"
+    },
+    "evolution": {
+      "name": "演化論",
+      "desc1": "2-4 人策略卡牌遊戲",
+      "desc2": "創造生物並讓牠們在競爭中存活",
+      "players": "2-4 人",
+      "duration": "30-60 分鐘"
+    }
+  },
+  "lobby": {
+    "title": "本草",
+    "nav": {
+      "rooms": "遊戲大廳",
+      "profile": "個人資料",
+      "friends": "好友",
+      "leaderboard": "排行榜",
+      "lobbyShort": "大廳",
+      "profileShort": "個人",
+      "leaderboardShort": "排行"
+    },
+    "connectionStatus": {
+      "disconnected": "未連線"
+    },
+    "nicknameLabel": "遊戲暱稱",
+    "nicknamePlaceholder": "請輸入遊戲中顯示的暱稱（2-12 字元）",
+    "welcomeBack": "歡迎回來，{{nickname}}！",
+    "backToSelection": "返回遊戲選擇",
+    "createNewRoom": "創建新房間",
+    "joinRoomPlaceholder": "輸入房間 ID",
+    "joinBtn": "加入",
+    "singlePlayer": "單人模式",
+    "reconnecting": "正在嘗試重新連線...",
+    "noRooms": "目前沒有可用的房間，點擊上方按鈕創建新房間",
+    "roomStatus": {
+      "waiting": "等待中",
+      "full": "已滿"
+    },
+    "roomAction": {
+      "join": "加入",
+      "full": "已滿"
+    },
+    "table": {
+      "roomName": "房間名稱",
+      "id": "ID",
+      "players": "玩家",
+      "status": "狀態",
+      "action": "操作"
+    },
+    "error": {
+      "notConnected": "尚未連線到伺服器",
+      "invalidNickname": "請輸入遊戲暱稱",
+      "disconnected": "與伺服器斷線，請確認後端是否啟動",
+      "noRoomId": "請輸入房間 ID"
+    },
+    "modal": {
+      "createRoom": {
+        "title": "創建新房間",
+        "subtitle": "設定房間參數後開始遊戲"
+      },
+      "creating": "創建中...",
+      "createBtn": "創建房間",
+      "privateRoom": "私人房間",
+      "passwordRequired": "「{{roomName}}」需要密碼才能加入",
+      "passwordPlaceholder": "請輸入房間密碼",
+      "joining": "加入中...",
+      "singlePlayer": {
+        "title": "單人模式設定",
+        "desc": "選擇 AI 對手的數量和難度"
+      },
+      "startGame": "開始遊戲"
+    },
+    "form": {
+      "playerCount": "玩家數量",
+      "3players": "3人",
+      "4players": "4人",
+      "privateRoom": "設為私人房間",
+      "password": "房間密碼",
+      "passwordPlaceholder": "請輸入密碼"
+    }
+  },
+  "profile": {
+    "backToLobby": "← 返回大廳",
+    "guestAccount": "訪客帳號",
+    "anonymous": {
+      "hint": "登入 Google 帳號以解鎖完整功能",
+      "benefit1": "保存遊戲記錄與統計數據",
+      "benefit2": "查看個人勝率與最高分",
+      "benefit3": "使用好友功能",
+      "benefit4": "登上排行榜",
+      "goLogin": "前往 Google 登入"
+    },
+    "stats": {
+      "title": "遊戲統計",
+      "gamesPlayed": "總場數",
+      "wins": "勝利",
+      "winRate": "勝率",
+      "totalScore": "總得分",
+      "highestScore": "最高分"
+    },
+    "history": {
+      "title": "最近遊戲",
+      "noRecords": "還沒有遊戲記錄",
+      "score": "得分：",
+      "players": "人遊戲",
+      "rounds": "局"
+    },
+    "retry": "重新載入",
+    "error": {
+      "statsLoadFailed": "載入統計資料失敗",
+      "historyLoadFailed": "載入歷史資料失敗",
+      "loadFailed": "載入資料失敗，請稍後再試"
+    }
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "backToLobby": "← 返回大廳",
+    "sortBy": {
+      "wins": "勝場數",
+      "winRate": "勝率",
+      "totalScore": "總得分"
+    },
+    "empty": {
+      "title": "暫無排行資料",
+      "hint": "完成遊戲後就會出現在排行榜上"
+    },
+    "table": {
+      "rank": "排名",
+      "player": "玩家",
+      "games": "場數",
+      "wins": "勝場",
+      "winRate": "勝率",
+      "totalScore": "總分"
+    },
+    "error": {
+      "loadFailed": "載入排行榜失敗"
+    }
+  },
+  "friends": {
+    "title": "好友管理",
+    "backToLobby": "← 返回大廳",
+    "tab": {
+      "friends": "好友 ({{count}})",
+      "requests": "請求",
+      "search": "搜尋"
+    },
+    "empty": {
+      "title": "還沒有好友",
+      "hint": "去搜尋頁面找玩家加好友吧！"
+    },
+    "status": {
+      "online": "線上",
+      "inGame": "遊戲中",
+      "offline": "離線"
+    },
+    "stats": "{{wins}} 勝 / {{games}} 場",
+    "playerStats": "{{wins}} 勝 · {{winRate}}% 勝率",
+    "button": {
+      "remove": "刪除",
+      "addFriend": "加好友",
+      "accept": "接受",
+      "reject": "拒絕"
+    },
+    "requests": {
+      "empty": "沒有待處理的好友請求"
+    },
+    "searchPlaceholder": "輸入玩家暱稱搜尋...",
+    "searchBtn": "搜尋",
+    "searching": "搜尋中...",
+    "noResults": "找不到符合的玩家",
+    "error": {
+      "searchFailed": "搜尋失敗",
+      "loadFailed": "載入好友失敗",
+      "requestsFailed": "載入請求失敗"
+    }
+  },
+  "connectionStatus": {
+    "reconnectSuccess": "重連成功！",
+    "reconnecting": "重新連線中... (第 {{attempt}} 次嘗試)",
+    "disconnected": "連線已中斷"
+  }
+}

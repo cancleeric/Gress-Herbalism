@@ -7,6 +7,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './i18n';
 import './styles/index.css';
 
 // 渲染應用程式到 DOM

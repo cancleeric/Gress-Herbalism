@@ -6,12 +6,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../firebase';
 import { getPlayerStats, getPlayerHistory } from '../../../services/apiService';
 import './Profile.css';
 
 function Profile() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [stats, setStats] = useState(null);
   const [history, setHistory] = useState([]);
@@ -71,7 +73,7 @@ function Profile() {
   if (loading) {
     return (
       <div className="profile-page">
-        <div className="profile-loading">載入中...</div>
+        <div className="profile-loading">{t('common.loading')}</div>
       </div>
     );
   }
@@ -88,7 +90,7 @@ function Profile() {
           {/* 導航欄 */}
           <header className="profile-nav">
             <button className="back-btn" onClick={handleBack}>
-              ← 返回大廳
+              {t('profile.backToLobby')}
             </button>
             <div className="nav-brand">
               <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -107,30 +109,30 @@ function Profile() {
                 </div>
                 <div className="user-info">
                   <h2>訪客</h2>
-                  <p className="user-email">訪客帳號</p>
+                  <p className="user-email">{t('profile.guestAccount')}</p>
                 </div>
               </div>
 
               <div className="profile-anonymous-content">
-                <p className="anonymous-hint">登入 Google 帳號以解鎖完整功能</p>
+                <p className="anonymous-hint">{t('profile.anonymous.hint')}</p>
                 <ul className="anonymous-benefits">
-                  <li>保存遊戲記錄與統計數據</li>
-                  <li>查看個人勝率與最高分</li>
-                  <li>使用好友功能</li>
-                  <li>登上排行榜</li>
+                  <li>{t('profile.anonymous.benefit1')}</li>
+                  <li>{t('profile.anonymous.benefit2')}</li>
+                  <li>{t('profile.anonymous.benefit3')}</li>
+                  <li>{t('profile.anonymous.benefit4')}</li>
                 </ul>
                 <button className="google-login-btn" onClick={() => navigate('/login')}>
-                  前往 Google 登入
+                  {t('profile.anonymous.goLogin')}
                 </button>
                 <button className="anonymous-back-btn" onClick={handleBack}>
-                  返回大廳
+                  {t('profile.backToLobby')}
                 </button>
               </div>
             </div>
           </main>
 
           <footer className="profile-footer">
-            <p>&copy; 2024 本草 Herbalism Online. All Rights Reserved.</p>
+            <p>{t('common.copyright')}</p>
           </footer>
         </div>
       </div>
@@ -147,7 +149,7 @@ function Profile() {
         {/* 導航欄 */}
         <header className="profile-nav">
           <button className="back-btn" onClick={handleBack}>
-            ← 返回大廳
+            {t('profile.backToLobby')}
           </button>
           <div className="nav-brand">
             <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -181,42 +183,42 @@ function Profile() {
             {error && (
               <div className="profile-error">
                 {error}
-                <button className="retry-btn" onClick={loadData}>重新載入</button>
+                <button className="retry-btn" onClick={loadData}>{t('profile.retry')}</button>
               </div>
             )}
 
             {/* 統計數據 */}
             <div className="stats-section">
-              <h3>遊戲統計</h3>
+              <h3>{t('profile.stats.title')}</h3>
               <div className="stats-grid">
                 <div className="stat-card">
                   <span className="stat-value">{stats?.games_played || 0}</span>
-                  <span className="stat-label">總場數</span>
+                  <span className="stat-label">{t('profile.stats.gamesPlayed')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-value">{stats?.games_won || 0}</span>
-                  <span className="stat-label">勝利</span>
+                  <span className="stat-label">{t('profile.stats.wins')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-value">{stats?.win_rate || 0}%</span>
-                  <span className="stat-label">勝率</span>
+                  <span className="stat-label">{t('profile.stats.winRate')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-value">{stats?.total_score || 0}</span>
-                  <span className="stat-label">總得分</span>
+                  <span className="stat-label">{t('profile.stats.totalScore')}</span>
                 </div>
                 <div className="stat-card highlight">
                   <span className="stat-value">{stats?.highest_score || 0}</span>
-                  <span className="stat-label">最高分</span>
+                  <span className="stat-label">{t('profile.stats.highestScore')}</span>
                 </div>
               </div>
             </div>
 
             {/* 遊戲歷史 */}
             <div className="history-section">
-              <h3>最近遊戲</h3>
+              <h3>{t('profile.history.title')}</h3>
               {history.length === 0 ? (
-                <p className="no-history">還沒有遊戲記錄</p>
+                <p className="no-history">{t('profile.history.noRecords')}</p>
               ) : (
                 <ul className="history-list">
                   {history.map((record, index) => (
@@ -242,12 +244,12 @@ function Profile() {
 
           {/* 登出按鈕 */}
           <button className="logout-btn" onClick={handleLogout}>
-            登出
+            {t('common.logout')}
           </button>
         </main>
 
         <footer className="profile-footer">
-          <p>© 2024 本草 Herbalism Online. All Rights Reserved.</p>
+          <p>{t('common.copyright')}</p>
         </footer>
       </div>
     </div>

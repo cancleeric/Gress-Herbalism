@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { onConnectionChange, getSocket } from '../../../services/socketService';
 import './ConnectionStatus.css';
 
@@ -12,6 +13,7 @@ import './ConnectionStatus.css';
  * 顯示斷線警告和重連進度
  */
 function ConnectionStatus() {
+  const { t } = useTranslation();
   const [isConnected, setIsConnected] = useState(true);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
@@ -71,7 +73,7 @@ function ConnectionStatus() {
       <div className="connection-status connected" role="status" aria-live="polite">
         <div className="connection-status-content">
           <span className="success-icon">&#10003;</span>
-          <span>重連成功！</span>
+          <span>{t('connectionStatus.reconnectSuccess')}</span>
         </div>
       </div>
     );
@@ -92,12 +94,12 @@ function ConnectionStatus() {
         {isReconnecting ? (
           <>
             <div className="spinner" aria-hidden="true"></div>
-            <span>重新連線中... (第 {reconnectAttempt} 次嘗試)</span>
+            <span>{t('connectionStatus.reconnecting', { attempt: reconnectAttempt })}</span>
           </>
         ) : (
           <>
             <div className="warning-icon" aria-hidden="true">!</div>
-            <span>連線已中斷</span>
+            <span>{t('connectionStatus.disconnected')}</span>
           </>
         )}
       </div>
