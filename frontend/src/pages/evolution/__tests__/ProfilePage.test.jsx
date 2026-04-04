@@ -180,6 +180,77 @@ describe('ProfilePage', () => {
 
       expect(screen.queryByText(/顯示全部/)).not.toBeInTheDocument();
     });
+
+    it('should render category filter buttons', () => {
+      render(<ProfilePage achievements={mockAchievements} />);
+
+      expect(screen.getByRole('tab', { name: '全部' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: '里程碑' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: '遊戲玩法' })).toBeInTheDocument();
+    });
+
+    it('should filter achievements by category', () => {
+      const categorised = [
+        { id: 'a1', name: '里程碑成就', icon: '🎮', points: 10, unlocked: true, category: 'milestone' },
+        { id: 'a2', name: '玩法成就', icon: '🦖', points: 30, unlocked: false, category: 'gameplay' },
+      ];
+      render(<ProfilePage achievements={categorised} />);
+
+      fireEvent.click(screen.getByRole('tab', { name: '里程碑' }));
+
+      expect(screen.getByText('里程碑成就')).toBeInTheDocument();
+      expect(screen.queryByText('玩法成就')).not.toBeInTheDocument();
+    });
+
+    it('should show all achievements when All category selected', () => {
+      const categorised = [
+        { id: 'a1', name: '里程碑成就', icon: '🎮', points: 10, unlocked: true, category: 'milestone' },
+        { id: 'a2', name: '玩法成就', icon: '🦖', points: 30, unlocked: false, category: 'gameplay' },
+      ];
+      render(<ProfilePage achievements={categorised} />);
+
+      fireEvent.click(screen.getByRole('tab', { name: '里程碑' }));
+      fireEvent.click(screen.getByRole('tab', { name: '全部' }));
+
+      expect(screen.getByText('里程碑成就')).toBeInTheDocument();
+      expect(screen.getByText('玩法成就')).toBeInTheDocument();
+    });
+
+    it('should open achievement detail modal on badge click', () => {
+      render(<ProfilePage achievements={mockAchievements} />);
+
+      fireEvent.click(screen.getByText('新手上路').closest('[role="button"]'));
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('should close achievement detail modal', () => {
+      render(<ProfilePage achievements={mockAchievements} />);
+
+      fireEvent.click(screen.getByText('新手上路').closest('[role="button"]'));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: '關閉' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('should display achievement rarity badges', () => {
+      render(<ProfilePage achievements={mockAchievements} />);
+
+      // 10 pt => 普通
+      const commonBadges = screen.getAllByText('普通');
+      expect(commonBadges.length).toBeGreaterThan(0);
+    });
+
+    it('should show toast notifications for newly unlocked achievements', () => {
+      const newlyUnlocked = [
+        { id: 'ach-new', name: '新解鎖成就', icon: '🌟', points: 50 },
+      ];
+      render(<ProfilePage achievements={mockAchievements} newlyUnlocked={newlyUnlocked} />);
+
+      expect(screen.getByText('新解鎖成就')).toBeInTheDocument();
+      expect(screen.getByText('🏅 成就解鎖！')).toBeInTheDocument();
+    });
   });
 
   describe('Game History Section', () => {
@@ -310,6 +381,48 @@ describe('AchievementBadge', () => {
     const { container } = render(<AchievementBadge achievement={achievement} />);
 
     expect(container.firstChild).toHaveAttribute('title', '這是描述文字');
+  });
+
+  it('should render rarity badge', () => {
+    const achievement = {
+      name: '稀有成就',
+      icon: '💎',
+      points: 30,
+      unlocked: true,
+    };
+
+    render(<AchievementBadge achievement={achievement} />);
+
+    expect(screen.getByText('稀有')).toBeInTheDocument();
+  });
+
+  it('should call onClick when clicked', () => {
+    const onClick = jest.fn();
+    const achievement = {
+      name: '可點擊',
+      icon: '👆',
+      points: 10,
+      unlocked: true,
+    };
+
+    render(<AchievementBadge achievement={achievement} onClick={onClick} />);
+
+    fireEvent.click(screen.getByText('可點擊').closest('[role="button"]'));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('should show progress bar for locked achievement with progress', () => {
+    const achievement = {
+      name: '進行中',
+      icon: '🔄',
+      points: 20,
+      unlocked: false,
+      progress: { current: 5, total: 10 },
+    };
+
+    render(<AchievementBadge achievement={achievement} />);
+
+    expect(screen.getByText('5/10')).toBeInTheDocument();
   });
 });
 
