@@ -326,6 +326,72 @@ app.put('/api/friends/invitations/:invitationId', async (req, res) => {
   }
 });
 
+// 取得最近對局玩家
+app.get('/api/players/:firebaseUid/recent-opponents', async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const { supabase } = require('./db/supabase');
+
+    // 查詢最近遊戲紀錄中的對手
+    const { data: history } = await supabase
+      .from('game_participants')
+      .select('game_id, player_id, score')
+      .eq('player_id', playerId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (!history || history.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const gameIds = [...new Set(history.map(h => h.game_id))];
+
+    const { data: opponents } = await supabase
+      .from('game_participants')
+      .select('player_id, players(id, display_name, photo_url), game_id, created_at')
+      .in('game_id', gameIds)
+      .neq('player_id', playerId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (!opponents) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // 去重，取最近遇到的玩家
+    const seen = new Set();
+    const unique = [];
+    for (const op of opponents) {
+      if (!seen.has(op.player_id)) {
+        seen.add(op.player_id);
+        // 取得線上狀態
+        const presence = await presenceService.getFriendsPresence([op.player_id]);
+        const status = presence?.[0]?.status || 'offline';
+        unique.push({
+          id: op.player_id,
+          displayName: op.players?.display_name || '玩家',
+          photoURL: op.players?.photo_url || null,
+          status,
+          lastPlayedAt: op.created_at,
+        });
+        if (unique.length >= limit) break;
+      }
+    }
+
+    res.json({ success: true, data: unique });
+  } catch (err) {
+    console.error('[最近對手] 查詢失敗:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -344,6 +410,13 @@ const gameRooms = new Map();
 
 // 玩家對應的 socket
 const playerSockets = new Map();
+
+// 快速配對等待佇列 (key: gameType, value: array of { socket, player, joinedAt })
+const matchmakingQueues = new Map();
+
+// 大廳聊天訊息 (最多保留 50 則)
+const lobbyChatMessages = [];
+const LOBBY_CHAT_MAX = 50;
 
 // 等待顏色選擇的狀態
 const pendingColorChoices = new Map();
@@ -493,6 +566,99 @@ io.on('connection', (socket) => {
   // 工單 0147：房間列表請求（確保前端訂閱後能獲取最新列表）
   socket.on('requestRoomList', () => {
     socket.emit('roomList', getAvailableRooms());
+  });
+
+  // ==================== 快速配對 ====================
+  socket.on('quickMatch', ({ player, gameType = 'herbalism', maxPlayers = 4 }) => {
+    if (!player || !player.id) return;
+
+    const queue = matchmakingQueues.get(gameType) || [];
+    // 避免重複加入
+    const alreadyIn = queue.find(e => e.player.id === player.id);
+    if (alreadyIn) {
+      socket.emit('quickMatchStatus', { status: 'waiting', position: queue.length });
+      return;
+    }
+
+    queue.push({ socket, player, joinedAt: Date.now(), maxPlayers });
+    matchmakingQueues.set(gameType, queue);
+
+    console.log(`[配對] ${player.name} 加入 ${gameType} 配對佇列，目前人數: ${queue.length}`);
+    socket.emit('quickMatchStatus', { status: 'waiting', position: queue.length });
+
+    // 人數足夠時自動開房
+    if (queue.length >= maxPlayers) {
+      const matched = queue.splice(0, maxPlayers);
+      matchmakingQueues.set(gameType, queue);
+
+      const gameId = generateGameId();
+      const players = matched.map((e, i) => ({
+        ...e.player,
+        socketId: e.socket.id,
+        hand: [],
+        isActive: true,
+        isCurrentTurn: false,
+        isHost: i === 0,
+        score: 0
+      }));
+
+      const roomState = {
+        gameId,
+        players,
+        hiddenCards: [],
+        currentPlayerIndex: 0,
+        currentTurn: 0,
+        maxPlayers,
+        gamePhase: 'waiting',
+        isPrivate: false,
+        gameType,
+      };
+
+      gameRooms.set(gameId, roomState);
+
+      for (const e of matched) {
+        e.socket.join(gameId);
+        e.socket.emit('quickMatchFound', { gameId, gameState: roomState });
+      }
+
+      updateRoomList();
+      console.log(`[配對] ${gameType} 配對成功，遊戲 ID: ${gameId}`);
+    }
+  });
+
+  socket.on('cancelQuickMatch', ({ player, gameType = 'herbalism' }) => {
+    if (!player || !player.id) return;
+    const queue = matchmakingQueues.get(gameType) || [];
+    const updated = queue.filter(e => e.player.id !== player.id);
+    matchmakingQueues.set(gameType, updated);
+    socket.emit('quickMatchStatus', { status: 'cancelled' });
+  });
+
+  // ==================== 大廳聊天 ====================
+  socket.on('lobby:sendMessage', ({ player, message }) => {
+    if (!player || !message || typeof message !== 'string') return;
+    const text = message.trim().slice(0, 200);
+    if (!text) return;
+
+    const msg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      playerId: player.id,
+      playerName: player.name || '玩家',
+      photoURL: player.photoURL || null,
+      text,
+      timestamp: new Date().toISOString(),
+    };
+
+    lobbyChatMessages.push(msg);
+    if (lobbyChatMessages.length > LOBBY_CHAT_MAX) {
+      lobbyChatMessages.shift();
+    }
+
+    io.emit('lobby:message', msg);
+  });
+
+  socket.on('lobby:requestHistory', () => {
+    socket.emit('lobby:history', lobbyChatMessages.slice(-30));
   });
 
   // 工單 0176：設定玩家線上狀態
