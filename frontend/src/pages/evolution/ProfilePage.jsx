@@ -131,10 +131,16 @@ function ProfilePage({
   // 新成就解鎖時顯示 Toast
   useEffect(() => {
     if (newlyUnlocked && newlyUnlocked.length > 0) {
-      setToasts((prev) => [
-        ...prev,
-        ...newlyUnlocked.map((a) => ({ ...a, id: a.id || `toast-${Date.now()}-${Math.random()}` })),
-      ]);
+      setToasts((prev) => {
+        let counter = prev.length;
+        return [
+          ...prev,
+          ...newlyUnlocked.map((a) => ({
+            ...a,
+            id: a.id || `toast-${counter++}`,
+          })),
+        ];
+      });
     }
   }, [newlyUnlocked]);
 

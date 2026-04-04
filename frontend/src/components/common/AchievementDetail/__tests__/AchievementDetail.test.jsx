@@ -239,6 +239,14 @@ describe('AchievementDetail', () => {
       });
     });
 
+    it('shows copied confirmation after sharing', async () => {
+      render(<AchievementDetail achievement={baseAchievement} onClose={mockOnClose} />);
+      fireEvent.click(screen.getByRole('button', { name: '分享成就' }));
+      await waitFor(() => {
+        expect(screen.getByText('✅ 已複製！')).toBeInTheDocument();
+      });
+    });
+
     it('copies locked achievement progress text', async () => {
       const locked = {
         ...baseAchievement,

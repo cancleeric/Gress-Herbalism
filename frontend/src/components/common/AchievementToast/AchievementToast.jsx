@@ -11,6 +11,8 @@ import './AchievementToast.css';
  * 單一成就 Toast 通知
  */
 export function AchievementToastItem({ achievement, onDismiss, duration = 4000 }) {
+  // Note: `onDismiss` should be memoized (e.g. with useCallback) by the parent
+  // to avoid resetting the auto-dismiss timer on unrelated re-renders.
   useEffect(() => {
     const timer = setTimeout(onDismiss, duration);
     return () => clearTimeout(timer);

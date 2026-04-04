@@ -3,7 +3,7 @@
  * 顯示成就的詳細資訊：圖示、描述、解鎖條件、進度條、稀有度
  */
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import './AchievementDetail.css';
 
@@ -80,6 +80,7 @@ function AchievementDetail({ achievement, onClose }) {
   const progressPct = progress
     ? Math.min(100, Math.round((progress.current / progress.total) * 100))
     : null;
+  const [copied, setCopied] = useState(false);
 
   // 按下 Escape 關閉
   const handleKeyDown = useCallback(
@@ -101,10 +102,11 @@ function AchievementDetail({ achievement, onClose }) {
       : `我正在追求成就「${achievement.name}」${achievement.icon}，目前進度 ${progressPct ?? 0}%！`;
     try {
       await navigator.clipboard.writeText(text);
-      alert('成就資訊已複製！');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback for environments without clipboard
-      alert(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   }, [achievement, progressPct]);
 
@@ -204,7 +206,7 @@ function AchievementDetail({ achievement, onClose }) {
           onClick={handleShare}
           aria-label="分享成就"
         >
-          📤 分享成就
+          {copied ? '✅ 已複製！' : '📤 分享成就'}
         </button>
       </div>
     </div>
