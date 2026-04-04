@@ -773,6 +773,70 @@ export function onEvoError(callback) {
 
 // ==================== 工單 0272 結束 ====================
 
+// ==================== 大廳改版：快速配對 & 聊天 ====================
+
+/**
+ * 加入快速配對佇列
+ */
+export function quickMatch(player, gameType = 'herbalism', maxPlayers = 4) {
+  const s = getSocket();
+  if (s) s.emit('quickMatch', { player, gameType, maxPlayers });
+}
+
+/**
+ * 取消快速配對
+ */
+export function cancelQuickMatch(player, gameType = 'herbalism') {
+  const s = getSocket();
+  if (s) s.emit('cancelQuickMatch', { player, gameType });
+}
+
+/**
+ * 監聽快速配對狀態更新
+ */
+export function onQuickMatchStatus(callback) {
+  return safeOn('quickMatchStatus', callback);
+}
+
+/**
+ * 監聽配對成功
+ */
+export function onQuickMatchFound(callback) {
+  return safeOn('quickMatchFound', callback);
+}
+
+/**
+ * 發送大廳聊天訊息
+ */
+export function sendLobbyMessage(player, message) {
+  const s = getSocket();
+  if (s) s.emit('lobby:sendMessage', { player, message });
+}
+
+/**
+ * 請求大廳聊天歷史
+ */
+export function requestLobbyChatHistory() {
+  const s = getSocket();
+  if (s) s.emit('lobby:requestHistory');
+}
+
+/**
+ * 監聽大廳聊天訊息
+ */
+export function onLobbyMessage(callback) {
+  return safeOn('lobby:message', callback);
+}
+
+/**
+ * 監聽大廳聊天歷史
+ */
+export function onLobbyChatHistory(callback) {
+  return safeOn('lobby:history', callback);
+}
+
+// ==================== 大廳改版結束 ====================
+
 // ==================== 工單 0379：連線診斷功能 ====================
 
 /**
