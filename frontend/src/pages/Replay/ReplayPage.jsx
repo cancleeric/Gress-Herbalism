@@ -47,7 +47,8 @@ function ReplayPage() {
           const response = await getHerbalismReplay(gameId);
           setEvents(response.data?.events || []);
         } else {
-          // Evolution replay — placeholder (will be handled when evolution replay page is ready)
+          // Evolution replay loading is not yet supported from this page
+          setError('演化論回放功能尚未支援，請稍後再試。');
           setEvents([]);
         }
       } catch {

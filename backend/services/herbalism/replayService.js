@@ -323,9 +323,9 @@ class HerbalismReplayService {
    * @returns {Array}
    */
   compressEvents(events) {
-    if (!Array.isArray(events)) return [];
+    if (!Array.isArray(events) || events.length === 0) return [];
 
-    const baseTimestamp = events[0]?.timestamp || Date.now();
+    const baseTimestamp = events[0].timestamp || Date.now();
 
     return events.map((event, index) => ({
       t: event.type,

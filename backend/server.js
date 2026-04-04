@@ -840,6 +840,20 @@ io.on('connection', (socket) => {
 
           // 如果是局結束，廣播結果（包含預測結算）
           if (result.isCorrect !== undefined) {
+            // 記錄猜牌和局結束回放事件（直接猜牌，無跟猜）
+            herbalismReplayService.recordGuess(
+              gameId,
+              action.playerId,
+              action.guessedColors || result.guessedColors,
+              result.isCorrect
+            );
+            herbalismReplayService.recordRoundEnd(
+              gameId,
+              gameState.currentRound,
+              result.gameState.scores || gameState.scores,
+              result.hiddenCards
+            );
+
             io.to(gameId).emit('guessResult', {
               isCorrect: result.isCorrect,
               scoreChanges: result.scoreChanges,
