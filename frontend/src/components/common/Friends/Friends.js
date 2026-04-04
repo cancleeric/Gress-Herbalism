@@ -15,6 +15,8 @@ import {
   respondToFriendRequest,
   removeFriend,
 } from '../../../services/friendService';
+import { inviteToRoom } from '../../../services/socketService';
+import { getCurrentRoom } from '../../../utils/common/localStorage';
 import './Friends.css';
 
 function Friends() {
@@ -117,6 +119,17 @@ function Friends() {
     }
   };
 
+  const handleInviteToRoom = (friend) => {
+    const currentRoom = getCurrentRoom();
+    if (!currentRoom || !currentRoom.roomId) {
+      alert('請先創建或加入房間才能邀請好友');
+      return;
+    }
+    const fromPlayer = { id: user?.uid, name: user?.displayName || '玩家' };
+    inviteToRoom(fromPlayer, friend.id, currentRoom.roomId, 'herbalism');
+    alert(`已向 ${friend.display_name} 發送遊戲邀請！`);
+  };
+
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）
     navigate(-1);
@@ -212,6 +225,13 @@ function Friends() {
                         </span>
                       </div>
                       <div className="friend-actions">
+                        <button
+                          className="invite-btn"
+                          onClick={() => handleInviteToRoom(friend)}
+                          title="邀請加入房間"
+                        >
+                          邀請
+                        </button>
                         <button
                           className="remove-btn"
                           onClick={() => handleRemoveFriend(friend.id)}

@@ -827,3 +827,118 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ==================== 工單 0379 結束 ====================
+
+// ==================== 遊戲大廳改版：快速配對、聊天室、好友邀請 ====================
+
+/**
+ * 加入快速配對佇列
+ * @param {Object} player - 玩家資訊 { id, name, ... }
+ * @param {string} gameType - 遊戲類型 'herbalism' | 'evolution'
+ * @param {number} minPlayers - 最少玩家數
+ */
+export function quickMatch(player, gameType = 'herbalism', minPlayers = 3) {
+  const s = getSocket();
+  s.emit('quickMatch', { player, gameType, minPlayers });
+}
+
+/**
+ * 取消快速配對
+ * @param {string} playerId - 玩家 ID
+ * @param {string} gameType - 遊戲類型
+ */
+export function cancelQuickMatch(playerId, gameType = 'herbalism') {
+  const s = getSocket();
+  s.emit('cancelQuickMatch', { playerId, gameType });
+}
+
+/**
+ * 監聽配對成功
+ * @param {Function} callback - ({ gameId, gameState }) => void
+ */
+export function onMatchFound(callback) {
+  return safeOn('matchFound', callback);
+}
+
+/**
+ * 監聽配對狀態更新
+ * @param {Function} callback - ({ status, queueSize }) => void
+ */
+export function onMatchStatus(callback) {
+  return safeOn('matchStatus', callback);
+}
+
+/**
+ * 發送大廳聊天訊息
+ * @param {string} playerName - 玩家顯示名稱
+ * @param {string} message - 訊息內容
+ * @param {string} gameType - 頻道類型 'all' | 'herbalism' | 'evolution'
+ */
+export function sendLobbyChatMessage(playerName, message, gameType = 'all') {
+  const s = getSocket();
+  s.emit('lobbyChatMessage', { playerName, message, gameType });
+}
+
+/**
+ * 監聽大廳聊天訊息
+ * @param {Function} callback - ({ id, playerName, message, gameType, timestamp }) => void
+ */
+export function onLobbyChatMessage(callback) {
+  return safeOn('lobbyChatMessage', callback);
+}
+
+/**
+ * 請求大廳聊天歷史
+ */
+export function requestLobbyChatHistory() {
+  const s = getSocket();
+  s.emit('requestLobbyChatHistory');
+}
+
+/**
+ * 監聽大廳聊天歷史
+ * @param {Function} callback - (messages[]) => void
+ */
+export function onLobbyChatHistory(callback) {
+  return safeOn('lobbyChatHistory', callback);
+}
+
+/**
+ * 透過 Socket 發送遊戲邀請給好友（即時推送）
+ * @param {Object} fromPlayer - 邀請者資訊 { id, name }
+ * @param {string} toPlayerId - 受邀者 Supabase player ID
+ * @param {string} roomId - 房間 ID
+ * @param {string} gameType - 遊戲類型
+ */
+export function inviteToRoom(fromPlayer, toPlayerId, roomId, gameType = 'herbalism') {
+  const s = getSocket();
+  s.emit('inviteToRoom', { fromPlayer, toPlayerId, roomId, gameType });
+}
+
+/**
+ * 監聽收到遊戲邀請
+ * @param {Function} callback - ({ id, fromPlayer, roomId, gameType, timestamp }) => void
+ */
+export function onGameInvitationReceived(callback) {
+  return safeOn('gameInvitationReceived', callback);
+}
+
+/**
+ * 監聽邀請發送結果
+ * @param {Function} callback - ({ toPlayerId, success, reason }) => void
+ */
+export function onInviteSent(callback) {
+  return safeOn('inviteSent', callback);
+}
+
+/**
+ * 設定玩家 ID 到 socket（供邀請功能使用）
+ * @param {string} playerId - Supabase player ID
+ */
+export function setSocketPlayerId(playerId) {
+  const s = getSocket();
+  if (s && playerId) {
+    s.emit('setPlayerId', { playerId });
+  }
+}
+
+// ==================== 遊戲大廳改版結束 ====================

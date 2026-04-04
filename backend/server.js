@@ -345,6 +345,13 @@ const gameRooms = new Map();
 // 玩家對應的 socket
 const playerSockets = new Map();
 
+// 快速配對佇列: gameType -> [{player, socketId, timestamp}]
+const matchmakingQueues = new Map();
+
+// 大廳聊天訊息（最多保留 50 條）
+const lobbyChatHistory = [];
+const LOBBY_CHAT_HISTORY_LIMIT = 50;
+
 // 等待顏色選擇的狀態
 const pendingColorChoices = new Map();
 
@@ -496,13 +503,18 @@ io.on('connection', (socket) => {
   });
 
   // 工單 0176：設定玩家線上狀態
-  socket.on('setPresence', async ({ firebaseUid }) => {
+  socket.on('setPresence', async ({ firebaseUid, playerId: directPlayerId }) => {
+    // 支援直接傳 playerId（供邀請功能使用）
+    if (directPlayerId) {
+      socket.data.playerId = directPlayerId;
+    }
     if (firebaseUid) {
       try {
         const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
         if (playerId) {
           await presenceService.setOnline(playerId);
           socket.firebasePlayerId = playerId;  // 保存以便斷線時使用
+          socket.data.playerId = playerId;
           console.log(`[線上狀態] 玩家 ${playerId} 已上線`);
         }
       } catch (err) {
@@ -1172,7 +1184,18 @@ io.on('connection', (socket) => {
 
   // 斷線處理
   socket.on('disconnect', async (reason) => {
-    // 本草遊戲斷線處理
+    // 快速配對：斷線時從佇列移除
+    const gameType = socket.data && socket.data.matchmakingGameType;
+    if (gameType) {
+      const queue = matchmakingQueues.get(gameType);
+      if (queue) {
+        const idx = queue.findIndex(e => e.socketId === socket.id);
+        if (idx !== -1) {
+          queue.splice(idx, 1);
+          console.log(`[配對] 斷線，從 ${gameType} 佇列移除 socket: ${socket.id}`);
+        }
+      }
+    }
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
@@ -1199,6 +1222,168 @@ io.on('connection', (socket) => {
   socket.on('reconnect', ({ roomId, playerId, playerName }) => {
     handlePlayerReconnect(socket, roomId, playerId, playerName);
   });
+
+  // ==================== 遊戲大廳改版：快速配對、聊天室、好友邀請 ====================
+
+  // 快速配對：加入配對佇列
+  socket.on('quickMatch', ({ player, gameType = 'herbalism', minPlayers = 3 }) => {
+    if (!player || !player.id) {
+      socket.emit('error', { message: '玩家資訊無效' });
+      return;
+    }
+
+    const queueKey = gameType;
+    if (!matchmakingQueues.has(queueKey)) {
+      matchmakingQueues.set(queueKey, []);
+    }
+    const queue = matchmakingQueues.get(queueKey);
+
+    // 避免重複加入
+    const existing = queue.findIndex(e => e.player.id === player.id);
+    if (existing !== -1) {
+      queue[existing].socketId = socket.id;
+    } else {
+      queue.push({ player, socketId: socket.id, timestamp: Date.now() });
+    }
+
+    socket.data.matchmakingGameType = gameType;
+    console.log(`[配對] 玩家 ${player.name} 加入 ${gameType} 佇列，目前人數: ${queue.length}`);
+    socket.emit('matchStatus', { status: 'searching', queueSize: queue.length });
+
+    // 清理已斷線的佇列玩家
+    const validQueue = queue.filter(entry => {
+      const s = io.sockets.sockets.get(entry.socketId);
+      return s && s.connected;
+    });
+    matchmakingQueues.set(queueKey, validQueue);
+
+    // 檢查是否可以配對
+    if (validQueue.length >= minPlayers) {
+      const matched = validQueue.splice(0, minPlayers);
+      matchmakingQueues.set(queueKey, validQueue);
+
+      // 創建新房間
+      const gameId = generateGameId();
+      const players = matched.map((entry, index) => ({
+        ...entry.player,
+        socketId: entry.socketId,
+        hand: [],
+        isActive: true,
+        isCurrentTurn: index === 0,
+        isHost: index === 0,
+        score: 0
+      }));
+
+      const roomState = {
+        gameId,
+        players,
+        hiddenCards: [],
+        currentPlayerIndex: 0,
+        gamePhase: 'waiting',
+        winner: null,
+        gameHistory: [],
+        maxPlayers: minPlayers,
+        currentRound: 0,
+        scores: {},
+        winningScore: 7,
+        roundHistory: [],
+        password: null,
+        isPrivate: false,
+        predictions: []
+      };
+      gameRooms.set(gameId, roomState);
+
+      // 通知所有配對玩家
+      matched.forEach(entry => {
+        const matchedSocket = io.sockets.sockets.get(entry.socketId);
+        if (matchedSocket) {
+          playerSockets.set(entry.socketId, { gameId, playerId: entry.player.id });
+          matchedSocket.join(gameId);
+          matchedSocket.emit('matchFound', { gameId, gameState: roomState });
+        }
+      });
+
+      broadcastRoomList();
+      console.log(`[配對] ${gameType} 配對成功，房間: ${gameId}，玩家: ${matched.map(e => e.player.name).join(', ')}`);
+    }
+  });
+
+  // 快速配對：取消配對
+  socket.on('cancelQuickMatch', ({ playerId, gameType = 'herbalism' }) => {
+    const queue = matchmakingQueues.get(gameType);
+    if (queue) {
+      const idx = queue.findIndex(e => e.player.id === playerId);
+      if (idx !== -1) {
+        queue.splice(idx, 1);
+        console.log(`[配對] 玩家 ${playerId} 取消 ${gameType} 配對`);
+      }
+    }
+    socket.emit('matchStatus', { status: 'idle', queueSize: 0 });
+  });
+
+  // 大廳聊天：發送訊息
+  socket.on('lobbyChatMessage', ({ playerName, message, gameType = 'all' }) => {
+    if (!message || !message.trim() || !playerName) return;
+
+    const trimmed = message.trim().slice(0, 200); // 限制訊息長度
+    const chatEntry = {
+      id: `${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      playerName,
+      message: trimmed,
+      gameType,
+      timestamp: Date.now()
+    };
+
+    lobbyChatHistory.push(chatEntry);
+    if (lobbyChatHistory.length > LOBBY_CHAT_HISTORY_LIMIT) {
+      lobbyChatHistory.shift();
+    }
+
+    io.emit('lobbyChatMessage', chatEntry);
+  });
+
+  // 大廳聊天：請求歷史訊息
+  socket.on('requestLobbyChatHistory', () => {
+    socket.emit('lobbyChatHistory', lobbyChatHistory);
+  });
+
+  // 好友邀請（Socket 即時推送）
+  socket.on('inviteToRoom', ({ fromPlayer, toPlayerId, roomId, gameType = 'herbalism' }) => {
+    if (!fromPlayer || !toPlayerId || !roomId) {
+      socket.emit('error', { message: '邀請資訊不完整' });
+      return;
+    }
+
+    // 找到目標玩家的 socket
+    let targetSocket = null;
+    io.sockets.sockets.forEach((s) => {
+      if (s.data && s.data.playerId === toPlayerId) {
+        targetSocket = s;
+      }
+    });
+
+    if (targetSocket) {
+      targetSocket.emit('gameInvitationReceived', {
+        id: `${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        fromPlayer,
+        roomId,
+        gameType,
+        timestamp: Date.now()
+      });
+      socket.emit('inviteSent', { toPlayerId, success: true });
+    } else {
+      socket.emit('inviteSent', { toPlayerId, success: false, reason: '對方不在線上' });
+    }
+  });
+
+  // 設定玩家 ID（供邀請功能使用）
+  socket.on('setPlayerId', ({ playerId }) => {
+    if (playerId) {
+      socket.data.playerId = playerId;
+    }
+  });
+
+  // ==================== 遊戲大廳改版結束 ====================
 
   // ==================== 工單 0313-0316：演化論遊戲 Socket 事件（使用新模組） ====================
 

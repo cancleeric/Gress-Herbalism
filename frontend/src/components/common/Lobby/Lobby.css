@@ -1311,3 +1311,479 @@
     font-size: 12px;
   }
 }
+
+/* ==================== 遊戲大廳改版：快速配對、類型篩選、聊天、好友面板 ==================== */
+
+/* 快速配對按鈕 */
+.quick-match-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, #1a5c1f 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(47, 127, 52, 0.3);
+}
+
+.quick-match-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(47, 127, 52, 0.4);
+}
+
+.quick-match-btn.searching {
+  background: linear-gradient(135deg, #c5a059 0%, #a37d3a 100%);
+  animation: pulse-match 1.5s infinite;
+}
+
+.quick-match-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes pulse-match {
+  0%, 100% { box-shadow: 0 2px 8px rgba(197, 160, 89, 0.3); }
+  50% { box-shadow: 0 4px 16px rgba(197, 160, 89, 0.6); }
+}
+
+/* 遊戲類型篩選 */
+.game-type-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filter-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-light, #f5f5f0);
+  border: 1.5px solid rgba(47, 127, 52, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+  background: rgba(47, 127, 52, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.filter-btn:hover:not(.active) {
+  border-color: rgba(47, 127, 52, 0.4);
+  color: var(--text-dark, #333);
+}
+
+/* 房間遊戲類型標籤 */
+.room-game-type {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: rgba(47, 127, 52, 0.1);
+  color: var(--primary);
+}
+
+.room-game-type.evolution {
+  background: rgba(197, 160, 89, 0.15);
+  color: var(--accent-gold, #c5a059);
+}
+
+/* 在線好友面板 */
+.online-friends-panel,
+.recent-players-panel {
+  background: var(--bg-card, #fff);
+  border: 1.5px solid rgba(47, 127, 52, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark, #333);
+  margin: 0 0 12px;
+}
+
+.panel-title .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.online-friends-list,
+.recent-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.online-friend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(47, 127, 52, 0.03);
+  transition: background 0.2s;
+}
+
+.online-friend-item:hover {
+  background: rgba(47, 127, 52, 0.07);
+}
+
+.friend-avatar-small {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.friend-avatar-small img,
+.avatar-placeholder-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(47, 127, 52, 0.15);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.friend-avatar-small .status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-dot.online { background: #4caf50; }
+.status-dot.in-game { background: #ff9800; }
+.status-dot.offline { background: #9e9e9e; }
+
+.online-friend-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dark, #333);
+}
+
+.online-friend-status {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  margin-right: 8px;
+}
+
+.invite-friend-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: rgba(47, 127, 52, 0.1);
+  border: 1.5px solid rgba(47, 127, 52, 0.3);
+  border-radius: 6px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.invite-friend-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.invite-friend-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* 最近遊玩的玩家 */
+.recent-player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-muted, #888);
+}
+
+/* 聊天按鈕（在 single-player-section 裡） */
+.single-player-section {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.chat-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-light, #f5f5f0);
+  border: 1.5px solid rgba(47, 127, 52, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dark, #333);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.chat-toggle-btn:hover {
+  background: rgba(47, 127, 52, 0.07);
+  border-color: var(--primary);
+}
+
+.chat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  margin-left: 4px;
+}
+
+/* 大廳聊天室面板 */
+.lobby-chat-panel {
+  margin-top: 16px;
+  border: 1.5px solid rgba(47, 127, 52, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card, #fff);
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(47, 127, 52, 0.07);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark, #333);
+  border-bottom: 1px solid rgba(47, 127, 52, 0.12);
+}
+
+.chat-header .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.chat-close-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #888);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.chat-close-btn:hover { color: var(--text-dark, #333); }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 120px;
+  max-height: 220px;
+}
+
+.chat-empty {
+  color: var(--text-muted, #aaa);
+  font-size: 13px;
+  text-align: center;
+  margin: auto;
+}
+
+.chat-message {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-dark, #333);
+}
+
+.chat-name {
+  font-weight: 600;
+  color: var(--primary);
+  margin-right: 2px;
+}
+
+.chat-text {
+  word-break: break-word;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(47, 127, 52, 0.12);
+}
+
+.chat-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid rgba(47, 127, 52, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  border-color: var(--primary);
+}
+
+.chat-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  background: #1a5c1f;
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-send-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* 遊戲邀請 Toast */
+.invitation-toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: white;
+  border: 2px solid var(--primary);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  box-shadow: 0 4px 20px rgba(47, 127, 52, 0.25);
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.invitation-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-dark, #333);
+}
+
+.invitation-info .material-symbols-outlined {
+  color: var(--primary);
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.invitation-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.inv-accept-btn,
+.inv-decline-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.inv-accept-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.inv-accept-btn:hover {
+  background: #1a5c1f;
+}
+
+.inv-decline-btn {
+  background: rgba(0,0,0,0.05);
+  color: var(--text-muted, #888);
+}
+
+.inv-decline-btn:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+@media (max-width: 480px) {
+  .invitation-toast {
+    left: 10px;
+    right: 10px;
+    min-width: unset;
+    bottom: 70px;
+  }
+
+  .game-type-filter {
+    gap: 6px;
+  }
+
+  .filter-btn {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}
