@@ -84,11 +84,11 @@ expansionLoader.registerModule('base', baseModule);
 const deepSeaModule = {
   ...require('./deep-sea'),
   manifest: {
-    id: 'deep-sea',
-    name: '深海生態',
-    version: '1.0.0',
+    id: deepSeaExpansion.id,
+    name: deepSeaExpansion.name,
+    version: deepSeaExpansion.version,
     type: 'expansion',
-    requires: ['base'],
+    requires: deepSeaExpansion.requires,
   },
 };
 expansionLoader.registerModule('deep-sea', deepSeaModule);

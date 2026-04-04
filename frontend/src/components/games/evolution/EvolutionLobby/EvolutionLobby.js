@@ -106,6 +106,7 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
   }, [user?.uid, onGameStart]);
 
   // 切換擴充包（只有房主可操作）
+  // TODO: 未來版本應透過 socket 將擴充包選擇廣播給其他玩家並在開始遊戲時傳送至後端
   const handleToggleExpansion = useCallback((expansionId) => {
     setSelectedExpansions(prev => {
       if (prev.includes(expansionId)) {
