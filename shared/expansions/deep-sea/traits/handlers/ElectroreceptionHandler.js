@@ -80,19 +80,6 @@ class ElectroreceptionHandler extends TraitHandler {
   }
 
   /**
-   * 目標生物嘗試從食物池進食時的檢查（由進食邏輯調用）
-   * 若生物被電感干擾，無法進食
-   */
-  checkCanFeed(context) {
-    const { creature } = context;
-
-    // 此方法只在此生物本身有電感性狀時被調用
-    // 電感干擾效果應用於被標記的生物（electroReceptionBlocked）
-    // 由規則引擎在進食前檢查 creature.electroReceptionBlocked
-    return { canFeed: true, reason: '' };
-  }
-
-  /**
    * 回合開始時重置電感使用狀態
    */
   onTurnStart(context) {

@@ -81,10 +81,7 @@ const baseModule = {
 expansionLoader.registerModule('base', baseModule);
 
 // 預先註冊 deep-sea 擴充包到 expansionLoader
-const deepSeaModule = {
-  ...require('./deep-sea'),
-};
-expansionLoader.registerModule('deep-sea', deepSeaModule);
+expansionLoader.registerModule('deep-sea', require('./deep-sea'));
 
 module.exports = {
   // 核心類別
