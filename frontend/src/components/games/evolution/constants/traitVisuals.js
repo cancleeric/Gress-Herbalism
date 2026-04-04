@@ -39,6 +39,14 @@ export const TRAIT_ICONS = {
 
   // 特殊
   trampling: '🦏',
+
+  // 深海生態擴充包
+  deepDive: '🌊🤿',
+  bioluminescence: '✨',
+  schooling: '🐟',
+  giantMaw: '🦈',
+  electroreception: '⚡',
+  inkCloud: '🖤',
 };
 
 /**
@@ -86,6 +94,14 @@ export const TRAIT_NAMES = {
 
   // 特殊
   trampling: '踐踏',
+
+  // 深海生態擴充包
+  deepDive: '深潛',
+  bioluminescence: '發光',
+  schooling: '群游',
+  giantMaw: '巨口',
+  electroreception: '電感',
+  inkCloud: '墨汁',
 };
 
 /**
@@ -112,6 +128,14 @@ export const TRAIT_CATEGORY_MAP = {
   cooperation: 'interactive',
   symbiosis: 'interactive',
   trampling: 'special',
+
+  // 深海生態擴充包
+  deepDive: 'defense',
+  bioluminescence: 'feeding',
+  schooling: 'defense',
+  giantMaw: 'carnivore',
+  electroreception: 'carnivore',
+  inkCloud: 'defense',
 };
 
 /**
@@ -151,6 +175,14 @@ export const getTraitDescription = (traitType) => {
     cooperation: '獲得食物時連結的生物獲得藍色食物',
     symbiosis: '代表吃飽前被保護者不能進食',
     trampling: '可移除食物池中的一個紅色食物',
+
+    // 深海生態擴充包
+    deepDive: '潛入深海，需要電感才能被攻擊',
+    bioluminescence: '進食階段可額外從食物池取得 1 個食物',
+    schooling: '控制 2+ 群游生物時，被攻擊可擲骰 4-6 逃脫',
+    giantMaw: '攻擊成功獲得 3 個藍色食物（需有肉食）',
+    electroreception: '可攻擊有深潛的生物',
+    inkCloud: '每回合一次，被攻擊時可取消攻擊（不需棄牌）',
   };
   return descriptions[traitType] || '';
 };

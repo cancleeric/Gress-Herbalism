@@ -228,6 +228,42 @@ const TRAIT_TYPES = {
   TRAMPLING: 'trampling'
 };
 
+// ========== 深海生態擴充包性狀常數 ==========
+
+/**
+ * 深海生態擴充包性狀類型（共 6 種）
+ * @readonly
+ * @enum {string}
+ */
+const DEEP_SEA_TRAIT_TYPES = {
+  /** 深潛 - 需要電感才能被攻擊 */
+  DEEP_DIVE: 'deepDive',
+  /** 發光 - 進食階段可額外從食物池取得 1 個食物 */
+  BIOLUMINESCENCE: 'bioluminescence',
+  /** 群游 - 控制 2+ 群游生物時，被攻擊擲骰 4-6 逃脫 */
+  SCHOOLING: 'schooling',
+  /** 巨口 - 攻擊成功獲得 3 個藍色食物（需有肉食） */
+  GIANT_MAW: 'giantMaw',
+  /** 電感 - 可攻擊有深潛的生物 */
+  ELECTRORECEPTION: 'electroreception',
+  /** 墨汁 - 每回合一次，被攻擊時可取消攻擊 */
+  INK_CLOUD: 'inkCloud',
+};
+
+/**
+ * 深海擴充包 ID
+ * @readonly
+ * @type {string}
+ */
+const DEEP_SEA_EXPANSION_ID = 'deep-sea';
+
+/**
+ * 深海擴充包卡牌數量
+ * @readonly
+ * @type {number}
+ */
+const DEEP_SEA_TOTAL_CARDS = 24;
+
 /**
  * 所有性狀類型陣列
  * @readonly
@@ -635,4 +671,9 @@ module.exports = {
 
   // 新增：擴充包模組存取
   baseExpansion: baseExpansionModule.baseExpansion,
+
+  // 深海生態擴充包常數
+  DEEP_SEA_TRAIT_TYPES,
+  DEEP_SEA_EXPANSION_ID,
+  DEEP_SEA_TOTAL_CARDS,
 };
