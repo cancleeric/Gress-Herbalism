@@ -37,6 +37,9 @@ const presenceService = require('./services/presenceService');
 // 工單 0313-0316 - 演化論遊戲處理（新模組）
 const evolutionHandler = require('./evolutionGameHandler');
 
+// 本草遊戲回放服務
+const { herbalismReplayService } = require('./services/herbalism/replayService');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -77,6 +80,24 @@ app.get('/api/leaderboard', async (req, res) => {
 // 健康檢查
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ==================== 回放 API ====================
+
+// 取得本草遊戲回放
+app.get('/api/replays/herbalism/:gameId', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const replay = await herbalismReplayService.getReplay(gameId);
+
+    if (!replay) {
+      return res.status(404).json({ success: false, message: '回放不存在' });
+    }
+
+    res.json({ success: true, data: replay });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // ==================== 工單 0060 API ====================
@@ -660,6 +681,9 @@ io.on('connection', (socket) => {
     gameState.currentRound = 1;
     gameState.scores = scores;
 
+    // 開始記錄回放
+    herbalismReplayService.startRecording(gameId, gameState);
+
     broadcastGameState(gameId);
     broadcastRoomList();
     console.log(`遊戲開始: ${gameId}, 第 ${gameState.currentRound} 局`);
@@ -685,6 +709,25 @@ io.on('connection', (socket) => {
     });
 
     if (result.success) {
+      // 記錄問牌事件
+      if (action.type === 'question' && result.requireColorChoice) {
+        herbalismReplayService.recordQuestion(
+          gameId,
+          action.playerId,
+          result.targetPlayerId,
+          result.colors
+        );
+      }
+      // 記錄猜牌事件（直接結果，無跟猜）
+      if (action.type === 'guess' && !result.requireFollowGuess && result.guessedColors) {
+        herbalismReplayService.recordGuess(
+          gameId,
+          action.playerId,
+          result.guessedColors || action.guessedColors,
+          result.isCorrect || false
+        );
+      }
+
       // 檢查是否需要等待被要牌玩家選擇顏色
       if (result.requireColorChoice) {
         // 儲存等待狀態
@@ -859,6 +902,14 @@ io.on('connection', (socket) => {
       // 清除等待狀態
       pendingColorChoices.delete(gameId);
 
+      // 記錄顏色選擇事件
+      herbalismReplayService.recordColorChoice(
+        gameId,
+        pendingChoice.targetPlayerId,
+        chosenColor,
+        result.cardsTransferred || 0
+      );
+
       // 廣播選擇結果
       io.to(gameId).emit('colorChoiceResult', {
         targetPlayerId: pendingChoice.targetPlayerId,
@@ -948,6 +999,14 @@ io.on('connection', (socket) => {
         color: prediction,
         timestamp: Date.now()
       });
+
+      // 記錄預測回放事件
+      herbalismReplayService.recordPrediction(
+        gameId,
+        playerId,
+        prediction,
+        gameState.currentRound
+      );
     }
 
     // 清除問牌後狀態
@@ -996,6 +1055,9 @@ io.on('connection', (socket) => {
       followState.declinedPlayers.push(playerId);
     }
 
+    // 記錄跟猜回放事件
+    herbalismReplayService.recordFollowGuess(gameId, playerId, isFollowing);
+
     // 移到下一個決定者
     followState.currentDeciderIndex++;
     const hasMoreDeciders = followState.currentDeciderIndex < followState.decisionOrder.length;
@@ -1025,6 +1087,24 @@ io.on('connection', (socket) => {
 
       // 清除跟猜狀態
       followGuessStates.delete(gameId);
+
+      // 記錄猜牌回放事件
+      herbalismReplayService.recordGuess(
+        gameId,
+        followState.guessingPlayerId,
+        followState.guessedColors,
+        result.isCorrect
+      );
+
+      // 記錄局結束事件（如有）
+      if (result.gameState.gamePhase === 'roundEnd' || result.gameState.gamePhase === 'finished') {
+        herbalismReplayService.recordRoundEnd(
+          gameId,
+          gameState.currentRound,
+          result.gameState.scores || gameState.scores,
+          result.hiddenCards
+        );
+      }
 
       // 更新遊戲狀態
       Object.assign(gameState, result.gameState);
@@ -1968,6 +2048,9 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
 
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);
     }
+
+    // 結束回放記錄
+    await herbalismReplayService.endRecording(gameState.gameId, gameState);
   } catch (err) {
     console.error('保存遊戲記錄失敗:', err.message);
   }

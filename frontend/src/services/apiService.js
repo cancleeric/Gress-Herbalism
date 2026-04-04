@@ -70,10 +70,19 @@ export async function healthCheck() {
   return apiRequest('/api/health');
 }
 
+/**
+ * 取得本草遊戲回放
+ * @param {string} gameId - 遊戲 ID
+ */
+export async function getHerbalismReplay(gameId) {
+  return apiRequest(`/api/replays/herbalism/${gameId}`);
+}
+
 export default {
   syncPlayer,
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
   healthCheck,
+  getHerbalismReplay,
 };

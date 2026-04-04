@@ -1,0 +1,105 @@
+/**
+ * 本草遊戲回放播放器樣式
+ */
+
+.herbalism-replay {
+  background: var(--bg-secondary, #1a1a2e);
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 700px;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.herbalism-replay--empty {
+  text-align: center;
+  color: var(--text-muted, #888);
+  padding: 40px;
+}
+
+/* 標題 */
+.herbalism-replay__title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 16px;
+  color: var(--color-primary, #4caf50);
+  text-align: center;
+}
+
+/* 事件面板 */
+.herbalism-replay__event-panel {
+  background: var(--bg-tertiary, #2a2a3e);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.herbalism-replay__event-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted, #888);
+}
+
+.herbalism-replay__event-content {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* 顏色標籤 */
+.herbalism-replay__color-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 2px;
+}
+
+.herbalism-replay__color-tag--red    { background: #c0392b; color: #fff; }
+.herbalism-replay__color-tag--yellow { background: #f1c40f; color: #333; }
+.herbalism-replay__color-tag--green  { background: #27ae60; color: #fff; }
+.herbalism-replay__color-tag--blue   { background: #2980b9; color: #fff; }
+.herbalism-replay__color-tag--none   { background: #555; color: #ccc; }
+
+/* 分數列 */
+.herbalism-replay__scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.herbalism-replay__score-item {
+  background: var(--bg-tertiary, #2a2a3e);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.herbalism-replay__score-item strong {
+  color: var(--color-primary, #4caf50);
+}
+
+/* 回合指示器 */
+.herbalism-replay__round {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  margin-bottom: 8px;
+  text-align: right;
+}
+
+/* 響應式 */
+@media (max-width: 480px) {
+  .herbalism-replay {
+    padding: 12px;
+  }
+
+  .herbalism-replay__event-content {
+    font-size: 14px;
+  }
+}
