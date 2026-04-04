@@ -332,7 +332,7 @@ function Lobby() {
     if (!user?.uid || user?.isAnonymous) return;
     getRecentOpponents(user.uid, 8)
       .then(res => setRecentOpponents(res?.data || []))
-      .catch(() => {});
+      .catch(err => console.error('[Lobby] 載入最近對手失敗:', err.message));
   }, [user]);
 
   // Issue #4：聊天滾動到底部
@@ -604,12 +604,12 @@ function Lobby() {
     };
     setIsMatchmaking(true);
     setMatchmakingStatus('排隊中...');
-    quickMatch(player, gameTypeFilter);
+    quickMatch(player, gameTypeFilter, playerCount);
   };
 
   const handleCancelQuickMatch = () => {
     const player = { id: playerId, name: nickname.trim() };
-    cancelQuickMatch(player, gameTypeFilter);
+    cancelQuickMatch(player, gameTypeFilter, playerCount);
     setIsMatchmaking(false);
     setMatchmakingStatus('');
   };
@@ -619,7 +619,10 @@ function Lobby() {
     if (!user?.uid) return;
     const savedRoom = getCurrentRoom();
     if (!savedRoom?.roomId) {
-      setError('請先創建或加入一個房間再邀請好友');
+      // 自動創建房間後再邀請
+      setError('請先創建房間，然後再邀請好友加入');
+      setCreateRoomError('');
+      setShowCreateModal(true);
       return;
     }
     try {

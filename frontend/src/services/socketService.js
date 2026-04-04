@@ -786,9 +786,9 @@ export function quickMatch(player, gameType = 'herbalism', maxPlayers = 4) {
 /**
  * 取消快速配對
  */
-export function cancelQuickMatch(player, gameType = 'herbalism') {
+export function cancelQuickMatch(player, gameType = 'herbalism', maxPlayers = 4) {
   const s = getSocket();
-  if (s) s.emit('cancelQuickMatch', { player, gameType });
+  if (s) s.emit('cancelQuickMatch', { player, gameType, maxPlayers });
 }
 
 /**
