@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   NICKNAME: 'gress_nickname',        // 工單 0122：遊戲暱稱
   PLAYER_SETTINGS: 'gress_player_settings',
   CURRENT_ROOM: 'gress_current_room',  // 工單 0079：重連資訊
+  RECENT_PLAYERS: 'gress_recent_players',  // 遊戲大廳改版：最近遊玩的玩家
 };
 
 /**
@@ -179,3 +180,46 @@ export function clearCurrentRoom() {
 }
 
 export { STORAGE_KEYS };
+
+// ==================== 遊戲大廳改版：最近遊玩的玩家 ====================
+
+const MAX_RECENT_PLAYERS = 10;
+
+/**
+ * 記錄最近一起玩過的玩家
+ * @param {Array<{id: string, name: string, photoURL?: string}>} players - 玩家列表（不含自己）
+ */
+export function saveRecentPlayers(players) {
+  try {
+    const existing = getRecentPlayers();
+    const existingMap = new Map(existing.map(p => [p.id, p]));
+
+    players.forEach(p => {
+      if (p && p.id && p.name) {
+        existingMap.set(p.id, { id: p.id, name: p.name, photoURL: p.photoURL || null, lastSeen: Date.now() });
+      }
+    });
+
+    const updated = Array.from(existingMap.values())
+      .sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0))
+      .slice(0, MAX_RECENT_PLAYERS);
+
+    localStorage.setItem(STORAGE_KEYS.RECENT_PLAYERS, JSON.stringify(updated));
+  } catch (e) {
+    console.warn('無法儲存最近玩家:', e);
+  }
+}
+
+/**
+ * 取得最近一起玩過的玩家
+ * @returns {Array<{id: string, name: string, photoURL?: string, lastSeen: number}>}
+ */
+export function getRecentPlayers() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.RECENT_PLAYERS);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.warn('無法讀取最近玩家:', e);
+    return [];
+  }
+}

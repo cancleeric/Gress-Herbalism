@@ -1200,6 +1200,36 @@ io.on('connection', (socket) => {
     handlePlayerReconnect(socket, roomId, playerId, playerName);
   });
 
+  // ==================== 遊戲大廳改版：快速配對與聊天室 ====================
+
+  // 快速配對：自動找到可加入的等待中房間
+  socket.on('quickMatch', ({ gameType }) => {
+    const available = getAvailableRooms().filter(
+      r => !gameType || gameType === 'all' || r.gameType === gameType
+    );
+    if (available.length > 0) {
+      const room = available[0];
+      socket.emit('matchFound', { gameId: room.id, roomName: room.name });
+    } else {
+      socket.emit('matchFound', { gameId: null, message: '目前沒有可加入的房間，請嘗試創建新房間' });
+    }
+  });
+
+  // 大廳聊天室：廣播訊息給所有連線的玩家
+  socket.on('lobbyChatMessage', ({ message, playerName }) => {
+    if (!message || typeof message !== 'string') return;
+    const sanitized = message.substring(0, 200).trim();
+    if (!sanitized) return;
+    io.emit('lobbyChatMessage', {
+      id: `${Date.now()}_${socket.id}`,
+      playerName: playerName || '匿名玩家',
+      message: sanitized,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // ==================== 遊戲大廳改版結束 ====================
+
   // ==================== 工單 0313-0316：演化論遊戲 Socket 事件（使用新模組） ====================
 
   // 房間操作

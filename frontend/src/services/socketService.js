@@ -503,6 +503,43 @@ export function disconnect() {
   }
 }
 
+// ==================== 遊戲大廳改版：快速配對與聊天室 ====================
+
+/**
+ * 發送快速配對請求
+ * @param {string} gameType - 遊戲類型 ('herbalism' | 'evolution' | 'all')
+ */
+export function emitQuickMatch(gameType) {
+  const s = getSocket();
+  s.emit('quickMatch', { gameType });
+}
+
+/**
+ * 監聽快速配對結果
+ */
+export function onMatchFound(callback) {
+  return safeOn('matchFound', callback);
+}
+
+/**
+ * 發送大廳聊天訊息
+ * @param {string} message - 訊息內容
+ * @param {string} playerName - 玩家名稱
+ */
+export function sendLobbyChat(message, playerName) {
+  const s = getSocket();
+  s.emit('lobbyChatMessage', { message, playerName });
+}
+
+/**
+ * 監聽大廳聊天訊息
+ */
+export function onLobbyChat(callback) {
+  return safeOn('lobbyChatMessage', callback);
+}
+
+// ==================== 遊戲大廳改版結束 ====================
+
 // ==================== 工單 0272：演化論遊戲 Socket 服務 ====================
 
 /**

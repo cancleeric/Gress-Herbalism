@@ -1,6 +1,7 @@
 /**
  * Lobby 組件單元測試
  * 重新設計：配合側邊欄佈局設計（工單 0121）
+ * 大廳改版：新增快速配對、好友、邀請、聊天測試
  */
 
 import React from 'react';
@@ -13,11 +14,19 @@ import { gameReducer } from '../../../store/gameStore';
 import * as socketService from '../../../services/socketService';
 
 // Mock socketService
-jest.mock('../../services/socketService');
+jest.mock('../../../services/socketService');
+
+// Mock friendService
+jest.mock('../../../services/friendService', () => ({
+  getFriends: jest.fn().mockResolvedValue([]),
+  getGameInvitations: jest.fn().mockResolvedValue([]),
+  sendGameInvitation: jest.fn().mockResolvedValue({}),
+  respondToGameInvitation: jest.fn().mockResolvedValue({}),
+}));
 
 // Mock useAuth
 const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
-jest.mock('../../firebase/AuthContext', () => ({
+jest.mock('../../../firebase/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }));
 
@@ -30,6 +39,60 @@ jest.mock('react-router-dom', () => ({
 
 // Socket event callbacks storage
 let eventCallbacks = {};
+
+// 共用 socket mock 設定（包含大廳改版新增的 socket 函數）
+const setupSocketMocks = () => {
+  // jsdom 不支援 scrollIntoView，需要模擬
+  window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  socketService.initSocket.mockReturnValue({});
+  socketService.onConnectionChange.mockImplementation((callback) => {
+    eventCallbacks.connectionChange = callback;
+    queueMicrotask(() => callback(true));
+    return () => {};
+  });
+  socketService.onRoomList.mockImplementation((callback) => {
+    eventCallbacks.roomList = callback;
+    return () => {};
+  });
+  socketService.onRoomCreated.mockImplementation((callback) => {
+    eventCallbacks.roomCreated = callback;
+    return () => {};
+  });
+  socketService.onJoinedRoom.mockImplementation((callback) => {
+    eventCallbacks.joinedRoom = callback;
+    return () => {};
+  });
+  socketService.onError.mockImplementation((callback) => {
+    eventCallbacks.error = callback;
+    return () => {};
+  });
+  socketService.onPasswordRequired.mockImplementation((callback) => {
+    eventCallbacks.passwordRequired = callback;
+    return () => {};
+  });
+  socketService.onReconnected.mockImplementation((callback) => {
+    eventCallbacks.reconnected = callback;
+    return () => {};
+  });
+  socketService.onReconnectFailed.mockImplementation((callback) => {
+    eventCallbacks.reconnectFailed = callback;
+    return () => {};
+  });
+  socketService.onMatchFound.mockImplementation((callback) => {
+    eventCallbacks.matchFound = callback;
+    return () => {};
+  });
+  socketService.onLobbyChat.mockImplementation((callback) => {
+    eventCallbacks.lobbyChat = callback;
+    return () => {};
+  });
+  socketService.attemptReconnect.mockImplementation(() => {});
+  socketService.createRoom.mockImplementation(() => {});
+  socketService.joinRoom.mockImplementation(() => {});
+  socketService.requestRoomList.mockImplementation(() => {});
+  socketService.emitQuickMatch.mockImplementation(() => {});
+  socketService.sendLobbyChat.mockImplementation(() => {});
+};
 
 // 測試用 wrapper
 const renderWithProviders = (component) => {
@@ -48,51 +111,13 @@ describe('Lobby - 頁面渲染', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    // Mock socket service functions
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('應顯示側邊欄標題「本草」', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '本草' })).toBeInTheDocument();
     });
   });
 
@@ -175,44 +200,7 @@ describe('Lobby - 輸入驗證', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('輸入玩家名稱應更新輸入值', async () => {
@@ -277,44 +265,7 @@ describe('Lobby - 創建房間功能', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('點擊創建新房間按鈕應開啟對話框', async () => {
@@ -464,50 +415,13 @@ describe('Lobby - 房間列表功能', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('顯示房間列表', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '本草' })).toBeInTheDocument();
     });
 
     // 模擬收到房間列表
@@ -527,7 +441,7 @@ describe('Lobby - 房間列表功能', () => {
   test('點擊房間表格加入按鈕應加入該房間', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '本草' })).toBeInTheDocument();
     });
 
     // 先輸入玩家名稱
@@ -639,39 +553,9 @@ describe('Lobby - 連線狀態', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
+    // 連線狀態測試中由各 test case 自行設定 onConnectionChange
+    socketService.onConnectionChange.mockImplementation(() => () => {});
   });
 
   test('未連線時應顯示未連線狀態', async () => {
@@ -709,44 +593,7 @@ describe('Lobby - 錯誤訊息', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('錯誤訊息應有 role="alert"', async () => {
@@ -775,44 +622,7 @@ describe('Lobby - 重連功能', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('有儲存的房間資訊時應嘗試重連', async () => {
@@ -919,44 +729,7 @@ describe('Lobby - Room ID 加入功能', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('輸入 Room ID 並點擊加入應加入房間', async () => {
@@ -1004,45 +777,7 @@ describe('Lobby - 密碼房間功能', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
-    socketService.requestRoomList.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('創建私人房間應勾選私人並輸入密碼', async () => {
@@ -1294,45 +1029,7 @@ describe('Lobby - 房間滿員狀態', () => {
     jest.clearAllMocks();
     eventCallbacks = {};
     localStorage.clear();
-
-    socketService.initSocket.mockReturnValue({});
-    socketService.onConnectionChange.mockImplementation((callback) => {
-      eventCallbacks.connectionChange = callback;
-      queueMicrotask(() => callback(true));
-      return () => {};
-    });
-    socketService.onRoomList.mockImplementation((callback) => {
-      eventCallbacks.roomList = callback;
-      return () => {};
-    });
-    socketService.onRoomCreated.mockImplementation((callback) => {
-      eventCallbacks.roomCreated = callback;
-      return () => {};
-    });
-    socketService.onJoinedRoom.mockImplementation((callback) => {
-      eventCallbacks.joinedRoom = callback;
-      return () => {};
-    });
-    socketService.onError.mockImplementation((callback) => {
-      eventCallbacks.error = callback;
-      return () => {};
-    });
-    socketService.onPasswordRequired.mockImplementation((callback) => {
-      eventCallbacks.passwordRequired = callback;
-      return () => {};
-    });
-    socketService.onReconnected.mockImplementation((callback) => {
-      eventCallbacks.reconnected = callback;
-      return () => {};
-    });
-    socketService.onReconnectFailed.mockImplementation((callback) => {
-      eventCallbacks.reconnectFailed = callback;
-      return () => {};
-    });
-    socketService.attemptReconnect.mockImplementation(() => {});
-    socketService.createRoom.mockImplementation(() => {});
-    socketService.joinRoom.mockImplementation(() => {});
-    socketService.requestRoomList.mockImplementation(() => {});
+    setupSocketMocks();
   });
 
   test('房間滿員時加入按鈕應被禁用且顯示「已滿」', async () => {
@@ -1414,5 +1111,291 @@ describe('Lobby - 房間滿員狀態', () => {
     await waitFor(() => {
       expect(screen.getByText('2/4')).toBeInTheDocument();
     });
+  });
+});
+
+// ==================== 大廳改版新功能測試 ====================
+
+describe('Lobby - 遊戲類型篩選', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+    setupSocketMocks();
+  });
+
+  test('應顯示遊戲類型篩選按鈕', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '本草' })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: '演化論' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '全部' })).toBeInTheDocument();
+  });
+
+  test('點擊演化論篩選後應只顯示演化論房間', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'herb-room', name: '本草房間', playerCount: 1, maxPlayers: 3, gameType: 'herbalism' },
+        { id: 'evo-room', name: '演化論房間', playerCount: 1, maxPlayers: 4, gameType: 'evolution' },
+      ]);
+    });
+
+    // 點擊演化論篩選
+    fireEvent.click(screen.getByRole('button', { name: '演化論' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('演化論房間')).toBeInTheDocument();
+      expect(screen.queryByText('本草房間')).not.toBeInTheDocument();
+    });
+  });
+
+  test('點擊全部篩選後應顯示所有房間', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'herb-room', name: '本草房間', playerCount: 1, maxPlayers: 3, gameType: 'herbalism' },
+        { id: 'evo-room', name: '演化論房間', playerCount: 1, maxPlayers: 4, gameType: 'evolution' },
+      ]);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '全部' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('本草房間')).toBeInTheDocument();
+      expect(screen.getByText('演化論房間')).toBeInTheDocument();
+    });
+  });
+
+  test('房間列表應顯示遊戲類型欄位', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      eventCallbacks.roomList([
+        { id: 'room1', name: '測試房間', playerCount: 1, maxPlayers: 3, gameType: 'herbalism' },
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('測試房間')).toBeInTheDocument();
+    });
+
+    // 應顯示遊戲類型欄位標題
+    expect(screen.getByText('遊戲')).toBeInTheDocument();
+  });
+});
+
+describe('Lobby - 快速配對', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+    setupSocketMocks();
+  });
+
+  test('應顯示快速配對按鈕', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('快速配對')).toBeInTheDocument();
+    });
+  });
+
+  test('點擊快速配對應呼叫 emitQuickMatch', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    fireEvent.click(screen.getByText('快速配對'));
+
+    expect(socketService.emitQuickMatch).toHaveBeenCalledWith('herbalism');
+  });
+
+  test('快速配對找到房間後應加入房間', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    fireEvent.click(screen.getByText('快速配對'));
+
+    await act(async () => {
+      eventCallbacks.matchFound({ gameId: 'match-room-1', roomName: '玩家的房間' });
+    });
+
+    expect(socketService.joinRoom).toHaveBeenCalledWith(
+      'match-room-1',
+      expect.objectContaining({ name: '玩家1' })
+    );
+  });
+
+  test('快速配對未找到房間應顯示錯誤訊息', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    fireEvent.click(screen.getByText('快速配對'));
+
+    await act(async () => {
+      eventCallbacks.matchFound({ gameId: null, message: '目前沒有可加入的房間' });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('目前沒有可加入的房間');
+    });
+  });
+});
+
+describe('Lobby - 面板切換', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+    setupSocketMocks();
+  });
+
+  test('應顯示面板切換標籤', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('房間列表')).toBeInTheDocument();
+      expect(screen.getByText('好友在線')).toBeInTheDocument();
+      expect(screen.getByText('邀請')).toBeInTheDocument();
+      expect(screen.getByText('最近玩家')).toBeInTheDocument();
+    });
+  });
+
+  test('點擊好友在線標籤應切換到好友面板', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('好友在線')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('好友在線'));
+
+    await waitFor(() => {
+      expect(screen.getByText('目前沒有好友在線')).toBeInTheDocument();
+    });
+  });
+
+  test('點擊邀請標籤應切換到邀請面板', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('邀請')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('邀請'));
+
+    await waitFor(() => {
+      expect(screen.getByText('目前沒有待回應的邀請')).toBeInTheDocument();
+    });
+  });
+
+  test('點擊最近玩家標籤應切換到最近玩家面板', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('最近玩家')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('最近玩家'));
+
+    await waitFor(() => {
+      expect(screen.getByText('尚無最近遊玩記錄')).toBeInTheDocument();
+    });
+  });
+});
+
+describe('Lobby - 大廳聊天室', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    eventCallbacks = {};
+    localStorage.clear();
+    setupSocketMocks();
+  });
+
+  test('應顯示大廳聊天室按鈕', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('大廳聊天')).toBeInTheDocument();
+    });
+  });
+
+  test('點擊聊天按鈕應展開聊天室', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('大廳聊天')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('大廳聊天'));
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('說點什麼...')).toBeInTheDocument();
+    });
+  });
+
+  test('收到聊天訊息應顯示在聊天室', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.getByText('大廳聊天')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('大廳聊天'));
+
+    await act(async () => {
+      eventCallbacks.lobbyChat({
+        id: '1',
+        playerName: '測試玩家',
+        message: '大家好！',
+        timestamp: new Date().toISOString(),
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('大家好！')).toBeInTheDocument();
+      expect(screen.getByText('測試玩家：')).toBeInTheDocument();
+    });
+  });
+
+  test('輸入訊息並發送應呼叫 sendLobbyChat', async () => {
+    renderWithProviders(<Lobby />);
+    await waitFor(() => {
+      expect(screen.queryByText('未連線')).not.toBeInTheDocument();
+    });
+
+    const nicknameInput = screen.getByLabelText('遊戲暱稱');
+    fireEvent.change(nicknameInput, { target: { value: '玩家1' } });
+
+    fireEvent.click(screen.getByText('大廳聊天'));
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('說點什麼...')).toBeInTheDocument();
+    });
+
+    const chatInput = screen.getByPlaceholderText('說點什麼...');
+    fireEvent.change(chatInput, { target: { value: '哈囉！' } });
+    fireEvent.keyDown(chatInput, { key: 'Enter' });
+
+    expect(socketService.sendLobbyChat).toHaveBeenCalledWith('哈囉！', '玩家1');
   });
 });
