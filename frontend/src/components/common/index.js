@@ -3,6 +3,7 @@
  *
  * 工單 0216 - 遷移共用組件至 common/
  * 工單 0276 - 新增 GameSelection 和 EvolutionLobbyPage
+ * Issue #7 - 新增 LazyImage 懶加載圖片組件
  */
 
 export { default as Login } from './Login';
@@ -14,3 +15,4 @@ export { default as ConnectionStatus } from './ConnectionStatus';
 export { default as VersionInfo } from './VersionInfo';
 export { default as GameSelection } from './GameSelection';
 export { default as EvolutionLobbyPage } from './EvolutionLobbyPage';
+export { default as LazyImage, LazyImage } from './LazyImage';

@@ -332,9 +332,11 @@ describe('useEvolutionGameEvents', () => {
 
     const { unmount } = renderHook(() => useEvolutionGameEvents(handlers));
 
-    expect(socketService.onEvoGameState).toHaveBeenCalledWith(handlers.onGameState);
-    expect(socketService.onEvoCreatureCreated).toHaveBeenCalledWith(handlers.onCreatureCreated);
-    expect(socketService.onEvoError).toHaveBeenCalledWith(handlers.onError);
+    // Issue #7: handlers are now wrapped in ref-based functions to prevent re-subscriptions
+    // Verify that event listener setup functions were called (with any function argument)
+    expect(socketService.onEvoGameState).toHaveBeenCalledWith(expect.any(Function));
+    expect(socketService.onEvoCreatureCreated).toHaveBeenCalledWith(expect.any(Function));
+    expect(socketService.onEvoError).toHaveBeenCalledWith(expect.any(Function));
 
     unmount();
   });

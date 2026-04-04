@@ -206,49 +206,60 @@ export function useEvolutionGameState(callback) {
 
 /**
  * 監聽遊戲事件
+ *
+ * Issue #7 效能優化：使用 useRef 存儲 handlers 避免 handlers 物件參考變化
+ * 導致 useEffect 每次渲染都重新訂閱的記憶體洩漏問題
  */
 export function useEvolutionGameEvents(handlers = {}) {
+  const handlersRef = useRef(handlers);
+
+  // 每次渲染更新 ref 的值，但不觸發 effect 重新執行
+  useEffect(() => {
+    handlersRef.current = handlers;
+  });
+
   useEffect(() => {
     const unsubscribers = [];
 
-    if (handlers.onGameState) {
-      unsubscribers.push(onEvoGameState(handlers.onGameState));
+    if (handlersRef.current.onGameState) {
+      unsubscribers.push(onEvoGameState((data) => handlersRef.current.onGameState?.(data)));
     }
-    if (handlers.onCreatureCreated) {
-      unsubscribers.push(onEvoCreatureCreated(handlers.onCreatureCreated));
+    if (handlersRef.current.onCreatureCreated) {
+      unsubscribers.push(onEvoCreatureCreated((data) => handlersRef.current.onCreatureCreated?.(data)));
     }
-    if (handlers.onTraitAdded) {
-      unsubscribers.push(onEvoTraitAdded(handlers.onTraitAdded));
+    if (handlersRef.current.onTraitAdded) {
+      unsubscribers.push(onEvoTraitAdded((data) => handlersRef.current.onTraitAdded?.(data)));
     }
-    if (handlers.onPlayerPassed) {
-      unsubscribers.push(onEvoPlayerPassed(handlers.onPlayerPassed));
+    if (handlersRef.current.onPlayerPassed) {
+      unsubscribers.push(onEvoPlayerPassed((data) => handlersRef.current.onPlayerPassed?.(data)));
     }
-    if (handlers.onCreatureFed) {
-      unsubscribers.push(onEvoCreatureFed(handlers.onCreatureFed));
+    if (handlersRef.current.onCreatureFed) {
+      unsubscribers.push(onEvoCreatureFed((data) => handlersRef.current.onCreatureFed?.(data)));
     }
-    if (handlers.onAttackPending) {
-      unsubscribers.push(onEvoAttackPending(handlers.onAttackPending));
+    if (handlersRef.current.onAttackPending) {
+      unsubscribers.push(onEvoAttackPending((data) => handlersRef.current.onAttackPending?.(data)));
     }
-    if (handlers.onAttackResolved) {
-      unsubscribers.push(onEvoAttackResolved(handlers.onAttackResolved));
+    if (handlersRef.current.onAttackResolved) {
+      unsubscribers.push(onEvoAttackResolved((data) => handlersRef.current.onAttackResolved?.(data)));
     }
-    if (handlers.onError) {
-      unsubscribers.push(onEvoError(handlers.onError));
+    if (handlersRef.current.onError) {
+      unsubscribers.push(onEvoError((data) => handlersRef.current.onError?.(data)));
     }
-    if (handlers.onPlayerJoined) {
-      unsubscribers.push(onEvoPlayerJoined(handlers.onPlayerJoined));
+    if (handlersRef.current.onPlayerJoined) {
+      unsubscribers.push(onEvoPlayerJoined((data) => handlersRef.current.onPlayerJoined?.(data)));
     }
-    if (handlers.onPlayerLeft) {
-      unsubscribers.push(onEvoPlayerLeft(handlers.onPlayerLeft));
+    if (handlersRef.current.onPlayerLeft) {
+      unsubscribers.push(onEvoPlayerLeft((data) => handlersRef.current.onPlayerLeft?.(data)));
     }
-    if (handlers.onGameStarted) {
-      unsubscribers.push(onEvoGameStarted(handlers.onGameStarted));
+    if (handlersRef.current.onGameStarted) {
+      unsubscribers.push(onEvoGameStarted((data) => handlersRef.current.onGameStarted?.(data)));
     }
 
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
-  }, [handlers]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 只在 mount/unmount 時訂閱/取消訂閱，handlers 透過 ref 更新
 }
 
 export default useEvolutionSocket;

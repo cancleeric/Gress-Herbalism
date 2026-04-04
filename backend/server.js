@@ -2053,3 +2053,43 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`伺服器運行在 port ${PORT}`);
   console.log(`區域網路玩家請連線到: http://<你的IP>:${PORT}`);
 });
+
+// Issue #7: 後端記憶體監控 - 定期記錄記憶體使用量，協助偵測記憶體洩漏
+const MEMORY_MONITOR_INTERVAL = parseInt(process.env.MEMORY_MONITOR_INTERVAL) || 5 * 60 * 1000; // 預設 5 分鐘
+const MEMORY_WARN_THRESHOLD_MB = parseInt(process.env.MEMORY_WARN_THRESHOLD_MB) || 512; // 預設 512 MB
+
+const memoryMonitorInterval = setInterval(() => {
+  const usage = process.memoryUsage();
+  const heapUsedMB = Math.round(usage.heapUsed / 1024 / 1024 * 100) / 100;
+  const heapTotalMB = Math.round(usage.heapTotal / 1024 / 1024 * 100) / 100;
+  const rssMB = Math.round(usage.rss / 1024 / 1024 * 100) / 100;
+
+  if (heapUsedMB > MEMORY_WARN_THRESHOLD_MB) {
+    console.warn(`[Memory] ⚠️  堆積記憶體使用量過高: ${heapUsedMB} MB / ${heapTotalMB} MB (RSS: ${rssMB} MB)`);
+    // 建議 GC（僅在 --expose-gc 旗標下有效）
+    if (global.gc) {
+      global.gc();
+      console.log('[Memory] 已觸發垃圾回收');
+    }
+  } else {
+    console.log(`[Memory] 堆積: ${heapUsedMB} MB / ${heapTotalMB} MB (RSS: ${rssMB} MB)`);
+  }
+}, MEMORY_MONITOR_INTERVAL);
+
+// 程序結束時清除監控 interval，避免資源洩漏
+process.on('SIGTERM', () => {
+  clearInterval(memoryMonitorInterval);
+  server.close(() => {
+    console.log('[Server] 伺服器已關閉');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  clearInterval(memoryMonitorInterval);
+  server.close(() => {
+    console.log('[Server] 伺服器已關閉');
+    process.exit(0);
+  });
+});
+
