@@ -62,6 +62,9 @@ const {
 // 載入 base 擴充包
 const { baseExpansion } = require('./base');
 
+// 載入 deep-sea 擴充包
+const { deepSeaExpansion } = require('./deep-sea');
+
 /**
  * 全域擴充包註冊表單例
  * 用於應用程式範圍內的擴充包管理
@@ -76,6 +79,12 @@ const baseModule = {
   manifest: BASE_MANIFEST,
 };
 expansionLoader.registerModule('base', baseModule);
+
+// 預先註冊 deep-sea 擴充包到 expansionLoader
+const deepSeaModule = {
+  ...require('./deep-sea'),
+};
+expansionLoader.registerModule('deep-sea', deepSeaModule);
 
 module.exports = {
   // 核心類別
@@ -114,4 +123,7 @@ module.exports = {
 
   // 全域單例
   globalRegistry,
+
+  // 擴充包
+  deepSeaExpansion,
 };

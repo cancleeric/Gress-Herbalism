@@ -136,7 +136,13 @@ const AVAILABLE_EXPANSIONS = [
     required: true,
     description: '84張卡牌、19種性狀',
   },
-  // 未來擴充包會加在這裡
+  {
+    id: 'deep-sea',
+    name: '深海生態',
+    nameEn: 'Deep Sea Ecology',
+    required: false,
+    description: '24張新卡牌、6種深海性狀，需要基礎版',
+  },
 ];
 
 // ==================== 食物類型 ====================
