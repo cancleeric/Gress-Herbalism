@@ -330,7 +330,8 @@ app.put('/api/friends/invitations/:invitationId', async (req, res) => {
 app.get('/api/players/:firebaseUid/recent-opponents', async (req, res) => {
   try {
     const { firebaseUid } = req.params;
-    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const parsedLimit = parseInt(req.query.limit, 10);
+    const limit = Math.min(isNaN(parsedLimit) ? 10 : parsedLimit, 50);
     const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
 
     if (!playerId) {
@@ -367,25 +368,34 @@ app.get('/api/players/:firebaseUid/recent-opponents', async (req, res) => {
 
     // 去重，取最近遇到的玩家
     const seen = new Set();
-    const unique = [];
+    const uniqueOpponents = [];
     for (const op of opponents) {
       if (!seen.has(op.player_id)) {
         seen.add(op.player_id);
-        // 取得線上狀態
-        const presence = await presenceService.getFriendsPresence([op.player_id]);
-        const status = presence?.[0]?.status || 'offline';
-        unique.push({
-          id: op.player_id,
-          displayName: op.players?.display_name || '玩家',
-          photoURL: op.players?.photo_url || null,
-          status,
-          lastPlayedAt: op.created_at,
-        });
-        if (unique.length >= limit) break;
+        uniqueOpponents.push(op);
+        if (uniqueOpponents.length >= limit) break;
       }
     }
 
-    res.json({ success: true, data: unique });
+    // 批次查詢線上狀態（一次查詢，避免 N 次 DB 呼叫）
+    const opponentIds = uniqueOpponents.map(op => op.player_id);
+    const presenceList = opponentIds.length > 0
+      ? await presenceService.getFriendsPresence(opponentIds).catch(() => [])
+      : [];
+    const presenceMap = {};
+    for (const p of presenceList) {
+      presenceMap[p.user_id] = p.status;
+    }
+
+    const result = uniqueOpponents.map(op => ({
+      id: op.player_id,
+      displayName: op.players?.display_name || '玩家',
+      photoURL: op.players?.photo_url || null,
+      status: presenceMap[op.player_id] || 'offline',
+      lastPlayedAt: op.created_at,
+    }));
+
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error('[最近對手] 查詢失敗:', err.message);
     res.status(500).json({ success: false, message: err.message });
@@ -445,7 +455,7 @@ const REFRESH_GRACE_PERIOD = 30000; // 30 秒重整寬限期
  * 產生唯一遊戲 ID
  */
 function generateGameId() {
-  return `game_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  return `game_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 }
 
 /**
@@ -572,7 +582,9 @@ io.on('connection', (socket) => {
   socket.on('quickMatch', ({ player, gameType = 'herbalism', maxPlayers = 4 }) => {
     if (!player || !player.id) return;
 
-    const queue = matchmakingQueues.get(gameType) || [];
+    // 以 gameType+maxPlayers 作為配對隊列 key，避免不同房間大小的玩家混配
+    const queueKey = `${gameType}:${maxPlayers}`;
+    const queue = matchmakingQueues.get(queueKey) || [];
     // 避免重複加入
     const alreadyIn = queue.find(e => e.player.id === player.id);
     if (alreadyIn) {
@@ -581,15 +593,15 @@ io.on('connection', (socket) => {
     }
 
     queue.push({ socket, player, joinedAt: Date.now(), maxPlayers });
-    matchmakingQueues.set(gameType, queue);
+    matchmakingQueues.set(queueKey, queue);
 
-    console.log(`[配對] ${player.name} 加入 ${gameType} 配對佇列，目前人數: ${queue.length}`);
+    console.log(`[配對] ${player.name} 加入 ${queueKey} 配對佇列，目前人數: ${queue.length}`);
     socket.emit('quickMatchStatus', { status: 'waiting', position: queue.length });
 
     // 人數足夠時自動開房
     if (queue.length >= maxPlayers) {
       const matched = queue.splice(0, maxPlayers);
-      matchmakingQueues.set(gameType, queue);
+      matchmakingQueues.set(queueKey, queue);
 
       const gameId = generateGameId();
       const players = matched.map((e, i) => ({
@@ -622,15 +634,16 @@ io.on('connection', (socket) => {
       }
 
       updateRoomList();
-      console.log(`[配對] ${gameType} 配對成功，遊戲 ID: ${gameId}`);
+      console.log(`[配對] ${queueKey} 配對成功，遊戲 ID: ${gameId}`);
     }
   });
 
-  socket.on('cancelQuickMatch', ({ player, gameType = 'herbalism' }) => {
+  socket.on('cancelQuickMatch', ({ player, gameType = 'herbalism', maxPlayers = 4 }) => {
     if (!player || !player.id) return;
-    const queue = matchmakingQueues.get(gameType) || [];
+    const queueKey = `${gameType}:${maxPlayers}`;
+    const queue = matchmakingQueues.get(queueKey) || [];
     const updated = queue.filter(e => e.player.id !== player.id);
-    matchmakingQueues.set(gameType, updated);
+    matchmakingQueues.set(queueKey, updated);
     socket.emit('quickMatchStatus', { status: 'cancelled' });
   });
 
