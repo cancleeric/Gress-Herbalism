@@ -348,6 +348,9 @@ const playerSockets = new Map();
 // 快速配對佇列: gameType -> [{player, socketId, timestamp}]
 const matchmakingQueues = new Map();
 
+// 玩家 ID 到 socketId 的反向映射（供即時邀請使用）
+const playerIdToSocket = new Map();
+
 // 大廳聊天訊息（最多保留 50 條）
 const lobbyChatHistory = [];
 const LOBBY_CHAT_HISTORY_LIMIT = 50;
@@ -507,6 +510,7 @@ io.on('connection', (socket) => {
     // 支援直接傳 playerId（供邀請功能使用）
     if (directPlayerId) {
       socket.data.playerId = directPlayerId;
+      playerIdToSocket.set(directPlayerId, socket.id);
     }
     if (firebaseUid) {
       try {
@@ -515,6 +519,7 @@ io.on('connection', (socket) => {
           await presenceService.setOnline(playerId);
           socket.firebasePlayerId = playerId;  // 保存以便斷線時使用
           socket.data.playerId = playerId;
+          playerIdToSocket.set(playerId, socket.id);
           console.log(`[線上狀態] 玩家 ${playerId} 已上線`);
         }
       } catch (err) {
@@ -1196,6 +1201,12 @@ io.on('connection', (socket) => {
         }
       }
     }
+
+    // 清理玩家 ID 到 socket 的映射
+    const playerId = socket.data && socket.data.playerId;
+    if (playerId && playerIdToSocket.get(playerId) === socket.id) {
+      playerIdToSocket.delete(playerId);
+    }
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
@@ -1327,7 +1338,7 @@ io.on('connection', (socket) => {
 
     const trimmed = message.trim().slice(0, 200); // 限制訊息長度
     const chatEntry = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: crypto.randomUUID(),
       playerName,
       message: trimmed,
       gameType,
@@ -1354,17 +1365,13 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // 找到目標玩家的 socket
-    let targetSocket = null;
-    io.sockets.sockets.forEach((s) => {
-      if (s.data && s.data.playerId === toPlayerId) {
-        targetSocket = s;
-      }
-    });
+    // O(1) 反向查找目標玩家的 socket
+    const targetSocketId = playerIdToSocket.get(toPlayerId);
+    const targetSocket = targetSocketId ? io.sockets.sockets.get(targetSocketId) : null;
 
-    if (targetSocket) {
+    if (targetSocket && targetSocket.connected) {
       targetSocket.emit('gameInvitationReceived', {
-        id: `${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        id: crypto.randomUUID(),
         fromPlayer,
         roomId,
         gameType,
@@ -1380,6 +1387,7 @@ io.on('connection', (socket) => {
   socket.on('setPlayerId', ({ playerId }) => {
     if (playerId) {
       socket.data.playerId = playerId;
+      playerIdToSocket.set(playerId, socket.id);
     }
   });
 

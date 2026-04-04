@@ -29,6 +29,7 @@ function Friends() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
 
   const loadFriends = useCallback(async () => {
     if (!user?.uid) return;
@@ -122,12 +123,14 @@ function Friends() {
   const handleInviteToRoom = (friend) => {
     const currentRoom = getCurrentRoom();
     if (!currentRoom || !currentRoom.roomId) {
-      alert('請先創建或加入房間才能邀請好友');
+      setInviteMessage('請先創建或加入房間才能邀請好友');
+      setTimeout(() => setInviteMessage(''), 3000);
       return;
     }
     const fromPlayer = { id: user?.uid, name: user?.displayName || '玩家' };
     inviteToRoom(fromPlayer, friend.id, currentRoom.roomId, 'herbalism');
-    alert(`已向 ${friend.display_name} 發送遊戲邀請！`);
+    setInviteMessage(`已向 ${friend.display_name} 發送遊戲邀請！`);
+    setTimeout(() => setInviteMessage(''), 3000);
   };
 
   const handleBack = () => {
@@ -196,6 +199,7 @@ function Friends() {
             </div>
 
             {error && <div className="friends-error">{error}</div>}
+            {inviteMessage && <div className="friends-invite-msg">{inviteMessage}</div>}
 
             {/* 好友列表 */}
             {activeTab === 'friends' && (

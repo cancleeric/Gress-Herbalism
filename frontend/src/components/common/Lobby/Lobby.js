@@ -112,6 +112,7 @@ function Lobby() {
   const [onlineFriends, setOnlineFriends] = useState([]);
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [recentPlayers, setRecentPlayers] = useState([]);
+  const [inviteStatus, setInviteStatus] = useState(''); // non-blocking feedback message
   const chatEndRef = useRef(null);
 
   // 工單 0276：移除遊戲類型選擇（現在有獨立的遊戲選擇頁面）
@@ -633,7 +634,8 @@ function Lobby() {
   const handleInviteFriend = (friend) => {
     const currentRoom = getCurrentRoom();
     if (!currentRoom || !currentRoom.roomId) {
-      alert('請先創建或加入房間才能邀請好友');
+      setInviteStatus('請先創建或加入房間才能邀請好友');
+      setTimeout(() => setInviteStatus(''), 3000);
       return;
     }
 
@@ -643,7 +645,8 @@ function Lobby() {
     };
 
     inviteToRoom(fromPlayer, friend.id, currentRoom.roomId, 'herbalism');
-    alert(`已向 ${friend.display_name} 發送邀請！`);
+    setInviteStatus(`已向 ${friend.display_name} 發送邀請！`);
+    setTimeout(() => setInviteStatus(''), 3000);
   };
 
   /**
@@ -957,6 +960,9 @@ function Lobby() {
           </div>
 
           {/* 在線好友面板 */}
+          {inviteStatus && (
+            <div className="invite-status-msg">{inviteStatus}</div>
+          )}
           {onlineFriends.length > 0 && (
             <div className="online-friends-panel">
               <h3 className="panel-title">
