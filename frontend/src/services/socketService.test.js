@@ -51,7 +51,7 @@ describe('socketService', () => {
     // 工單 0201：Mock localStorage utils
     mockGetCurrentRoom = jest.fn().mockReturnValue(null);
     mockClearCurrentRoom = jest.fn();
-    jest.doMock('../utils/localStorage', () => ({
+    jest.doMock('../utils/common/localStorage', () => ({
       getCurrentRoom: mockGetCurrentRoom,
       clearCurrentRoom: mockClearCurrentRoom,
     }));

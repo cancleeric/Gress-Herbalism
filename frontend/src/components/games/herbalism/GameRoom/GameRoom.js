@@ -205,6 +205,7 @@ function GameRoom() {
    * 取得自己的玩家資訊
    */
   const getMyPlayer = useCallback(() => {
+    if (!gameState.players) return null;
     if (gameState.currentPlayerId) {
       return gameState.players.find(p => p.id === gameState.currentPlayerId) || null;
     }
@@ -225,7 +226,7 @@ function GameRoom() {
    * 計算活躍玩家數量
    */
   const getActivePlayerCount = useCallback(() => {
-    return gameState.players.filter(p => p.isActive !== false).length;
+    return (gameState.players || []).filter(p => p.isActive !== false).length;
   }, [gameState.players]);
 
   /**
@@ -361,7 +362,7 @@ function GameRoom() {
     const currentDeciderId = followGuessData.currentDeciderId;
     if (!currentDeciderId) return;
 
-    const decidingPlayer = gameState.players.find(p => p.id === currentDeciderId);
+    const decidingPlayer = gameState.players?.find(p => p.id === currentDeciderId);
     if (!decidingPlayer || !isAIPlayer(decidingPlayer)) return;
 
     // 延遲執行 AI 跟猜決策
