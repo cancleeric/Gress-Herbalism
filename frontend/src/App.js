@@ -10,6 +10,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
@@ -22,11 +23,12 @@ import './styles/App.css';
  */
 function ProtectedRoute({ children }) {
   const { isLoggedIn, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="app-loading">
-        <p>載入中...</p>
+        <p>{t('common.loading')}</p>
       </div>
     );
   }
