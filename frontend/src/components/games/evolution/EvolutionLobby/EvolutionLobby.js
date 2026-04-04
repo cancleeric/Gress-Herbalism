@@ -18,6 +18,7 @@ import {
   onEvoGameStarted,
   onEvoError
 } from '../../../../services/socketService';
+import { ExpansionSelector } from '../ExpansionSelector';
 import './EvolutionLobby.css';
 
 /**
@@ -33,6 +34,7 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
   const [room, setRoom] = useState(initialRoom);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedExpansions, setSelectedExpansions] = useState(['base']);
 
   // 工單 0279：同步 initialRoom prop 變化
   useEffect(() => {
@@ -102,6 +104,16 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
       unsubError();
     };
   }, [user?.uid, onGameStart]);
+
+  // 切換擴充包（只有房主可操作）
+  const handleToggleExpansion = useCallback((expansionId) => {
+    setSelectedExpansions(prev => {
+      if (prev.includes(expansionId)) {
+        return prev.filter(id => id !== expansionId);
+      }
+      return [...prev, expansionId];
+    });
+  }, []);
 
   // 切換準備狀態
   // 工單 0283：使用 currentPlayer.id 而非 Firebase UID
@@ -184,6 +196,14 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
         <p>遊戲人數：2-4 人</p>
         <p>遊戲時間：約 30-60 分鐘</p>
       </div>
+
+      {/* 擴充包選擇 */}
+      <ExpansionSelector
+        selectedExpansions={selectedExpansions}
+        onToggle={handleToggleExpansion}
+        isHost={isHost}
+        disabled={isReady}
+      />
 
       {/* 操作按鈕 */}
       <div className="action-buttons">

@@ -39,6 +39,14 @@ export const TRAIT_ICONS = {
 
   // 特殊
   trampling: '🦏',
+
+  // ===== 深海生態擴充包 =====
+  deepDive: '🤿',
+  electric: '⚡',
+  bioluminescence: '✨',
+  schooling: '🐠',
+  megamouth: '🦈',
+  abyssalAdaptation: '🌊',
 };
 
 /**
@@ -86,6 +94,14 @@ export const TRAIT_NAMES = {
 
   // 特殊
   trampling: '踐踏',
+
+  // 深海生態擴充包
+  deepDive: '深潛',
+  electric: '電擊',
+  bioluminescence: '發光',
+  schooling: '群游',
+  megamouth: '巨口',
+  abyssalAdaptation: '深淵適應',
 };
 
 /**
@@ -112,6 +128,14 @@ export const TRAIT_CATEGORY_MAP = {
   cooperation: 'interactive',
   symbiosis: 'interactive',
   trampling: 'special',
+
+  // 深海生態擴充包
+  deepDive: 'defense',
+  electric: 'defense',
+  bioluminescence: 'special',
+  schooling: 'interactive',
+  megamouth: 'carnivore',
+  abyssalAdaptation: 'feeding',
 };
 
 /**
@@ -122,6 +146,7 @@ export const TRAIT_FOOD_BONUS = {
   carnivore: 1,
   massive: 1,
   parasite: 2,
+  megamouth: 1,
   // 其他性狀食量加成為 0
 };
 
@@ -151,6 +176,13 @@ export const getTraitDescription = (traitType) => {
     cooperation: '獲得食物時連結的生物獲得藍色食物',
     symbiosis: '代表吃飽前被保護者不能進食',
     trampling: '可移除食物池中的一個紅色食物',
+    // 深海生態擴充包
+    deepDive: '只有水生肉食才能攻擊此生物',
+    electric: '被攻擊時，攻擊者失去 1 個藍色食物',
+    bioluminescence: '進食時，自己的另一隻生物獲得 1 個藍色食物',
+    schooling: '連結兩隻生物；其中一隻進食時，另一隻獲得 1 個藍色食物',
+    megamouth: '食量+1，不能從食物池進食，攻擊成功獲得 3 個藍色食物',
+    abyssalAdaptation: '食量需求減少 1（最低 1），可疊加',
   };
   return descriptions[traitType] || '';
 };

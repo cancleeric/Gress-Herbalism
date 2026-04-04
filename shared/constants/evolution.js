@@ -20,6 +20,7 @@
 
 // 匯入新模組以確保相容性
 const baseExpansionModule = require('../expansions/base');
+const deepSeaExpansionModule = require('../expansions/deep-sea');
 
 /**
  * 性狀類別定義（從新模組匯入）
@@ -136,7 +137,14 @@ const AVAILABLE_EXPANSIONS = [
     required: true,
     description: '84張卡牌、19種性狀',
   },
-  // 未來擴充包會加在這裡
+  {
+    id: 'deep-sea',
+    name: '深海生態',
+    nameEn: 'Deep Sea Ecology',
+    required: false,
+    description: '28張新卡牌、6種深海性狀（深潛、電擊、發光、群游、巨口、深淵適應）',
+    requires: ['base'],
+  },
 ];
 
 // ==================== 食物類型 ====================
@@ -635,4 +643,11 @@ module.exports = {
 
   // 新增：擴充包模組存取
   baseExpansion: baseExpansionModule.baseExpansion,
+
+  // 深海生態擴充包（issue #2）
+  deepSeaExpansion: deepSeaExpansionModule.deepSeaExpansion,
+  DEEP_SEA_TRAIT_TYPES: deepSeaExpansionModule.DEEP_SEA_TRAIT_TYPES,
+  DEEP_SEA_TRAIT_DEFINITIONS: deepSeaExpansionModule.DEEP_SEA_TRAIT_DEFINITIONS,
+  DEEP_SEA_CARDS: deepSeaExpansionModule.DEEP_SEA_CARDS,
+  DEEP_SEA_RULES: deepSeaExpansionModule.DEEP_SEA_RULES,
 };
