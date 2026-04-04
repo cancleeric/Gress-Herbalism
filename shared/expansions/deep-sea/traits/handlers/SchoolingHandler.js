@@ -44,7 +44,15 @@ class SchoolingHandler extends TraitHandler {
    */
   handleDefenseResponse(context, response) {
     const { gameState } = context;
-    const roll = response?.roll ?? Math.ceil(Math.random() * 6);
+    const roll = response?.roll;
+    if (roll === undefined || roll === null) {
+      return {
+        success: false,
+        gameState,
+        attackCancelled: false,
+        message: '群游：未提供擲骰結果',
+      };
+    }
     const escaped = roll >= 4;
 
     return {

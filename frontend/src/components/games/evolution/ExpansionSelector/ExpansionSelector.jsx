@@ -6,7 +6,7 @@
  * @module components/games/evolution/ExpansionSelector
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './ExpansionSelector.css';
 
@@ -119,13 +119,17 @@ ExpansionCard.propTypes = {
  * @param {boolean} props.disabled - 是否禁用（遊戲已開始時）
  */
 function ExpansionSelector({ selectedExpansions, onChange, disabled }) {
-  const [enabled, setEnabled] = useState(() => {
-    const initial = { base: true };
-    if (selectedExpansions) {
-      selectedExpansions.forEach(id => { initial[id] = true; });
-    }
-    return initial;
-  });
+  const buildEnabled = useCallback((ids) => {
+    const state = { base: true };
+    if (ids) ids.forEach(id => { state[id] = true; });
+    return state;
+  }, []);
+
+  const [enabled, setEnabled] = useState(() => buildEnabled(selectedExpansions));
+
+  useEffect(() => {
+    setEnabled(buildEnabled(selectedExpansions));
+  }, [selectedExpansions, buildEnabled]);
 
   const handleToggle = useCallback((expansionId, isEnabled) => {
     if (disabled) return;

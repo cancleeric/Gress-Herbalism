@@ -59,12 +59,11 @@ class InkCloudHandler extends TraitHandler {
       };
     }
 
-    defender.inkCloudUsed = true;
-
     return {
       success: true,
       gameState,
       attackCancelled: true,
+      inkCloudConsumed: true,
       message: '墨汁：攻擊已取消',
     };
   }

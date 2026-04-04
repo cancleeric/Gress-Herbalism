@@ -226,6 +226,13 @@ describe('SchoolingHandler', () => {
     expect(result.attackCancelled).toBe(false);
     expect(result.roll).toBe(2);
   });
+
+  test('handleDefenseResponse should fail when roll is not provided', () => {
+    const context = { gameState: makeGameState() };
+    const result = handler.handleDefenseResponse(context, {});
+    expect(result.success).toBe(false);
+    expect(result.attackCancelled).toBe(false);
+  });
 });
 
 // ===== GiantMawHandler =====
@@ -311,7 +318,7 @@ describe('InkCloudHandler', () => {
     const context = { defender, gameState: makeGameState() };
     const result = handler.handleDefenseResponse(context, { useInkCloud: true });
     expect(result.attackCancelled).toBe(true);
-    expect(defender.inkCloudUsed).toBe(true);
+    expect(result.inkCloudConsumed).toBe(true);
   });
 
   test('handleDefenseResponse should not cancel attack when useInkCloud is false', () => {

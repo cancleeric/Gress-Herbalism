@@ -43,8 +43,8 @@ class BioluminescenceHandler extends TraitHandler {
     const { creature, gameState } = context;
 
     creature.bioluminescenceUsed = true;
-    creature.food = creature.food || { red: 0, blue: 0 };
-    creature.food.red += 1;
+    const currentFood = creature.food || { red: 0, blue: 0 };
+    creature.food = { ...currentFood, red: currentFood.red + 1 };
 
     const newGameState = {
       ...gameState,
