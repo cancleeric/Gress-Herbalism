@@ -17,6 +17,9 @@ const CATEGORY_TABS = [
   { key: 'special', label: '特殊成就' },
 ];
 
+/** 預設稀有度 */
+const DEFAULT_RARITY = 'common';
+
 /** 稀有度顯示名稱 */
 const RARITY_LABELS = {
   common: '普通',
@@ -40,7 +43,7 @@ function AchievementCard({ achievement, onClick }) {
     condition,
   } = achievement;
 
-  const rarityKey = rarity || 'common';
+  const rarityKey = rarity || DEFAULT_RARITY;
   const progressPct = typeof progress === 'number' ? Math.min(progress, 100) : 0;
   const target =
     condition && typeof condition.value === 'number' ? condition.value : null;

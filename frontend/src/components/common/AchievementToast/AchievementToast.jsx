@@ -20,11 +20,16 @@ const RARITY_CLASS = {
  */
 function AchievementToastItem({ achievement, onDismiss, duration = 4000 }) {
   const timerRef = useRef(null);
+  const onDismissRef = useRef(onDismiss);
 
   useEffect(() => {
-    timerRef.current = setTimeout(onDismiss, duration);
+    onDismissRef.current = onDismiss;
+  });
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => onDismissRef.current(), duration);
     return () => clearTimeout(timerRef.current);
-  }, [onDismiss, duration]);
+  }, [duration]);
 
   const rarityClass = RARITY_CLASS[achievement.rarity] || RARITY_CLASS.common;
 

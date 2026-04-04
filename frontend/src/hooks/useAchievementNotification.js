@@ -9,7 +9,16 @@
  *   dismiss(achievementId);       // 手動關閉
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+
+/**
+ * 取得成就的唯一 key
+ * @param {Object} achievement
+ * @returns {string}
+ */
+function getAchievementKey(achievement) {
+  return achievement.id || achievement.name;
+}
 
 /**
  * 成就通知管理 Hook
@@ -28,11 +37,11 @@ function useAchievementNotification({ maxNotifications = 3 } = {}) {
     (achievement) => {
       if (!achievement) return;
 
-      const key = achievement.id || achievement.name;
+      const key = getAchievementKey(achievement);
 
       setNotifications((prev) => {
         // 避免重複
-        if (prev.some((n) => (n.id || n.name) === key)) return prev;
+        if (prev.some((n) => getAchievementKey(n) === key)) return prev;
 
         const next = [...prev, achievement];
         // 若超過上限，移除最舊的
@@ -50,7 +59,7 @@ function useAchievementNotification({ maxNotifications = 3 } = {}) {
    */
   const dismiss = useCallback((key) => {
     setNotifications((prev) =>
-      prev.filter((n) => (n.id || n.name) !== key)
+      prev.filter((n) => getAchievementKey(n) !== key)
     );
   }, []);
 
