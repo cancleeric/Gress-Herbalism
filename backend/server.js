@@ -2058,15 +2058,18 @@ server.listen(PORT, '0.0.0.0', () => {
 const MEMORY_MONITOR_INTERVAL = parseInt(process.env.MEMORY_MONITOR_INTERVAL) || 5 * 60 * 1000; // 預設 5 分鐘
 const MEMORY_WARN_THRESHOLD_MB = parseInt(process.env.MEMORY_WARN_THRESHOLD_MB) || 512; // 預設 512 MB
 
+/** 將位元組轉換為 MB（四捨五入至小數點後兩位） */
+const toMB = (bytes) => Math.round(bytes / 1024 / 1024 * 100) / 100;
+
 const memoryMonitorInterval = setInterval(() => {
   const usage = process.memoryUsage();
-  const heapUsedMB = Math.round(usage.heapUsed / 1024 / 1024 * 100) / 100;
-  const heapTotalMB = Math.round(usage.heapTotal / 1024 / 1024 * 100) / 100;
-  const rssMB = Math.round(usage.rss / 1024 / 1024 * 100) / 100;
+  const heapUsedMB = toMB(usage.heapUsed);
+  const heapTotalMB = toMB(usage.heapTotal);
+  const rssMB = toMB(usage.rss);
 
   if (heapUsedMB > MEMORY_WARN_THRESHOLD_MB) {
     console.warn(`[Memory] ⚠️  堆積記憶體使用量過高: ${heapUsedMB} MB / ${heapTotalMB} MB (RSS: ${rssMB} MB)`);
-    // 建議 GC（僅在 --expose-gc 旗標下有效）
+    // global.gc 僅在以 --expose-gc 旗標啟動 Node.js 時可用（例如: node --expose-gc server.js）
     if (global.gc) {
       global.gc();
       console.log('[Memory] 已觸發垃圾回收');

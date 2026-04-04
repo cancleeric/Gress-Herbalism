@@ -15,4 +15,4 @@ export { default as ConnectionStatus } from './ConnectionStatus';
 export { default as VersionInfo } from './VersionInfo';
 export { default as GameSelection } from './GameSelection';
 export { default as EvolutionLobbyPage } from './EvolutionLobbyPage';
-export { default as LazyImage, LazyImage } from './LazyImage';
+export { default as LazyImage } from './LazyImage';

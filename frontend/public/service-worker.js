@@ -24,7 +24,7 @@ const STATIC_ASSETS = [
 ];
 
 const CACHE_EXPIRY = {
-  api: 5 * 60 * 1000,       // API 快取 5 分鐘
+  api: 5 * 60 * 1000,              // API 快取 5 分鐘
   images: 7 * 24 * 60 * 60 * 1000, // 圖片快取 7 天
 };
 

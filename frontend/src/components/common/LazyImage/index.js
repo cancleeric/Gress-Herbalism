@@ -4,4 +4,5 @@
  * @module components/common/LazyImage
  */
 
-export { LazyImage, default } from './LazyImage';
+export { LazyImage } from './LazyImage';
+export { default } from './LazyImage';
