@@ -64,6 +64,9 @@ function Lobby() {
   const navigate = useNavigate();
   const { user } = useAuth();  // 從 Auth Context 取得登入資訊
 
+  // 斷線錯誤訊息常數（用於判斷是否僅清除斷線錯誤）
+  const DISCONNECT_ERROR_MSG = '與伺服器斷線，請確認後端是否啟動';
+
   // 本地狀態
   // 工單 0122：分離玩家名稱與暱稱
   // user.displayName: Google 登入時為帳號名稱，訪客登入時為 null
@@ -102,6 +105,7 @@ function Lobby() {
 
   // 工單 0382：延遲顯示斷線錯誤的 timer ref
   const disconnectTimerRef = useRef(null);
+  const matchmakingTimerRef = useRef(null);
 
   // 工單 0276：移除遊戲類型選擇（現在有獨立的遊戲選擇頁面）
 
@@ -162,11 +166,11 @@ function Lobby() {
       if (!connected) {
         // 延遲 3 秒後才顯示錯誤，給予重連時間
         disconnectTimerRef.current = setTimeout(() => {
-          setError('與伺服器斷線，請確認後端是否啟動');
+          setError(DISCONNECT_ERROR_MSG);
         }, 3000);
       } else {
         // 只清除斷線錯誤訊息，保留其他錯誤（如快速配對結果）
-        setError(prev => prev === '與伺服器斷線，請確認後端是否啟動' ? '' : prev);
+        setError(prev => prev === DISCONNECT_ERROR_MSG ? '' : prev);
       }
     });
 
@@ -262,6 +266,10 @@ function Lobby() {
       if (disconnectTimerRef.current) {
         clearTimeout(disconnectTimerRef.current);
       }
+      // 清理快速配對超時 timer
+      if (matchmakingTimerRef.current) {
+        clearTimeout(matchmakingTimerRef.current);
+      }
       unsubConnect();
       unsubRooms();
       unsubError();
@@ -303,6 +311,11 @@ function Lobby() {
   // 遊戲大廳改版：快速配對結果監聽
   useEffect(() => {
     const unsubMatchFound = onMatchFound((data) => {
+      // 清除超時 timer（配對已有結果）
+      if (matchmakingTimerRef.current) {
+        clearTimeout(matchmakingTimerRef.current);
+        matchmakingTimerRef.current = null;
+      }
       setIsMatchmaking(false);
       if (data.gameId) {
         handleQuickJoinRoom(data.gameId);
@@ -608,12 +621,17 @@ function Lobby() {
       setError('尚未連線到伺服器');
       return;
     }
+    // 清除之前的超時 timer
+    if (matchmakingTimerRef.current) {
+      clearTimeout(matchmakingTimerRef.current);
+    }
     setIsMatchmaking(true);
     setError('');
     emitQuickMatch(gameTypeFilter);
     // 5 秒超時保護
-    setTimeout(() => {
+    matchmakingTimerRef.current = setTimeout(() => {
       setIsMatchmaking(false);
+      matchmakingTimerRef.current = null;
     }, 5000);
   };
 
