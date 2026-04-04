@@ -5,3 +5,21 @@
  */
 
 import '@testing-library/jest-dom';
+
+// Mock react-i18next for tests
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key, options) => {
+      if (options) {
+        return key.replace(/\{\{(\w+)\}\}/g, (_, k) => options[k] ?? `{{${k}}}`);
+      }
+      return key;
+    },
+    i18n: {
+      language: 'zh-TW',
+      changeLanguage: jest.fn(),
+    },
+  }),
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
+  Trans: ({ children }) => children,
+}));
