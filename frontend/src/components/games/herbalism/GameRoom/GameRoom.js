@@ -205,11 +205,10 @@ function GameRoom() {
    * 取得自己的玩家資訊
    */
   const getMyPlayer = useCallback(() => {
-    if (!gameState.players) return null;
     if (gameState.currentPlayerId) {
-      return gameState.players.find(p => p.id === gameState.currentPlayerId) || null;
+      return gameState.players?.find(p => p.id === gameState.currentPlayerId) || null;
     }
-    return gameState.players[0] || null;
+    return gameState.players?.[0] || null;
   }, [gameState.players, gameState.currentPlayerId]);
 
   /**
