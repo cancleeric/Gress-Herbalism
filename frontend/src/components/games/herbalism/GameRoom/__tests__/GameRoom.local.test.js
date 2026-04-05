@@ -8,12 +8,12 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from '../GameRoom';
 import { gameReducer, initialState } from '../../../../../store/gameStore';
 
 // Mock useAIPlayers
-jest.mock('../../../hooks/useAIPlayers', () => ({
+jest.mock('../../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: () => ({
     aiPlayers: [
@@ -54,7 +54,7 @@ const mockGetState = jest.fn().mockReturnValue({
 });
 const mockGetCurrentPlayer = jest.fn().mockReturnValue(null);
 
-jest.mock('../../../controllers/LocalGameController', () => {
+jest.mock('../../../../../controllers/herbalism/LocalGameController', () => {
   return class MockLocalGameController {
     constructor() {
       this.startGame = mockStartGame;
@@ -69,7 +69,7 @@ jest.mock('../../../controllers/LocalGameController', () => {
 });
 
 // Mock socketService
-jest.mock('../../../services/socketService', () => ({
+jest.mock('../../../../../services/socketService', () => ({
   onGameState: jest.fn(() => jest.fn()),
   onError: jest.fn(() => jest.fn()),
   onHiddenCardsRevealed: jest.fn(() => jest.fn()),
@@ -102,14 +102,14 @@ jest.mock('../../../services/socketService', () => ({
 }));
 
 // 工單 0161：Mock useAuth
-jest.mock('../../../firebase/AuthContext', () => ({
+jest.mock('../../../../../firebase/AuthContext', () => ({
   useAuth: () => ({
     user: { displayName: null, isAnonymous: true, photoURL: null }
   })
 }));
 
 // Mock localStorage
-jest.mock('../../../utils/localStorage', () => ({
+jest.mock('../../../../../utils/common/localStorage', () => ({
   clearCurrentRoom: jest.fn(),
   saveCurrentRoom: jest.fn(),
   getCurrentRoom: jest.fn()
@@ -117,7 +117,8 @@ jest.mock('../../../utils/localStorage', () => ({
 
 describe('GameRoom 本地模式', () => {
   test('應該在本地模式下初始化', () => {
-    const store = createStore(gameReducer, initialState);
+    const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+    const store = createStore(rootReducer, { herbalism: initialState });
 
     const { container } = render(
       <Provider store={store}>
