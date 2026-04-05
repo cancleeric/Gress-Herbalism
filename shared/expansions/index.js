@@ -62,6 +62,9 @@ const {
 // 載入 base 擴充包
 const { baseExpansion } = require('./base');
 
+// 載入 deep-sea 擴充包
+const { deepSeaExpansion } = require('./deep-sea');
+
 /**
  * 全域擴充包註冊表單例
  * 用於應用程式範圍內的擴充包管理
@@ -76,6 +79,20 @@ const baseModule = {
   manifest: BASE_MANIFEST,
 };
 expansionLoader.registerModule('base', baseModule);
+
+// 預先註冊 deep-sea 擴充包到 expansionLoader
+const deepSeaModule = {
+  ...require('./deep-sea'),
+  manifest: {
+    id: 'deep-sea',
+    name: '深海生態',
+    version: '1.0.0',
+    type: 'expansion',
+    description: '深海生態擴充包，新增 6 種深海性狀與 24 張雙面卡',
+    dependencies: { base: '1.0.0' },
+  },
+};
+expansionLoader.registerModule('deep-sea', deepSeaModule);
 
 module.exports = {
   // 核心類別
@@ -114,4 +131,8 @@ module.exports = {
 
   // 全域單例
   globalRegistry,
+
+  // 擴充包
+  baseExpansion,
+  deepSeaExpansion,
 };

@@ -291,6 +291,7 @@ function EvolutionRoom() {
   }, [roomId, currentPlayerId]);
 
   // 處理使用性狀能力
+  // eslint-disable-next-line no-unused-vars
   const handleUseTrait = useCallback((creatureId, traitType, targetId = null) => {
     if (!creatureId || !traitType || !roomId || !currentPlayerId) return;
     console.log('[EvolutionRoom] 使用性狀:', creatureId, traitType, targetId);

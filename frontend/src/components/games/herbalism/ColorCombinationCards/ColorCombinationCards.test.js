@@ -92,7 +92,7 @@ describe('ColorCard Component', () => {
     render(<ColorCard card={mockCard} selected={true} disabled={false} />);
     const card = screen.getByRole('button');
 
-    expect(card).toHaveAttribute('aria-selected', 'true');
+    expect(card).toHaveAttribute('aria-pressed', 'true');
     expect(card).toHaveAttribute('aria-disabled', 'false');
   });
 });

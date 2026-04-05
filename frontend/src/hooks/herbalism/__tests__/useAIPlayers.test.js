@@ -4,13 +4,13 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import useAIPlayers from '../useAIPlayers';
-import { AI_DIFFICULTY } from '../../shared/constants';
+import { AI_DIFFICULTY } from '../../../shared/constants';
 
 // Mock 需要在測試之前設置
 const mockCreateAIPlayer = jest.fn();
 
-jest.mock('../../ai', () => {
-  const actualModule = jest.requireActual('../../ai');
+jest.mock('../../../ai', () => {
+  const actualModule = jest.requireActual('../../../ai');
   return {
     ...actualModule,
     createAIPlayer: (...args) => mockCreateAIPlayer(...args)

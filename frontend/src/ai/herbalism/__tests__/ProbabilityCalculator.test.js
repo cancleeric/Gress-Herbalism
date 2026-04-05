@@ -3,7 +3,7 @@
  */
 
 import ProbabilityCalculator, { createProbabilityCalculator } from '../ProbabilityCalculator';
-import { COLORS } from '../../shared/constants';
+import { COLORS } from '../../../shared/constants';
 
 describe('ProbabilityCalculator', () => {
   describe('constructor', () => {

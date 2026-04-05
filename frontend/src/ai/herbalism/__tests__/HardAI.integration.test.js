@@ -5,7 +5,7 @@
  */
 
 import AIPlayer, { createAIPlayer } from '../AIPlayer';
-import { AI_DIFFICULTY } from '../../shared/constants';
+import { AI_DIFFICULTY } from '../../../shared/constants';
 import { ACTION_TYPE } from '../strategies/BaseStrategy';
 
 describe('HardAI Integration Tests', () => {
