@@ -1,0 +1,158 @@
+/**
+ * ReplayList CSS
+ */
+
+.replay-list {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.replay-list__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.replay-list__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  flex: none;
+}
+
+.replay-list__filter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.replay-list__filter-input {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.replay-list__filter-btn,
+.replay-list__filter-clear,
+.replay-list__refresh-btn {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.replay-list__filter-btn {
+  background: #4a7c59;
+  color: #fff;
+}
+
+.replay-list__filter-btn:hover {
+  background: #3a6347;
+}
+
+.replay-list__filter-clear {
+  background: #bbb;
+  color: #333;
+}
+
+.replay-list__filter-clear:hover {
+  background: #aaa;
+}
+
+.replay-list__refresh-btn {
+  background: #e8e8e8;
+  color: #333;
+  margin-left: auto;
+}
+
+.replay-list__refresh-btn:hover:not(:disabled) {
+  background: #d0d0d0;
+}
+
+.replay-list__refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.replay-list__error {
+  padding: 0.75rem 1rem;
+  background: #fdecea;
+  color: #c62828;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.replay-list__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #666;
+}
+
+.replay-list__empty-hint {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.replay-list__table-wrapper {
+  overflow-x: auto;
+}
+
+.replay-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.replay-list__table th {
+  background: #4a7c59;
+  color: #fff;
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.replay-list__row {
+  border-bottom: 1px solid #eee;
+  transition: background 0.15s;
+}
+
+.replay-list__row:hover {
+  background: #f5f9f6;
+}
+
+.replay-list__table td {
+  padding: 0.6rem 0.85rem;
+  vertical-align: middle;
+}
+
+.replay-list__winner-badge {
+  background: #fff8e1;
+  color: #f57f17;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+}
+
+.replay-list__watch-btn {
+  padding: 0.35rem 0.8rem;
+  background: #4a7c59;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.replay-list__watch-btn:hover {
+  background: #3a6347;
+}

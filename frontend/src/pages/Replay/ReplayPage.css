@@ -1,0 +1,88 @@
+/**
+ * ReplayPage CSS
+ */
+
+.replay-page {
+  min-height: 100vh;
+  background: #f4f7f5;
+  padding: 1rem;
+}
+
+.replay-page__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.replay-page__back-btn,
+.replay-page__list-btn {
+  padding: 0.4rem 0.9rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  background: #e0e0e0;
+  color: #333;
+}
+
+.replay-page__back-btn:hover,
+.replay-page__list-btn:hover {
+  background: #ccc;
+}
+
+.replay-page__player-section {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.replay-page__loading,
+.replay-page__error {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.replay-page__error {
+  color: #c62828;
+  background: #fdecea;
+  border-radius: 6px;
+}
+
+.replay-page__retry-btn {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  background: #4a7c59;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.replay-page__player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.replay-page__player-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.replay-page__share-btn {
+  padding: 0.4rem 0.9rem;
+  background: #fff;
+  border: 1px solid #4a7c59;
+  color: #4a7c59;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.replay-page__share-btn:hover {
+  background: #f0f7f2;
+}

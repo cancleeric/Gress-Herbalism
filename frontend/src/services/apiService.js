@@ -70,10 +70,30 @@ export async function healthCheck() {
   return apiRequest('/api/health');
 }
 
+/**
+ * 取得本草遊戲回放列表
+ * @param {object} options - { limit, playerName }
+ */
+export async function getHerbalismReplays({ limit = 20, playerName = '' } = {}) {
+  const params = new URLSearchParams({ limit });
+  if (playerName) params.set('playerName', playerName);
+  return apiRequest(`/api/replays/herbalism?${params}`);
+}
+
+/**
+ * 取得特定本草遊戲回放
+ * @param {string} gameId - 遊戲 ID
+ */
+export async function getHerbalismReplay(gameId) {
+  return apiRequest(`/api/replays/herbalism/${gameId}`);
+}
+
 export default {
   syncPlayer,
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
   healthCheck,
+  getHerbalismReplays,
+  getHerbalismReplay,
 };

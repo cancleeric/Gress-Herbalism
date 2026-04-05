@@ -37,6 +37,9 @@ const presenceService = require('./services/presenceService');
 // 工單 0313-0316 - 演化論遊戲處理（新模組）
 const evolutionHandler = require('./evolutionGameHandler');
 
+// Issue #6 - 本草遊戲回放服務
+const { herbalismReplayService, HERBALISM_EVENT_TYPES } = require('./services/herbalism/replayService');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -323,6 +326,34 @@ app.put('/api/friends/invitations/:invitationId', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// ==================== Issue #6 回放 API ====================
+
+// 列出本草遊戲回放（最近 N 筆）
+app.get('/api/replays/herbalism', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const playerName = req.query.playerName || null;
+    const replays = await herbalismReplayService.listReplays({ limit, playerName });
+    res.json({ success: true, data: replays });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得特定本草遊戲回放
+app.get('/api/replays/herbalism/:gameId', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const replay = await herbalismReplayService.getReplay(gameId);
+    if (!replay) {
+      return res.status(404).json({ success: false, message: '找不到回放' });
+    }
+    res.json({ success: true, data: replay });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -659,6 +690,12 @@ io.on('connection', (socket) => {
     gameState.gamePhase = 'playing';
     gameState.currentRound = 1;
     gameState.scores = scores;
+    gameState.startTime = Date.now();
+
+    // Issue #6：開始回放錄製
+    herbalismReplayService.startRecording(gameId, gameState);
+    herbalismReplayService.recordRoundStart(gameId, 1,
+      gameState.players[0] ? gameState.players[0].name : '');
 
     broadcastGameState(gameId);
     broadcastRoomList();
@@ -685,6 +722,27 @@ io.on('connection', (socket) => {
     });
 
     if (result.success) {
+      // Issue #6：記錄遊戲動作回放事件
+      const actingPlayer = gameState.players.find(p => p.id === action.playerId);
+      const actingPlayerName = actingPlayer ? actingPlayer.name : '';
+      if (action.type === 'question') {
+        const targetPlayer = gameState.players.find(p => p.id === action.targetPlayerId);
+        herbalismReplayService.recordQuestion(gameId, {
+          playerId: action.playerId,
+          playerName: actingPlayerName,
+          targetPlayerId: action.targetPlayerId,
+          targetPlayerName: targetPlayer ? targetPlayer.name : '',
+          colors: action.colors,
+          questionType: action.questionType || 1,
+        });
+      } else if (action.type === 'guess') {
+        herbalismReplayService.recordGuess(gameId, {
+          playerId: action.playerId,
+          playerName: actingPlayerName,
+          guessedColors: action.guessedColors,
+        });
+      }
+
       // 檢查是否需要等待被要牌玩家選擇顏色
       if (result.requireColorChoice) {
         // 儲存等待狀態
@@ -797,6 +855,19 @@ io.on('connection', (socket) => {
 
           // 如果是局結束，廣播結果（包含預測結算）
           if (result.isCorrect !== undefined) {
+            // Issue #6：記錄猜牌結果回放事件（無跟猜玩家的快速猜牌路徑）
+            const guessingPlayer = gameState.players.find(p => p.id === action.playerId);
+            herbalismReplayService.recordRoundResult(gameId, {
+              guessingPlayerId: action.playerId,
+              guessingPlayerName: guessingPlayer ? guessingPlayer.name : '',
+              guessedColors: action.guessedColors || [],
+              hiddenColors: result.hiddenCards ? result.hiddenCards.map(c => c.color) : [],
+              isCorrect: result.isCorrect,
+              followingPlayers: [],
+              scoreChanges: result.scoreChanges || {},
+              scores: gameState.scores || {},
+            });
+
             io.to(gameId).emit('guessResult', {
               isCorrect: result.isCorrect,
               scoreChanges: result.scoreChanges,
@@ -858,6 +929,15 @@ io.on('connection', (socket) => {
     if (result.success) {
       // 清除等待狀態
       pendingColorChoices.delete(gameId);
+
+      // Issue #6：記錄顏色選擇回放事件
+      const targetPlayer = gameState.players.find(p => p.id === pendingChoice.targetPlayerId);
+      herbalismReplayService.recordColorChoice(gameId, {
+        playerId: pendingChoice.targetPlayerId,
+        playerName: targetPlayer ? targetPlayer.name : '',
+        chosenColor: chosenColor,
+        cardsTransferred: result.cardsTransferred || 0,
+      });
 
       // 廣播選擇結果
       io.to(gameId).emit('colorChoiceResult', {
@@ -950,6 +1030,13 @@ io.on('connection', (socket) => {
       });
     }
 
+    // Issue #6：記錄回合結束回放事件
+    herbalismReplayService.recordEndTurn(gameId, {
+      playerId,
+      playerName: player?.name || '',
+      prediction: prediction || null,
+    });
+
     // 清除問牌後狀態
     postQuestionStates.delete(gameId);
 
@@ -996,6 +1083,14 @@ io.on('connection', (socket) => {
       followState.declinedPlayers.push(playerId);
     }
 
+    // Issue #6：記錄跟猜回放事件
+    const followPlayer = gameState.players.find(p => p.id === playerId);
+    herbalismReplayService.recordFollowGuess(gameId, {
+      playerId,
+      playerName: followPlayer ? followPlayer.name : '',
+      isFollowing,
+    });
+
     // 移到下一個決定者
     followState.currentDeciderIndex++;
     const hasMoreDeciders = followState.currentDeciderIndex < followState.decisionOrder.length;
@@ -1028,6 +1123,19 @@ io.on('connection', (socket) => {
 
       // 更新遊戲狀態
       Object.assign(gameState, result.gameState);
+
+      // Issue #6：記錄猜牌結果回放事件（含跟猜路徑）
+      const guessingPlayer = gameState.players.find(p => p.id === followState.guessingPlayerId);
+      herbalismReplayService.recordRoundResult(gameId, {
+        guessingPlayerId: followState.guessingPlayerId,
+        guessingPlayerName: guessingPlayer ? guessingPlayer.name : '',
+        guessedColors: followState.guessedColors || [],
+        hiddenColors: result.hiddenCards ? result.hiddenCards.map(c => c.color) : [],
+        isCorrect: result.isCorrect,
+        followingPlayers: followState.followingPlayers,
+        scoreChanges: result.scoreChanges || {},
+        scores: gameState.scores || {},
+      });
 
       // 廣播猜牌結果（包含預測結算）
       console.log('[guessResult] 發送結果:', JSON.stringify({
@@ -1915,6 +2023,11 @@ function settlePredictions(gameState, scoreChanges) {
  */
 async function saveGameToDatabase(gameState, winnerPlayer) {
   try {
+    // Issue #6：結束回放錄製並儲存
+    herbalismReplayService.endRecording(gameState.gameId, gameState).catch(err => {
+      console.error('[HerbalismReplay] 儲存回放失敗:', err.message);
+    });
+
     // 工單 0174：查詢每位玩家的 Supabase player_id
     const playerIdMap = {};
     for (const player of gameState.players) {
@@ -2020,6 +2133,11 @@ function startNextRoundLogic(gameId) {
   gameState.gameHistory = [];
   gameState.predictions = [];
   gameState.winner = null;
+
+  // Issue #6：記錄新局開始回放事件
+  const startPlayer = gameState.players[nextStartPlayer];
+  herbalismReplayService.recordRoundStart(gameId, gameState.currentRound,
+    startPlayer ? startPlayer.name : '');
 
   // 廣播下一局開始
   io.to(gameId).emit('roundStarted', {

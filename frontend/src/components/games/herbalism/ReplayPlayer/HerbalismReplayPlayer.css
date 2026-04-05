@@ -1,0 +1,235 @@
+/**
+ * HerbalismReplayPlayer CSS
+ */
+
+.herb-replay-player {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.herb-replay-player--empty {
+  padding: 2rem;
+  text-align: center;
+  color: #888;
+}
+
+/* Header */
+.herb-replay-player__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #4a7c59;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  gap: 0.5rem;
+}
+
+.herb-replay-player__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+}
+
+.herb-replay-player__meta-winner {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+}
+
+.herb-replay-player__meta-rounds {
+  opacity: 0.85;
+}
+
+.herb-replay-player__close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.herb-replay-player__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Progress */
+.herb-replay-player__progress-wrap {
+  height: 6px;
+  background: #e0e0e0;
+  cursor: pointer;
+  position: relative;
+}
+
+.herb-replay-player__progress-bar {
+  height: 100%;
+  background: #4a7c59;
+  transition: width 0.2s ease;
+}
+
+/* Controls */
+.herb-replay-player__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e8e8e8;
+  flex-wrap: wrap;
+}
+
+.herb-rp-btn {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.herb-rp-btn:hover:not(:disabled) {
+  background: #eee;
+}
+
+.herb-rp-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.herb-rp-btn--primary {
+  background: #4a7c59;
+  color: #fff;
+  border-color: #4a7c59;
+  font-size: 1.1rem;
+  min-width: 2.5rem;
+}
+
+.herb-rp-btn--primary:hover:not(:disabled) {
+  background: #3a6347;
+}
+
+.herb-replay-player__counter {
+  font-size: 0.82rem;
+  color: #555;
+  min-width: 60px;
+  text-align: center;
+}
+
+.herb-replay-player__speed {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.herb-replay-player__speed-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.herb-rp-speed-btn {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: #333;
+}
+
+.herb-rp-speed-btn:hover {
+  background: #eee;
+}
+
+.herb-rp-speed-btn.active {
+  background: #4a7c59;
+  color: #fff;
+  border-color: #4a7c59;
+}
+
+/* Event log */
+.herb-replay-player__log {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 380px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.herb-replay-player__log-hint {
+  text-align: center;
+  color: #999;
+  font-size: 0.88rem;
+  padding: 1.5rem 0;
+}
+
+.herb-replay-player__event {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  animation: ev-fade-in 0.25s ease;
+}
+
+.herb-replay-player__event.current {
+  background: #e8f5e9;
+  border-left: 3px solid #4a7c59;
+  font-weight: 600;
+}
+
+.herb-replay-player__event-num {
+  color: #999;
+  font-size: 0.75rem;
+  min-width: 1.8rem;
+  flex-shrink: 0;
+}
+
+/* Event type colours */
+.ev--game-start { background: #e3f2fd; }
+.ev--round-start { background: #f3e5f5; font-weight: 600; }
+.ev--question { background: #fff8e1; }
+.ev--color-choice { background: #fbe9e7; }
+.ev--end-turn { background: #f1f8e9; }
+.ev--guess { background: #e0f7fa; }
+.ev--follow-guess { background: #e8eaf6; }
+.ev--round-result.ev--round-result { /* specificity bump */
+  background: #fff3e0;
+  border: 1px solid #ffe082;
+}
+.ev--game-end {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  font-weight: 600;
+}
+
+/* Finished banner */
+.herb-replay-player__finished {
+  text-align: center;
+  padding: 0.75rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+@keyframes ev-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

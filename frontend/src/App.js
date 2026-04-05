@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
+import ReplayPage from './pages/Replay';
 import './styles/App.css';
 
 /**
@@ -149,6 +150,24 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Friends />
+            </ProtectedRoute>
+          }
+        />
+        {/* Issue #6：回放列表路由 */}
+        <Route
+          path="/replays"
+          element={
+            <ProtectedRoute>
+              <ReplayPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Issue #6：特定回放路由 */}
+        <Route
+          path="/replay/herbalism/:gameId"
+          element={
+            <ProtectedRoute>
+              <ReplayPage />
             </ProtectedRoute>
           }
         />
