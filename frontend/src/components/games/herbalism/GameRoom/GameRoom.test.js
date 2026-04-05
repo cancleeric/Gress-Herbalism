@@ -53,8 +53,7 @@ jest.mock('react-router-dom', () => ({
 
 // 測試用 wrapper
 const renderWithProviders = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
-  const store = createStore(rootReducer, { herbalism: preloadedState });
+  const store = createStore(combineReducers({ herbalism: gameReducer }), { herbalism: preloadedState });
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={[`/game/${gameId}`]}>
@@ -425,7 +424,7 @@ describe('GameRoom - 工作單 0023', () => {
 
       fireEvent.click(screen.getByText('離開房間'));
 
-      expect(mockNavigate).toHaveBeenCalledWith('/lobby/herbalism');
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 
@@ -1135,8 +1134,7 @@ describe('GameRoom - 工作單 0023', () => {
   describe('重連邏輯（工單 0200）', () => {
     // Helper: render with store access for verifying dispatch results
     const renderWithStore = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-      const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
-      const store = createStore(rootReducer, { herbalism: preloadedState });
+      const store = createStore(combineReducers({ herbalism: gameReducer }), { herbalism: preloadedState });
       const result = render(
         <Provider store={store}>
           <MemoryRouter initialEntries={[`/game/${gameId}`]}>
@@ -1253,7 +1251,7 @@ describe('GameRoom - 工作單 0023', () => {
           });
         });
 
-        const state = store.getState().herbalism;
+        const state = store.getState();
         expect(state.gameId).toBe('test_room');
         expect(state.players).toEqual(mockReconnState.players);
         expect(state.maxPlayers).toBe(4);
@@ -1286,7 +1284,7 @@ describe('GameRoom - 工作單 0023', () => {
           });
         });
 
-        const state = store.getState().herbalism;
+        const state = store.getState();
         expect(state).toMatchObject({
           gameId: 'room_123',
           players: mockReconnState.players,
@@ -1351,7 +1349,7 @@ describe('GameRoom - 工作單 0023', () => {
 
         expect(clearCurrentRoom).toHaveBeenCalled();
         expect(clearPersistedState).toHaveBeenCalled();
-        expect(mockNavigate).toHaveBeenCalledWith('/lobby/herbalism');
+        expect(mockNavigate).toHaveBeenCalledWith('/');
       });
     });
 

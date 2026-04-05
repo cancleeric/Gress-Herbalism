@@ -144,7 +144,16 @@ function GameRoom() {
     gameState,
     onAIAction: useCallback((action, aiInstance) => {
       if (localControllerRef.current) {
-        localControllerRef.current.handleAction(action);
+        // Normalize action: add playerId and fix field names
+        const normalizedAction = { ...action, playerId: aiInstance.id };
+        if (action.type === 'guess') {
+          normalizedAction.guessedColors = action.colors;
+        }
+        if (action.type === 'question') {
+          normalizedAction.giveColor = action.giveColor || action.colors?.[0];
+          normalizedAction.getColor = action.getColor || action.colors?.[1];
+        }
+        localControllerRef.current.handleAction(normalizedAction);
       }
     }, [])
   });
@@ -381,6 +390,28 @@ function GameRoom() {
 
     return () => clearTimeout(timerId);
   }, [isLocalMode, gameState.gamePhase, followGuessData, gameState.players, isAIPlayer, handleAIFollowGuess]);
+
+  /**
+   * 自動結束 AI 回合（本地模式問牌後階段）
+   * AI 問牌後進入 postQuestion 階段，需自動呼叫 endTurn
+   */
+  useEffect(() => {
+    if (!isLocalMode || !localControllerRef.current) return;
+    if (gameState.gamePhase !== GAME_PHASE_POST_QUESTION) return;
+
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer || !isAIPlayer(currentPlayer)) return;
+
+    const timerId = setTimeout(() => {
+      console.log('[GameRoom] AI 自動結束回合:', currentPlayer.name);
+      localControllerRef.current.endTurn({
+        playerId: currentPlayer.id,
+        prediction: null
+      });
+    }, 1000);
+
+    return () => clearTimeout(timerId);
+  }, [isLocalMode, gameState.gamePhase, gameState.currentPlayerIndex, getCurrentPlayer, isAIPlayer]);
 
   /**
    * 工單 0150：遊戲不存在時的倒數計時與自動導航

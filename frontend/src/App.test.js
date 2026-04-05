@@ -20,25 +20,30 @@ jest.mock('./firebase', () => ({
   }),
 }));
 
-// Mock 子元件以隔離 App 層級測試（從 common barrel 取得）
-jest.mock('./components/common', () => ({
-  Lobby: function MockLobby() {
+// Mock 子元件以隔離 App 層級測試
+jest.mock('./components/common/Lobby', () => {
+  return function MockLobby() {
     return <div className="lobby"><h1>本草 Herbalism</h1><p>3-4 人推理卡牌遊戲</p></div>;
-  },
-  GameSelection: function MockGameSelection() { return <div className="lobby"><h1>本草 Herbalism</h1><p>3-4 人推理卡牌遊戲</p></div>; },
-  EvolutionLobbyPage: function MockEvolutionLobbyPage() { return <div>EvolutionLobbyPage</div>; },
-  Profile: function MockProfile() { return <div>Profile</div>; },
-  Leaderboard: function MockLeaderboard() { return <div>Leaderboard</div>; },
-  Friends: function MockFriends() { return <div>Friends</div>; },
-  Login: function MockLogin() { return <div>Login</div>; },
-  ConnectionStatus: function MockConnectionStatus() { return null; },
-}));
-jest.mock('./components/games/herbalism', () => ({
-  GameRoom: function MockGameRoom() { return <div>GameRoom</div>; },
-}));
-jest.mock('./components/games/evolution', () => ({
-  EvolutionRoom: function MockEvolutionRoom() { return <div>EvolutionRoom</div>; },
-}));
+  };
+});
+jest.mock('./components/games/herbalism/GameRoom/GameRoom', () => {
+  return function MockGameRoom() { return <div>GameRoom</div>; };
+});
+jest.mock('./components/common/Profile', () => {
+  return function MockProfile() { return <div>Profile</div>; };
+});
+jest.mock('./components/common/Leaderboard', () => {
+  return function MockLeaderboard() { return <div>Leaderboard</div>; };
+});
+jest.mock('./components/common/Friends', () => {
+  return function MockFriends() { return <div>Friends</div>; };
+});
+jest.mock('./components/common/Login', () => {
+  return function MockLogin() { return <div>Login</div>; };
+});
+jest.mock('./components/common/ConnectionStatus', () => {
+  return function MockConnectionStatus() { return null; };
+});
 
 describe('App - 工作單 0013', () => {
   describe('應用程式渲染', () => {

@@ -144,8 +144,10 @@ describe('GameRoom AI 視覺回饋', () => {
       currentPlayerId: 'human-1',
       hiddenCards: [{ color: 'green' }, { color: 'yellow' }]
     };
-    const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
-    testStore = createStore(rootReducer, { herbalism: stateWithAIPlayers });
+    testStore = createStore(
+      combineReducers({ herbalism: gameReducer }),
+      { herbalism: stateWithAIPlayers }
+    );
 
     // Default mock implementation
     mockUseAIPlayers.mockReturnValue({

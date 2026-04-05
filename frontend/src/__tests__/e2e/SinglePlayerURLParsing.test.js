@@ -68,7 +68,7 @@ jest.mock('../../firebase/AuthContext', () => ({
 }));
 
 // Mock localStorage
-jest.mock('../../utils/localStorage', () => ({
+jest.mock('../../utils/common/localStorage', () => ({
   clearCurrentRoom: jest.fn(),
   saveCurrentRoom: jest.fn(),
   getCurrentRoom: jest.fn()
@@ -83,12 +83,15 @@ jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
  * 創建測試用的 Redux store
  */
 const createTestStore = (initialState = {}) => {
-  const mergedHerbalismState = {
+  const mergedInitialState = {
     ...defaultInitialState,
     ...initialState
   };
-  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
-  return createStore(rootReducer, { herbalism: mergedHerbalismState });
+
+  return createStore(
+    combineReducers({ herbalism: gameReducer }),
+    { herbalism: mergedInitialState }
+  );
 };
 
 // 引入 socketService mock 以便在 beforeEach 重新設定實作
