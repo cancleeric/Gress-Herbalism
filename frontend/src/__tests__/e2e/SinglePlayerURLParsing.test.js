@@ -11,8 +11,8 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { createStore } from 'redux';
-import GameRoom from '../../components/GameRoom/GameRoom';
+import { createStore, combineReducers } from 'redux';
+import GameRoom from '../../components/games/herbalism/GameRoom/GameRoom';
 import useAIPlayers from '../../hooks/herbalism/useAIPlayers';
 import LocalGameController from '../../controllers/herbalism/LocalGameController';
 import { gameReducer, initialState as defaultInitialState } from '../../store/gameStore';
@@ -58,7 +58,7 @@ jest.mock('../../services/socketService', () => {
   };
 });
 
-jest.mock('../../controllers/LocalGameController');
+jest.mock('../../controllers/herbalism/LocalGameController');
 
 // 工單 0161：Mock useAuth
 jest.mock('../../firebase/AuthContext', () => ({
@@ -74,7 +74,7 @@ jest.mock('../../utils/localStorage', () => ({
   getCurrentRoom: jest.fn()
 }));
 
-jest.mock('../../hooks/useAIPlayers', () => ({
+jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: jest.fn()
 }));
@@ -83,12 +83,12 @@ jest.mock('../../hooks/useAIPlayers', () => ({
  * 創建測試用的 Redux store
  */
 const createTestStore = (initialState = {}) => {
-  const mergedInitialState = {
+  const mergedHerbalismState = {
     ...defaultInitialState,
     ...initialState
   };
-
-  return createStore(gameReducer, mergedInitialState);
+  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+  return createStore(rootReducer, { herbalism: mergedHerbalismState });
 };
 
 // 引入 socketService mock 以便在 beforeEach 重新設定實作
@@ -200,7 +200,7 @@ describe('單人模式 URL 參數解析測試', () => {
       }, { timeout: 2000 });
 
       // 驗證遊戲狀態被初始化為單人模式
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
     });
@@ -449,7 +449,7 @@ describe('單人模式 URL 參數解析測試', () => {
       expect(LocalGameController).toHaveBeenCalled();
 
       // 驗證遊戲狀態正確
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
       expect(state.players.length).toBeGreaterThanOrEqual(1);

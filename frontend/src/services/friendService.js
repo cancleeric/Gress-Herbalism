@@ -131,7 +131,7 @@ export async function respondToGameInvitation(invitationId, firebaseUid, action)
   });
 }
 
-export default {
+const friendService = {
   searchPlayers,
   getFriends,
   getFriendRequests,
@@ -143,3 +143,5 @@ export default {
   getGameInvitations,
   respondToGameInvitation,
 };
+
+export default friendService;
