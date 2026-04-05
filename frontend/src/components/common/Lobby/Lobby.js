@@ -6,7 +6,7 @@
  * @description 顯示遊戲大廳，包含房間列表、創建房間和加入房間功能
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../firebase/AuthContext';
@@ -27,24 +27,9 @@ import {
   joinRoom,
   attemptReconnect,
   emitPlayerRefreshing,
-  requestRoomList,
-  quickMatch,
-  cancelQuickMatch,
-  onQuickMatchStatus,
-  onQuickMatchFound,
-  sendLobbyMessage,
-  requestLobbyChatHistory,
-  onLobbyMessage,
-  onLobbyChatHistory,
+  requestRoomList
 } from '../../../services/socketService';
-import {
-  getFriends,
-  getGameInvitations,
-  respondToGameInvitation,
-  sendGameInvitation,
-  getRecentOpponents,
-} from '../../../services/friendService';
-import { MIN_PLAYERS, MAX_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
+import { MIN_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
 import VersionInfo from '../VersionInfo';
 import {
   saveNickname,
@@ -114,27 +99,6 @@ function Lobby() {
     aiCount: 2,
     difficulties: [AI_DIFFICULTY.MEDIUM, AI_DIFFICULTY.MEDIUM]
   });
-
-  // Issue #4：遊戲類型篩選
-  const [gameTypeFilter, setGameTypeFilter] = useState('herbalism');
-
-  // Issue #4：快速配對
-  const [isMatchmaking, setIsMatchmaking] = useState(false);
-  const [matchmakingStatus, setMatchmakingStatus] = useState('');
-
-  // Issue #4：好友面板
-  const [onlineFriends, setOnlineFriends] = useState([]);
-  const [pendingInvitations, setPendingInvitations] = useState([]);
-  const [showFriendsPanel, setShowFriendsPanel] = useState(false);
-
-  // Issue #4：最近對局玩家
-  const [recentOpponents, setRecentOpponents] = useState([]);
-
-  // Issue #4：大廳聊天
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput] = useState('');
-  const [showChat, setShowChat] = useState(false);
-  const chatEndRef = useRef(null);
 
   // 載入時讀取儲存的暱稱
   useEffect(() => {
@@ -264,83 +228,6 @@ function Lobby() {
       unsubReconnectFailed();
     };
   }, [dispatch, navigate, playerId, rooms, nickname]);
-
-  // Issue #4：快速配對 & 聊天 socket 訂閱
-  useEffect(() => {
-    const unsubMatchStatus = onQuickMatchStatus(({ status, position }) => {
-      if (status === 'waiting') {
-        setMatchmakingStatus(`排隊中（第 ${position} 位）`);
-      } else if (status === 'cancelled') {
-        setIsMatchmaking(false);
-        setMatchmakingStatus('');
-      }
-    });
-
-    const unsubMatchFound = onQuickMatchFound(({ gameId, gameState }) => {
-      setIsMatchmaking(false);
-      setMatchmakingStatus('');
-      saveCurrentRoom({ roomId: gameId, playerId, playerName: nickname.trim() });
-      dispatch(updateGameState({
-        gameId,
-        players: gameState.players,
-        maxPlayers: gameState.maxPlayers,
-        gamePhase: gameState.gamePhase,
-        currentPlayerId: playerId,
-      }));
-      navigate(`/game/${gameId}`);
-    });
-
-    const unsubChatMsg = onLobbyMessage((msg) => {
-      setChatMessages(prev => [...prev, msg]);
-    });
-
-    const unsubChatHistory = onLobbyChatHistory((history) => {
-      setChatMessages(history);
-    });
-
-    return () => {
-      unsubMatchStatus();
-      unsubMatchFound();
-      unsubChatMsg();
-      unsubChatHistory();
-    };
-  }, [dispatch, navigate, playerId, nickname]);
-
-  // Issue #4：載入好友在線狀態和邀請
-  const loadFriendsAndInvitations = useCallback(async () => {
-    if (!user?.uid || user?.isAnonymous) return;
-    try {
-      const [friendsData, invData] = await Promise.all([
-        getFriends(user.uid),
-        getGameInvitations(user.uid),
-      ]);
-      setOnlineFriends((friendsData?.data || friendsData || []).filter(f => f.friend?.status !== 'offline'));
-      setPendingInvitations(invData?.data || invData || []);
-    } catch (err) {
-      console.error('[Lobby] 載入好友/邀請失敗:', err.message);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    loadFriendsAndInvitations();
-    const timer = setInterval(loadFriendsAndInvitations, 30000);
-    return () => clearInterval(timer);
-  }, [loadFriendsAndInvitations]);
-
-  // Issue #4：載入最近對局玩家
-  useEffect(() => {
-    if (!user?.uid || user?.isAnonymous) return;
-    getRecentOpponents(user.uid, 8)
-      .then(res => setRecentOpponents(res?.data || []))
-      .catch(err => console.error('[Lobby] 載入最近對手失敗:', err.message));
-  }, [user]);
-
-  // Issue #4：聊天滾動到底部
-  useEffect(() => {
-    if (showChat && chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages, showChat]);
 
   // 嘗試重連
   useEffect(() => {
@@ -590,97 +477,6 @@ function Lobby() {
     });
   };
 
-  // Issue #4：快速配對
-  const handleQuickMatch = () => {
-    if (!validateNicknameInput()) return;
-    if (!isConnected) { setError('尚未連線到伺服器'); return; }
-
-    saveNickname(nickname.trim());
-    const player = {
-      id: playerId,
-      name: nickname.trim(),
-      firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
-      photoURL: user?.photoURL || null,
-    };
-    setIsMatchmaking(true);
-    setMatchmakingStatus('排隊中...');
-    quickMatch(player, gameTypeFilter, playerCount);
-  };
-
-  const handleCancelQuickMatch = () => {
-    const player = { id: playerId, name: nickname.trim() };
-    cancelQuickMatch(player, gameTypeFilter, playerCount);
-    setIsMatchmaking(false);
-    setMatchmakingStatus('');
-  };
-
-  // Issue #4：邀請好友進入房間
-  const handleInviteFriend = async (friendId) => {
-    if (!user?.uid) return;
-    const savedRoom = getCurrentRoom();
-    if (!savedRoom?.roomId) {
-      // 自動創建房間後再邀請
-      setError('請先創建房間，然後再邀請好友加入');
-      setCreateRoomError('');
-      setShowCreateModal(true);
-      return;
-    }
-    try {
-      await sendGameInvitation(user.uid, friendId, savedRoom.roomId);
-      alert('邀請已發送！');
-    } catch (err) {
-      alert(err.message || '邀請失敗');
-    }
-  };
-
-  // Issue #4：回應遊戲邀請
-  const handleRespondInvitation = async (invitationId, action) => {
-    if (!user?.uid) return;
-    try {
-      const result = await respondToGameInvitation(invitationId, user.uid, action);
-      setPendingInvitations(prev => prev.filter(i => i.id !== invitationId));
-      if (action === 'accept' && result?.data?.room_id) {
-        const roomId = result.data.room_id;
-        saveNickname(nickname.trim());
-        const player = {
-          id: playerId,
-          name: nickname.trim(),
-          firebaseUid: user?.isAnonymous ? null : (user?.uid || null),
-          photoURL: user?.photoURL || null,
-        };
-        joinRoom(roomId, player);
-      }
-    } catch (err) {
-      alert(err.message || '操作失敗');
-    }
-  };
-
-  // Issue #4：大廳聊天發送
-  const handleSendChatMessage = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim() || !isConnected) return;
-    const player = {
-      id: playerId,
-      name: nickname.trim() || displayName,
-      photoURL: user?.photoURL || null,
-    };
-    sendLobbyMessage(player, chatInput.trim());
-    setChatInput('');
-  };
-
-  // Issue #4：打開聊天室時載入歷史
-  const handleOpenChat = () => {
-    setShowChat(true);
-    requestLobbyChatHistory();
-  };
-
-  // Issue #4：狀態圖示
-  const getStatusIcon = (status) => {
-    if (status === 'online') return <span className="status-dot online" title="線上"></span>;
-    if (status === 'in_game') return <span className="status-dot in-game" title="遊戲中"></span>;
-    return <span className="status-dot offline" title="離線"></span>;
-  };
-
   return (
     <div className="lobby">
       {/* 重連中覆蓋層 */}
@@ -801,48 +597,6 @@ function Lobby() {
             返回遊戲選擇
           </button>
 
-          {/* Issue #4：遊戲類型篩選 */}
-          <div className="game-type-filter">
-            <button
-              className={`filter-btn ${gameTypeFilter === 'herbalism' ? 'active' : ''}`}
-              onClick={() => setGameTypeFilter('herbalism')}
-            >
-              🌿 本草
-            </button>
-            <button
-              className={`filter-btn ${gameTypeFilter === 'evolution' ? 'active' : ''}`}
-              onClick={() => setGameTypeFilter('evolution')}
-            >
-              🦎 演化論
-            </button>
-            <button
-              className={`filter-btn ${gameTypeFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setGameTypeFilter('all')}
-            >
-              全部
-            </button>
-          </div>
-
-          {/* Issue #4：快速配對 */}
-          <div className="quick-match-section">
-            {!isMatchmaking ? (
-              <button
-                className="quick-match-btn"
-                onClick={handleQuickMatch}
-                disabled={!isConnected || isLoading}
-              >
-                <span className="material-symbols-outlined">bolt</span>
-                快速配對
-              </button>
-            ) : (
-              <div className="matchmaking-status">
-                <div className="matchmaking-spinner"></div>
-                <span>{matchmakingStatus}</span>
-                <button className="cancel-match-btn" onClick={handleCancelQuickMatch}>取消</button>
-              </div>
-            )}
-          </div>
-
           {/* 創建房間按鈕 */}
           <button
             className="create-room-btn"
@@ -881,164 +635,70 @@ function Lobby() {
             </button>
           </div>
 
-          {/* Issue #4：房間列表（支援遊戲類型篩選） */}
+          {/* 房間列表表格 */}
+          {/* 工單 0276：只顯示本草房間 */}
           <div className="room-table-container">
-            {(() => {
-              const filtered = rooms.filter(room => {
-                if (gameTypeFilter === 'all') return true;
-                return !room.gameType || room.gameType === gameTypeFilter;
-              });
-              if (filtered.length === 0) {
-                return (
-                  <div className="no-rooms">
-                    <span className="material-symbols-outlined">meeting_room</span>
-                    目前沒有可用的房間，點擊上方按鈕創建新房間
-                  </div>
-                );
-              }
-              return (
-                <table className="room-table">
-                  <thead>
-                    <tr>
-                      <th>房間名稱</th>
-                      <th>類型</th>
-                      <th>玩家</th>
-                      <th>狀態</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((room) => (
-                      <tr key={room.id}>
-                        <td>
-                          <span className="room-name">
-                            {room.name}
-                            {room.isPrivate && (
-                              <span className="material-symbols-outlined private-icon">lock</span>
-                            )}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="room-game-type">
-                            {room.gameType === 'evolution' ? '🦎 演化論' : '🌿 本草'}
-                          </span>
-                        </td>
-                        <td>
+            {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').length === 0 ? (
+              <div className="no-rooms">
+                <span className="material-symbols-outlined">meeting_room</span>
+                目前沒有可用的房間，點擊上方按鈕創建新房間
+              </div>
+            ) : (
+              <table className="room-table">
+                <thead>
+                  <tr>
+                    <th>房間名稱</th>
+                    <th>ID</th>
+                    <th>玩家</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* 工單 0276：只顯示本草房間 */}
+                  {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').map((room) => (
+                    <tr key={room.id}>
+                      <td>
+                        <span className="room-name">
+                          {room.name}
+                          {room.isPrivate && (
+                            <span className="material-symbols-outlined private-icon">lock</span>
+                          )}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="room-id">{room.id}</span>
+                      </td>
+                      <td>
+                        <span className="room-players">
                           <span className={`room-players-count ${!canJoinRoom(room) ? 'full' : ''}`}>
                             {room.playerCount}/{room.maxPlayers || 4}
                           </span>
-                        </td>
-                        <td>
-                          <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
-                            {canJoinRoom(room) ? '等待中' : '已滿'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="room-action-btn"
-                            onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                            disabled={isLoading || !isConnected || !canJoinRoom(room)}
-                          >
-                            <span className="material-symbols-outlined">
-                              {canJoinRoom(room) ? 'login' : 'block'}
-                            </span>
-                            {canJoinRoom(room) ? '加入' : '已滿'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              );
-            })()}
-          </div>
-
-          {/* Issue #4：待處理遊戲邀請 */}
-          {pendingInvitations.length > 0 && (
-            <div className="invitations-section">
-              <h3 className="section-title">
-                <span className="material-symbols-outlined">mail</span>
-                遊戲邀請（{pendingInvitations.length}）
-              </h3>
-              <ul className="invitations-list">
-                {pendingInvitations.map(inv => (
-                  <li key={inv.id} className="invitation-item">
-                    <span className="invitation-sender">{inv.from?.displayName || '玩家'}</span>
-                    <span className="invitation-room"> 邀請你加入房間</span>
-                    <div className="invitation-actions">
-                      <button
-                        className="inv-accept-btn"
-                        onClick={() => handleRespondInvitation(inv.id, 'accept')}
-                      >接受</button>
-                      <button
-                        className="inv-reject-btn"
-                        onClick={() => handleRespondInvitation(inv.id, 'reject')}
-                      >拒絕</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Issue #4：好友在線面板 */}
-          <div className="friends-online-section">
-            <button
-              className="friends-toggle-btn"
-              onClick={() => setShowFriendsPanel(p => !p)}
-            >
-              <span className="material-symbols-outlined">group</span>
-              線上好友（{onlineFriends.length}）
-              <span className="material-symbols-outlined">
-                {showFriendsPanel ? 'expand_less' : 'expand_more'}
-              </span>
-            </button>
-            {showFriendsPanel && (
-              <div className="friends-online-list">
-                {onlineFriends.length === 0 ? (
-                  <p className="no-friends-msg">目前沒有好友在線</p>
-                ) : (
-                  onlineFriends.map(f => {
-                    const friend = f.friend || f;
-                    return (
-                      <div key={friend.id} className="friend-online-item">
-                        {getStatusIcon(friend.status)}
-                        <span className="friend-name">{friend.displayName || friend.display_name || '玩家'}</span>
-                        <span className="friend-status-label">
-                          {friend.status === 'in_game' ? '遊戲中' : '線上'}
                         </span>
+                      </td>
+                      <td>
+                        <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
+                          {canJoinRoom(room) ? '等待中' : '已滿'}
+                        </span>
+                      </td>
+                      <td>
                         <button
-                          className="friend-invite-btn"
-                          onClick={() => handleInviteFriend(friend.id)}
-                          title="邀請進入房間"
+                          className="room-action-btn"
+                          onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                          disabled={isLoading || !isConnected || !canJoinRoom(room)}
                         >
-                          <span className="material-symbols-outlined">person_add</span>
+                          <span className="material-symbols-outlined">
+                            {canJoinRoom(room) ? 'login' : 'block'}
+                          </span>
+                          {canJoinRoom(room) ? '加入' : '已滿'}
                         </button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
-
-          {/* Issue #4：最近對局玩家 */}
-          {recentOpponents.length > 0 && (
-            <div className="recent-opponents-section">
-              <h3 className="section-title">
-                <span className="material-symbols-outlined">history</span>
-                最近對局玩家
-              </h3>
-              <div className="recent-opponents-list">
-                {recentOpponents.map(op => (
-                  <div key={op.id} className="recent-opponent-item">
-                    {getStatusIcon(op.status)}
-                    <span className="opponent-name">{op.displayName || '玩家'}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* 工單 202601260048：單人模式區 */}
           <div className="single-player-section">
@@ -1051,58 +711,6 @@ function Lobby() {
             </button>
           </div>
         </main>
-      </div>
-
-      {/* Issue #4：大廳聊天浮動按鈕 */}
-      <div className="lobby-chat-widget">
-        <button
-          className="chat-toggle-btn"
-          onClick={showChat ? () => setShowChat(false) : handleOpenChat}
-          title="大廳聊天室"
-        >
-          <span className="material-symbols-outlined">chat</span>
-          {chatMessages.length > 0 && !showChat && (
-            <span className="chat-badge">{Math.min(chatMessages.length, 99)}</span>
-          )}
-        </button>
-        {showChat && (
-          <div className="lobby-chat-panel">
-            <div className="chat-header">
-              <span>大廳聊天</span>
-              <button className="chat-close-btn" onClick={() => setShowChat(false)}>✕</button>
-            </div>
-            <div className="chat-messages">
-              {chatMessages.length === 0 && (
-                <p className="no-chat-msg">目前沒有訊息，來打個招呼吧！</p>
-              )}
-              {chatMessages.map(msg => (
-                <div key={msg.id} className={`chat-msg ${msg.playerId === playerId ? 'mine' : ''}`}>
-                  <span className="chat-msg-author">{msg.playerName}</span>
-                  <span className="chat-msg-text">{msg.text}</span>
-                </div>
-              ))}
-              <div ref={chatEndRef}></div>
-            </div>
-            <form className="chat-input-form" onSubmit={handleSendChatMessage}>
-              <input
-                className="chat-input"
-                type="text"
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                placeholder="輸入訊息..."
-                maxLength={200}
-                disabled={!isConnected}
-              />
-              <button
-                type="submit"
-                className="chat-send-btn"
-                disabled={!isConnected || !chatInput.trim()}
-              >
-                <span className="material-symbols-outlined">send</span>
-              </button>
-            </form>
-          </div>
-        )}
       </div>
 
       {/* 手機版底部導航 */}
