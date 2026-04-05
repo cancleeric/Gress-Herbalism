@@ -2,7 +2,7 @@
  * 成就解鎖通知 Toast 組件
  * 使用 framer-motion 動畫
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { AnimatePresence, motion } from 'framer-motion';
 import './AchievementToast.css';
@@ -12,11 +12,15 @@ const RARITY_COLORS = { common: '#9E9E9E', rare: '#2196F3', legendary: '#FF9800'
 const AUTO_DISMISS_MS = 4000;
 
 function AchievementToastItem({ achievement, onDismiss }) {
+  const onDismissRef = useRef(onDismiss);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const timer = setTimeout(onDismiss, AUTO_DISMISS_MS);
+    onDismissRef.current = onDismiss;
+  }, [onDismiss]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => onDismissRef.current(), AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
-  }, []); // onDismiss is stable per render; reset not desired
+  }, []);
 
   return (
     <motion.div

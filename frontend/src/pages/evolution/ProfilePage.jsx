@@ -2,7 +2,7 @@
  * 個人資料頁面
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { StatsCardGroup } from '../../components/games/evolution/stats';
 import AchievementToast from '../../components/common/AchievementToast';
@@ -277,15 +277,17 @@ function ProfilePage({
     }
   }, [newlyUnlocked]);
 
-  // Merge progress data into achievements using a Map for O(n) lookup
-  const progressMap = new Map(
-    achievementProgress?.map((p) => [p.id, p]) || []
-  );
-  const mergedAchievements = achievements?.map((ach) => {
-    const prog = progressMap.get(ach.id);
-    if (!prog) return ach;
-    return { ...ach, progress: prog.progress, current: prog.current, target: prog.target };
-  });
+  // Merge progress data into achievements using a memoised Map for O(n) lookup
+  const mergedAchievements = useMemo(() => {
+    const progressMap = new Map(
+      achievementProgress?.map((p) => [p.id, p]) || []
+    );
+    return achievements?.map((ach) => {
+      const prog = progressMap.get(ach.id);
+      if (!prog) return ach;
+      return { ...ach, progress: prog.progress, current: prog.current, target: prog.target };
+    });
+  }, [achievements, achievementProgress]);
 
   // Filter by category
   const filteredAchievements =
