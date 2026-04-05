@@ -21,7 +21,7 @@ function GameSelection() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
 
-  const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || user?.email?.split('@')[0] || '訪客');
+  const displayName = user?.isAnonymous ? t('common.guest') : (user?.displayName || user?.email?.split('@')[0] || t('common.guest'));
 
   /**
    * 處理遊戲選擇

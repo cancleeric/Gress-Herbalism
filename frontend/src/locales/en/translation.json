@@ -99,7 +99,9 @@
     "game_log": "Game Log",
     "phase_waiting": "Waiting",
     "phase_playing": "In Progress",
-    "phase_finished": "Finished"
+    "phase_finished": "Finished",
+    "no_players": "No players yet",
+    "no_history": "No history yet"
   },
   "herbalism": {
     "colors": {

@@ -74,7 +74,7 @@ function PlayerStatusList({ players, currentPlayerIndex, myPlayerId }) {
     return (
       <div className="player-status-list">
         <h4>{t('gameStatus.player_status')}</h4>
-        <p className="no-players">尚無玩家</p>
+        <p className="no-players">{t('gameStatus.no_players')}</p>
       </div>
     );
   }
@@ -242,7 +242,7 @@ function GameHistoryList({ history, players, maxItems = 10 }) {
     return (
       <div className="game-history-list">
         <h4>{t('gameStatus.game_log')}</h4>
-        <p className="no-history">尚無記錄</p>
+        <p className="no-history">{t('gameStatus.no_history')}</p>
       </div>
     );
   }

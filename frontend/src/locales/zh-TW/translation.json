@@ -99,7 +99,9 @@
     "game_log": "遊戲記錄",
     "phase_waiting": "等待中",
     "phase_playing": "進行中",
-    "phase_finished": "已結束"
+    "phase_finished": "已結束",
+    "no_players": "尚無玩家",
+    "no_history": "尚無記錄"
   },
   "herbalism": {
     "colors": {
