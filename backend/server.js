@@ -37,6 +37,9 @@ const presenceService = require('./services/presenceService');
 // 工單 0313-0316 - 演化論遊戲處理（新模組）
 const evolutionHandler = require('./evolutionGameHandler');
 
+// 遊戲回放服務
+const { replayService } = require('./services/evolution/replayService');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -77,6 +80,24 @@ app.get('/api/leaderboard', async (req, res) => {
 // 健康檢查
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ==================== 遊戲回放 API ====================
+
+// 取得演化論遊戲回放
+app.get('/api/evolution/replay/:gameId', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const replay = await replayService.getReplay(gameId);
+
+    if (!replay) {
+      return res.status(404).json({ success: false, message: '找不到回放資料' });
+    }
+
+    res.json({ success: true, data: replay });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // ==================== 工單 0060 API ====================

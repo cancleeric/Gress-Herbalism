@@ -9,6 +9,7 @@
 
 const gameLogic = require('./logic/evolution/gameLogic');
 const { GAME_PHASES } = require('../shared/constants/evolution');
+const { replayService, EVENT_TYPES } = require('./services/evolution/replayService');
 
 // ==================== 狀態管理 ====================
 
@@ -256,6 +257,12 @@ function startGame(socket, io, data) {
   room.gameState = gameLogic.startGame(room.gameState);
   room.phase = 'playing';
 
+  // 開始記錄回放
+  replayService.startRecording(roomId, {
+    config: room.gameState.config,
+    turnOrder: room.gameState.playerOrder,
+  });
+
   // 廣播遊戲開始
   io.to(roomId).emit('evo:gameStarted', { room });
   broadcastGameState(io, roomId);
@@ -286,6 +293,9 @@ function createCreature(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
+    // 記錄回放事件
+    const newCreature = Object.values(result.gameState.players[actualPlayerId]?.creatures || []).at(-1);
+    replayService.recordCreateCreature(roomId, actualPlayerId, newCreature?.id || '', cardId);
     io.to(roomId).emit('evo:creatureCreated', result.events);
     broadcastGameState(io, roomId);
   } else {
@@ -315,6 +325,10 @@ function addTrait(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
+    // 記錄回放事件：取得剛加上的性狀類型
+    const creature = Object.values(result.gameState.players).flatMap(p => p.creatures || []).find(c => c.id === creatureId);
+    const addedTrait = creature?.traits?.at(-1);
+    replayService.recordAddTrait(roomId, actualPlayerId, creatureId, addedTrait?.type || '', cardId, targetCreatureId || null);
     io.to(roomId).emit('evo:traitAdded', result.events);
     broadcastGameState(io, roomId);
   } else {
@@ -372,6 +386,8 @@ function feedCreature(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
+    // 記錄回放事件
+    replayService.recordFeeding(roomId, actualPlayerId, creatureId, 'food');
     io.to(roomId).emit('evo:creatureFed', result.events);
     if (result.chainEffects) {
       io.to(roomId).emit('evo:chainTriggered', result.chainEffects);
@@ -404,6 +420,9 @@ function attack(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
+    // 記錄攻擊事件（success 以是否有 pendingResponse 判斷是否成功發動）
+    const attackSuccess = !result.gameState.pendingResponse;
+    replayService.recordAttack(roomId, actualPlayerId, attackerId, playerId, defenderId, attackSuccess);
 
     if (room.gameState.pendingResponse) {
       // 需要防守方回應
@@ -515,6 +534,26 @@ function broadcastRoomList(io) {
 function broadcastGameState(io, roomId) {
   const room = evoRooms.get(roomId);
   if (!room || !room.gameState) return;
+
+  // 偵測遊戲結束，結束回放記錄並廣播結果
+  if (room.gameState.phase === GAME_PHASES.GAME_END && !room._replayEnded) {
+    room._replayEnded = true;
+    const result = gameLogic.getGameResult(room.gameState);
+    const finalState = {
+      winner: result?.winner?.id || null,
+      scores: result?.scores || {},
+      round: room.gameState.round,
+    };
+    replayService.endRecording(roomId, finalState).catch(err => {
+      console.error(`[演化論] 回放儲存失敗: ${roomId}`, err);
+    });
+    // 通知所有玩家遊戲結束及回放 ID
+    io.to(roomId).emit('evo:gameEnded', {
+      winner: finalState.winner,
+      scores: finalState.scores,
+      replayId: roomId,
+    });
+  }
 
   // 為每個玩家發送個人化狀態（隱藏其他玩家手牌）
   room.players.forEach(player => {

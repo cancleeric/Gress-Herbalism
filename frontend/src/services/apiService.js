@@ -70,10 +70,19 @@ export async function healthCheck() {
   return apiRequest('/api/health');
 }
 
+/**
+ * 取得演化論遊戲回放
+ * @param {string} gameId - 遊戲 ID
+ */
+export async function getEvolutionReplay(gameId) {
+  return apiRequest(`/api/evolution/replay/${gameId}`);
+}
+
 export default {
   syncPlayer,
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
   healthCheck,
+  getEvolutionReplay,
 };

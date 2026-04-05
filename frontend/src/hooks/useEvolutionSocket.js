@@ -21,6 +21,7 @@ import {
   onEvoPlayerJoined,
   onEvoPlayerLeft,
   onEvoGameStarted,
+  onEvoGameEnded,
 } from '../services/socketService';
 
 /**
@@ -243,6 +244,9 @@ export function useEvolutionGameEvents(handlers = {}) {
     }
     if (handlers.onGameStarted) {
       unsubscribers.push(onEvoGameStarted(handlers.onGameStarted));
+    }
+    if (handlers.onGameEnded) {
+      unsubscribers.push(onEvoGameEnded(handlers.onGameEnded));
     }
 
     return () => {
