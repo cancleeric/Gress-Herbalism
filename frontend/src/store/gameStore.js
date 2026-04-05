@@ -12,7 +12,6 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import {
   GAME_PHASE_WAITING,
-  GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
 } from '../shared/constants';
 

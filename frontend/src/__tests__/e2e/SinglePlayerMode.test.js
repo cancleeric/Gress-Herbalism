@@ -16,9 +16,9 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
-import { createStore } from 'redux';
-import GameRoom from '../../components/GameRoom/GameRoom';
-import AIPlayerSelector from '../../components/GameSetup/AIPlayerSelector';
+import { createStore, combineReducers } from 'redux';
+import GameRoom from '../../components/games/herbalism/GameRoom/GameRoom';
+import AIPlayerSelector from '../../components/games/herbalism/GameSetup/AIPlayerSelector';
 import LocalGameController from '../../controllers/herbalism/LocalGameController';
 import useAIPlayers from '../../hooks/herbalism/useAIPlayers';
 import { gameReducer, initialState as defaultInitialState } from '../../store/gameStore';
@@ -60,7 +60,7 @@ jest.mock('../../services/socketService', () => ({
   dismissGuessResult: jest.fn()
 }));
 
-jest.mock('../../controllers/LocalGameController');
+jest.mock('../../controllers/herbalism/LocalGameController');
 
 // 工單 0161：Mock useAuth
 jest.mock('../../firebase/AuthContext', () => ({
@@ -77,7 +77,7 @@ jest.mock('../../utils/localStorage', () => ({
 }));
 
 // Mock useAIPlayers hook
-jest.mock('../../hooks/useAIPlayers', () => ({
+jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: jest.fn()
 }));
@@ -86,12 +86,12 @@ jest.mock('../../hooks/useAIPlayers', () => ({
  * 創建測試用的 Redux store
  */
 const createTestStore = (initialState = {}) => {
-  const mergedInitialState = {
+  const mergedHerbalismState = {
     ...defaultInitialState,
     ...initialState
   };
-
-  return createStore(gameReducer, mergedInitialState);
+  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+  return createStore(rootReducer, { herbalism: mergedHerbalismState });
 };
 
 describe('單人模式 E2E 測試', () => {
@@ -312,7 +312,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 2000 });
 
       // 驗證遊戲狀態被初始化
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
     });
@@ -370,7 +370,7 @@ describe('單人模式 E2E 測試', () => {
 
       // 驗證遊戲狀態
       await waitFor(() => {
-        const state = store.getState();
+        const state = store.getState().herbalism;
         expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       });
     });
@@ -416,7 +416,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 100 });
 
       // 驗證遊戲狀態正確（使用 mock 設定的狀態）
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
     });
@@ -467,7 +467,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 100 });
 
       // 驗證遊戲狀態
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.players.length).toBeGreaterThanOrEqual(1);
     });
@@ -556,7 +556,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 100 });
 
       // 驗證初始遊戲階段正確
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
     });
 
@@ -597,7 +597,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 100 });
 
       // 驗證初始遊戲狀態正確
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
 
@@ -687,7 +687,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 100 });
 
       // 驗證遊戲狀態
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
     });
 
@@ -751,7 +751,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 100 });
 
       // 驗證遊戲狀態
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.players).toHaveLength(1);
     });
@@ -851,7 +851,7 @@ describe('單人模式 E2E 測試', () => {
       }, { timeout: 500 });
 
       // 驗證遊戲狀態初始化
-      const state = store.getState();
+      const state = store.getState().herbalism;
       expect(state.gamePhase).toBe(GAME_PHASE_PLAYING);
       expect(state.hiddenCards).toHaveLength(2);
       expect(state.players.length).toBeGreaterThanOrEqual(1);

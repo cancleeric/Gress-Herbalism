@@ -5,8 +5,8 @@
  * @description 顯示遊戲桌面，包含蓋牌區域和遊戲進行狀態
  */
 
-import React, { useMemo, useCallback } from 'react';
-import { useSelector, shallowEqual } from 'react-redux';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import {
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,

@@ -16,7 +16,7 @@ jest.mock('react-router-dom', () => ({
 
 // Mock apiService
 const mockGetLeaderboard = jest.fn();
-jest.mock('../../services/apiService', () => ({
+jest.mock('../../../services/apiService', () => ({
   getLeaderboard: (...args) => mockGetLeaderboard(...args),
 }));
 
@@ -145,7 +145,7 @@ describe('Leaderboard 組件', () => {
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => expect(screen.getByText(/返回大廳/)).toBeInTheDocument());
       fireEvent.click(screen.getByText(/返回大廳/));
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
   });
 

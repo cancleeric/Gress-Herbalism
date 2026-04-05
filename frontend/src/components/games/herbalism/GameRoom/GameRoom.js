@@ -132,10 +132,12 @@ function GameRoom() {
     aiThinking,
     currentAIId,
     isAIPlayer,
+    // eslint-disable-next-line no-unused-vars
     getAIInstance,
     handleAITurn,
     handleAIFollowGuess,
     handleGameEvent,
+    // eslint-disable-next-line no-unused-vars
     resetAIPlayers
   } = useAIPlayers({
     aiConfig: isLocalMode ? aiConfig : null,
@@ -741,6 +743,7 @@ function GameRoom() {
   /**
    * 打開問牌介面
    */
+  // eslint-disable-next-line no-unused-vars
   const handleOpenQuestion = () => {
     setShowQuestionCard(true);
     setIsGuessing(false);
@@ -878,6 +881,7 @@ function GameRoom() {
   /**
    * 處理開始下一局
    */
+  // eslint-disable-next-line no-unused-vars
   const handleStartNextRound = () => {
     if (isLocalMode && localControllerRef.current) {
       // 本地模式
@@ -895,6 +899,7 @@ function GameRoom() {
   /**
    * 工單 0172：處理關閉猜牌結果面板（猜錯但遊戲繼續時）
    */
+  // eslint-disable-next-line no-unused-vars
   const handleDismissGuessResult = () => {
     if (isLocalMode) {
       // 本地模式直接關閉
@@ -1447,6 +1452,7 @@ function GameRoom() {
               <div className="playing-inquiry-grid">
                 {colorCombinations.map((combo) => {
                   const isDisabledBySelf = combo.id === myLastColorCardId;
+                  // eslint-disable-next-line no-unused-vars
                   const marker = colorCardMarkers[combo.id];
                   const isDisabled = !canAct || onlyGuess || isDisabledBySelf;
 

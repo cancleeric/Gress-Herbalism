@@ -20,7 +20,7 @@ jest.mock('react-router-dom', () => ({
 const mockLoginWithGoogle = jest.fn();
 const mockLoginAsGuest = jest.fn();
 
-jest.mock('../../firebase', () => ({
+jest.mock('../../../firebase', () => ({
   useAuth: () => ({
     loginWithGoogle: mockLoginWithGoogle,
     loginAsGuest: mockLoginAsGuest,
