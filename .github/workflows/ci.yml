@@ -18,7 +18,7 @@ jobs:
   # Lint 檢查
   lint:
     name: Lint Check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
   # 單元測試
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
     strategy:
       matrix:
@@ -88,7 +88,7 @@ jobs:
   # E2E 測試
   e2e-tests:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: unit-tests
     continue-on-error: true
     steps:
@@ -157,7 +157,7 @@ jobs:
   # 建置檢查
   build:
     name: Build Check
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: lint
     steps:
       - name: Checkout
@@ -190,7 +190,7 @@ jobs:
   # Docker 建置
   docker-build:
     name: Docker Build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [unit-tests, build]
     continue-on-error: true
     steps:
