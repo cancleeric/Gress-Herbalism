@@ -99,7 +99,9 @@
     "game_log": "ゲームログ",
     "phase_waiting": "待機中",
     "phase_playing": "進行中",
-    "phase_finished": "終了"
+    "phase_finished": "終了",
+    "no_players": "プレイヤーなし",
+    "no_history": "履歴なし"
   },
   "herbalism": {
     "colors": {
