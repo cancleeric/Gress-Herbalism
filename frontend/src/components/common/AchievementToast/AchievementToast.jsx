@@ -13,9 +13,10 @@ const AUTO_DISMISS_MS = 4000;
 
 function AchievementToastItem({ achievement, onDismiss }) {
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const timer = setTimeout(onDismiss, AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
-  }, [onDismiss]);
+  }, []); // onDismiss is stable per render; reset not desired
 
   return (
     <motion.div

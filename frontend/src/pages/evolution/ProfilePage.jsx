@@ -37,10 +37,14 @@ function AchievementDetailModal({ achievement, onClose }) {
       try {
         await navigator.share({ title: `成就：${achievement.name}`, text });
       } catch {
-        // user cancelled or share failed — fall through to clipboard
+        // user cancelled or share failed
       }
     } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(text);
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        // clipboard access denied — silent fail
+      }
     }
   };
 
@@ -273,10 +277,12 @@ function ProfilePage({
     }
   }, [newlyUnlocked]);
 
-  // Merge progress data into achievements
+  // Merge progress data into achievements using a Map for O(n) lookup
+  const progressMap = new Map(
+    achievementProgress?.map((p) => [p.id, p]) || []
+  );
   const mergedAchievements = achievements?.map((ach) => {
-    if (!achievementProgress) return ach;
-    const prog = achievementProgress.find((p) => p.id === ach.id);
+    const prog = progressMap.get(ach.id);
     if (!prog) return ach;
     return { ...ach, progress: prog.progress, current: prog.current, target: prog.target };
   });
@@ -388,19 +394,16 @@ function ProfilePage({
         <CategoryFilter activeCategory={activeCategory} onChange={setActiveCategory} />
 
         <div className="profile-page__achievement-grid">
-          {displayedAchievements?.map((achievement) => {
-            const prog = achievementProgress?.find((p) => p.id === achievement.id);
-            return (
-              <AchievementBadge
-                key={achievement.id}
-                achievement={achievement}
-                onClick={() => setSelectedAchievement(achievement)}
-                progress={prog?.progress ?? achievement.progress}
-                current={prog?.current ?? achievement.current}
-                target={prog?.target ?? achievement.target}
-              />
-            );
-          })}
+          {displayedAchievements?.map((achievement) => (
+            <AchievementBadge
+              key={achievement.id}
+              achievement={achievement}
+              onClick={() => setSelectedAchievement(achievement)}
+              progress={achievement.progress}
+              current={achievement.current}
+              target={achievement.target}
+            />
+          ))}
         </div>
 
         {filteredAchievements && filteredAchievements.length > 6 && (
