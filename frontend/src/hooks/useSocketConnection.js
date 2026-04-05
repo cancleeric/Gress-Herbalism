@@ -83,7 +83,13 @@ export function useSocketConnection({
     isMounted.current = true;
 
     if (autoConnect) {
-      connect();
+      setStatus(SocketStatus.CONNECTING);
+      const s = initSocket();
+      if (cleanupRef.current) cleanupRef.current();
+      cleanupRef.current = onConnectionChange(handleConnectionChange);
+      if (s && s.connected) {
+        setStatus(SocketStatus.CONNECTED);
+      }
     } else {
       // 即使不自動連線，也要監聽現有連線狀態
       const s = getSocket();
@@ -104,7 +110,8 @@ export function useSocketConnection({
         disconnect();
       }
     };
-  }, [autoConnect, autoDisconnect, connect, handleConnectionChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect, autoDisconnect]);
 
   return {
     status,

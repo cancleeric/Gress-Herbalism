@@ -60,12 +60,18 @@ function LazyImage({
     };
   }, [src, rootMargin]);
 
+  const classes = [
+    'lazy-image',
+    loaded ? 'lazy-image--loaded' : 'lazy-image--loading',
+    className,
+  ].filter(Boolean).join(' ');
+
   return (
     <img
       ref={imgRef}
       src={currentSrc}
       alt={alt}
-      className={`lazy-image${loaded ? ' lazy-image--loaded' : ' lazy-image--loading'}${className ? ` ${className}` : ''}`}
+      className={classes}
       style={style}
       onLoad={() => setLoaded(true)}
       {...rest}

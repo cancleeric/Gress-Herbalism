@@ -2079,11 +2079,25 @@ server.listen(PORT, '0.0.0.0', () => {
 // ==================== Issue #7：記憶體監控 ====================
 
 /**
+ * 清理指定遊戲房間的所有相關狀態，防止記憶體洩漏。
+ * @param {string} gameId - 遊戲房間 ID
+ */
+function cleanupGameRoom(gameId) {
+  gameRooms.delete(gameId);
+  followGuessStates.delete(gameId);
+  postQuestionStates.delete(gameId);
+  guessResultConfirmations.delete(gameId);
+  pendingColorChoices.delete(gameId);
+  console.log(`[Memory] 已清理過期遊戲房間: ${gameId}`);
+}
+
+/**
  * 定期記錄記憶體使用量，協助偵測記憶體洩漏。
  * 若 heapUsed 持續成長超過閾值，輸出警告。
  */
 const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000; // 每 5 分鐘
 const MEMORY_WARN_MB = 512; // 超過 512 MB 時警告
+const STALE_ROOM_TTL = 10 * 60 * 1000; // 已結束房間保留 10 分鐘後清理
 
 let previousHeapUsed = 0;
 
@@ -2111,21 +2125,15 @@ setInterval(() => {
   }
   previousHeapUsed = heapUsedMB;
 
-  // 清理已結束且超過 10 分鐘的空遊戲房間（防禦性清理）
+  // 清理已結束且超過 TTL 的空遊戲房間（防禦性清理）
   const now = Date.now();
-  const STALE_ROOM_TTL = 10 * 60 * 1000; // 10 分鐘
   for (const [gameId, state] of gameRooms.entries()) {
     if (
       state.gamePhase === 'finished' &&
       state.finishedAt &&
       now - state.finishedAt > STALE_ROOM_TTL
     ) {
-      gameRooms.delete(gameId);
-      followGuessStates.delete(gameId);
-      postQuestionStates.delete(gameId);
-      guessResultConfirmations.delete(gameId);
-      pendingColorChoices.delete(gameId);
-      console.log(`[Memory] 已清理過期遊戲房間: ${gameId}`);
+      cleanupGameRoom(gameId);
     }
   }
 }, MEMORY_CHECK_INTERVAL);

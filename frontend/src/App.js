@@ -84,6 +84,17 @@ class ErrorBoundary extends React.Component {
 }
 
 /**
+ * 載入中顯示組件（工單 0117 / Issue #7 — Suspense fallback）
+ */
+function LoadingView() {
+  return (
+    <div className="app-loading">
+      <p>載入中...</p>
+    </div>
+  );
+}
+
+/**
  * 應用內容組件 - 包含路由邏輯
  * 工單 0119：新增 ConnectionStatus 組件
  * 工單 0276：新增遊戲選擇頁面和各遊戲大廳路由
@@ -176,17 +187,6 @@ function AppContent() {
         />
       </Routes>
       </Suspense>
-    </div>
-  );
-}
-
-/**
- * 載入中顯示組件（工單 0117）
- */
-function LoadingView() {
-  return (
-    <div className="app-loading">
-      <p>載入中...</p>
     </div>
   );
 }
