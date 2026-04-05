@@ -140,6 +140,7 @@ function PlayerHand({
    * 依顏色分組手牌
    * @returns {Object} 分組後的手牌
    */
+  // eslint-disable-next-line no-unused-vars
   const groupCardsByColor = () => {
     const groups = {};
     cards.forEach(card => {

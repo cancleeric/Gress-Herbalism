@@ -6,7 +6,7 @@
  * 工單 0074, 0127（重新設計）
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
   QUESTION_TYPE_ONE_EACH,
@@ -60,7 +60,7 @@ function QuestionFlow({
   );
 
   // 選擇的顏色
-  const colors = selectedCard?.colors || [];
+  const colors = useMemo(() => selectedCard?.colors || [], [selectedCard]);
 
   /**
    * 檢查要牌方是否擁有選定顏色的牌

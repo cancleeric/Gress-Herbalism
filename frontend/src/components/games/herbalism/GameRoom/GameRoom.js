@@ -132,27 +132,19 @@ function GameRoom() {
     aiThinking,
     currentAIId,
     isAIPlayer,
+    // eslint-disable-next-line no-unused-vars
     getAIInstance,
     handleAITurn,
     handleAIFollowGuess,
     handleGameEvent,
+    // eslint-disable-next-line no-unused-vars
     resetAIPlayers
   } = useAIPlayers({
     aiConfig: isLocalMode ? aiConfig : null,
     gameState,
     onAIAction: useCallback((action, aiInstance) => {
       if (localControllerRef.current) {
-        // Normalize action: add playerId and fix field names
-        const normalizedAction = { ...action, playerId: aiInstance.id };
-        if (action.type === 'guess') {
-          normalizedAction.guessedColors = action.colors || [];
-          delete normalizedAction.colors;
-        }
-        if (action.type === 'question') {
-          normalizedAction.giveColor = action.giveColor || action.colors?.[0];
-          normalizedAction.getColor = action.getColor || action.colors?.[1];
-        }
-        localControllerRef.current.handleAction(normalizedAction);
+        localControllerRef.current.handleAction(action);
       }
     }, [])
   });
@@ -389,28 +381,6 @@ function GameRoom() {
 
     return () => clearTimeout(timerId);
   }, [isLocalMode, gameState.gamePhase, followGuessData, gameState.players, isAIPlayer, handleAIFollowGuess]);
-
-  /**
-   * 自動結束 AI 回合（本地模式問牌後階段）
-   * AI 問牌後進入 postQuestion 階段，需自動呼叫 endTurn
-   */
-  useEffect(() => {
-    if (!isLocalMode || !localControllerRef.current) return;
-    if (gameState.gamePhase !== GAME_PHASE_POST_QUESTION) return;
-
-    const currentPlayer = getCurrentPlayer();
-    if (!currentPlayer || !isAIPlayer(currentPlayer)) return;
-
-    const timerId = setTimeout(() => {
-      console.log('[GameRoom] AI 自動結束回合:', currentPlayer.name);
-      localControllerRef.current.endTurn({
-        playerId: currentPlayer.id,
-        prediction: null
-      });
-    }, 1000);
-
-    return () => clearTimeout(timerId);
-  }, [isLocalMode, gameState.gamePhase, gameState.currentPlayerIndex, getCurrentPlayer, isAIPlayer]);
 
   /**
    * 工單 0150：遊戲不存在時的倒數計時與自動導航
@@ -773,6 +743,7 @@ function GameRoom() {
   /**
    * 打開問牌介面
    */
+  // eslint-disable-next-line no-unused-vars
   const handleOpenQuestion = () => {
     setShowQuestionCard(true);
     setIsGuessing(false);
@@ -910,6 +881,7 @@ function GameRoom() {
   /**
    * 處理開始下一局
    */
+  // eslint-disable-next-line no-unused-vars
   const handleStartNextRound = () => {
     if (isLocalMode && localControllerRef.current) {
       // 本地模式
@@ -927,6 +899,7 @@ function GameRoom() {
   /**
    * 工單 0172：處理關閉猜牌結果面板（猜錯但遊戲繼續時）
    */
+  // eslint-disable-next-line no-unused-vars
   const handleDismissGuessResult = () => {
     if (isLocalMode) {
       // 本地模式直接關閉
@@ -1479,6 +1452,7 @@ function GameRoom() {
               <div className="playing-inquiry-grid">
                 {colorCombinations.map((combo) => {
                   const isDisabledBySelf = combo.id === myLastColorCardId;
+                  // eslint-disable-next-line no-unused-vars
                   const marker = colorCardMarkers[combo.id];
                   const isDisabled = !canAct || onlyGuess || isDisabledBySelf;
 

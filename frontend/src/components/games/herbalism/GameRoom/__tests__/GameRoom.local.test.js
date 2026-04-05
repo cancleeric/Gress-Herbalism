@@ -117,10 +117,8 @@ jest.mock('../../../../../utils/common/localStorage', () => ({
 
 describe('GameRoom 本地模式', () => {
   test('應該在本地模式下初始化', () => {
-    const store = createStore(
-      combineReducers({ herbalism: gameReducer }),
-      { herbalism: initialState }
-    );
+    const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+    const store = createStore(rootReducer, { herbalism: initialState });
 
     const { container } = render(
       <Provider store={store}>

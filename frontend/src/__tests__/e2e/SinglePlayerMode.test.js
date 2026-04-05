@@ -27,8 +27,7 @@ import {
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED,
   GAME_PHASE_FOLLOW_GUESSING,
-  ACTION_TYPE_QUESTION,
-  ACTION_TYPE_GUESS,
+  ACTION_TYPE,
   COLORS
 } from '../../shared/constants';
 
@@ -71,7 +70,7 @@ jest.mock('../../firebase/AuthContext', () => ({
 }));
 
 // Mock localStorage
-jest.mock('../../utils/common/localStorage', () => ({
+jest.mock('../../utils/localStorage', () => ({
   clearCurrentRoom: jest.fn(),
   saveCurrentRoom: jest.fn(),
   getCurrentRoom: jest.fn()
@@ -87,15 +86,12 @@ jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
  * 創建測試用的 Redux store
  */
 const createTestStore = (initialState = {}) => {
-  const mergedInitialState = {
+  const mergedHerbalismState = {
     ...defaultInitialState,
     ...initialState
   };
-
-  return createStore(
-    combineReducers({ herbalism: gameReducer }),
-    { herbalism: mergedInitialState }
-  );
+  const rootReducer = combineReducers({ herbalism: gameReducer, evolution: (s = {}) => s });
+  return createStore(rootReducer, { herbalism: mergedHerbalismState });
 };
 
 describe('單人模式 E2E 測試', () => {
@@ -654,7 +650,7 @@ describe('單人模式 E2E 測試', () => {
       // Mock AI 執行猜錯動作
       mockHandleAITurn.mockImplementation(async () => {
         await mockLocalController.processPlayerAction({
-          type: ACTION_TYPE_GUESS,
+          type: ACTION_TYPE.GUESS,
           playerId: 'ai-1',
           guessedColors: [COLORS.GREEN, COLORS.YELLOW] // 猜錯
         });

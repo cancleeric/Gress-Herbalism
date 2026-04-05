@@ -7,7 +7,6 @@
  */
 
 import {
-  COLORS,
   CARD_COUNTS,
   ALL_COLORS,
   MIN_PLAYERS,
