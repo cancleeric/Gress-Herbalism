@@ -320,8 +320,10 @@ export const AI_THINK_DELAY = {
   [AI_DIFFICULTY.EASY]: 1000,
   [AI_DIFFICULTY.MEDIUM]: 1500,
   [AI_DIFFICULTY.HARD]: 2000,
+  /** 一般動作的最小/最大延遲範圍（隨機）*/
   MIN: 1000,
   MAX: 3000,
+  /** 跟猜決策的最小/最大延遲範圍（較短）*/
   FOLLOW_GUESS_MIN: 500,
   FOLLOW_GUESS_MAX: 1500
 };
