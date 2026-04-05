@@ -17,25 +17,25 @@ function Leaderboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const loadLeaderboard = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const result = await getLeaderboard(sortBy, 20);
+        if (result.success) {
+          setLeaderboard(result.data);
+        }
+      } catch (err) {
+        setError('載入排行榜失敗');
+        console.error('載入排行榜失敗:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadLeaderboard();
   }, [sortBy]);
-
-  const loadLeaderboard = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const result = await getLeaderboard(sortBy, 20);
-      if (result.success) {
-        setLeaderboard(result.data);
-      }
-    } catch (err) {
-      setError('載入排行榜失敗');
-      console.error('載入排行榜失敗:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）

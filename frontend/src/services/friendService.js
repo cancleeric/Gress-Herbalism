@@ -131,11 +131,7 @@ export async function respondToGameInvitation(invitationId, firebaseUid, action)
   });
 }
 
-export async function getRecentOpponents(firebaseUid, limit = 10) {
-  return apiRequest(`/api/players/${firebaseUid}/recent-opponents?limit=${limit}`);
-}
-
-export default {
+const friendService = {
   searchPlayers,
   getFriends,
   getFriendRequests,
@@ -146,5 +142,6 @@ export default {
   sendGameInvitation,
   getGameInvitations,
   respondToGameInvitation,
-  getRecentOpponents,
 };
+
+export default friendService;
