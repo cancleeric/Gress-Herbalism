@@ -30,9 +30,6 @@ CREATE POLICY "Allow public read herbalism_replays" ON herbalism_game_replays
 CREATE POLICY "Allow public insert herbalism_replays" ON herbalism_game_replays
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Allow public upsert herbalism_replays" ON herbalism_game_replays
-  FOR UPDATE USING (true);
-
 -- ==================== 完成 ====================
 -- 執行完成後，可以用以下 SQL 驗證
 -- SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'herbalism_game_replays';

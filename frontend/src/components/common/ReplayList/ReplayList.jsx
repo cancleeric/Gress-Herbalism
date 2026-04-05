@@ -54,8 +54,8 @@ function ReplayList({ onSelectReplay, currentPlayerName }) {
     setIsLoading(true);
     setError(null);
     try {
-      const resp = await getHerbalismReplays({ limit: 30, playerName: playerNameFilter });
-      setReplays(resp.data || []);
+      const replayData = await getHerbalismReplays({ limit: 30, playerName: playerNameFilter });
+      setReplays(replayData.data || []);
     } catch (err) {
       setError('無法載入回放列表，請稍後再試。');
     } finally {

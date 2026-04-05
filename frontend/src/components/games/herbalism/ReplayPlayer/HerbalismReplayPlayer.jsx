@@ -147,6 +147,9 @@ function HerbalismReplayPlayer({ replay, onClose }) {
   const [speed, setSpeed] = useState(1);
   const timerRef = useRef(null);
   const logEndRef = useRef(null);
+  // Keep speed accessible inside callbacks without stale closure issues
+  const speedRef = useRef(speed);
+  useEffect(() => { speedRef.current = speed; }, [speed]);
 
   const visibleEvents = events.slice(0, currentIndex + 1);
 
@@ -169,19 +172,19 @@ function HerbalismReplayPlayer({ replay, onClose }) {
       return;
     }
     setCurrentIndex(nextIdx);
-    timerRef.current = setTimeout(() => advanceIndex(nextIdx), BASE_DELAY_MS / speed);
-  }, [totalEvents, speed]);
+    timerRef.current = setTimeout(() => advanceIndex(nextIdx), BASE_DELAY_MS / speedRef.current);
+  }, [totalEvents]);
 
   const play = useCallback(() => {
     if (playbackState === PLAYBACK_STATES.FINISHED) {
       setCurrentIndex(-1);
       setPlaybackState(PLAYBACK_STATES.PLAYING);
-      timerRef.current = setTimeout(() => advanceIndex(-1), BASE_DELAY_MS / speed);
+      timerRef.current = setTimeout(() => advanceIndex(-1), BASE_DELAY_MS / speedRef.current);
     } else {
       setPlaybackState(PLAYBACK_STATES.PLAYING);
-      timerRef.current = setTimeout(() => advanceIndex(currentIndex), BASE_DELAY_MS / speed);
+      timerRef.current = setTimeout(() => advanceIndex(currentIndex), BASE_DELAY_MS / speedRef.current);
     }
-  }, [playbackState, currentIndex, advanceIndex, speed]);
+  }, [playbackState, currentIndex, advanceIndex]);
 
   const pause = useCallback(() => {
     clearTimer();

@@ -46,6 +46,10 @@ class HerbalismReplayService {
    * @param {Object} initialState - 初始遊戲狀態
    */
   startRecording(gameId, initialState) {
+    if (this.eventBuffers.has(gameId)) {
+      console.warn(`[HerbalismReplay] 覆蓋現有緩衝區: ${gameId}`);
+    }
+
     const playerNames = (initialState.players || []).map(p => ({
       id: p.id,
       name: p.name,
@@ -364,7 +368,7 @@ class HerbalismReplayService {
 
     return events.map((event, index) => ({
       t: event.type,
-      d: index === 0 ? 0 : event.timestamp - baseTs,
+      d: index === 0 ? 0 : (event.timestamp || baseTs) - baseTs,
       ...event.data,
     }));
   }
