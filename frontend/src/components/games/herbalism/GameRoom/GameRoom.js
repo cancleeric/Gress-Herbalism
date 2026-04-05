@@ -145,7 +145,8 @@ function GameRoom() {
         // Normalize action: add playerId and fix field names
         const normalizedAction = { ...action, playerId: aiInstance.id };
         if (action.type === 'guess') {
-          normalizedAction.guessedColors = action.colors;
+          normalizedAction.guessedColors = action.colors || [];
+          delete normalizedAction.colors;
         }
         if (action.type === 'question') {
           normalizedAction.giveColor = action.giveColor || action.colors?.[0];
