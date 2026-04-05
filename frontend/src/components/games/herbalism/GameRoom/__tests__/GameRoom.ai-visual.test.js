@@ -12,14 +12,14 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { createStore } from 'redux';
+import { createStore, combineReducers } from 'redux';
 import GameRoom from '../GameRoom';
 import { gameReducer, initialState } from '../../../../../store/gameStore';
 
 // Mock useAIPlayers to simulate AI thinking state
 const mockUseAIPlayers = jest.fn();
 
-jest.mock('../../../hooks/useAIPlayers', () => ({
+jest.mock('../../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: (config) => mockUseAIPlayers(config)
 }));
@@ -41,7 +41,7 @@ const mockGetState = jest.fn().mockReturnValue({
 });
 const mockGetCurrentPlayer = jest.fn().mockReturnValue({ id: 'ai-1', name: 'AI-Easy', isAI: true });
 
-jest.mock('../../../controllers/LocalGameController', () => {
+jest.mock('../../../../../controllers/herbalism/LocalGameController', () => {
   return class MockLocalGameController {
     constructor() {
       this.startGame = mockStartGame;
@@ -56,7 +56,7 @@ jest.mock('../../../controllers/LocalGameController', () => {
 });
 
 // Mock socketService
-jest.mock('../../../services/socketService', () => ({
+jest.mock('../../../../../services/socketService', () => ({
   onGameState: jest.fn(() => jest.fn()),
   onError: jest.fn(() => jest.fn()),
   onHiddenCardsRevealed: jest.fn(() => jest.fn()),
@@ -89,14 +89,14 @@ jest.mock('../../../services/socketService', () => ({
 }));
 
 // 工單 0161：Mock useAuth
-jest.mock('../../../firebase/AuthContext', () => ({
+jest.mock('../../../../../firebase/AuthContext', () => ({
   useAuth: () => ({
     user: { displayName: null, isAnonymous: true, photoURL: null }
   })
 }));
 
 // Mock localStorage
-jest.mock('../../../utils/localStorage', () => ({
+jest.mock('../../../../../utils/common/localStorage', () => ({
   clearCurrentRoom: jest.fn(),
   saveCurrentRoom: jest.fn(),
   getCurrentRoom: jest.fn()
@@ -144,7 +144,10 @@ describe('GameRoom AI 視覺回饋', () => {
       currentPlayerId: 'human-1',
       hiddenCards: [{ color: 'green' }, { color: 'yellow' }]
     };
-    testStore = createStore(gameReducer, stateWithAIPlayers);
+    testStore = createStore(
+      combineReducers({ herbalism: gameReducer }),
+      { herbalism: stateWithAIPlayers }
+    );
 
     // Default mock implementation
     mockUseAIPlayers.mockReturnValue({

@@ -12,7 +12,7 @@ import {
 } from './selectors';
 
 describe('Redux Selectors', () => {
-  const mockState = {
+  const mockHerbalismState = {
     gameId: 'test-game',
     players: [
       { id: '1', name: 'P1', isActive: true },
@@ -30,6 +30,7 @@ describe('Redux Selectors', () => {
     currentPlayerId: '1',
     maxPlayers: 4
   };
+  const mockState = { herbalism: mockHerbalismState };
 
   beforeEach(() => {
     // 重置記憶化 selector 的快取
@@ -60,7 +61,7 @@ describe('Redux Selectors', () => {
 
     test('不同輸入應返回不同引用', () => {
       const result1 = selectGameRoomState(mockState);
-      const newState = { ...mockState, gamePhase: 'finished' };
+      const newState = { herbalism: { ...mockHerbalismState, gamePhase: 'finished' } };
       const result2 = selectGameRoomState(newState);
       expect(result1).not.toBe(result2);
       expect(result2.gamePhase).toBe('finished');
@@ -75,17 +76,17 @@ describe('Redux Selectors', () => {
     });
 
     test('players 為空時應返回 null', () => {
-      const result = selectCurrentPlayer({ ...mockState, players: [] });
+      const result = selectCurrentPlayer({ herbalism: { ...mockHerbalismState, players: [] } });
       expect(result).toBeNull();
     });
 
     test('currentPlayerIndex 超出範圍時應返回 null', () => {
-      const result = selectCurrentPlayer({ ...mockState, currentPlayerIndex: 99 });
+      const result = selectCurrentPlayer({ herbalism: { ...mockHerbalismState, currentPlayerIndex: 99 } });
       expect(result).toBeNull();
     });
 
     test('players 為 undefined 時應返回 null', () => {
-      const result = selectCurrentPlayer({ ...mockState, players: undefined });
+      const result = selectCurrentPlayer({ herbalism: { ...mockHerbalismState, players: undefined } });
       expect(result).toBeNull();
     });
   });
@@ -98,12 +99,12 @@ describe('Redux Selectors', () => {
     });
 
     test('players 為空時應返回空陣列', () => {
-      const result = selectActivePlayers({ ...mockState, players: [] });
+      const result = selectActivePlayers({ herbalism: { ...mockHerbalismState, players: [] } });
       expect(result).toEqual([]);
     });
 
     test('players 為 undefined 時應返回空陣列', () => {
-      const result = selectActivePlayers({ ...mockState, players: undefined });
+      const result = selectActivePlayers({ herbalism: { ...mockHerbalismState, players: undefined } });
       expect(result).toEqual([]);
     });
   });
@@ -116,7 +117,7 @@ describe('Redux Selectors', () => {
     });
 
     test('gameHistory 為 undefined 時應返回空陣列', () => {
-      const result = selectGameHistory({ ...mockState, gameHistory: undefined });
+      const result = selectGameHistory({ herbalism: { ...mockHerbalismState, gameHistory: undefined } });
       expect(result).toEqual([]);
     });
   });
@@ -128,7 +129,7 @@ describe('Redux Selectors', () => {
     });
 
     test('有勝利者時應返回勝利者', () => {
-      const result = selectWinner({ ...mockState, winner: 'player-1' });
+      const result = selectWinner({ herbalism: { ...mockHerbalismState, winner: 'player-1' } });
       expect(result).toBe('player-1');
     });
   });

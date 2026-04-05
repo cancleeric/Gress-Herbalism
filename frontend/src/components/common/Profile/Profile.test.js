@@ -18,7 +18,7 @@ jest.mock('react-router-dom', () => ({
 const mockLogout = jest.fn();
 let mockUser = { uid: 'test-uid', displayName: '測試用戶', email: 'test@example.com', photoURL: null };
 
-jest.mock('../../firebase', () => ({
+jest.mock('../../../firebase', () => ({
   useAuth: () => ({
     user: mockUser,
     logout: mockLogout,
@@ -28,7 +28,7 @@ jest.mock('../../firebase', () => ({
 // Mock apiService
 const mockGetPlayerStats = jest.fn();
 const mockGetPlayerHistory = jest.fn();
-jest.mock('../../services/apiService', () => ({
+jest.mock('../../../services/apiService', () => ({
   getPlayerStats: (...args) => mockGetPlayerStats(...args),
   getPlayerHistory: (...args) => mockGetPlayerHistory(...args),
 }));

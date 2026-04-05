@@ -3,7 +3,7 @@
  */
 
 import BaseStrategy, { ACTION_TYPE, validateStrategy } from '../strategies/BaseStrategy';
-import { AI_DIFFICULTY, ALL_COLORS } from '../../shared/constants';
+import { AI_DIFFICULTY, ALL_COLORS } from '../../../shared/constants';
 
 // 建立具體實現類別用於測試
 class ConcreteStrategy extends BaseStrategy {
