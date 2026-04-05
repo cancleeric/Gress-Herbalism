@@ -384,6 +384,9 @@ describe('AI 行為測試與驗證', () => {
 
       initializeAI(ai, gameState);
 
+      // Mock thinkDelay to avoid real delays (30 iterations * up to 1500ms would exceed timeout)
+      ai.thinkDelay = () => Promise.resolve();
+
       const guessedColors = [COLORS.RED, COLORS.BLUE];
 
       // 測試 30 次以驗證機率分布（減少次數以避免超時）
