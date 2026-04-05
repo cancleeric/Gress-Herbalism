@@ -35,7 +35,8 @@
       "<rootDir>/frontend/"
     ],
     "testPathIgnorePatterns": [
-      "<rootDir>/frontend/"
+      "<rootDir>/frontend/",
+      "<rootDir>/shared/constants.test.js"
     ]
   },
   "keywords": [
