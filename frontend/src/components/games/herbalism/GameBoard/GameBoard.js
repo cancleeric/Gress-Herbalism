@@ -5,7 +5,7 @@
  * @description 顯示遊戲桌面，包含蓋牌區域和遊戲進行狀態
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
 import {
   GAME_PHASE_WAITING,
@@ -231,4 +231,5 @@ function GameBoard({
   );
 }
 
-export default GameBoard;
+// Issue #7：React.memo 避免遊戲桌面在無關狀態更新時重渲染
+export default memo(GameBoard);

@@ -4,19 +4,29 @@
  * @module App
  * 工單 0059 - 加入 Firebase 登入
  * 工單 0060 - 加入個人資料和排行榜
+ * Issue #7  - React.lazy code splitting 效能優化
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
-import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
-import { GameRoom } from './components/games/herbalism';
-import { EvolutionRoom } from './components/games/evolution';
-import { ReplayPage } from './components/games/evolution/replay';
+import { ConnectionStatus } from './components/common';
 import './styles/App.css';
+
+// Issue #7：React.lazy 延遲載入大型路由組件以縮短初始 bundle
+const Login = lazy(() => import('./components/common/Login'));
+const Lobby = lazy(() => import('./components/common/Lobby'));
+const Profile = lazy(() => import('./components/common/Profile'));
+const Leaderboard = lazy(() => import('./components/common/Leaderboard'));
+const Friends = lazy(() => import('./components/common/Friends'));
+const GameSelection = lazy(() => import('./components/common/GameSelection'));
+const EvolutionLobbyPage = lazy(() => import('./components/common/EvolutionLobbyPage'));
+const GameRoom = lazy(() => import('./components/games/herbalism/GameRoom'));
+const EvolutionRoom = lazy(() => import('./components/games/evolution/EvolutionRoom'));
+const ReplayPage = lazy(() => import('./components/games/evolution/replay/ReplayPage'));
 
 /**
  * 受保護路由組件 - 需要登入才能訪問
@@ -82,6 +92,8 @@ function AppContent() {
   return (
     <div className="app">
       <ConnectionStatus />
+      {/* Issue #7：Suspense 包裹所有延遲載入路由 */}
+      <Suspense fallback={<LoadingView />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         {/* 工單 0276：遊戲選擇頁面 */}
@@ -163,6 +175,7 @@ function AppContent() {
           }
         />
       </Routes>
+      </Suspense>
     </div>
   );
 }

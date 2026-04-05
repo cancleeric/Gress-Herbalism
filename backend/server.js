@@ -1814,6 +1814,7 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
     if (winner) {
       gameState.winner = winner;
       gameState.gamePhase = 'finished';
+      gameState.finishedAt = Date.now(); // Issue #7：記錄結束時間用於記憶體清理
 
       // 保存遊戲記錄到 Supabase
       const winnerPlayer = gameState.players.find(p => p.id === winner);
@@ -2074,3 +2075,57 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`伺服器運行在 port ${PORT}`);
   console.log(`區域網路玩家請連線到: http://<你的IP>:${PORT}`);
 });
+
+// ==================== Issue #7：記憶體監控 ====================
+
+/**
+ * 定期記錄記憶體使用量，協助偵測記憶體洩漏。
+ * 若 heapUsed 持續成長超過閾值，輸出警告。
+ */
+const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000; // 每 5 分鐘
+const MEMORY_WARN_MB = 512; // 超過 512 MB 時警告
+
+let previousHeapUsed = 0;
+
+setInterval(() => {
+  const mem = process.memoryUsage();
+  const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
+  const heapTotalMB = Math.round(mem.heapTotal / 1024 / 1024);
+  const rssMB = Math.round(mem.rss / 1024 / 1024);
+
+  console.log(
+    `[Memory] heapUsed=${heapUsedMB}MB heapTotal=${heapTotalMB}MB rss=${rssMB}MB` +
+    ` | gameRooms=${gameRooms.size} playerSockets=${playerSockets.size}` +
+    ` | disconnectTimeouts=${disconnectTimeouts.size}`
+  );
+
+  if (heapUsedMB > MEMORY_WARN_MB) {
+    console.warn(`[Memory] ⚠️ 堆積記憶體超過 ${MEMORY_WARN_MB}MB (${heapUsedMB}MB)，請檢查是否有記憶體洩漏`);
+  }
+
+  if (previousHeapUsed > 0) {
+    const growthMB = heapUsedMB - previousHeapUsed;
+    if (growthMB > 50) {
+      console.warn(`[Memory] ⚠️ 記憶體在本週期成長 ${growthMB}MB，可能有洩漏風險`);
+    }
+  }
+  previousHeapUsed = heapUsedMB;
+
+  // 清理已結束且超過 10 分鐘的空遊戲房間（防禦性清理）
+  const now = Date.now();
+  const STALE_ROOM_TTL = 10 * 60 * 1000; // 10 分鐘
+  for (const [gameId, state] of gameRooms.entries()) {
+    if (
+      state.gamePhase === 'finished' &&
+      state.finishedAt &&
+      now - state.finishedAt > STALE_ROOM_TTL
+    ) {
+      gameRooms.delete(gameId);
+      followGuessStates.delete(gameId);
+      postQuestionStates.delete(gameId);
+      guessResultConfirmations.delete(gameId);
+      pendingColorChoices.delete(gameId);
+      console.log(`[Memory] 已清理過期遊戲房間: ${gameId}`);
+    }
+  }
+}, MEMORY_CHECK_INTERVAL);

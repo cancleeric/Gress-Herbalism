@@ -5,7 +5,7 @@
  * @description 顯示遊戲狀態，包含當前玩家、玩家狀態、遊戲階段和歷史記錄
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
@@ -391,5 +391,6 @@ GameStatusContainer.propTypes = {
   showHistory: PropTypes.bool
 };
 
-export default GameStatus;
+// Issue #7：React.memo 避免遊戲狀態組件不必要的重渲染
+export default memo(GameStatus);
 export { GameStatusContainer };

@@ -5,7 +5,7 @@
  * @description 顯示玩家自己的手牌
  */
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import PropTypes from 'prop-types';
 import './PlayerHand.css';
 
@@ -224,4 +224,5 @@ PlayerHand.propTypes = {
   title: PropTypes.string
 };
 
-export default PlayerHand;
+// Issue #7：React.memo 避免手牌在無關狀態更新時重渲染
+export default memo(PlayerHand);
