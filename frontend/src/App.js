@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
+import { ReplayPage } from './components/games/evolution/replay';
 import './styles/App.css';
 
 /**
@@ -116,6 +117,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <EvolutionRoom />
+            </ProtectedRoute>
+          }
+        />
+        {/* 演化論回放路由 */}
+        <Route
+          path="/evolution/replay/:gameId"
+          element={
+            <ProtectedRoute>
+              <ReplayPage />
             </ProtectedRoute>
           }
         />

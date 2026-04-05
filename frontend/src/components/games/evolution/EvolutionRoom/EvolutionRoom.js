@@ -41,7 +41,8 @@ import {
   onEvoAttackPending,
   onEvoAttackResolved,
   onEvoTraitUsed,
-  onEvoError
+  onEvoError,
+  onEvoGameEnded,
 } from '../../../../services/socketService';
 import './EvolutionRoom.css';
 
@@ -74,6 +75,7 @@ function EvolutionRoom() {
   const [room, setRoom] = useState(initialRoomData || null);
   const [isJoined, setIsJoined] = useState(!!initialRoomData);
   const [error, setError] = useState(null);
+  const [replayId, setReplayId] = useState(null);
   // 工單 0284：生成穩定的玩家 ID
   const [myPlayerId] = useState(() => `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
 
@@ -214,6 +216,14 @@ function EvolutionRoom() {
       setTimeout(() => setError(null), 3000);
     });
 
+    // 監聽遊戲結束（含回放 ID）
+    const unsubGameEnded = onEvoGameEnded((data) => {
+      console.log('[EvolutionRoom] 遊戲結束，回放 ID:', data.replayId);
+      if (data.replayId) {
+        setReplayId(data.replayId);
+      }
+    });
+
     return () => {
       unsubJoinedRoom();
       unsubGameStarted();
@@ -227,6 +237,7 @@ function EvolutionRoom() {
       unsubAttackResolved();
       unsubTraitUsed();
       unsubError();
+      unsubGameEnded();
     };
   }, [dispatch]);
 
@@ -552,7 +563,14 @@ function EvolutionRoom() {
                   : `獲勝者: ${players[evolutionState.gameResult.winnerId]?.name}`}
               </div>
             )}
-            <button onClick={() => navigate('/lobby/evolution')}>返回大廳</button>
+            <div className="game-result-actions">
+              {replayId && (
+                <button onClick={() => navigate(`/evolution/replay/${replayId}`)}>
+                  查看回放
+                </button>
+              )}
+              <button onClick={() => navigate('/lobby/evolution')}>返回大廳</button>
+            </div>
           </div>
         </div>
       )}

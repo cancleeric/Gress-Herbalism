@@ -771,6 +771,13 @@ export function onEvoError(callback) {
   return safeOn('evo:error', callback);
 }
 
+/**
+ * 監聽遊戲結束（包含回放 ID）
+ */
+export function onEvoGameEnded(callback) {
+  return safeOn('evo:gameEnded', callback);
+}
+
 // ==================== 工單 0272 結束 ====================
 
 // ==================== 工單 0379：連線診斷功能 ====================

@@ -81,6 +81,12 @@ export const GameOverModal = ({ isOpen = true, onClose, onPlayAgain }) => {
     }
   }, [gameId, navigate]);
 
+  const handleViewReplay = useCallback(() => {
+    if (gameId) {
+      navigate(`/evolution/replay/${gameId}`);
+    }
+  }, [gameId, navigate]);
+
   const handleClose = useCallback(() => {
     if (onClose) {
       onClose();
@@ -147,6 +153,15 @@ export const GameOverModal = ({ isOpen = true, onClose, onPlayAgain }) => {
             >
               再來一局
             </button>
+            {gameId && (
+              <button
+                className="game-over-modal__btn game-over-modal__btn--secondary"
+                onClick={handleViewReplay}
+                data-testid="btn-view-replay"
+              >
+                查看回放
+              </button>
+            )}
             <button
               className="game-over-modal__btn game-over-modal__btn--secondary"
               onClick={handleViewStats}
