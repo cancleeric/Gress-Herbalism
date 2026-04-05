@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import {
   GAME_PHASE_WAITING,
@@ -18,15 +19,6 @@ import {
 import './GameStatus.css';
 
 /**
- * 遊戲階段對應的中文名稱
- */
-const PHASE_NAMES = {
-  [GAME_PHASE_WAITING]: '等待中',
-  [GAME_PHASE_PLAYING]: '進行中',
-  [GAME_PHASE_FINISHED]: '已結束'
-};
-
-/**
  * 當前玩家顯示組件
  *
  * @param {Object} props - 組件屬性
@@ -35,22 +27,24 @@ const PHASE_NAMES = {
  * @returns {JSX.Element} 當前玩家顯示
  */
 function CurrentPlayerDisplay({ currentPlayer, isYourTurn }) {
+  const { t } = useTranslation();
+
   if (!currentPlayer) {
     return (
       <div className="current-player-display">
-        <h4>當前回合</h4>
-        <p className="no-player">等待玩家加入...</p>
+        <h4>{t('gameStatus.current_round')}</h4>
+        <p className="no-player">{t('gameStatus.waiting_players')}</p>
       </div>
     );
   }
 
   return (
     <div className={`current-player-display ${isYourTurn ? 'your-turn' : ''}`}>
-      <h4>當前回合</h4>
+      <h4>{t('gameStatus.current_round')}</h4>
       <div className="current-player-name">
         <span className="player-indicator"></span>
         <span>{currentPlayer.name}</span>
-        {isYourTurn && <span className="your-turn-badge">你的回合</span>}
+        {isYourTurn && <span className="your-turn-badge">{t('gameStatus.your_turn')}</span>}
       </div>
     </div>
   );
@@ -74,10 +68,12 @@ CurrentPlayerDisplay.propTypes = {
  * @returns {JSX.Element} 玩家狀態列表
  */
 function PlayerStatusList({ players, currentPlayerIndex, myPlayerId }) {
+  const { t } = useTranslation();
+
   if (!players || players.length === 0) {
     return (
       <div className="player-status-list">
-        <h4>玩家狀態</h4>
+        <h4>{t('gameStatus.player_status')}</h4>
         <p className="no-players">尚無玩家</p>
       </div>
     );
@@ -85,7 +81,7 @@ function PlayerStatusList({ players, currentPlayerIndex, myPlayerId }) {
 
   return (
     <div className="player-status-list">
-      <h4>玩家狀態</h4>
+      <h4>{t('gameStatus.player_status')}</h4>
       <ul className="players-list">
         {players.map((player, index) => (
           <li
@@ -130,6 +126,12 @@ PlayerStatusList.propTypes = {
  * @returns {JSX.Element} 遊戲階段顯示
  */
 function GamePhaseDisplay({ gamePhase, winner, players }) {
+  const { t } = useTranslation();
+  const PHASE_NAMES = {
+    [GAME_PHASE_WAITING]: t('gameStatus.phase_waiting'),
+    [GAME_PHASE_PLAYING]: t('gameStatus.phase_playing'),
+    [GAME_PHASE_FINISHED]: t('gameStatus.phase_finished')
+  };
   const phaseName = PHASE_NAMES[gamePhase] || gamePhase;
   const winnerPlayer = winner ? players?.find(p => p.id === winner) : null;
 
@@ -234,10 +236,12 @@ function formatHistoryEntry(entry, players) {
  * @returns {JSX.Element} 遊戲歷史記錄
  */
 function GameHistoryList({ history, players, maxItems = 10 }) {
+  const { t } = useTranslation();
+
   if (!history || history.length === 0) {
     return (
       <div className="game-history-list">
-        <h4>遊戲記錄</h4>
+        <h4>{t('gameStatus.game_log')}</h4>
         <p className="no-history">尚無記錄</p>
       </div>
     );
@@ -248,7 +252,7 @@ function GameHistoryList({ history, players, maxItems = 10 }) {
 
   return (
     <div className="game-history-list">
-      <h4>遊戲記錄 ({history.length})</h4>
+      <h4>{t('gameStatus.game_log')} ({history.length})</h4>
       <ul className="history-list">
         {recentHistory.map((entry, index) => (
           <li

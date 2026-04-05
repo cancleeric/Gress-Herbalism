@@ -6,7 +6,9 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../firebase';
+import LanguageSwitcher from '../LanguageSwitcher';
 import './Login.css';
 
 /**
@@ -22,6 +24,7 @@ function isConfigurationError(errorCode) {
 
 function Login() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { loginWithGoogle, loginAsGuest, isLoading } = useAuth();
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
@@ -37,7 +40,7 @@ function Login() {
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.error || '登入失敗，請稍後再試');
+      setError(result.error || t('login.login_failed'));
       setErrorCode(result.errorCode || '');
     }
 
@@ -54,7 +57,7 @@ function Login() {
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.error || '登入失敗，請稍後再試');
+      setError(result.error || t('login.login_failed'));
       setErrorCode(result.errorCode || '');
     }
 
@@ -64,7 +67,7 @@ function Login() {
   if (isLoading) {
     return (
       <div className="login-page">
-        <div className="loading-text">載入中...</div>
+        <div className="loading-text">{t('common.loading')}</div>
       </div>
     );
   }
@@ -85,18 +88,19 @@ function Login() {
             <span className="nav-title">Herbalism</span>
           </div>
           <nav className="nav-links">
-            <a href="/">規則書</a>
-            <a href="/">卡牌</a>
-            <a href="/">關於</a>
+            <a href="#">{t('login.rules')}</a>
+            <a href="#">{t('login.cards')}</a>
+            <a href="#">{t('login.about')}</a>
+            <LanguageSwitcher />
           </nav>
         </header>
 
         <main className="login-main">
           {/* Branding */}
           <div className="branding">
-            <h1 className="brand-title">本草 Herbalism</h1>
+            <h1 className="brand-title">{t('login.title')}</h1>
             <div className="brand-subtitle-wrapper">
-              <h2 className="brand-subtitle">3-4人線上推理桌遊</h2>
+              <h2 className="brand-subtitle">{t('login.subtitle')}</h2>
             </div>
           </div>
 
@@ -114,7 +118,7 @@ function Login() {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
                 </svg>
-                <span>使用 Google 帳號登入</span>
+                <span>{t('login.google_login')}</span>
               </button>
 
               <button
@@ -123,7 +127,7 @@ function Login() {
                 disabled={isProcessing}
               >
                 <span className="guest-icon">👤</span>
-                <span>訪客登入</span>
+                <span>{t('login.guest_login')}</span>
               </button>
             </div>
 
@@ -132,12 +136,12 @@ function Login() {
                 <p className="error-message">{error}</p>
                 {isConfigurationError(errorCode) && (
                   <div className="config-help">
-                    <p className="config-help-title">管理員設定步驟：</p>
+                    <p className="config-help-title">{t('login.admin_steps_title')}</p>
                     <ol>
-                      <li>前往 <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer">Firebase Console</a></li>
-                      <li>選擇專案 → Authentication → Sign-in method</li>
-                      <li>啟用「Google」和「匿名」登入方式</li>
-                      <li>確認 Authorized domains 包含 localhost 和生產環境網域</li>
+                      <li>{t('login.admin_step_1')} <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer">Firebase Console</a></li>
+                      <li>{t('login.admin_step_2')}</li>
+                      <li>{t('login.admin_step_3')}</li>
+                      <li>{t('login.admin_step_4')}</li>
                     </ol>
                   </div>
                 )}
@@ -145,38 +149,38 @@ function Login() {
             )}
 
             <div className="divider">
-              <span>新朋友？</span>
+              <span>{t('login.new_user')}</span>
             </div>
 
             <button className="btn-link">
-              創建帳號
+              {t('login.create_account')}
             </button>
           </div>
 
           {/* Game Introduction */}
           <div className="game-intro">
             <p className="intro-quote">
-              "在古老的本草知識中，找出神秘藥方。融合推理、策略與智慧的桌遊。"
+              &ldquo;{t('login.quote')}&rdquo;
             </p>
             <div className="intro-features">
               <div className="feature">
                 <span className="feature-icon">👥</span>
-                <span>3-4 位玩家</span>
+                <span>{t('login.feature_players')}</span>
               </div>
               <div className="feature">
                 <span className="feature-icon">⏱️</span>
-                <span>20-30 分鐘</span>
+                <span>{t('login.feature_time')}</span>
               </div>
               <div className="feature">
                 <span className="feature-icon">🧠</span>
-                <span>邏輯推理</span>
+                <span>{t('login.feature_logic')}</span>
               </div>
             </div>
           </div>
         </main>
 
         <footer className="login-footer">
-          <p>© 2024 本草 Herbalism Online. All Rights Reserved.</p>
+          <p>{t('login.footer')}</p>
         </footer>
       </div>
     </div>

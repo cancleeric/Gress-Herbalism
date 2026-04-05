@@ -1,0 +1,149 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "refresh": "刷新",
+    "back": "返回",
+    "logout": "登出",
+    "profile": "个人资料",
+    "friends": "好友",
+    "leaderboard": "排行榜",
+    "settings": "设置",
+    "language": "语言",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "minutes": "分钟",
+    "players": "位玩家",
+    "guest": "访客"
+  },
+  "app": {
+    "loading": "加载中...",
+    "error_title": "发生错误",
+    "error_message": "应用程序遇到问题，请刷新页面。",
+    "refresh": "刷新"
+  },
+  "login": {
+    "title": "本草 Herbalism",
+    "subtitle": "3-4人在线推理桌游",
+    "google_login": "使用 Google 账号登录",
+    "guest_login": "访客登录",
+    "rules": "规则书",
+    "cards": "卡牌",
+    "about": "关于",
+    "new_user": "新朋友？",
+    "create_account": "创建账号",
+    "login_failed": "登录失败，请稍后再试",
+    "admin_steps_title": "管理员设置步骤：",
+    "admin_step_1": "前往 Firebase Console",
+    "admin_step_2": "选择项目 → Authentication → Sign-in method",
+    "admin_step_3": "启用「Google」和「匿名」登录方式",
+    "admin_step_4": "确认 Authorized domains 包含 localhost 和生产环境域名",
+    "quote": "在古老的本草知识中，找出神秘药方。融合推理、策略与智慧的桌游。",
+    "feature_players": "3-4 位玩家",
+    "feature_time": "20-30 分钟",
+    "feature_logic": "逻辑推理",
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "gameSelection": {
+    "title": "选择游戏",
+    "subtitle": "请选择您想要游玩的游戏",
+    "herbalism_title": "本草",
+    "herbalism_desc": "3-4 人推理桌游\n通过问牌和推理猜测盖牌颜色",
+    "herbalism_players": "3-4 人",
+    "herbalism_time": "15-30 分钟",
+    "evolution_title": "演化论",
+    "evolution_desc": "2-4 人策略卡牌游戏\n创造生物并让它们在竞争中存活",
+    "evolution_players": "2-4 人",
+    "evolution_time": "30-60 分钟"
+  },
+  "lobby": {
+    "title": "本草",
+    "rooms": "房间列表",
+    "profile": "个人资料",
+    "friends": "好友",
+    "leaderboard": "排行榜",
+    "reconnecting": "正在尝试重新连接...",
+    "nickname_label": "游戏昵称",
+    "welcome_back": "欢迎回来，{{name}}！",
+    "disconnected": "已断线",
+    "create_room": "创建房间",
+    "join_room": "加入房间",
+    "no_rooms": "目前没有房间",
+    "room_name": "房间名称",
+    "room_id": "ID",
+    "room_players": "玩家",
+    "room_status": "状态",
+    "room_action": "操作",
+    "single_player": "单人游戏",
+    "ai_game": "与 AI 对战"
+  },
+  "profile": {
+    "loading": "加载中...",
+    "guest_name": "访客",
+    "guest_email": "访客账号",
+    "anonymous_hint": "登录 Google 账号以解锁完整功能",
+    "benefit_records": "保存游戏记录与统计数据",
+    "benefit_stats": "查看个人胜率与最高分",
+    "benefit_friends": "使用好友功能",
+    "benefit_leaderboard": "登上排行榜",
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "gameStatus": {
+    "current_round": "当前回合",
+    "waiting_players": "等待玩家加入...",
+    "your_turn": "你的回合",
+    "player_status": "玩家状态",
+    "history": "历史记录",
+    "game_log": "游戏记录",
+    "phase_waiting": "等待中",
+    "phase_playing": "进行中",
+    "phase_finished": "已结束"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "红",
+      "yellow": "黄",
+      "green": "绿",
+      "blue": "蓝"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "等待开始",
+      "evolution": "演化阶段",
+      "food_supply": "食物供给阶段",
+      "feeding": "进食阶段",
+      "extinction": "灭绝阶段"
+    },
+    "traits": {
+      "carnivore": "肉食",
+      "scavenger": "腐食",
+      "sharpVision": "锐目",
+      "camouflage": "伪装",
+      "burrowing": "穴居",
+      "poisonous": "毒液",
+      "aquatic": "水生",
+      "agile": "敏捷",
+      "massive": "巨化",
+      "tailLoss": "断尾",
+      "mimicry": "拟态",
+      "fatTissue": "脂肪组织",
+      "hibernating": "冬眠",
+      "parasite": "寄生虫",
+      "foraging": "掠夺",
+      "communication": "沟通",
+      "cooperation": "合作",
+      "symbiosis": "共生",
+      "trampling": "践踏"
+    }
+  },
+  "languageSwitcher": {
+    "label": "语言",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  }
+}

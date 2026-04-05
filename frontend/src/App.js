@@ -10,6 +10,8 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
@@ -176,17 +178,19 @@ function LoadingView() {
  */
 function App() {
   return (
-    <Provider store={store}>
-      <PersistGate loading={<LoadingView />} persistor={persistor}>
-        <ErrorBoundary>
-          <AuthProvider>
-            <Router>
-              <AppContent />
-            </Router>
-          </AuthProvider>
-        </ErrorBoundary>
-      </PersistGate>
-    </Provider>
+    <I18nextProvider i18n={i18n}>
+      <Provider store={store}>
+        <PersistGate loading={<LoadingView />} persistor={persistor}>
+          <ErrorBoundary>
+            <AuthProvider>
+              <Router>
+                <AppContent />
+              </Router>
+            </AuthProvider>
+          </ErrorBoundary>
+        </PersistGate>
+      </Provider>
+    </I18nextProvider>
   );
 }
 
