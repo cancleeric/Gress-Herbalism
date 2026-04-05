@@ -1,0 +1,149 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "refresh": "Refresh",
+    "back": "Back",
+    "logout": "Logout",
+    "profile": "Profile",
+    "friends": "Friends",
+    "leaderboard": "Leaderboard",
+    "settings": "Settings",
+    "language": "Language",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "minutes": "min",
+    "players": "players",
+    "guest": "Guest"
+  },
+  "app": {
+    "loading": "Loading...",
+    "error_title": "An Error Occurred",
+    "error_message": "The application encountered a problem. Please refresh the page.",
+    "refresh": "Refresh"
+  },
+  "login": {
+    "title": "Herbalism",
+    "subtitle": "3-4 Player Online Deduction Game",
+    "google_login": "Sign in with Google",
+    "guest_login": "Guest Login",
+    "rules": "Rules",
+    "cards": "Cards",
+    "about": "About",
+    "new_user": "New here?",
+    "create_account": "Create Account",
+    "login_failed": "Login failed. Please try again later.",
+    "admin_steps_title": "Admin Setup Steps:",
+    "admin_step_1": "Go to Firebase Console",
+    "admin_step_2": "Select project → Authentication → Sign-in method",
+    "admin_step_3": "Enable Google and Anonymous login methods",
+    "admin_step_4": "Confirm Authorized domains includes localhost and production domain",
+    "quote": "Discover the secret herbal formula through ancient knowledge. A board game of deduction, strategy and wisdom.",
+    "feature_players": "3-4 Players",
+    "feature_time": "20-30 min",
+    "feature_logic": "Logic Deduction",
+    "footer": "© 2024 Herbalism Online. All Rights Reserved."
+  },
+  "gameSelection": {
+    "title": "Select Game",
+    "subtitle": "Choose the game you want to play",
+    "herbalism_title": "Herbalism",
+    "herbalism_desc": "3-4 Player Deduction Game\nDiscover hidden card colors through questions and deduction",
+    "herbalism_players": "3-4 Players",
+    "herbalism_time": "15-30 min",
+    "evolution_title": "Evolution",
+    "evolution_desc": "2-4 Player Strategy Card Game\nCreate creatures and help them survive in competition",
+    "evolution_players": "2-4 Players",
+    "evolution_time": "30-60 min"
+  },
+  "lobby": {
+    "title": "Herbalism",
+    "rooms": "Rooms",
+    "profile": "Profile",
+    "friends": "Friends",
+    "leaderboard": "Leaderboard",
+    "reconnecting": "Attempting to reconnect...",
+    "nickname_label": "Game Nickname",
+    "welcome_back": "Welcome back, {{name}}!",
+    "disconnected": "Disconnected",
+    "create_room": "Create Room",
+    "join_room": "Join Room",
+    "no_rooms": "No rooms available",
+    "room_name": "Room Name",
+    "room_id": "ID",
+    "room_players": "Players",
+    "room_status": "Status",
+    "room_action": "Action",
+    "single_player": "Single Player",
+    "ai_game": "Play vs AI"
+  },
+  "profile": {
+    "loading": "Loading...",
+    "guest_name": "Guest",
+    "guest_email": "Guest Account",
+    "anonymous_hint": "Sign in with Google to unlock full features",
+    "benefit_records": "Save game records and statistics",
+    "benefit_stats": "View your win rate and high scores",
+    "benefit_friends": "Use the friends feature",
+    "benefit_leaderboard": "Appear on the leaderboard",
+    "footer": "© 2024 Herbalism Online. All Rights Reserved."
+  },
+  "gameStatus": {
+    "current_round": "Current Turn",
+    "waiting_players": "Waiting for players...",
+    "your_turn": "Your Turn",
+    "player_status": "Player Status",
+    "history": "History",
+    "game_log": "Game Log",
+    "phase_waiting": "Waiting",
+    "phase_playing": "In Progress",
+    "phase_finished": "Finished"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "Red",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "Waiting",
+      "evolution": "Evolution Phase",
+      "food_supply": "Food Supply Phase",
+      "feeding": "Feeding Phase",
+      "extinction": "Extinction Phase"
+    },
+    "traits": {
+      "carnivore": "Carnivore",
+      "scavenger": "Scavenger",
+      "sharpVision": "Sharp Vision",
+      "camouflage": "Camouflage",
+      "burrowing": "Burrowing",
+      "poisonous": "Poisonous",
+      "aquatic": "Aquatic",
+      "agile": "Agile",
+      "massive": "Massive",
+      "tailLoss": "Tail Loss",
+      "mimicry": "Mimicry",
+      "fatTissue": "Fat Tissue",
+      "hibernating": "Hibernating",
+      "parasite": "Parasite",
+      "foraging": "Foraging",
+      "communication": "Communication",
+      "cooperation": "Cooperation",
+      "symbiosis": "Symbiosis",
+      "trampling": "Trampling"
+    }
+  },
+  "languageSwitcher": {
+    "label": "Language",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  }
+}

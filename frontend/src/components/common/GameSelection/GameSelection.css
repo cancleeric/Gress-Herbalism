@@ -52,6 +52,12 @@
   color: #333;
 }
 
+.gs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .gs-logout-btn {
   padding: 8px 16px;
   border: 1px solid #999;

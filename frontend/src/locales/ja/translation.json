@@ -1,0 +1,149 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "refresh": "更新",
+    "back": "戻る",
+    "logout": "ログアウト",
+    "profile": "プロフィール",
+    "friends": "フレンド",
+    "leaderboard": "ランキング",
+    "settings": "設定",
+    "language": "言語",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる",
+    "minutes": "分",
+    "players": "人",
+    "guest": "ゲスト"
+  },
+  "app": {
+    "loading": "読み込み中...",
+    "error_title": "エラーが発生しました",
+    "error_message": "アプリケーションに問題が発生しました。ページを更新してください。",
+    "refresh": "更新"
+  },
+  "login": {
+    "title": "本草 Herbalism",
+    "subtitle": "3〜4人のオンライン推理ボードゲーム",
+    "google_login": "Google アカウントでログイン",
+    "guest_login": "ゲストログイン",
+    "rules": "ルール",
+    "cards": "カード",
+    "about": "について",
+    "new_user": "初めての方？",
+    "create_account": "アカウント作成",
+    "login_failed": "ログインに失敗しました。後でもう一度お試しください。",
+    "admin_steps_title": "管理者設定手順：",
+    "admin_step_1": "Firebase Console に移動",
+    "admin_step_2": "プロジェクト → Authentication → Sign-in method を選択",
+    "admin_step_3": "Google と匿名ログインを有効化",
+    "admin_step_4": "Authorized domains に localhost と本番ドメインが含まれていることを確認",
+    "quote": "古代の本草知識の中から、神秘の薬方を見つけ出せ。推理・戦略・知恵を融合したボードゲーム。",
+    "feature_players": "3〜4人",
+    "feature_time": "20〜30分",
+    "feature_logic": "論理推理",
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "gameSelection": {
+    "title": "ゲーム選択",
+    "subtitle": "遊びたいゲームを選んでください",
+    "herbalism_title": "本草",
+    "herbalism_desc": "3〜4人推理ボードゲーム\n質問と推理で伏せカードの色を当てよう",
+    "herbalism_players": "3〜4人",
+    "herbalism_time": "15〜30分",
+    "evolution_title": "進化論",
+    "evolution_desc": "2〜4人ストラテジーカードゲーム\n生き物を作り、競争で生き残ろう",
+    "evolution_players": "2〜4人",
+    "evolution_time": "30〜60分"
+  },
+  "lobby": {
+    "title": "本草",
+    "rooms": "ルーム一覧",
+    "profile": "プロフィール",
+    "friends": "フレンド",
+    "leaderboard": "ランキング",
+    "reconnecting": "再接続中...",
+    "nickname_label": "ゲームニックネーム",
+    "welcome_back": "おかえり、{{name}}！",
+    "disconnected": "切断中",
+    "create_room": "ルーム作成",
+    "join_room": "ルームに参加",
+    "no_rooms": "現在ルームがありません",
+    "room_name": "ルーム名",
+    "room_id": "ID",
+    "room_players": "プレイヤー",
+    "room_status": "状態",
+    "room_action": "操作",
+    "single_player": "シングルプレイ",
+    "ai_game": "AI と対戦"
+  },
+  "profile": {
+    "loading": "読み込み中...",
+    "guest_name": "ゲスト",
+    "guest_email": "ゲストアカウント",
+    "anonymous_hint": "Google アカウントでログインして全機能を解放",
+    "benefit_records": "ゲーム記録と統計を保存",
+    "benefit_stats": "勝率と最高スコアを確認",
+    "benefit_friends": "フレンド機能を使用",
+    "benefit_leaderboard": "ランキングに掲載",
+    "footer": "© 2024 本草 Herbalism Online. All Rights Reserved."
+  },
+  "gameStatus": {
+    "current_round": "現在のターン",
+    "waiting_players": "プレイヤーを待っています...",
+    "your_turn": "あなたのターン",
+    "player_status": "プレイヤー状態",
+    "history": "履歴",
+    "game_log": "ゲームログ",
+    "phase_waiting": "待機中",
+    "phase_playing": "進行中",
+    "phase_finished": "終了"
+  },
+  "herbalism": {
+    "colors": {
+      "red": "赤",
+      "yellow": "黄",
+      "green": "緑",
+      "blue": "青"
+    }
+  },
+  "evolution": {
+    "phases": {
+      "waiting": "待機",
+      "evolution": "進化フェーズ",
+      "food_supply": "食料供給フェーズ",
+      "feeding": "摂食フェーズ",
+      "extinction": "絶滅フェーズ"
+    },
+    "traits": {
+      "carnivore": "肉食",
+      "scavenger": "腐食",
+      "sharpVision": "鋭眼",
+      "camouflage": "擬態",
+      "burrowing": "穴居",
+      "poisonous": "毒",
+      "aquatic": "水棲",
+      "agile": "俊敏",
+      "massive": "巨大化",
+      "tailLoss": "尾切り",
+      "mimicry": "擬似",
+      "fatTissue": "脂肪組織",
+      "hibernating": "冬眠",
+      "parasite": "寄生",
+      "foraging": "略奪",
+      "communication": "コミュニケーション",
+      "cooperation": "協力",
+      "symbiosis": "共生",
+      "trampling": "踏みつけ"
+    }
+  },
+  "languageSwitcher": {
+    "label": "言語",
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    "en": "English",
+    "ja": "日本語"
+  }
+}
