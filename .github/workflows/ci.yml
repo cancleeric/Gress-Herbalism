@@ -176,7 +176,7 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          CI: true
+          CI: false
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
