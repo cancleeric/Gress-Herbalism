@@ -447,6 +447,76 @@ setInterval(() => {
 }, 30000);
 
 /**
+ * Issue #7：清理過期的遊戲房間，防止記憶體洩漏
+ *
+ * 清理條件：
+ * - 等待中且超過 10 分鐘無活動的房間
+ * - 遊戲中且所有玩家都已離線超過 5 分鐘的房間
+ */
+function cleanupStaleGameRooms() {
+  const now = Date.now();
+  const WAITING_TIMEOUT = 10 * 60 * 1000;  // 10 分鐘
+  const GAME_TIMEOUT = 5 * 60 * 1000;       // 5 分鐘
+
+  let cleaned = 0;
+  gameRooms.forEach((state, gameId) => {
+    const lastActivity = state.lastActivityAt || state.createdAt || 0;
+
+    if (state.gamePhase === 'waiting') {
+      if (now - lastActivity > WAITING_TIMEOUT) {
+        cleanupGameRoom(gameId);
+        cleaned++;
+      }
+    } else if (state.gamePhase !== 'ended') {
+      // 遊戲中：檢查是否所有玩家都斷線
+      const allOffline = state.players?.every(p => !p.socketId || !io.sockets.sockets.get(p.socketId));
+      if (allOffline && now - lastActivity > GAME_TIMEOUT) {
+        cleanupGameRoom(gameId);
+        cleaned++;
+      }
+    }
+  });
+
+  if (cleaned > 0) {
+    console.log(`[記憶體] 已清理 ${cleaned} 個過期房間，剩餘房間數: ${gameRooms.size}`);
+  }
+}
+
+/**
+ * Issue #7：清理單一遊戲房間及所有相關狀態，防止記憶體洩漏
+ *
+ * @param {string} gameId - 房間 ID
+ */
+function cleanupGameRoom(gameId) {
+  gameRooms.delete(gameId);
+  pendingColorChoices.delete(gameId);
+  followGuessStates.delete(gameId);
+  postQuestionStates.delete(gameId);
+  guessResultConfirmations.delete(gameId);
+
+  // 清除該房間的斷線計時器
+  disconnectTimeouts.forEach((timeoutId, key) => {
+    if (key.startsWith(gameId)) {
+      clearTimeout(timeoutId);
+      disconnectTimeouts.delete(key);
+    }
+  });
+}
+
+// Issue #7：每 5 分鐘執行一次過期房間清理
+setInterval(cleanupStaleGameRooms, 5 * 60 * 1000);
+
+// Issue #7：每 10 分鐘輸出一次記憶體使用量，協助監控記憶體洩漏
+setInterval(() => {
+  const used = process.memoryUsage();
+  console.log(
+    `[記憶體] RSS: ${Math.round(used.rss / 1024 / 1024)}MB` +
+    ` | Heap: ${Math.round(used.heapUsed / 1024 / 1024)}/${Math.round(used.heapTotal / 1024 / 1024)}MB` +
+    ` | 房間數: ${gameRooms.size}`
+  );
+}, 10 * 60 * 1000);
+
+/**
  * 廣播房間列表給所有人
  */
 function broadcastRoomList() {
@@ -474,6 +544,8 @@ function broadcastGameState(gameId) {
   const gameState = gameRooms.get(gameId);
   // 工單 0148：確保房間存在且有玩家時才廣播
   if (gameState && gameState.players && gameState.players.length > 0) {
+    // Issue #7：更新最後活動時間
+    gameState.lastActivityAt = Date.now();
     io.to(gameId).emit('gameState', gameState);
   }
 }
@@ -541,7 +613,10 @@ io.on('connection', (socket) => {
       password: password || null,
       isPrivate: !!password,
       // 預測相關（工單 0071）
-      predictions: []
+      predictions: [],
+      // Issue #7：記錄最後活動時間，用於過期房間清理
+      createdAt: Date.now(),
+      lastActivityAt: Date.now()
     };
 
     gameRooms.set(gameId, roomState);
@@ -1247,8 +1322,8 @@ function handlePlayerLeave(socket, gameId, playerId) {
     gameState.players.splice(playerIndex, 1);
 
     if (gameState.players.length === 0) {
-      // 房間空了，刪除房間
-      gameRooms.delete(gameId);
+      // 房間空了，刪除房間（含所有相關狀態）
+      cleanupGameRoom(gameId);
       // 房間已刪除，只更新房間列表
       broadcastRoomList();
       return;
@@ -1341,9 +1416,9 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
           currentState.players.splice(currentPlayerIndex, 1);
 
           if (currentState.players.length === 0) {
-            // 房間空了，刪除房間
+            // 房間空了，刪除房間（含所有相關狀態）
             console.log(`房間 ${gameId} 已空，刪除房間`);
-            gameRooms.delete(gameId);
+            cleanupGameRoom(gameId);
             broadcastRoomList();
           } else {
             // 如果移除的是房主，轉移房主
