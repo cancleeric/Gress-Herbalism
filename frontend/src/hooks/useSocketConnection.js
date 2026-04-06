@@ -6,7 +6,7 @@
  * @module hooks/useSocketConnection
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSocket, initSocket, onConnectionChange, ConnectionState } from '../services/socketService';
 
 /**
@@ -20,7 +20,6 @@ import { getSocket, initSocket, onConnectionChange, ConnectionState } from '../s
  */
 export function useSocketConnection({ autoConnect = true } = {}) {
   const [connectionState, setConnectionState] = useState(ConnectionState.DISCONNECTED);
-  const cleanupRef = useRef(null);
 
   useEffect(() => {
     if (!autoConnect) return;
@@ -41,15 +40,9 @@ export function useSocketConnection({ autoConnect = true } = {}) {
       setConnectionState(ConnectionState.CONNECTED);
     }
 
-    // 儲存清理函式
-    cleanupRef.current = unsubscribe;
-
     return () => {
       // Issue #7：清理監聽器，防止記憶體洩漏
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
+      unsubscribe();
     };
   }, [autoConnect]);
 

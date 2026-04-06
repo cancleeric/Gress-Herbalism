@@ -69,7 +69,7 @@ function LazyImage({
   return (
     <img
       ref={imgRef}
-      src={isInView ? src : placeholder}
+      src={isInView ? src : (placeholder || undefined)}
       alt={alt}
       className={`lazy-image${isLoaded ? ' lazy-image--loaded' : ''}${className ? ` ${className}` : ''}`}
       style={{ opacity: isLoaded ? 1 : 0.3, transition: 'opacity 0.3s', ...style }}

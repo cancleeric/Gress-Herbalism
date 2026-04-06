@@ -446,31 +446,33 @@ setInterval(() => {
   });
 }, 30000);
 
+// Issue #7：過期房間清理閾值（可透過環境變數調整）
+const STALE_WAITING_ROOM_TIMEOUT = parseInt(process.env.STALE_WAITING_ROOM_TIMEOUT, 10) || 10 * 60 * 1000;  // 10 分鐘
+const STALE_GAME_ROOM_TIMEOUT = parseInt(process.env.STALE_GAME_ROOM_TIMEOUT, 10) || 5 * 60 * 1000;         // 5 分鐘
+
 /**
  * Issue #7：清理過期的遊戲房間，防止記憶體洩漏
  *
  * 清理條件：
- * - 等待中且超過 10 分鐘無活動的房間
- * - 遊戲中且所有玩家都已離線超過 5 分鐘的房間
+ * - 等待中且超過 STALE_WAITING_ROOM_TIMEOUT 無活動的房間
+ * - 遊戲中且所有玩家都已離線超過 STALE_GAME_ROOM_TIMEOUT 的房間
  */
 function cleanupStaleGameRooms() {
   const now = Date.now();
-  const WAITING_TIMEOUT = 10 * 60 * 1000;  // 10 分鐘
-  const GAME_TIMEOUT = 5 * 60 * 1000;       // 5 分鐘
 
   let cleaned = 0;
   gameRooms.forEach((state, gameId) => {
     const lastActivity = state.lastActivityAt || state.createdAt || 0;
 
     if (state.gamePhase === 'waiting') {
-      if (now - lastActivity > WAITING_TIMEOUT) {
+      if (now - lastActivity > STALE_WAITING_ROOM_TIMEOUT) {
         cleanupGameRoom(gameId);
         cleaned++;
       }
     } else if (state.gamePhase !== 'ended') {
       // 遊戲中：檢查是否所有玩家都斷線
       const allOffline = state.players?.every(p => !p.socketId || !io.sockets.sockets.get(p.socketId));
-      if (allOffline && now - lastActivity > GAME_TIMEOUT) {
+      if (allOffline && now - lastActivity > STALE_GAME_ROOM_TIMEOUT) {
         cleanupGameRoom(gameId);
         cleaned++;
       }
