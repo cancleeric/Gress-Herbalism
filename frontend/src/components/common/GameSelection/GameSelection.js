@@ -4,11 +4,15 @@
  * @module GameSelection
  * @description 登入後的遊戲選擇頁面
  * 工單 0276
+ * 工單 0055 - 新增互動式教學系統
  */
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../firebase/AuthContext';
+import Tutorial from '../Tutorial';
+import useTutorial from '../Tutorial/useTutorial';
+import herbalismSteps from '../Tutorial/herbalismSteps';
 import './GameSelection.css';
 
 /**
@@ -19,6 +23,13 @@ function GameSelection() {
   const { user, logout } = useAuth();
 
   const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || user?.email?.split('@')[0] || '訪客');
+
+  // 教學系統（工單 0055）：用於手動重啟教學
+  const { restartTutorial } = useTutorial({
+    tutorialId: 'herbalism',
+    steps: herbalismSteps,
+    autoStart: false,
+  });
 
   /**
    * 處理遊戲選擇
@@ -45,6 +56,9 @@ function GameSelection() {
 
   return (
     <div className="game-selection">
+      {/* 互動式教學覆蓋層（首次訪問自動啟動）*/}
+      <Tutorial tutorialId="herbalism" steps={herbalismSteps} autoStart />
+
       {/* 頂部欄 */}
       <header className="gs-header">
         <div className="gs-user-info">
@@ -62,9 +76,19 @@ function GameSelection() {
           )}
           <span className="gs-username">{displayName}</span>
         </div>
-        <button className="gs-logout-btn" onClick={handleLogout}>
-          登出
-        </button>
+        <div className="gs-header-actions">
+          <button
+            className="gs-tutorial-btn"
+            onClick={restartTutorial}
+            aria-label="重新觀看新手教學"
+            title="新手教學"
+          >
+            ❓ 新手教學
+          </button>
+          <button className="gs-logout-btn" onClick={handleLogout}>
+            登出
+          </button>
+        </div>
       </header>
 
       {/* 主內容 */}

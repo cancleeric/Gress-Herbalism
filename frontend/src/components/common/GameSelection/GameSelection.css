@@ -52,6 +52,32 @@
   color: #333;
 }
 
+/* 頂部右側按鈕群組 */
+.gs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 新手教學按鈕（工單 0055） */
+.gs-tutorial-btn {
+  padding: 8px 14px;
+  border: 1px solid #8b7355;
+  border-radius: 6px;
+  background: rgba(139, 115, 85, 0.08);
+  color: #8b7355;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.gs-tutorial-btn:hover {
+  background: rgba(139, 115, 85, 0.18);
+  border-color: #6b5344;
+  color: #6b5344;
+}
+
 .gs-logout-btn {
   padding: 8px 16px;
   border: 1px solid #999;
