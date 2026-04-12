@@ -248,11 +248,16 @@ function Profile() {
 
             <div className="settings-section">
               <h3>遊戲設定</h3>
-              <button className="tutorial-replay-btn" onClick={handleReplayTutorial}>
+              <button
+                className="tutorial-replay-btn"
+                onClick={handleReplayTutorial}
+                aria-label="重播本草新手教學"
+                aria-describedby={tutorialMessage ? 'tutorial-replay-message' : undefined}
+              >
                 重播本草新手教學
               </button>
               {tutorialMessage && (
-                <p className="tutorial-message">{tutorialMessage}</p>
+                <p id="tutorial-replay-message" className="tutorial-message">{tutorialMessage}</p>
               )}
             </div>
           </div>

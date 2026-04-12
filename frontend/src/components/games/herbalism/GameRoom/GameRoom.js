@@ -1243,7 +1243,7 @@ function GameRoom() {
           </div>
           <div className="waiting-header-right">
             <span className="waiting-room-id">房間 ID: {gameId}</span>
-            <button className="waiting-settings-btn" onClick={() => setShowSettings(true)}>
+            <button className="waiting-settings-btn" onClick={() => setShowSettings(true)} aria-label="設定">
               <span className="material-symbols-outlined">settings</span>
               設定
             </button>
@@ -1437,7 +1437,7 @@ function GameRoom() {
             </div>
           </div>
           <div className="playing-header-right">
-            <button className="playing-settings-btn" onClick={() => setShowSettings(true)}>
+            <button className="playing-settings-btn" onClick={() => setShowSettings(true)} aria-label="遊戲設定">
               設定
             </button>
             <button className="playing-leave-btn" onClick={handleLeaveRoom}>
@@ -2130,6 +2130,7 @@ function GameRoom() {
           <button
             className="btn btn-secondary"
             onClick={() => setShowSettings(true)}
+            aria-label="遊戲設定"
           >
             設定
           </button>
