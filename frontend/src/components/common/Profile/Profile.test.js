@@ -18,7 +18,7 @@ jest.mock('react-router-dom', () => ({
 const mockLogout = jest.fn();
 let mockUser = { uid: 'test-uid', displayName: '測試用戶', email: 'test@example.com', photoURL: null };
 
-jest.mock('../../firebase', () => ({
+jest.mock('../../../firebase', () => ({
   useAuth: () => ({
     user: mockUser,
     logout: mockLogout,
@@ -28,9 +28,14 @@ jest.mock('../../firebase', () => ({
 // Mock apiService
 const mockGetPlayerStats = jest.fn();
 const mockGetPlayerHistory = jest.fn();
-jest.mock('../../services/apiService', () => ({
+jest.mock('../../../services/apiService', () => ({
   getPlayerStats: (...args) => mockGetPlayerStats(...args),
   getPlayerHistory: (...args) => mockGetPlayerHistory(...args),
+}));
+
+const mockResetHerbalismTutorial = jest.fn();
+jest.mock('../../../utils/common/localStorage', () => ({
+  resetHerbalismTutorial: () => mockResetHerbalismTutorial(),
 }));
 
 describe('Profile 組件', () => {
@@ -174,6 +179,16 @@ describe('Profile 組件', () => {
         expect(mockLogout).toHaveBeenCalled();
         expect(mockNavigate).toHaveBeenCalledWith('/login');
       });
+    });
+
+    test('點擊重播本草新手教學應重設教學狀態', async () => {
+      render(<MemoryRouter><Profile /></MemoryRouter>);
+      await waitFor(() => expect(screen.getByText('重播本草新手教學')).toBeInTheDocument());
+
+      fireEvent.click(screen.getByText('重播本草新手教學'));
+
+      expect(mockResetHerbalismTutorial).toHaveBeenCalledTimes(1);
+      expect(screen.getByText('已重設新手教學，進入本草遊戲房間時會重新顯示。')).toBeInTheDocument();
     });
   });
 

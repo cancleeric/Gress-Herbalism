@@ -65,10 +65,17 @@ import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
-import { clearCurrentRoom, getCurrentRoom } from '../../../../utils/common/localStorage';
+import {
+  clearCurrentRoom,
+  getCurrentRoom,
+  hasCompletedHerbalismTutorial,
+  setHerbalismTutorialCompleted,
+  resetHerbalismTutorial
+} from '../../../../utils/common/localStorage';
 import { useAuth } from '../../../../firebase/AuthContext';
 import VersionInfo from '../../../common/VersionInfo';
 import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
+import TutorialOverlay from '../TutorialOverlay';
 import './GameRoom.css';
 
 /**
@@ -187,6 +194,10 @@ function GameRoom() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const reconnectTimerRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
+  // 新手教學狀態（工單 0055）
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Firebase Auth（工單 0123）
   const { user: authUser } = useAuth();
@@ -699,6 +710,16 @@ function GameRoom() {
   }, [gameState.storeGameId, gameId, getMyPlayer]);
 
   /**
+   * 工單 0055：新玩家自動顯示新手教學
+   */
+  useEffect(() => {
+    if (!hasCompletedHerbalismTutorial()) {
+      setTutorialStep(0);
+      setShowTutorial(true);
+    }
+  }, []);
+
+  /**
    * 離開房間
    */
   const handleLeaveRoom = () => {
@@ -1137,6 +1158,64 @@ function GameRoom() {
     return name.charAt(0).toUpperCase();
   };
 
+  const completeTutorial = () => {
+    setHerbalismTutorialCompleted(true);
+    setShowTutorial(false);
+    setTutorialStep(0);
+  };
+
+  const handleNextTutorialStep = () => {
+    setTutorialStep(prev => prev + 1);
+  };
+
+  const handlePrevTutorialStep = () => {
+    setTutorialStep(prev => Math.max(0, prev - 1));
+  };
+
+  const handleSkipTutorial = () => {
+    completeTutorial();
+  };
+
+  const handleFinishTutorial = () => {
+    completeTutorial();
+  };
+
+  const handleReplayTutorial = () => {
+    resetHerbalismTutorial();
+    setTutorialStep(0);
+    setShowTutorial(true);
+    setShowSettings(false);
+  };
+
+  const renderTutorialAndSettings = () => (
+    <>
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-content tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>遊戲設定</h3>
+            <p>新手教學可隨時重播。</p>
+            <div className="tutorial-settings-actions">
+              <button className="btn btn-primary" onClick={handleReplayTutorial}>
+                重播新手教學
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>
+                關閉
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <TutorialOverlay
+        isOpen={showTutorial}
+        currentStep={tutorialStep}
+        onNext={handleNextTutorialStep}
+        onPrev={handlePrevTutorialStep}
+        onSkip={handleSkipTutorial}
+        onFinish={handleFinishTutorial}
+      />
+    </>
+  );
+
   const myPlayer = getMyPlayer();
   const currentPlayer = getCurrentPlayer();
   const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING && myPlayer?.isActive !== false;
@@ -1164,6 +1243,10 @@ function GameRoom() {
           </div>
           <div className="waiting-header-right">
             <span className="waiting-room-id">房間 ID: {gameId}</span>
+            <button className="waiting-settings-btn" onClick={() => setShowSettings(true)}>
+              <span className="material-symbols-outlined">settings</span>
+              設定
+            </button>
             <button className="waiting-leave-btn" onClick={handleLeaveRoom}>
               <span className="material-symbols-outlined">logout</span>
               離開房間
@@ -1312,6 +1395,7 @@ function GameRoom() {
         )}
 
         {/* 版本資訊 */}
+        {renderTutorialAndSettings()}
         <VersionInfo />
       </div>
     );
@@ -1353,6 +1437,9 @@ function GameRoom() {
             </div>
           </div>
           <div className="playing-header-right">
+            <button className="playing-settings-btn" onClick={() => setShowSettings(true)}>
+              設定
+            </button>
             <button className="playing-leave-btn" onClick={handleLeaveRoom}>
               離開
             </button>
@@ -2023,6 +2110,7 @@ function GameRoom() {
         )}
 
         {/* 版本資訊 */}
+        {renderTutorialAndSettings()}
         <VersionInfo />
       </div>
     );
@@ -2039,6 +2127,12 @@ function GameRoom() {
           <span className="game-phase">{getGamePhaseText()}</span>
         </div>
         <div className="header-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowSettings(true)}
+          >
+            設定
+          </button>
           <button
             className="btn btn-secondary"
             onClick={handleLeaveRoom}
@@ -2378,6 +2472,7 @@ function GameRoom() {
       )}
 
       {/* 工單 0112: 版本資訊 */}
+      {renderTutorialAndSettings()}
       <VersionInfo />
     </div>
   );

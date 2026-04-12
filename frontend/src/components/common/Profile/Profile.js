@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../firebase';
 import { getPlayerStats, getPlayerHistory } from '../../../services/apiService';
+import { resetHerbalismTutorial } from '../../../utils/common/localStorage';
 import './Profile.css';
 
 function Profile() {
@@ -17,6 +18,7 @@ function Profile() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tutorialMessage, setTutorialMessage] = useState('');
 
   // 工單 0175：阻止匿名玩家存取 Profile
   const isAnonymous = user?.isAnonymous;
@@ -66,6 +68,11 @@ function Profile() {
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）
     navigate(-1);
+  };
+
+  const handleReplayTutorial = () => {
+    resetHerbalismTutorial();
+    setTutorialMessage('已重設新手教學，進入本草遊戲房間時會重新顯示。');
   };
 
   if (loading) {
@@ -236,6 +243,16 @@ function Profile() {
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+
+            <div className="settings-section">
+              <h3>遊戲設定</h3>
+              <button className="tutorial-replay-btn" onClick={handleReplayTutorial}>
+                重播本草新手教學
+              </button>
+              {tutorialMessage && (
+                <p className="tutorial-message">{tutorialMessage}</p>
               )}
             </div>
           </div>

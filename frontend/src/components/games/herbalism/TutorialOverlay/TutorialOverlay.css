@@ -1,0 +1,115 @@
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.tutorial-card {
+  width: min(560px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(187, 156, 99, 0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+}
+
+.tutorial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.tutorial-step-badge {
+  background: rgba(47, 127, 52, 0.1);
+  color: #2f7f34;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 6px 10px;
+}
+
+.tutorial-skip-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tutorial-skip-btn:hover {
+  color: #334155;
+}
+
+.tutorial-title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  color: #1e293b;
+}
+
+.tutorial-description {
+  margin: 0 0 18px;
+  color: #475569;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.tutorial-progress-dots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tutorial-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.tutorial-dot.active {
+  width: 20px;
+  border-radius: 9999px;
+  background: #2f7f34;
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tutorial-btn {
+  height: 38px;
+  min-width: 90px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tutorial-btn-secondary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.tutorial-btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tutorial-btn-primary {
+  background: #2f7f34;
+  color: #fff;
+}
+
+.tutorial-btn-primary:hover {
+  background: #26682b;
+}

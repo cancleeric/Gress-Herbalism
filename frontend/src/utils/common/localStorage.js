@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   NICKNAME: 'gress_nickname',        // 工單 0122：遊戲暱稱
   PLAYER_SETTINGS: 'gress_player_settings',
   CURRENT_ROOM: 'gress_current_room',  // 工單 0079：重連資訊
+  HERBALISM_TUTORIAL_COMPLETED: 'gress_herbalism_tutorial_completed',
 };
 
 /**
@@ -175,6 +176,42 @@ export function clearCurrentRoom() {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_ROOM);
   } catch (e) {
     console.warn('無法從 localStorage 清除房間資訊:', e);
+  }
+}
+
+/**
+ * 是否已完成本草新手教學
+ * @returns {boolean}
+ */
+export function hasCompletedHerbalismTutorial() {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED) === 'true';
+  } catch (e) {
+    console.warn('無法讀取本草教學狀態:', e);
+    return false;
+  }
+}
+
+/**
+ * 設定本草新手教學完成狀態
+ * @param {boolean} completed - 是否完成
+ */
+export function setHerbalismTutorialCompleted(completed = true) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED, completed ? 'true' : 'false');
+  } catch (e) {
+    console.warn('無法儲存本草教學狀態:', e);
+  }
+}
+
+/**
+ * 重設本草新手教學狀態
+ */
+export function resetHerbalismTutorial() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED);
+  } catch (e) {
+    console.warn('無法重設本草教學狀態:', e);
   }
 }
 

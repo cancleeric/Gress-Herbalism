@@ -1324,6 +1324,29 @@
   border-radius: 6px;
 }
 
+.waiting-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background-color: rgba(47, 127, 52, 0.08);
+  border: 1px solid rgba(47, 127, 52, 0.25);
+  border-radius: 8px;
+  color: var(--waiting-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.waiting-settings-btn:hover {
+  background-color: rgba(47, 127, 52, 0.14);
+}
+
+.waiting-settings-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
 .waiting-leave-btn {
   display: flex;
   align-items: center;
@@ -2008,6 +2031,28 @@
   gap: 32px;
 }
 
+.playing-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  height: 40px;
+  padding: 0 16px;
+  background-color: transparent;
+  border: 1px solid rgba(187, 156, 99, 0.5);
+  border-radius: 8px;
+  color: #7f786c;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.playing-settings-btn:hover {
+  background-color: rgba(187, 156, 99, 0.12);
+  color: #5f584c;
+}
+
 .playing-leave-btn {
   display: flex;
   align-items: center;
@@ -2027,6 +2072,22 @@
 
 .playing-leave-btn:hover {
   background-color: rgba(187, 156, 99, 0.9);
+}
+
+.tutorial-settings-modal h3 {
+  margin: 0 0 8px;
+}
+
+.tutorial-settings-modal p {
+  margin: 0;
+  color: #64748b;
+}
+
+.tutorial-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 /* 遊戲進行中主內容 */
