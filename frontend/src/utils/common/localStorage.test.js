@@ -11,6 +11,9 @@ import {
   saveCurrentRoom,
   getCurrentRoom,
   clearCurrentRoom,
+  hasCompletedHerbalismTutorial,
+  setHerbalismTutorialCompleted,
+  resetHerbalismTutorial,
   STORAGE_KEYS
 } from './localStorage';
 
@@ -234,6 +237,25 @@ describe('localStorage 工具函數', () => {
       expect(() => clearCurrentRoom()).not.toThrow();
 
       localStorage.removeItem = originalRemoveItem;
+    });
+  });
+
+  describe('Herbalism tutorial persistence', () => {
+    test('預設應為未完成', () => {
+      expect(hasCompletedHerbalismTutorial()).toBe(false);
+    });
+
+    test('應可設定為已完成', () => {
+      setHerbalismTutorialCompleted(true);
+      expect(hasCompletedHerbalismTutorial()).toBe(true);
+      expect(localStorage.getItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED)).toBe('true');
+    });
+
+    test('應可重設教學狀態', () => {
+      setHerbalismTutorialCompleted(true);
+      resetHerbalismTutorial();
+      expect(hasCompletedHerbalismTutorial()).toBe(false);
+      expect(localStorage.getItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED)).toBeNull();
     });
   });
 });

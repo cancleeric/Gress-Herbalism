@@ -566,6 +566,28 @@
   }
 }
 
+/* ==================== 教學設定 ==================== */
+.tutorial-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.tutorial-settings-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.tutorial-settings-modal {
+  max-width: 380px;
+}
+
 /* 玩家分數 */
 .player-score {
   font-weight: bold;

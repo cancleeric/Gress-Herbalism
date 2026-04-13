@@ -16,3 +16,4 @@ export { default as CardGiveNotification } from './CardGiveNotification';
 export { default as ColorCombinationCards } from './ColorCombinationCards';
 export { default as Prediction } from './Prediction';
 export { default as AIThinkingIndicator } from './AIThinkingIndicator';
+export { default as TutorialOverlay } from './TutorialOverlay/TutorialOverlay';

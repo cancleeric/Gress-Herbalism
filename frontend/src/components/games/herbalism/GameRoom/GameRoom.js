@@ -65,7 +65,14 @@ import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
-import { clearCurrentRoom, getCurrentRoom } from '../../../../utils/common/localStorage';
+import TutorialOverlay from '../TutorialOverlay/TutorialOverlay';
+import {
+  clearCurrentRoom,
+  getCurrentRoom,
+  hasCompletedHerbalismTutorial,
+  setHerbalismTutorialCompleted,
+  resetHerbalismTutorial
+} from '../../../../utils/common/localStorage';
 import { useAuth } from '../../../../firebase/AuthContext';
 import VersionInfo from '../../../common/VersionInfo';
 import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
@@ -187,9 +194,20 @@ function GameRoom() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const reconnectTimerRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showTutorialSettings, setShowTutorialSettings] = useState(false);
 
   // Firebase Auth（工單 0123）
   const { user: authUser } = useAuth();
+
+  /**
+   * 首次進入顯示新手教學
+   */
+  useEffect(() => {
+    if (!hasCompletedHerbalismTutorial()) {
+      setShowTutorial(true);
+    }
+  }, []);
 
   /**
    * 取得當前回合的玩家
@@ -716,6 +734,31 @@ function GameRoom() {
   };
 
   /**
+   * 完成新手教學
+   */
+  const handleCompleteTutorial = () => {
+    setHerbalismTutorialCompleted(true);
+    setShowTutorial(false);
+  };
+
+  /**
+   * 跳過新手教學
+   */
+  const handleSkipTutorial = () => {
+    setHerbalismTutorialCompleted(true);
+    setShowTutorial(false);
+  };
+
+  /**
+   * 從設定重新播放教學
+   */
+  const handleReplayTutorial = () => {
+    resetHerbalismTutorial();
+    setShowTutorialSettings(false);
+    setShowTutorial(true);
+  };
+
+  /**
    * 開始遊戲
    */
   const handleStartGame = () => {
@@ -1164,6 +1207,13 @@ function GameRoom() {
           </div>
           <div className="waiting-header-right">
             <span className="waiting-room-id">房間 ID: {gameId}</span>
+            <button
+              className="tutorial-settings-btn"
+              onClick={() => setShowTutorialSettings(true)}
+            >
+              <span className="material-symbols-outlined">settings</span>
+              教學設定
+            </button>
             <button className="waiting-leave-btn" onClick={handleLeaveRoom}>
               <span className="material-symbols-outlined">logout</span>
               離開房間
@@ -1313,6 +1363,31 @@ function GameRoom() {
 
         {/* 版本資訊 */}
         <VersionInfo />
+
+        {/* 新手教學 */}
+        <TutorialOverlay
+          isOpen={showTutorial}
+          onComplete={handleCompleteTutorial}
+          onSkip={handleSkipTutorial}
+        />
+
+        {/* 教學設定 */}
+        {showTutorialSettings && (
+          <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
+            <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
+              <h3>教學設定</h3>
+              <p>可隨時重新播放本草新手教學。</p>
+              <div className="modal-actions">
+                <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
+                  取消
+                </button>
+                <button className="btn btn-primary" onClick={handleReplayTutorial}>
+                  重新播放教學
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1353,6 +1428,13 @@ function GameRoom() {
             </div>
           </div>
           <div className="playing-header-right">
+            <button
+              className="tutorial-settings-btn"
+              onClick={() => setShowTutorialSettings(true)}
+            >
+              <span className="material-symbols-outlined">settings</span>
+              教學設定
+            </button>
             <button className="playing-leave-btn" onClick={handleLeaveRoom}>
               離開
             </button>
@@ -2024,6 +2106,31 @@ function GameRoom() {
 
         {/* 版本資訊 */}
         <VersionInfo />
+
+        {/* 新手教學 */}
+        <TutorialOverlay
+          isOpen={showTutorial}
+          onComplete={handleCompleteTutorial}
+          onSkip={handleSkipTutorial}
+        />
+
+        {/* 教學設定 */}
+        {showTutorialSettings && (
+          <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
+            <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
+              <h3>教學設定</h3>
+              <p>可隨時重新播放本草新手教學。</p>
+              <div className="modal-actions">
+                <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
+                  取消
+                </button>
+                <button className="btn btn-primary" onClick={handleReplayTutorial}>
+                  重新播放教學
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -2039,6 +2146,12 @@ function GameRoom() {
           <span className="game-phase">{getGamePhaseText()}</span>
         </div>
         <div className="header-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowTutorialSettings(true)}
+          >
+            教學設定
+          </button>
           <button
             className="btn btn-secondary"
             onClick={handleLeaveRoom}
@@ -2379,6 +2492,31 @@ function GameRoom() {
 
       {/* 工單 0112: 版本資訊 */}
       <VersionInfo />
+
+      {/* 新手教學 */}
+      <TutorialOverlay
+        isOpen={showTutorial}
+        onComplete={handleCompleteTutorial}
+        onSkip={handleSkipTutorial}
+      />
+
+      {/* 教學設定 */}
+      {showTutorialSettings && (
+        <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
+          <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>教學設定</h3>
+            <p>可隨時重新播放本草新手教學。</p>
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
+                取消
+              </button>
+              <button className="btn btn-primary" onClick={handleReplayTutorial}>
+                重新播放教學
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
