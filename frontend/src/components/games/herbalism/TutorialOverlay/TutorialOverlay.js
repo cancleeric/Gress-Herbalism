@@ -89,5 +89,4 @@ TutorialOverlay.propTypes = {
   onComplete: PropTypes.func.isRequired,
   onSkip: PropTypes.func.isRequired
 };
-
 export default TutorialOverlay;

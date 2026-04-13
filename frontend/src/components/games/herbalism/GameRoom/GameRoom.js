@@ -1185,6 +1185,32 @@ function GameRoom() {
   const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING && myPlayer?.isActive !== false;
   const onlyGuess = mustGuess();
   const maxPlayers = gameState.maxPlayers || 4;
+  const tutorialUI = (
+    <>
+      <TutorialOverlay
+        isOpen={showTutorial}
+        onComplete={handleCompleteTutorial}
+        onSkip={handleSkipTutorial}
+      />
+
+      {showTutorialSettings && (
+        <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
+          <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>教學設定</h3>
+            <p>可隨時重新播放本草新手教學。</p>
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
+                取消
+              </button>
+              <button className="btn btn-primary" onClick={handleReplayTutorial}>
+                重新播放教學
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   // 等待階段：渲染新的三欄式 UI（工單 0123）
   if (gameState.gamePhase === GAME_PHASE_WAITING) {
@@ -1364,30 +1390,7 @@ function GameRoom() {
         {/* 版本資訊 */}
         <VersionInfo />
 
-        {/* 新手教學 */}
-        <TutorialOverlay
-          isOpen={showTutorial}
-          onComplete={handleCompleteTutorial}
-          onSkip={handleSkipTutorial}
-        />
-
-        {/* 教學設定 */}
-        {showTutorialSettings && (
-          <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
-            <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
-              <h3>教學設定</h3>
-              <p>可隨時重新播放本草新手教學。</p>
-              <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
-                  取消
-                </button>
-                <button className="btn btn-primary" onClick={handleReplayTutorial}>
-                  重新播放教學
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {tutorialUI}
       </div>
     );
   }
@@ -2107,30 +2110,7 @@ function GameRoom() {
         {/* 版本資訊 */}
         <VersionInfo />
 
-        {/* 新手教學 */}
-        <TutorialOverlay
-          isOpen={showTutorial}
-          onComplete={handleCompleteTutorial}
-          onSkip={handleSkipTutorial}
-        />
-
-        {/* 教學設定 */}
-        {showTutorialSettings && (
-          <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
-            <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
-              <h3>教學設定</h3>
-              <p>可隨時重新播放本草新手教學。</p>
-              <div className="modal-actions">
-                <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
-                  取消
-                </button>
-                <button className="btn btn-primary" onClick={handleReplayTutorial}>
-                  重新播放教學
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {tutorialUI}
       </div>
     );
   }
@@ -2493,30 +2473,7 @@ function GameRoom() {
       {/* 工單 0112: 版本資訊 */}
       <VersionInfo />
 
-      {/* 新手教學 */}
-      <TutorialOverlay
-        isOpen={showTutorial}
-        onComplete={handleCompleteTutorial}
-        onSkip={handleSkipTutorial}
-      />
-
-      {/* 教學設定 */}
-      {showTutorialSettings && (
-        <div className="modal-overlay" onClick={() => setShowTutorialSettings(false)}>
-          <div className="modal tutorial-settings-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>教學設定</h3>
-            <p>可隨時重新播放本草新手教學。</p>
-            <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowTutorialSettings(false)}>
-                取消
-              </button>
-              <button className="btn btn-primary" onClick={handleReplayTutorial}>
-                重新播放教學
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {tutorialUI}
     </div>
   );
 }
