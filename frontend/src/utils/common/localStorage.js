@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   NICKNAME: 'gress_nickname',        // 工單 0122：遊戲暱稱
   PLAYER_SETTINGS: 'gress_player_settings',
   CURRENT_ROOM: 'gress_current_room',  // 工單 0079：重連資訊
+  HERBALISM_TUTORIAL_COMPLETED: 'gress_herbalism_tutorial_completed'
 };
 
 /**
@@ -175,6 +176,42 @@ export function clearCurrentRoom() {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_ROOM);
   } catch (e) {
     console.warn('無法從 localStorage 清除房間資訊:', e);
+  }
+}
+
+/**
+ * 是否已完成（或略過）Herbalism 新手教學
+ * @returns {boolean}
+ */
+export function hasCompletedHerbalismTutorial() {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED) === 'true';
+  } catch (e) {
+    console.warn('無法從 localStorage 讀取教學完成狀態:', e);
+    return false;
+  }
+}
+
+/**
+ * 設定 Herbalism 新手教學完成狀態
+ * @param {boolean} completed
+ */
+export function setHerbalismTutorialCompleted(completed = true) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED, completed ? 'true' : 'false');
+  } catch (e) {
+    console.warn('無法儲存教學完成狀態到 localStorage:', e);
+  }
+}
+
+/**
+ * 重置 Herbalism 新手教學完成狀態
+ */
+export function resetHerbalismTutorial() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.HERBALISM_TUTORIAL_COMPLETED);
+  } catch (e) {
+    console.warn('無法從 localStorage 清除教學完成狀態:', e);
   }
 }
 

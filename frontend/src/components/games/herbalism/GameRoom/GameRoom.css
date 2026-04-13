@@ -2005,7 +2005,26 @@
 .playing-header-right {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 12px;
+}
+
+.playing-help-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(47, 127, 52, 0.35);
+  border-radius: 8px;
+  background: white;
+  color: var(--waiting-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.playing-help-btn .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .playing-leave-btn {
@@ -2835,6 +2854,12 @@
   .playing-header-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .playing-help-btn,
+  .playing-leave-btn {
+    flex: 1;
+    justify-content: center;
   }
 
   .playing-left-column {

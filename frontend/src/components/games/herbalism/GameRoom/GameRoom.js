@@ -11,7 +11,12 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   updateGameState,
   resetGame,
-  clearPersistedState
+  clearPersistedState,
+  startTutorial,
+  nextTutorialStep,
+  prevTutorialStep,
+  skipTutorial,
+  completeTutorial
 } from '../../../../store/gameStore';
 import { selectGameRoomState } from '../../../../store/selectors';
 import useAIPlayers from '../../../../hooks/herbalism/useAIPlayers';
@@ -65,11 +70,35 @@ import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
 import CardGiveNotification from '../CardGiveNotification/CardGiveNotification';
 import QuestionFlow from '../QuestionFlow/QuestionFlow';
-import { clearCurrentRoom, getCurrentRoom } from '../../../../utils/common/localStorage';
+import { clearCurrentRoom, getCurrentRoom, setHerbalismTutorialCompleted } from '../../../../utils/common/localStorage';
 import { useAuth } from '../../../../firebase/AuthContext';
 import VersionInfo from '../../../common/VersionInfo';
 import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
+import TutorialOverlay from '../TutorialOverlay/TutorialOverlay';
 import './GameRoom.css';
+
+const HERBALISM_TUTORIAL_STEPS = [
+  {
+    title: '歡迎來到本草',
+    description: '這是遊戲總覽區：你會在這裡看到蓋牌、玩家資訊與目前局勢。',
+    selector: '[data-tutorial-id="game-overview"]'
+  },
+  {
+    title: '步驟一：選擇藥草組合',
+    description: '在「問牌選擇」區點擊雙色牌，選你要用來問牌的藥草組合。',
+    selector: '[data-tutorial-id="herb-selection"]'
+  },
+  {
+    title: '步驟二：組合配方並問牌',
+    description: '選完顏色組合後，會進入問牌流程來指定對象與規則，完成本回合操作。',
+    selector: '[data-tutorial-id="recipe-crafting"]'
+  },
+  {
+    title: '步驟三：追蹤分數',
+    description: '左側會顯示你的即時分數。目標是率先達成勝利分數。',
+    selector: '[data-tutorial-id="scoring"]'
+  }
+];
 
 /**
  * 遊戲房間組件
@@ -122,6 +151,11 @@ function GameRoom() {
 
   // 從 Redux store 取得遊戲狀態（工單 0162：使用記憶化 selector）
   const gameState = useSelector(selectGameRoomState);
+  const tutorialState = useSelector((state) => state.herbalism?.tutorial || {
+    isActive: false,
+    currentStep: 0,
+    hasCompleted: false
+  });
 
   // 本地遊戲控制器（單人模式專用）
   const localControllerRef = useRef(null);
@@ -1142,6 +1176,52 @@ function GameRoom() {
   const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING && myPlayer?.isActive !== false;
   const onlyGuess = mustGuess();
   const maxPlayers = gameState.maxPlayers || 4;
+  const isTutorialAutoStartPhase = [
+    GAME_PHASE_PLAYING,
+    GAME_PHASE_POST_QUESTION,
+    GAME_PHASE_FOLLOW_GUESSING,
+    GAME_PHASE_ROUND_END
+  ].includes(gameState.gamePhase);
+
+  useEffect(() => {
+    if (isTutorialAutoStartPhase && !tutorialState.hasCompleted && !tutorialState.isActive) {
+      dispatch(startTutorial());
+    }
+  }, [
+    dispatch,
+    isTutorialAutoStartPhase,
+    tutorialState.hasCompleted,
+    tutorialState.isActive
+  ]);
+
+  useEffect(() => {
+    if (tutorialState.isActive && tutorialState.currentStep >= HERBALISM_TUTORIAL_STEPS.length) {
+      dispatch(completeTutorial());
+      setHerbalismTutorialCompleted(true);
+    }
+  }, [dispatch, tutorialState.currentStep, tutorialState.isActive]);
+
+  const handleReplayTutorial = () => {
+    dispatch(startTutorial());
+  };
+
+  const handleTutorialNext = () => {
+    dispatch(nextTutorialStep());
+  };
+
+  const handleTutorialBack = () => {
+    dispatch(prevTutorialStep());
+  };
+
+  const handleTutorialSkip = () => {
+    dispatch(skipTutorial());
+    setHerbalismTutorialCompleted(true);
+  };
+
+  const handleTutorialComplete = () => {
+    dispatch(completeTutorial());
+    setHerbalismTutorialCompleted(true);
+  };
 
   // 等待階段：渲染新的三欄式 UI（工單 0123）
   if (gameState.gamePhase === GAME_PHASE_WAITING) {
@@ -1353,6 +1433,10 @@ function GameRoom() {
             </div>
           </div>
           <div className="playing-header-right">
+            <button className="playing-help-btn" onClick={handleReplayTutorial}>
+              <span className="material-symbols-outlined">help</span>
+              教學
+            </button>
             <button className="playing-leave-btn" onClick={handleLeaveRoom}>
               離開
             </button>
@@ -1360,7 +1444,7 @@ function GameRoom() {
         </header>
 
         {/* 主內容 - 三欄佈局 */}
-        <main className="playing-main">
+        <main className="playing-main" data-tutorial-id="game-overview">
           {/* 左欄 */}
           <aside className="playing-left-column">
             {/* 自己的玩家卡片 */}
@@ -1383,7 +1467,7 @@ function GameRoom() {
               <div className="playing-my-info">
                 <h3>{myPlayer?.name || '載入中...'}</h3>
               </div>
-              <div className="playing-my-stats">
+              <div className="playing-my-stats" data-tutorial-id="scoring">
                 <div className="playing-my-stat">
                   <span className="playing-my-stat-label">分數</span>
                   <span className="playing-my-stat-value">{myPlayer?.score || 0}</span>
@@ -1439,12 +1523,12 @@ function GameRoom() {
             </div>
 
             {/* 顏色組合牌 */}
-            <div className="playing-inquiry-area">
+            <div className="playing-inquiry-area" data-tutorial-id="herb-selection">
               <h3 className="playing-inquiry-title">
                 <span className="material-symbols-outlined">view_module</span>
                 問牌選擇
               </h3>
-              <div className="playing-inquiry-grid">
+              <div className="playing-inquiry-grid" data-tutorial-id="recipe-crafting">
                 {colorCombinations.map((combo) => {
                   const isDisabledBySelf = combo.id === myLastColorCardId;
                   const marker = colorCardMarkers[combo.id];
@@ -2021,6 +2105,16 @@ function GameRoom() {
             <button onClick={() => setError('')} className="close-error">×</button>
           </div>
         )}
+
+        <TutorialOverlay
+          isOpen={tutorialState.isActive}
+          steps={HERBALISM_TUTORIAL_STEPS}
+          currentStep={tutorialState.currentStep}
+          onNext={handleTutorialNext}
+          onBack={handleTutorialBack}
+          onSkip={handleTutorialSkip}
+          onComplete={handleTutorialComplete}
+        />
 
         {/* 版本資訊 */}
         <VersionInfo />

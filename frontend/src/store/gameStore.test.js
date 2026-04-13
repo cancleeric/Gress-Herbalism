@@ -15,12 +15,16 @@ import {
   guessAction,
   setCurrentPlayer,
   gameEnded,
-  resetGame
+  resetGame,
+  startTutorial,
+  nextTutorialStep,
+  prevTutorialStep,
+  skipTutorial,
+  completeTutorial
 } from './gameStore';
 
 import {
   GAME_PHASE_WAITING,
-  GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
 } from '../shared/constants';
 
@@ -35,6 +39,11 @@ describe('gameStore - 工作單 0012', () => {
       expect(ActionTypes.GUESS_ACTION).toBe('GUESS_ACTION');
       expect(ActionTypes.SET_CURRENT_PLAYER).toBe('SET_CURRENT_PLAYER');
       expect(ActionTypes.GAME_ENDED).toBe('GAME_ENDED');
+      expect(ActionTypes.START_TUTORIAL).toBe('START_TUTORIAL');
+      expect(ActionTypes.NEXT_TUTORIAL_STEP).toBe('NEXT_TUTORIAL_STEP');
+      expect(ActionTypes.PREV_TUTORIAL_STEP).toBe('PREV_TUTORIAL_STEP');
+      expect(ActionTypes.SKIP_TUTORIAL).toBe('SKIP_TUTORIAL');
+      expect(ActionTypes.COMPLETE_TUTORIAL).toBe('COMPLETE_TUTORIAL');
     });
   });
 
@@ -105,6 +114,14 @@ describe('gameStore - 工作單 0012', () => {
       const action = resetGame();
 
       expect(action.type).toBe(ActionTypes.RESET_GAME);
+    });
+
+    test('tutorial actions 應返回正確的 action', () => {
+      expect(startTutorial().type).toBe(ActionTypes.START_TUTORIAL);
+      expect(nextTutorialStep().type).toBe(ActionTypes.NEXT_TUTORIAL_STEP);
+      expect(prevTutorialStep().type).toBe(ActionTypes.PREV_TUTORIAL_STEP);
+      expect(skipTutorial().type).toBe(ActionTypes.SKIP_TUTORIAL);
+      expect(completeTutorial().type).toBe(ActionTypes.COMPLETE_TUTORIAL);
     });
   });
 
@@ -206,6 +223,46 @@ describe('gameStore - 工作單 0012', () => {
       const state = gameReducer(currentState, { type: 'UNKNOWN_ACTION' });
 
       expect(state).toEqual(currentState);
+    });
+
+    test('START_TUTORIAL 應開啟教學並重置步驟', () => {
+      const state = gameReducer({
+        ...initialState,
+        tutorial: { ...initialState.tutorial, isActive: false, currentStep: 3 }
+      }, startTutorial());
+
+      expect(state.tutorial.isActive).toBe(true);
+      expect(state.tutorial.currentStep).toBe(0);
+    });
+
+    test('NEXT/PREV_TUTORIAL_STEP 應正確移動步驟', () => {
+      const nextState = gameReducer({
+        ...initialState,
+        tutorial: { ...initialState.tutorial, currentStep: 1 }
+      }, nextTutorialStep());
+
+      expect(nextState.tutorial.currentStep).toBe(2);
+
+      const prevState = gameReducer(nextState, prevTutorialStep());
+      expect(prevState.tutorial.currentStep).toBe(1);
+    });
+
+    test('SKIP/COMPLETE_TUTORIAL 應標記教學完成', () => {
+      const skipped = gameReducer({
+        ...initialState,
+        tutorial: { ...initialState.tutorial, isActive: true, hasCompleted: false }
+      }, skipTutorial());
+
+      expect(skipped.tutorial.isActive).toBe(false);
+      expect(skipped.tutorial.hasCompleted).toBe(true);
+
+      const completed = gameReducer({
+        ...initialState,
+        tutorial: { ...initialState.tutorial, isActive: true, hasCompleted: false }
+      }, completeTutorial());
+
+      expect(completed.tutorial.isActive).toBe(false);
+      expect(completed.tutorial.hasCompleted).toBe(true);
     });
   });
 });

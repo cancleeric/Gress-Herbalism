@@ -12,9 +12,9 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import {
   GAME_PHASE_WAITING,
-  GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED
 } from '../shared/constants';
+import { hasCompletedHerbalismTutorial } from '../utils/common/localStorage';
 
 // 工單 0261：引入演化論 reducer
 import evolutionReducer from './evolution/evolutionStore';
@@ -55,7 +55,12 @@ export const ActionTypes = {
   GUESS_ACTION: 'GUESS_ACTION',
   SET_CURRENT_PLAYER: 'SET_CURRENT_PLAYER',
   GAME_ENDED: 'GAME_ENDED',
-  RESET_GAME: 'RESET_GAME'
+  RESET_GAME: 'RESET_GAME',
+  START_TUTORIAL: 'START_TUTORIAL',
+  NEXT_TUTORIAL_STEP: 'NEXT_TUTORIAL_STEP',
+  PREV_TUTORIAL_STEP: 'PREV_TUTORIAL_STEP',
+  SKIP_TUTORIAL: 'SKIP_TUTORIAL',
+  COMPLETE_TUTORIAL: 'COMPLETE_TUTORIAL'
 };
 
 // ==================== Initial State ====================
@@ -73,7 +78,12 @@ export const initialState = {
   winner: null,
   gameHistory: [],
   currentPlayerId: null,
-  error: null
+  error: null,
+  tutorial: {
+    isActive: false,
+    currentStep: 0,
+    hasCompleted: hasCompletedHerbalismTutorial()
+  }
 };
 
 // ==================== Action Creators ====================
@@ -186,6 +196,56 @@ export function resetGame() {
   };
 }
 
+/**
+ * 開始教學
+ * @returns {Object}
+ */
+export function startTutorial() {
+  return {
+    type: ActionTypes.START_TUTORIAL
+  };
+}
+
+/**
+ * 教學下一步
+ * @returns {Object}
+ */
+export function nextTutorialStep() {
+  return {
+    type: ActionTypes.NEXT_TUTORIAL_STEP
+  };
+}
+
+/**
+ * 教學上一步
+ * @returns {Object}
+ */
+export function prevTutorialStep() {
+  return {
+    type: ActionTypes.PREV_TUTORIAL_STEP
+  };
+}
+
+/**
+ * 略過教學（視為已完成）
+ * @returns {Object}
+ */
+export function skipTutorial() {
+  return {
+    type: ActionTypes.SKIP_TUTORIAL
+  };
+}
+
+/**
+ * 完成教學
+ * @returns {Object}
+ */
+export function completeTutorial() {
+  return {
+    type: ActionTypes.COMPLETE_TUTORIAL
+  };
+}
+
 // ==================== Reducer ====================
 
 /**
@@ -257,6 +317,64 @@ export function gameReducer(state = initialState, action) {
 
     case ActionTypes.RESET_GAME:
       return initialState;
+
+    case ActionTypes.START_TUTORIAL: {
+      const tutorial = state.tutorial || initialState.tutorial;
+      return {
+        ...state,
+        tutorial: {
+          ...tutorial,
+          isActive: true,
+          currentStep: 0
+        }
+      };
+    }
+
+    case ActionTypes.NEXT_TUTORIAL_STEP: {
+      const tutorial = state.tutorial || initialState.tutorial;
+      return {
+        ...state,
+        tutorial: {
+          ...tutorial,
+          currentStep: tutorial.currentStep + 1
+        }
+      };
+    }
+
+    case ActionTypes.PREV_TUTORIAL_STEP: {
+      const tutorial = state.tutorial || initialState.tutorial;
+      return {
+        ...state,
+        tutorial: {
+          ...tutorial,
+          currentStep: Math.max(0, tutorial.currentStep - 1)
+        }
+      };
+    }
+
+    case ActionTypes.SKIP_TUTORIAL: {
+      const tutorial = state.tutorial || initialState.tutorial;
+      return {
+        ...state,
+        tutorial: {
+          ...tutorial,
+          isActive: false,
+          hasCompleted: true
+        }
+      };
+    }
+
+    case ActionTypes.COMPLETE_TUTORIAL: {
+      const tutorial = state.tutorial || initialState.tutorial;
+      return {
+        ...state,
+        tutorial: {
+          ...tutorial,
+          isActive: false,
+          hasCompleted: true
+        }
+      };
+    }
 
     default:
       return state;

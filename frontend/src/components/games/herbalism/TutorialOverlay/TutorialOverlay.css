@@ -1,0 +1,102 @@
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4200;
+  pointer-events: none;
+}
+
+.tutorial-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 10, 0.72);
+}
+
+.tutorial-spotlight {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(10, 12, 10, 0.72);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: transparent;
+  z-index: 1;
+}
+
+.tutorial-card {
+  position: fixed;
+  width: min(320px, calc(100vw - 24px));
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  padding: 14px;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.tutorial-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: #1f2a1f;
+}
+
+.tutorial-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #435043;
+  line-height: 1.45;
+}
+
+.tutorial-progress {
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  color: #6b806c;
+}
+
+.tutorial-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.tutorial-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.tutorial-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tutorial-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tutorial-btn-skip {
+  background: transparent;
+  color: #6b806c;
+}
+
+.tutorial-btn-secondary {
+  background: #eef3ee;
+  color: #304230;
+}
+
+.tutorial-btn-primary {
+  background: #2f7f34;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .tutorial-card {
+    left: 12px !important;
+    right: 12px;
+    width: auto;
+    top: auto !important;
+    bottom: 12px;
+  }
+}
