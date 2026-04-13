@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './TutorialOverlay.css';
 
 const SPOTLIGHT_PADDING = 10;
@@ -14,33 +14,37 @@ function TutorialOverlay({
 }) {
   const [targetRect, setTargetRect] = useState(null);
   const step = steps[currentStep];
+  const targetSelector = step?.selector;
 
   const hasNext = currentStep < steps.length - 1;
   const hasBack = currentStep > 0;
 
-  const updateTargetRect = useMemo(() => {
-    return () => {
-      if (!step?.selector) {
-        setTargetRect(null);
-        return;
-      }
+  const updateTargetRect = useCallback(() => {
+    if (!targetSelector) {
+      setTargetRect(null);
+      return;
+    }
 
-      const target = document.querySelector(step.selector);
-      if (!target) {
-        setTargetRect(null);
-        return;
-      }
+    const target = document.querySelector(targetSelector);
+    if (!target) {
+      setTargetRect(null);
+      return;
+    }
 
-      target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
-      const rect = target.getBoundingClientRect();
-      setTargetRect({
-        top: Math.max(8, rect.top - SPOTLIGHT_PADDING),
-        left: Math.max(8, rect.left - SPOTLIGHT_PADDING),
-        width: rect.width + SPOTLIGHT_PADDING * 2,
-        height: rect.height + SPOTLIGHT_PADDING * 2
-      });
-    };
-  }, [step]);
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
+    });
+    const rect = target.getBoundingClientRect();
+    setTargetRect({
+      top: Math.max(8, rect.top - SPOTLIGHT_PADDING),
+      left: Math.max(8, rect.left - SPOTLIGHT_PADDING),
+      width: rect.width + SPOTLIGHT_PADDING * 2,
+      height: rect.height + SPOTLIGHT_PADDING * 2
+    });
+  }, [targetSelector]);
 
   useEffect(() => {
     if (!isOpen || !step) return undefined;

@@ -100,6 +100,13 @@ const HERBALISM_TUTORIAL_STEPS = [
   }
 ];
 
+const TUTORIAL_AUTO_START_PHASES = [
+  GAME_PHASE_PLAYING,
+  GAME_PHASE_POST_QUESTION,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END
+];
+
 /**
  * 遊戲房間組件
  *
@@ -1176,20 +1183,15 @@ function GameRoom() {
   const canAct = isMyTurn() && gameState.gamePhase === GAME_PHASE_PLAYING && myPlayer?.isActive !== false;
   const onlyGuess = mustGuess();
   const maxPlayers = gameState.maxPlayers || 4;
-  const isTutorialAutoStartPhase = [
-    GAME_PHASE_PLAYING,
-    GAME_PHASE_POST_QUESTION,
-    GAME_PHASE_FOLLOW_GUESSING,
-    GAME_PHASE_ROUND_END
-  ].includes(gameState.gamePhase);
 
   useEffect(() => {
-    if (isTutorialAutoStartPhase && !tutorialState.hasCompleted && !tutorialState.isActive) {
+    const shouldAutoStart = TUTORIAL_AUTO_START_PHASES.includes(gameState.gamePhase);
+    if (shouldAutoStart && !tutorialState.hasCompleted && !tutorialState.isActive) {
       dispatch(startTutorial());
     }
   }, [
     dispatch,
-    isTutorialAutoStartPhase,
+    gameState.gamePhase,
     tutorialState.hasCompleted,
     tutorialState.isActive
   ]);
