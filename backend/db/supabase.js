@@ -10,6 +10,18 @@ const {
   calculateMultiplayerEloChanges,
 } = require('../services/eloService');
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function sanitizeLimit(value, defaultValue = 20, maxValue = 100) {
+  const parsed = parseInt(value, 10);
+  const safeValue = Number.isNaN(parsed) ? defaultValue : parsed;
+  return Math.min(Math.max(safeValue, 1), maxValue);
+}
+
+function isValidUuid(value) {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+}
+
 // 從環境變數讀取設定，若無則使用預設值（開發用）
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvlmpnovbrksqwtihwqi.supabase.co';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2bG1wbm92YnJrc3F3dGlod3FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMDMxNDUsImV4cCI6MjA4NDc3OTE0NX0.wLuRDB0gaNc2rRyDOZ8ea8aTBzT2jF8f7m3TCCaCcMU';
@@ -178,9 +190,10 @@ async function saveGameParticipants(gameHistoryId, participants) {
  */
 async function getLeaderboard(orderBy = 'elo_rating', limit = 100, rankingType = 'global') {
   try {
-    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 100);
+    const safeLimit = sanitizeLimit(limit, 100, 100);
     const seasonId = getCurrentSeasonId();
-    const isSeason = rankingType === 'season';
+    const safeRankingType = rankingType === 'season' ? 'season' : 'global';
+    const isSeason = safeRankingType === 'season';
     const allowedOrderBy = isSeason
       ? ['season_current_elo', 'season_games_won', 'season_peak_elo', 'season_games_played']
       : ['elo_rating', 'games_won', 'win_rate', 'total_score', 'games_played'];
@@ -210,7 +223,7 @@ async function getLeaderboard(orderBy = 'elo_rating', limit = 100, rankingType =
     // 加上排名
     return (data || []).map((player, index) => ({
       rank: index + 1,
-      ranking_type: isSeason ? 'season' : 'global',
+      ranking_type: safeRankingType,
       season_id: player.current_season_id || seasonId,
       ...player,
     }));
@@ -336,12 +349,26 @@ async function updatePlayerGameStats(playerId, gameResult) {
  */
 async function updatePlayersElo({ participants = [], winnerId = null, gameId = null }) {
   try {
-    if (!Array.isArray(participants) || participants.length < 2 || !winnerId) {
+    if (!Array.isArray(participants) || participants.length < 2) {
       return { seasonId: getCurrentSeasonId(), changes: {} };
     }
 
     const seasonId = getCurrentSeasonId();
-    const participantIds = participants.map(p => p.playerId).filter(Boolean);
+    const participantIds = participants
+      .map(p => p.playerId)
+      .filter(id => isValidUuid(id));
+
+    if (participantIds.length < 2) {
+      return { seasonId, changes: {} };
+    }
+
+    const resolvedWinnerId = isValidUuid(winnerId)
+      ? winnerId
+      : (participants.find(p => p.isWinner && isValidUuid(p.playerId))?.playerId || null);
+
+    if (!resolvedWinnerId) {
+      return { seasonId, changes: {} };
+    }
 
     const { data: playerRows, error: fetchError } = await supabase
       .from('players')
@@ -358,7 +385,7 @@ async function updatePlayersElo({ participants = [], winnerId = null, gameId = n
       gamesPlayed: row.games_played ?? 0,
     }));
 
-    const eloChanges = calculateMultiplayerEloChanges(playersForElo, winnerId);
+    const eloChanges = calculateMultiplayerEloChanges(playersForElo, resolvedWinnerId);
     const updates = [];
     const historyRows = [];
 
@@ -448,7 +475,7 @@ async function getPlayerIdByFirebaseUid(firebaseUid) {
  */
 async function getPlayerEloHistory(playerId, limit = 20) {
   try {
-    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const safeLimit = sanitizeLimit(limit, 20, 100);
     const { data, error } = await supabase
       .from('player_elo_history')
       .select('id, game_id, season_id, elo_before, elo_after, elo_change, created_at')

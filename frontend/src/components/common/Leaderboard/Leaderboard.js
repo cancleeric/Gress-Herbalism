@@ -76,18 +76,22 @@ function Leaderboard() {
   };
 
   const myRank = leaderboard.find(player => player.firebase_uid && player.firebase_uid === user?.uid) || null;
-  const chartPoints = [...eloHistory]
-    .reverse()
+  const chartWidth = 240;
+  const chartHeight = 70;
+  const reversedEloHistory = [...eloHistory].reverse();
+  const eloValues = reversedEloHistory.map(item => item.elo_after);
+  const eloMin = eloValues.length > 0 ? Math.min(...eloValues) : 0;
+  const eloMax = eloValues.length > 0 ? Math.max(...eloValues) : 0;
+  const chartPoints = reversedEloHistory
     .map((item, index, arr) => {
-      const width = 240;
-      const height = 70;
-      const min = Math.min(...arr.map(x => x.elo_after));
-      const max = Math.max(...arr.map(x => x.elo_after));
-      const x = arr.length <= 1 ? 0 : (index / (arr.length - 1)) * width;
-      const y = max === min ? height / 2 : ((max - item.elo_after) / (max - min)) * height;
+      const x = arr.length <= 1 ? 0 : (index / (arr.length - 1)) * chartWidth;
+      const y = eloMax === eloMin ? chartHeight / 2 : ((eloMax - item.elo_after) / (eloMax - eloMin)) * chartHeight;
       return `${x},${y}`;
     })
     .join(' ');
+  const eloSortField = rankingType === 'season' ? 'season_current_elo' : 'elo_rating';
+  const winsSortField = rankingType === 'season' ? 'season_games_won' : 'games_won';
+  const thirdSortField = rankingType === 'season' ? 'season_peak_elo' : 'total_score';
 
   return (
     <div className="leaderboard-page">
@@ -137,20 +141,20 @@ function Leaderboard() {
 
             <div className="sort-tabs">
               <button
-                className={`sort-tab ${sortBy === (rankingType === 'season' ? 'season_current_elo' : 'elo_rating') ? 'active' : ''}`}
-                onClick={() => setSortBy(rankingType === 'season' ? 'season_current_elo' : 'elo_rating')}
+                className={`sort-tab ${sortBy === eloSortField ? 'active' : ''}`}
+                onClick={() => setSortBy(eloSortField)}
               >
                 ELO
               </button>
               <button
-                className={`sort-tab ${sortBy === (rankingType === 'season' ? 'season_games_won' : 'games_won') ? 'active' : ''}`}
-                onClick={() => setSortBy(rankingType === 'season' ? 'season_games_won' : 'games_won')}
+                className={`sort-tab ${sortBy === winsSortField ? 'active' : ''}`}
+                onClick={() => setSortBy(winsSortField)}
               >
                 勝場
               </button>
               <button
-                className={`sort-tab ${sortBy === (rankingType === 'season' ? 'season_peak_elo' : 'total_score') ? 'active' : ''}`}
-                onClick={() => setSortBy(rankingType === 'season' ? 'season_peak_elo' : 'total_score')}
+                className={`sort-tab ${sortBy === thirdSortField ? 'active' : ''}`}
+                onClick={() => setSortBy(thirdSortField)}
               >
                 {rankingType === 'season' ? '賽季峰值' : '總得分'}
               </button>
@@ -161,7 +165,7 @@ function Leaderboard() {
                 <p>我的排名：#{myRank.rank}（ELO: {rankingType === 'season' ? myRank.season_current_elo : myRank.elo_rating}）</p>
                 {eloHistory.length > 1 && (
                   <div className="elo-history-chart">
-                    <svg width="240" height="70" viewBox="0 0 240 70" role="img" aria-label="ELO history chart">
+                    <svg width={chartWidth} height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label="ELO history chart">
                       <polyline
                         points={chartPoints}
                         fill="none"
