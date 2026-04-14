@@ -56,11 +56,9 @@ export async function getPlayerHistory(firebaseUid, limit = 20) {
 
 /**
  * 取得排行榜
- * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'win_rate')
- * @param {number} limit - 限制筆數
  */
-export async function getLeaderboard(orderBy = 'total_score', limit = 10) {
-  return apiRequest(`/api/leaderboard?orderBy=${orderBy}&limit=${limit}`);
+export async function getLeaderboard() {
+  return apiRequest('/api/leaderboard');
 }
 
 /**

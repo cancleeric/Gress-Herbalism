@@ -4,7 +4,7 @@
  * 中國風草藥主題設計
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLeaderboard } from '../../../services/apiService';
 import './Leaderboard.css';
@@ -12,22 +12,17 @@ import './Leaderboard.css';
 function Leaderboard() {
   const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
-  const [sortBy, setSortBy] = useState('games_won');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadLeaderboard();
-  }, [sortBy]);
-
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
-      const result = await getLeaderboard(sortBy, 20);
+      const result = await getLeaderboard();
       if (result.success) {
-        setLeaderboard(result.data);
+        setLeaderboard(result.data || []);
       }
     } catch (err) {
       setError('載入排行榜失敗');
@@ -35,7 +30,11 @@ function Leaderboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadLeaderboard();
+  }, [loadLeaderboard]);
 
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）
@@ -79,28 +78,6 @@ function Leaderboard() {
           <div className="leaderboard-card">
             <h1 className="leaderboard-title">排行榜</h1>
 
-            {/* 排序選項 */}
-            <div className="sort-tabs">
-              <button
-                className={`sort-tab ${sortBy === 'games_won' ? 'active' : ''}`}
-                onClick={() => setSortBy('games_won')}
-              >
-                勝場數
-              </button>
-              <button
-                className={`sort-tab ${sortBy === 'win_rate' ? 'active' : ''}`}
-                onClick={() => setSortBy('win_rate')}
-              >
-                勝率
-              </button>
-              <button
-                className={`sort-tab ${sortBy === 'total_score' ? 'active' : ''}`}
-                onClick={() => setSortBy('total_score')}
-              >
-                總得分
-              </button>
-            </div>
-
             {error && <div className="leaderboard-error">{error}</div>}
 
             {/* 排行榜列表 */}
@@ -118,10 +95,9 @@ function Leaderboard() {
                     <tr>
                       <th className="col-rank">排名</th>
                       <th className="col-player">玩家</th>
-                      <th className="col-games">場數</th>
+                      <th className="col-elo">ELO</th>
                       <th className="col-wins">勝場</th>
-                      <th className="col-rate">勝率</th>
-                      <th className="col-score">總分</th>
+                      <th className="col-losses">敗場</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -144,10 +120,9 @@ function Leaderboard() {
                             <span className="player-name">{player.display_name}</span>
                           </div>
                         </td>
-                        <td className="col-games">{player.games_played}</td>
+                        <td className="col-elo">{player.elo_score ?? 1000}</td>
                         <td className="col-wins">{player.games_won}</td>
-                        <td className="col-rate">{player.win_rate}%</td>
-                        <td className="col-score">{player.total_score}</td>
+                        <td className="col-losses">{player.losses ?? 0}</td>
                       </tr>
                     ))}
                   </tbody>

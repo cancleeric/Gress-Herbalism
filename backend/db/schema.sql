@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS players (
   total_score INTEGER DEFAULT 0,
   games_played INTEGER DEFAULT 0,
   games_won INTEGER DEFAULT 0,
+  elo_score INTEGER DEFAULT 1000,
 
   -- 時間戳
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS players (
 -- 建立索引
 CREATE INDEX IF NOT EXISTS idx_players_display_name ON players(display_name);
 CREATE INDEX IF NOT EXISTS idx_players_firebase_uid ON players(firebase_uid);
+CREATE INDEX IF NOT EXISTS idx_players_elo_score ON players(elo_score DESC);
 
 -- ==================== 遊戲歷史記錄表 ====================
 CREATE TABLE IF NOT EXISTS game_history (

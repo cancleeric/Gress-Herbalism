@@ -521,7 +521,7 @@ function Lobby() {
           <button
             className={`sidebar-nav-item ${activeNav === 'ranks' ? 'active' : ''}`}
             onClick={() => navigate('/leaderboard')}
-            title="排行榜"
+            title="Leaderboard"
           >
             <span className="material-symbols-outlined">leaderboard</span>
           </button>
@@ -741,7 +741,7 @@ function Lobby() {
           onClick={() => navigate('/leaderboard')}
         >
           <span className="material-symbols-outlined">leaderboard</span>
-          排行
+          Leaderboard
         </button>
       </nav>
 

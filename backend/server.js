@@ -24,6 +24,7 @@ const {
   getPlayerHistory,
   getPlayerIdByFirebaseUid,
   updatePlayerGameStats,
+  updatePlayerEloRatings,
 } = require('./db/supabase');
 
 // 工單 0061 - 好友服務
@@ -65,9 +66,7 @@ app.use(express.json());
 // 取得排行榜
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const orderBy = req.query.orderBy || 'total_score';
-    const limit = parseInt(req.query.limit) || 10;
-    const leaderboard = await getLeaderboard(orderBy, limit);
+    const leaderboard = await getLeaderboard();
     res.json({ success: true, data: leaderboard });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1964,6 +1963,14 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
             isWinner: player.id === gameState.winner,
           });
         }
+      }
+
+      // 更新 ELO（K=32）
+      if (winnerId) {
+        const dbPlayerIds = gameState.players
+          .map(player => playerIdMap[player.id])
+          .filter(Boolean);
+        await updatePlayerEloRatings(dbPlayerIds, winnerId);
       }
 
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);

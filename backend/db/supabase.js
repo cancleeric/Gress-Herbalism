@@ -166,19 +166,16 @@ async function saveGameParticipants(gameHistoryId, participants) {
 // ==================== 排行榜相關操作 ====================
 
 /**
- * 取得排行榜
- * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'win_rate')
- * @param {number} limit - 限制筆數
- * @returns {Promise<Array>} 排行榜資料
+ * 取得排行榜（依 ELO 分數）
+ * @returns {Promise<Array>} 排行榜資料（最多 100 筆）
  */
-async function getLeaderboard(orderBy = 'total_score', limit = 10) {
+async function getLeaderboard() {
   try {
     const { data, error } = await supabase
       .from('players')
-      .select('id, display_name, avatar_url, total_score, games_played, games_won, win_rate, highest_score')
-      .gt('games_played', 0) // 至少玩過一場
-      .order(orderBy, { ascending: false })
-      .limit(limit);
+      .select('id, display_name, avatar_url, elo_score, games_played, games_won')
+      .order('elo_score', { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error('取得排行榜失敗:', error.message);
@@ -188,6 +185,7 @@ async function getLeaderboard(orderBy = 'total_score', limit = 10) {
     // 加上排名
     return (data || []).map((player, index) => ({
       rank: index + 1,
+      losses: Math.max(0, (player.games_played || 0) - (player.games_won || 0)),
       ...player,
     }));
   } catch (err) {
@@ -302,6 +300,73 @@ async function updatePlayerGameStats(playerId, gameResult) {
   }
 }
 
+function calculateExpectedScore(playerElo, opponentElo) {
+  return 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
+}
+
+/**
+ * 更新玩家 ELO（K=32）
+ * @param {string[]} playerIds - 參與玩家 DB ID
+ * @param {string} winnerPlayerId - 勝利玩家 DB ID
+ */
+async function updatePlayerEloRatings(playerIds, winnerPlayerId) {
+  if (!winnerPlayerId || !Array.isArray(playerIds) || playerIds.length < 2) {
+    return;
+  }
+
+  try {
+    const uniquePlayerIds = [...new Set(playerIds.filter(Boolean))];
+    if (uniquePlayerIds.length < 2 || !uniquePlayerIds.includes(winnerPlayerId)) {
+      return;
+    }
+
+    const { data: players, error } = await supabase
+      .from('players')
+      .select('id, elo_score')
+      .in('id', uniquePlayerIds);
+
+    if (error || !players || players.length < 2) {
+      console.error('取得 ELO 玩家資料失敗:', error?.message);
+      return;
+    }
+
+    const winner = players.find(player => player.id === winnerPlayerId);
+    const losers = players.filter(player => player.id !== winnerPlayerId);
+    if (!winner || losers.length === 0) {
+      return;
+    }
+
+    const kPerPair = 32 / losers.length;
+    const ratingUpdates = new Map();
+    ratingUpdates.set(winner.id, winner.elo_score ?? 1000);
+    losers.forEach(loser => ratingUpdates.set(loser.id, loser.elo_score ?? 1000));
+
+    let winnerDelta = 0;
+    losers.forEach((loser) => {
+      const winnerElo = winner.elo_score ?? 1000;
+      const loserElo = loser.elo_score ?? 1000;
+      const expectedWinner = calculateExpectedScore(winnerElo, loserElo);
+      const expectedLoser = calculateExpectedScore(loserElo, winnerElo);
+      winnerDelta += kPerPair * (1 - expectedWinner);
+      const loserDelta = -kPerPair * expectedLoser;
+      ratingUpdates.set(loser.id, Math.max(0, Math.round((loser.elo_score ?? 1000) + loserDelta)));
+    });
+
+    ratingUpdates.set(winner.id, Math.max(0, Math.round((winner.elo_score ?? 1000) + winnerDelta)));
+
+    await Promise.all(
+      [...ratingUpdates.entries()].map(([playerId, eloScore]) =>
+        supabase
+          .from('players')
+          .update({ elo_score: eloScore })
+          .eq('id', playerId)
+      )
+    );
+  } catch (err) {
+    console.error('updatePlayerEloRatings 錯誤:', err.message);
+  }
+}
+
 /**
  * 根據 Firebase UID 取得玩家 ID
  * @param {string} firebaseUid - Firebase UID
@@ -338,5 +403,6 @@ module.exports = {
   getPlayerStats,
   getPlayerHistory,
   updatePlayerGameStats,
+  updatePlayerEloRatings,
   getPlayerIdByFirebaseUid,
 };
