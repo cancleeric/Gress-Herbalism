@@ -4,7 +4,7 @@
  * 中國風草藥主題設計
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLeaderboard, getPlayerEloHistory } from '../../../services/apiService';
 import { useAuth } from '../../../firebase/AuthContext';
@@ -20,16 +20,7 @@ function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadLeaderboard();
-  }, [sortBy, rankingType]);
-
-  useEffect(() => {
-    if (!user?.uid) return;
-    loadMyEloHistory(user.uid);
-  }, [user?.uid]);
-
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = useCallback(async () => {
     setLoading(true);
     setError('');
 
@@ -44,9 +35,9 @@ function Leaderboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sortBy, rankingType]);
 
-  const loadMyEloHistory = async (uid) => {
+  const loadMyEloHistory = useCallback(async (uid) => {
     try {
       const result = await getPlayerEloHistory(uid, 20);
       if (result.success) {
@@ -55,7 +46,16 @@ function Leaderboard() {
     } catch (err) {
       setEloHistory([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadLeaderboard();
+  }, [loadLeaderboard]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    loadMyEloHistory(user.uid);
+  }, [user?.uid, loadMyEloHistory]);
 
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）
