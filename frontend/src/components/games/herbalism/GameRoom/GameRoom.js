@@ -166,6 +166,7 @@ function GameRoom() {
   const [followGuessData, setFollowGuessData] = useState(null);
   const [showFollowGuessPanel, setShowFollowGuessPanel] = useState(false);
   const [guessResultData, setGuessResultData] = useState(null);
+  const [pendingEloUpdate, setPendingEloUpdate] = useState(null);
   const [showRoundEnd, setShowRoundEnd] = useState(false);
   // 預測相關狀態（工單 0071）
   const [showPrediction, setShowPrediction] = useState(false);
@@ -523,7 +524,10 @@ function GameRoom() {
     // Issue #60：監聽 ELO 更新
     const unsubEloUpdated = onEloUpdated(({ playerEloChanges, seasonId }) => {
       setGuessResultData(prev => {
-        if (!prev) return prev;
+        if (!prev) {
+          setPendingEloUpdate({ playerEloChanges, seasonId });
+          return prev;
+        }
         return {
           ...prev,
           eloChanges: playerEloChanges || {},
@@ -536,6 +540,7 @@ function GameRoom() {
     const unsubRoundStart = onRoundStarted(({ round, startPlayerIndex }) => {
       setShowRoundEnd(false);
       setGuessResultData(null);
+      setPendingEloUpdate(null);
       setShowPrediction(false);
       // 新局開始時清除顏色牌標記（工單 0075）
       setColorCardMarkers({});
@@ -630,6 +635,17 @@ function GameRoom() {
       unsubReconnected();
     };
   }, [dispatch, isLocalMode]);
+
+  // Issue #60：處理先到的 ELO 更新事件
+  useEffect(() => {
+    if (!guessResultData || !pendingEloUpdate) return;
+    setGuessResultData(prev => ({
+      ...prev,
+      eloChanges: pendingEloUpdate.playerEloChanges || {},
+      seasonId: pendingEloUpdate.seasonId,
+    }));
+    setPendingEloUpdate(null);
+  }, [guessResultData, pendingEloUpdate]);
 
   /**
    * 工單 0196/0210：多人模式重連（含重試機制）
