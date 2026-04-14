@@ -19,11 +19,15 @@ const {
   saveGameRecord,
   saveGameParticipants,
   getLeaderboard,
+  getSeasonLeaderboard,
+  getCurrentSeason,
   getOrCreatePlayer,
   getPlayerStats,
+  getPlayerEloHistory,
   getPlayerHistory,
   getPlayerIdByFirebaseUid,
   updatePlayerGameStats,
+  updatePlayersEloRatings,
 } = require('./db/supabase');
 
 // 工單 0061 - 好友服務
@@ -65,10 +69,35 @@ app.use(express.json());
 // 取得排行榜
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const orderBy = req.query.orderBy || 'total_score';
-    const limit = parseInt(req.query.limit) || 10;
-    const leaderboard = await getLeaderboard(orderBy, limit);
-    res.json({ success: true, data: leaderboard });
+    const orderBy = req.query.orderBy || 'elo_rating';
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const type = req.query.type || 'global';
+    const viewerFirebaseUid = req.query.viewerFirebaseUid || null;
+
+    if (type === 'season') {
+      const seasonId = req.query.seasonId ? parseInt(req.query.seasonId, 10) : null;
+      const seasonData = await getSeasonLeaderboard(limit, seasonId);
+      return res.json({
+        success: true,
+        data: seasonData.entries,
+        meta: {
+          type: 'season',
+          season: seasonData.season,
+        },
+      });
+    }
+
+    const leaderboard = await getLeaderboard(orderBy, limit, { viewerFirebaseUid });
+    const activeSeason = await getCurrentSeason();
+    res.json({
+      success: true,
+      data: leaderboard.entries,
+      meta: {
+        type: 'global',
+        season: activeSeason,
+        viewer: leaderboard.viewer,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -127,6 +156,18 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
     }
 
     const history = await getPlayerHistory(playerId, limit);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家 ELO 歷史
+app.get('/api/players/:playerIdentifier/elo-history', async (req, res) => {
+  try {
+    const { playerIdentifier } = req.params;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const history = await getPlayerEloHistory(playerIdentifier, limit);
     res.json({ success: true, data: history });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1964,6 +2005,18 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
             isWinner: player.id === gameState.winner,
           });
         }
+      }
+
+      // issue #60：更新 ELO 積分與歷史
+      const eloPlayers = gameState.players
+        .map((player) => ({
+          playerId: playerIdMap[player.id] || null,
+          score: gameState.scores[player.id] || 0,
+        }))
+        .filter((p) => p.playerId);
+
+      if (eloPlayers.length >= 2) {
+        await updatePlayersEloRatings(eloPlayers, gameHistoryId);
       }
 
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);

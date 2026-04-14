@@ -14,23 +14,32 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
+jest.mock('../../../firebase', () => ({
+  useAuth: () => ({
+    user: { uid: 'uid123' },
+  }),
+}));
+
 // Mock apiService
 const mockGetLeaderboard = jest.fn();
-jest.mock('../../services/apiService', () => ({
+const mockGetPlayerEloHistory = jest.fn();
+jest.mock('../../../services/apiService', () => ({
   getLeaderboard: (...args) => mockGetLeaderboard(...args),
+  getPlayerEloHistory: (...args) => mockGetPlayerEloHistory(...args),
 }));
 
 describe('Leaderboard 組件', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetLeaderboard.mockResolvedValue({ success: true, data: [] });
+    mockGetLeaderboard.mockResolvedValue({ success: true, data: [], meta: {} });
+    mockGetPlayerEloHistory.mockResolvedValue({ success: true, data: [] });
   });
 
   describe('頁面渲染', () => {
     test('應顯示排行榜標題', async () => {
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => {
-        expect(screen.getByText(/排行榜/)).toBeInTheDocument();
+        expect(screen.getByText(/全球排行榜/)).toBeInTheDocument();
       });
     });
 
@@ -44,6 +53,7 @@ describe('Leaderboard 組件', () => {
     test('應顯示排序選項', async () => {
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => {
+        expect(screen.getByText('ELO')).toBeInTheDocument();
         expect(screen.getByText('勝場數')).toBeInTheDocument();
         expect(screen.getByText('勝率')).toBeInTheDocument();
         expect(screen.getByText('總得分')).toBeInTheDocument();
@@ -63,7 +73,7 @@ describe('Leaderboard 組件', () => {
         { id: '1', rank: 1, display_name: '玩家A', games_played: 10, games_won: 8, win_rate: 80, total_score: 100 },
         { id: '2', rank: 2, display_name: '玩家B', games_played: 10, games_won: 6, win_rate: 60, total_score: 80 },
       ];
-      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData });
+      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData, meta: {} });
 
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
 
@@ -74,7 +84,7 @@ describe('Leaderboard 組件', () => {
     });
 
     test('無數據時應顯示空狀態', async () => {
-      mockGetLeaderboard.mockResolvedValue({ success: true, data: [] });
+      mockGetLeaderboard.mockResolvedValue({ success: true, data: [], meta: {} });
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => {
         expect(screen.getByText('暫無排行資料')).toBeInTheDocument();
@@ -88,7 +98,7 @@ describe('Leaderboard 組件', () => {
         { id: '3', rank: 3, display_name: '第三名', games_played: 10, games_won: 6, win_rate: 60, total_score: 80 },
         { id: '4', rank: 4, display_name: '第四名', games_played: 10, games_won: 4, win_rate: 40, total_score: 60 },
       ];
-      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData });
+      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData, meta: {} });
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => {
         expect(screen.getByText('第一名')).toBeInTheDocument();
@@ -100,7 +110,7 @@ describe('Leaderboard 組件', () => {
       const mockData = [
         { id: '1', rank: 1, display_name: '小明', games_played: 10, games_won: 8, win_rate: 80, total_score: 100 },
       ];
-      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData });
+      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData, meta: {} });
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => {
         expect(screen.getByText('小')).toBeInTheDocument();
@@ -111,7 +121,7 @@ describe('Leaderboard 組件', () => {
       const mockData = [
         { id: '1', rank: 1, display_name: '玩家', avatar_url: 'https://example.com/avatar.jpg', games_played: 10, games_won: 8, win_rate: 80, total_score: 100 },
       ];
-      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData });
+      mockGetLeaderboard.mockResolvedValue({ success: true, data: mockData, meta: {} });
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => {
         const img = screen.getByRole('img');
@@ -126,7 +136,7 @@ describe('Leaderboard 組件', () => {
       await waitFor(() => expect(screen.getByText('勝率')).toBeInTheDocument());
       fireEvent.click(screen.getByText('勝率'));
       await waitFor(() => {
-        expect(mockGetLeaderboard).toHaveBeenCalledWith('win_rate', 20);
+        expect(mockGetLeaderboard).toHaveBeenCalledWith('win_rate', 100, expect.any(Object));
       });
     });
 
@@ -135,7 +145,7 @@ describe('Leaderboard 組件', () => {
       await waitFor(() => expect(screen.getByText('總得分')).toBeInTheDocument());
       fireEvent.click(screen.getByText('總得分'));
       await waitFor(() => {
-        expect(mockGetLeaderboard).toHaveBeenCalledWith('total_score', 20);
+        expect(mockGetLeaderboard).toHaveBeenCalledWith('total_score', 100, expect.any(Object));
       });
     });
   });
@@ -145,7 +155,7 @@ describe('Leaderboard 組件', () => {
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => expect(screen.getByText(/返回大廳/)).toBeInTheDocument());
       fireEvent.click(screen.getByText(/返回大廳/));
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
   });
 
@@ -156,6 +166,25 @@ describe('Leaderboard 組件', () => {
       await waitFor(() => {
         expect(screen.getByText('載入排行榜失敗')).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('ELO 歷史', () => {
+    test('應載入目前玩家 ELO 歷史', async () => {
+      mockGetPlayerEloHistory.mockResolvedValue({
+        success: true,
+        data: [
+          { new_elo: 1000, elo_change: 8, created_at: '2026-01-01T00:00:00.000Z' },
+          { new_elo: 1008, elo_change: 6, created_at: '2026-01-02T00:00:00.000Z' },
+        ],
+      });
+
+      render(<MemoryRouter><Leaderboard /></MemoryRouter>);
+
+      await waitFor(() => {
+        expect(mockGetPlayerEloHistory).toHaveBeenCalledWith('uid123', 20);
+      });
+      expect(screen.getByText(/我的 ELO 歷史/)).toBeInTheDocument();
     });
   });
 });

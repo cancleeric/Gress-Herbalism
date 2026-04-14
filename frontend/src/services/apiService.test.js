@@ -7,6 +7,7 @@ import {
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
+  getPlayerEloHistory,
   healthCheck,
 } from './apiService';
 
@@ -118,10 +119,13 @@ describe('apiService', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await getLeaderboard('games_won', 10);
+      const result = await getLeaderboard('games_won', 10, {
+        type: 'season',
+        seasonId: 2,
+      });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/leaderboard?orderBy=games_won&limit=10'),
+        expect.stringContaining('/api/leaderboard?orderBy=games_won&limit=10&type=season&seasonId=2'),
         expect.any(Object)
       );
       expect(result).toEqual(mockResponse);
@@ -137,9 +141,27 @@ describe('apiService', () => {
       await getLeaderboard();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('orderBy=total_score&limit=10'),
+        expect.stringContaining('orderBy=elo_rating&limit=100'),
         expect.any(Object)
       );
+    });
+  });
+
+  describe('getPlayerEloHistory', () => {
+    test('成功取得玩家 ELO 歷史', async () => {
+      const mockResponse = { success: true, data: [{ elo_change: 12 }] };
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await getPlayerEloHistory('uid123', 15);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/players/uid123/elo-history?limit=15'),
+        expect.any(Object)
+      );
+      expect(result).toEqual(mockResponse);
     });
   });
 

@@ -4,38 +4,114 @@
  * 中國風草藥主題設計
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLeaderboard } from '../../../services/apiService';
+import { useAuth } from '../../../firebase';
+import { getLeaderboard, getPlayerEloHistory } from '../../../services/apiService';
 import './Leaderboard.css';
+
+function EloHistoryChart({ data }) {
+  if (!data || data.length < 2) {
+    return <div className="elo-chart-empty">完成更多對局後會顯示 ELO 走勢</div>;
+  }
+
+  const width = 560;
+  const height = 180;
+  const padding = 24;
+  const ratings = data.map((item) => item.new_elo);
+  const min = Math.min(...ratings);
+  const max = Math.max(...ratings);
+  const range = Math.max(1, max - min);
+  const stepX = (width - padding * 2) / Math.max(1, data.length - 1);
+
+  const points = data.map((item, index) => {
+    const x = padding + index * stepX;
+    const normalized = (item.new_elo - min) / range;
+    const y = height - padding - normalized * (height - padding * 2);
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg className="elo-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="ELO 歷史走勢圖">
+      <polyline
+        fill="none"
+        stroke="#2E7D32"
+        strokeWidth="3"
+        points={points}
+      />
+    </svg>
+  );
+}
 
 function Leaderboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
-  const [sortBy, setSortBy] = useState('games_won');
+  const [sortBy, setSortBy] = useState('elo_rating');
+  const [boardType, setBoardType] = useState('global');
+  const [meta, setMeta] = useState({});
+  const [eloHistory, setEloHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadLeaderboard();
-  }, [sortBy]);
+    let active = true;
 
-  const loadLeaderboard = async () => {
-    setLoading(true);
-    setError('');
+    const run = async () => {
+      setLoading(true);
+      setError('');
 
-    try {
-      const result = await getLeaderboard(sortBy, 20);
-      if (result.success) {
-        setLeaderboard(result.data);
+      try {
+        const result = await getLeaderboard(sortBy, 100, {
+          type: boardType,
+          viewerFirebaseUid: user?.uid,
+        });
+        if (active && result.success) {
+          setLeaderboard(result.data);
+          setMeta(result.meta || {});
+        }
+      } catch (err) {
+        if (active) {
+          setError('載入排行榜失敗');
+        }
+        console.error('載入排行榜失敗:', err);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      setError('載入排行榜失敗');
-      console.error('載入排行榜失敗:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    run();
+    return () => {
+      active = false;
+    };
+  }, [sortBy, boardType, user?.uid]);
+
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      if (!user?.uid) {
+        setEloHistory([]);
+        return;
+      }
+
+      try {
+        const result = await getPlayerEloHistory(user.uid, 20);
+        if (active && result.success) {
+          setEloHistory(result.data || []);
+        }
+      } catch (err) {
+        console.error('載入 ELO 歷史失敗:', err);
+      }
+    };
+
+    run();
+    return () => {
+      active = false;
+    };
+  }, [user?.uid]);
 
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）
@@ -54,6 +130,10 @@ function Leaderboard() {
         return <span className="rank-number">{rank}</span>;
     }
   };
+
+  const leaderboardTitle = useMemo(() => (
+    boardType === 'season' ? '賽季排行榜' : '全球排行榜'
+  ), [boardType]);
 
   return (
     <div className="leaderboard-page">
@@ -77,10 +157,31 @@ function Leaderboard() {
 
         <main className="leaderboard-main">
           <div className="leaderboard-card">
-            <h1 className="leaderboard-title">排行榜</h1>
+            <h1 className="leaderboard-title">{leaderboardTitle}</h1>
+
+            <div className="leaderboard-type-tabs">
+              <button
+                className={`sort-tab ${boardType === 'global' ? 'active' : ''}`}
+                onClick={() => setBoardType('global')}
+              >
+                全球
+              </button>
+              <button
+                className={`sort-tab ${boardType === 'season' ? 'active' : ''}`}
+                onClick={() => setBoardType('season')}
+              >
+                賽季
+              </button>
+            </div>
 
             {/* 排序選項 */}
             <div className="sort-tabs">
+              <button
+                className={`sort-tab ${sortBy === 'elo_rating' ? 'active' : ''}`}
+                onClick={() => setSortBy('elo_rating')}
+              >
+                ELO
+              </button>
               <button
                 className={`sort-tab ${sortBy === 'games_won' ? 'active' : ''}`}
                 onClick={() => setSortBy('games_won')}
@@ -101,6 +202,16 @@ function Leaderboard() {
               </button>
             </div>
 
+            {meta?.season?.season_name && (
+              <div className="season-info">目前賽季：{meta.season.season_name}</div>
+            )}
+
+            {meta?.viewer && (
+              <div className="my-rank-card">
+                我的排名 #{meta.viewer.rank} · ELO {meta.viewer.eloRating}
+              </div>
+            )}
+
             {error && <div className="leaderboard-error">{error}</div>}
 
             {/* 排行榜列表 */}
@@ -117,14 +228,16 @@ function Leaderboard() {
                   <thead>
                     <tr>
                       <th className="col-rank">排名</th>
-                      <th className="col-player">玩家</th>
-                      <th className="col-games">場數</th>
-                      <th className="col-wins">勝場</th>
-                      <th className="col-rate">勝率</th>
-                      <th className="col-score">總分</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                        <th className="col-player">玩家</th>
+                        <th className="col-elo">ELO</th>
+                        <th className="col-games">場數</th>
+                        <th className="col-wins">勝場</th>
+                        <th className="col-losses">敗場</th>
+                        <th className="col-rate">勝率</th>
+                        {boardType === 'season' ? <th className="col-score">賽季峰值</th> : <th className="col-score">總分</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
                     {leaderboard.map((player) => (
                       <tr key={player.id} className={player.rank <= 3 ? 'top-rank' : ''}>
                         <td className="col-rank">{getRankDisplay(player.rank)}</td>
@@ -144,16 +257,31 @@ function Leaderboard() {
                             <span className="player-name">{player.display_name}</span>
                           </div>
                         </td>
+                        <td className="col-elo">{player.elo_rating || 1000}</td>
                         <td className="col-games">{player.games_played}</td>
                         <td className="col-wins">{player.games_won}</td>
+                        <td className="col-losses">{player.losses}</td>
                         <td className="col-rate">{player.win_rate}%</td>
-                        <td className="col-score">{player.total_score}</td>
+                        {boardType === 'season'
+                          ? <td className="col-score">{player.season_peak_elo || player.elo_rating || 1000}</td>
+                          : <td className="col-score">{player.total_score}</td>}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
+
+            <div className="elo-history-card">
+              <h2 className="elo-history-title">我的 ELO 歷史</h2>
+              <EloHistoryChart data={eloHistory} />
+              {eloHistory.length > 0 && (
+                <div className="elo-latest-change">
+                  最新變化：{eloHistory[eloHistory.length - 1].elo_change > 0 ? '+' : ''}
+                  {eloHistory[eloHistory.length - 1].elo_change}
+                </div>
+              )}
+            </div>
           </div>
         </main>
 
