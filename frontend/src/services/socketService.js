@@ -385,6 +385,13 @@ export function onGuessResult(callback) {
 }
 
 /**
+ * 監聽 ELO 更新結果
+ */
+export function onEloUpdated(callback) {
+  return safeOn('eloUpdated', callback);
+}
+
+/**
  * 監聽局開始
  */
 export function onRoundStarted(callback) {

@@ -24,6 +24,8 @@ const {
   getPlayerHistory,
   getPlayerIdByFirebaseUid,
   updatePlayerGameStats,
+  updatePlayersElo,
+  getPlayerEloHistory,
 } = require('./db/supabase');
 
 // 工單 0061 - 好友服務
@@ -65,9 +67,10 @@ app.use(express.json());
 // 取得排行榜
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const orderBy = req.query.orderBy || 'total_score';
-    const limit = parseInt(req.query.limit) || 10;
-    const leaderboard = await getLeaderboard(orderBy, limit);
+    const rankingType = req.query.rankingType || 'global';
+    const orderBy = req.query.orderBy || (rankingType === 'season' ? 'season_current_elo' : 'elo_rating');
+    const limit = parseInt(req.query.limit, 10) || 100;
+    const leaderboard = await getLeaderboard(orderBy, limit, rankingType);
     res.json({ success: true, data: leaderboard });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -127,6 +130,21 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
     }
 
     const history = await getPlayerHistory(playerId, limit);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家 ELO 歷史
+app.get('/api/players/:id/elo-history', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit, 10) || 20;
+
+    // 優先視為 firebase uid 查詢，若查不到則視為 player_id
+    const playerId = await getPlayerIdByFirebaseUid(id) || id;
+    const history = await getPlayerEloHistory(playerId, limit);
     res.json({ success: true, data: history });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1964,6 +1982,40 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
             isWinner: player.id === gameState.winner,
           });
         }
+      }
+
+      // Issue #60：更新 ELO 並廣播變化
+      const eloParticipants = gameState.players
+        .map(player => ({
+          localPlayerId: player.id,
+          playerId: playerIdMap[player.id] || null,
+          isWinner: player.id === gameState.winner,
+        }))
+        .filter(p => Boolean(p.playerId));
+
+      const eloResult = await updatePlayersElo({
+        participants: eloParticipants.map(p => ({ playerId: p.playerId, isWinner: p.isWinner })),
+        winnerId: winnerId || null,
+        gameId: gameState.gameId,
+      });
+
+      const playerEloChanges = {};
+      for (const participant of eloParticipants) {
+        const dbChange = eloResult.changes[participant.playerId];
+        if (dbChange) {
+          playerEloChanges[participant.localPlayerId] = {
+            delta: dbChange.delta,
+            beforeRating: dbChange.beforeRating,
+            afterRating: dbChange.afterRating,
+          };
+        }
+      }
+
+      if (Object.keys(playerEloChanges).length > 0) {
+        io.to(gameState.gameId).emit('eloUpdated', {
+          seasonId: eloResult.seasonId,
+          playerEloChanges,
+        });
       }
 
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);

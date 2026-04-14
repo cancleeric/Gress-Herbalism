@@ -56,11 +56,21 @@ export async function getPlayerHistory(firebaseUid, limit = 20) {
 
 /**
  * 取得排行榜
- * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'win_rate')
+ * @param {string} orderBy - 排序欄位
+ * @param {number} limit - 限制筆數
+ * @param {'global'|'season'} rankingType - 排行榜類型
+ */
+export async function getLeaderboard(orderBy = 'elo_rating', limit = 100, rankingType = 'global') {
+  return apiRequest(`/api/leaderboard?orderBy=${orderBy}&limit=${limit}&rankingType=${rankingType}`);
+}
+
+/**
+ * 取得玩家 ELO 歷史
+ * @param {string} playerIdOrFirebaseUid - 玩家 id 或 firebase uid
  * @param {number} limit - 限制筆數
  */
-export async function getLeaderboard(orderBy = 'total_score', limit = 10) {
-  return apiRequest(`/api/leaderboard?orderBy=${orderBy}&limit=${limit}`);
+export async function getPlayerEloHistory(playerIdOrFirebaseUid, limit = 20) {
+  return apiRequest(`/api/players/${playerIdOrFirebaseUid}/elo-history?limit=${limit}`);
 }
 
 /**
@@ -75,5 +85,6 @@ export default {
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
+  getPlayerEloHistory,
   healthCheck,
 };

@@ -7,6 +7,7 @@ import {
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
+  getPlayerEloHistory,
   healthCheck,
 } from './apiService';
 
@@ -118,10 +119,10 @@ describe('apiService', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await getLeaderboard('games_won', 10);
+      const result = await getLeaderboard('games_won', 10, 'global');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/leaderboard?orderBy=games_won&limit=10'),
+        expect.stringContaining('/api/leaderboard?orderBy=games_won&limit=10&rankingType=global'),
         expect.any(Object)
       );
       expect(result).toEqual(mockResponse);
@@ -137,7 +138,40 @@ describe('apiService', () => {
       await getLeaderboard();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('orderBy=total_score&limit=10'),
+        expect.stringContaining('orderBy=elo_rating&limit=100&rankingType=global'),
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('getPlayerEloHistory', () => {
+    test('成功取得玩家 ELO 歷史', async () => {
+      const mockResponse = { success: true, data: [{ elo_before: 1000, elo_after: 1018, elo_change: 18 }] };
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await getPlayerEloHistory('uid123', 30);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/players/uid123/elo-history?limit=30'),
+        expect.any(Object)
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    test('使用預設 limit', async () => {
+      const mockResponse = { success: true, data: [] };
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      await getPlayerEloHistory('uid123');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/players/uid123/elo-history?limit=20'),
         expect.any(Object)
       );
     });

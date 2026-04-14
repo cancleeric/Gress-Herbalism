@@ -26,6 +26,7 @@ import {
   onFollowGuessStarted,
   onFollowGuessUpdate,
   onGuessResult,
+  onEloUpdated,
   onRoundStarted,
   onPostQuestionPhase,
   onTurnEnded,
@@ -519,6 +520,18 @@ function GameRoom() {
       setShowRoundEnd(true);
     });
 
+    // Issue #60：監聽 ELO 更新
+    const unsubEloUpdated = onEloUpdated(({ playerEloChanges, seasonId }) => {
+      setGuessResultData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          eloChanges: playerEloChanges || {},
+          seasonId,
+        };
+      });
+    });
+
     // 監聽局開始
     const unsubRoundStart = onRoundStarted(({ round, startPlayerIndex }) => {
       setShowRoundEnd(false);
@@ -607,6 +620,7 @@ function GameRoom() {
       unsubFollowGuess();
       unsubFollowUpdate();
       unsubGuessResult();
+      unsubEloUpdated();
       unsubRoundStart();
       unsubPostQuestion();
       unsubTurnEnded();
@@ -1940,6 +1954,40 @@ function GameRoom() {
                   })}
                 </div>
               </div>
+
+              {/* ELO 變化區塊（Issue #60） */}
+              {guessResultData.eloChanges && Object.keys(guessResultData.eloChanges).length > 0 && (
+                <div className="gr-section">
+                  <h3 className="gr-section-title">
+                    <span className="material-symbols-outlined">bolt</span>
+                    ELO 變化
+                  </h3>
+                  <div className="gr-card-list">
+                    {Object.entries(guessResultData.eloChanges).map(([playerId, eloChange]) => {
+                      const player = gameState.players.find(p => p.id === playerId);
+                      const delta = eloChange?.delta || 0;
+                      return (
+                        <div key={playerId} className="gr-score-item">
+                          <div className="gr-player-info">
+                            <div className={`gr-avatar ${delta > 0 ? 'gr-avatar-positive' : 'gr-avatar-neutral'}`}>
+                              <span className="material-symbols-outlined">trophy</span>
+                            </div>
+                            <div className="gr-player-details">
+                              <p className="gr-player-name">{player?.name || playerId}</p>
+                              <p className="gr-player-desc">
+                                {eloChange.beforeRating} → {eloChange.afterRating}
+                              </p>
+                            </div>
+                          </div>
+                          <div className={`gr-score-change ${delta > 0 ? 'gr-score-positive' : delta < 0 ? 'gr-score-negative' : ''}`}>
+                            {delta > 0 ? `+${delta}` : delta}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* 預測結果 */}
               {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (

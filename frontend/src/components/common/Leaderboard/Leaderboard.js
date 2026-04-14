@@ -6,26 +6,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLeaderboard } from '../../../services/apiService';
+import { getLeaderboard, getPlayerEloHistory } from '../../../services/apiService';
+import { useAuth } from '../../../firebase/AuthContext';
 import './Leaderboard.css';
 
 function Leaderboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [leaderboard, setLeaderboard] = useState([]);
-  const [sortBy, setSortBy] = useState('games_won');
+  const [sortBy, setSortBy] = useState('elo_rating');
+  const [rankingType, setRankingType] = useState('global');
+  const [eloHistory, setEloHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadLeaderboard();
-  }, [sortBy]);
+  }, [sortBy, rankingType]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    loadMyEloHistory(user.uid);
+  }, [user?.uid]);
 
   const loadLeaderboard = async () => {
     setLoading(true);
     setError('');
 
     try {
-      const result = await getLeaderboard(sortBy, 20);
+      const result = await getLeaderboard(sortBy, 100, rankingType);
       if (result.success) {
         setLeaderboard(result.data);
       }
@@ -34,6 +43,17 @@ function Leaderboard() {
       console.error('載入排行榜失敗:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMyEloHistory = async (uid) => {
+    try {
+      const result = await getPlayerEloHistory(uid, 20);
+      if (result.success) {
+        setEloHistory(result.data || []);
+      }
+    } catch (err) {
+      setEloHistory([]);
     }
   };
 
@@ -54,6 +74,20 @@ function Leaderboard() {
         return <span className="rank-number">{rank}</span>;
     }
   };
+
+  const myRank = leaderboard.find(player => player.firebase_uid && player.firebase_uid === user?.uid) || null;
+  const chartPoints = [...eloHistory]
+    .reverse()
+    .map((item, index, arr) => {
+      const width = 240;
+      const height = 70;
+      const min = Math.min(...arr.map(x => x.elo_after));
+      const max = Math.max(...arr.map(x => x.elo_after));
+      const x = arr.length <= 1 ? 0 : (index / (arr.length - 1)) * width;
+      const y = max === min ? height / 2 : ((max - item.elo_after) / (max - min)) * height;
+      return `${x},${y}`;
+    })
+    .join(' ');
 
   return (
     <div className="leaderboard-page">
@@ -82,24 +116,65 @@ function Leaderboard() {
             {/* 排序選項 */}
             <div className="sort-tabs">
               <button
-                className={`sort-tab ${sortBy === 'games_won' ? 'active' : ''}`}
-                onClick={() => setSortBy('games_won')}
+                className={`sort-tab ${rankingType === 'global' ? 'active' : ''}`}
+                onClick={() => {
+                  setRankingType('global');
+                  setSortBy('elo_rating');
+                }}
               >
-                勝場數
+                全球排名
               </button>
               <button
-                className={`sort-tab ${sortBy === 'win_rate' ? 'active' : ''}`}
-                onClick={() => setSortBy('win_rate')}
+                className={`sort-tab ${rankingType === 'season' ? 'active' : ''}`}
+                onClick={() => {
+                  setRankingType('season');
+                  setSortBy('season_current_elo');
+                }}
               >
-                勝率
-              </button>
-              <button
-                className={`sort-tab ${sortBy === 'total_score' ? 'active' : ''}`}
-                onClick={() => setSortBy('total_score')}
-              >
-                總得分
+                賽季排名
               </button>
             </div>
+
+            <div className="sort-tabs">
+              <button
+                className={`sort-tab ${sortBy === (rankingType === 'season' ? 'season_current_elo' : 'elo_rating') ? 'active' : ''}`}
+                onClick={() => setSortBy(rankingType === 'season' ? 'season_current_elo' : 'elo_rating')}
+              >
+                ELO
+              </button>
+              <button
+                className={`sort-tab ${sortBy === (rankingType === 'season' ? 'season_games_won' : 'games_won') ? 'active' : ''}`}
+                onClick={() => setSortBy(rankingType === 'season' ? 'season_games_won' : 'games_won')}
+              >
+                勝場
+              </button>
+              <button
+                className={`sort-tab ${sortBy === (rankingType === 'season' ? 'season_peak_elo' : 'total_score') ? 'active' : ''}`}
+                onClick={() => setSortBy(rankingType === 'season' ? 'season_peak_elo' : 'total_score')}
+              >
+                {rankingType === 'season' ? '賽季峰值' : '總得分'}
+              </button>
+            </div>
+
+            {myRank && (
+              <div className="leaderboard-my-rank">
+                <p>我的排名：#{myRank.rank}（ELO: {rankingType === 'season' ? myRank.season_current_elo : myRank.elo_rating}）</p>
+                {eloHistory.length > 1 && (
+                  <div className="elo-history-chart">
+                    <svg width="240" height="70" viewBox="0 0 240 70" role="img" aria-label="ELO history chart">
+                      <polyline
+                        points={chartPoints}
+                        fill="none"
+                        stroke="#2f855a"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            )}
 
             {error && <div className="leaderboard-error">{error}</div>}
 
@@ -118,6 +193,7 @@ function Leaderboard() {
                     <tr>
                       <th className="col-rank">排名</th>
                       <th className="col-player">玩家</th>
+                      <th className="col-score">ELO</th>
                       <th className="col-games">場數</th>
                       <th className="col-wins">勝場</th>
                       <th className="col-rate">勝率</th>
@@ -142,10 +218,14 @@ function Leaderboard() {
                               </div>
                             )}
                             <span className="player-name">{player.display_name}</span>
+                            {rankingType === 'season' && player.rank <= 10 && (
+                              <span className="top10-badge">S Top 10</span>
+                            )}
                           </div>
                         </td>
-                        <td className="col-games">{player.games_played}</td>
-                        <td className="col-wins">{player.games_won}</td>
+                        <td className="col-score">{rankingType === 'season' ? player.season_current_elo : player.elo_rating}</td>
+                        <td className="col-games">{rankingType === 'season' ? player.season_games_played : player.games_played}</td>
+                        <td className="col-wins">{rankingType === 'season' ? player.season_games_won : player.games_won}</td>
                         <td className="col-rate">{player.win_rate}%</td>
                         <td className="col-score">{player.total_score}</td>
                       </tr>
