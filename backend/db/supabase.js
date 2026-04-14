@@ -376,6 +376,9 @@ async function updatePlayersElo({ participants = [], winnerId = null, gameId = n
       .in('id', participantIds);
 
     if (fetchError || !playerRows || playerRows.length < 2) {
+      if (fetchError) {
+        console.error('updatePlayersElo 取得玩家資料失敗:', fetchError.message);
+      }
       return { seasonId, changes: {} };
     }
 
