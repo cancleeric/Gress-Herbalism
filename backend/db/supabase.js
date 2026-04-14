@@ -8,6 +8,7 @@ const {
   INITIAL_ELO_RATING,
   calculateMultiplayerEloChanges,
 } = require('../utils/eloRating');
+const PLAYER_ID_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // 從環境變數讀取設定，若無則使用預設值（開發用）
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvlmpnovbrksqwtihwqi.supabase.co';
@@ -15,6 +16,12 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsIn
 
 // 建立 Supabase 客戶端
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+function clampLimit(limit, defaultValue, maxValue = 100) {
+  const parsed = Number.parseInt(limit, 10);
+  const normalized = Number.isFinite(parsed) && parsed > 0 ? parsed : defaultValue;
+  return Math.min(Math.max(normalized, 1), maxValue);
+}
 
 /**
  * 測試資料庫連線
@@ -177,7 +184,7 @@ async function saveGameParticipants(gameHistoryId, participants) {
  */
 async function getLeaderboard(orderBy = 'elo_rating', limit = 10, options = {}) {
   try {
-    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+    const safeLimit = clampLimit(limit, 10);
     const validOrderBy = ['elo_rating', 'total_score', 'games_won', 'win_rate'].includes(orderBy)
       ? orderBy
       : 'elo_rating';
@@ -399,7 +406,7 @@ async function getCurrentSeason() {
  */
 async function getSeasonLeaderboard(limit = 100, seasonId = null) {
   try {
-    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 100);
+    const safeLimit = clampLimit(limit, 100);
     let targetSeason = null;
 
     if (seasonId) {
@@ -448,9 +455,8 @@ async function getSeasonLeaderboard(limit = 100, seasonId = null) {
  */
 async function getPlayerEloHistory(playerIdentifier, limit = 20) {
   try {
-    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-      .test(playerIdentifier);
+    const safeLimit = clampLimit(limit, 20);
+    const isUuid = PLAYER_ID_UUID_REGEX.test(playerIdentifier);
 
     const { data: playerData, error: playerError } = await supabase
       .from('players')

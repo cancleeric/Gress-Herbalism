@@ -10,6 +10,8 @@ import { useAuth } from '../../../firebase';
 import { getLeaderboard, getPlayerEloHistory } from '../../../services/apiService';
 import './Leaderboard.css';
 
+const INITIAL_ELO_RATING = 1000;
+
 function EloHistoryChart({ data }) {
   if (!data || data.length < 2) {
     return <div className="elo-chart-empty">完成更多對局後會顯示 ELO 走勢</div>;
@@ -257,13 +259,13 @@ function Leaderboard() {
                             <span className="player-name">{player.display_name}</span>
                           </div>
                         </td>
-                        <td className="col-elo">{player.elo_rating || 1000}</td>
+                        <td className="col-elo">{player.elo_rating || INITIAL_ELO_RATING}</td>
                         <td className="col-games">{player.games_played}</td>
                         <td className="col-wins">{player.games_won}</td>
                         <td className="col-losses">{player.losses}</td>
                         <td className="col-rate">{player.win_rate}%</td>
                         {boardType === 'season'
-                          ? <td className="col-score">{player.season_peak_elo || player.elo_rating || 1000}</td>
+                          ? <td className="col-score">{player.season_peak_elo || player.elo_rating || INITIAL_ELO_RATING}</td>
                           : <td className="col-score">{player.total_score}</td>}
                       </tr>
                     ))}
