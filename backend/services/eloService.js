@@ -34,6 +34,11 @@ function calculateMultiplayerEloDeltas(players, winnerPlayerId) {
     return {};
   }
 
+  const winnerExists = players.some((player) => player.playerId === winnerPlayerId);
+  if (!winnerExists) {
+    return {};
+  }
+
   const deltas = {};
 
   players.forEach((player) => {

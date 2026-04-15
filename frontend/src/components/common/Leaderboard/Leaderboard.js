@@ -14,14 +14,18 @@ const SCOPE = {
 };
 
 function EloTrendChart({ points }) {
-  if (!points || points.length < 2) {
+  const safeValues = (points || [])
+    .map((p) => p.elo_after)
+    .filter((value) => Number.isFinite(value));
+
+  if (safeValues.length < 2) {
     return <p className="elo-trend-empty">暫無足夠資料繪製曲線</p>;
   }
 
   const width = 420;
   const height = 120;
   const padding = 12;
-  const values = points.map((p) => p.elo_after ?? 0);
+  const values = safeValues;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = Math.max(1, max - min);
@@ -76,7 +80,7 @@ function Leaderboard() {
   }, [scope]);
 
   const myEntry = useMemo(
-    () => leaderboard.find((player) => player.firebase_uid && player.firebase_uid === user?.uid),
+    () => leaderboard.find((player) => player.firebase_uid === user?.uid),
     [leaderboard, user?.uid]
   );
 

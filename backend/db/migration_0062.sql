@@ -2,6 +2,7 @@
 -- 工單 0062 - 全球排行榜 ELO + 賽季系統
 
 -- 玩家 ELO 欄位
+-- 1000 為 ELO 常見初始基準分，讓新玩家可從中性位置開始評分
 ALTER TABLE players ADD COLUMN IF NOT EXISTS elo_rating INTEGER DEFAULT 1000;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS season_peak_elo INTEGER DEFAULT 1000;
 

@@ -78,4 +78,12 @@ describe('Leaderboard', () => {
       expect(screen.getByText('載入排行榜失敗')).toBeInTheDocument();
     });
   });
+
+  test('ELO 歷史查詢失敗仍應穩定渲染', async () => {
+    mockGetPlayerEloHistory.mockRejectedValue(new Error('history fail'));
+    render(<MemoryRouter><Leaderboard /></MemoryRouter>);
+    await waitFor(() => {
+      expect(screen.getByText('暫無足夠資料繪製曲線')).toBeInTheDocument();
+    });
+  });
 });

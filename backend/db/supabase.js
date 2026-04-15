@@ -6,6 +6,15 @@
 const { createClient } = require('@supabase/supabase-js');
 const { calculateMultiplayerEloDeltas, DEFAULT_ELO } = require('../services/eloService');
 
+const LEADERBOARD_ALLOWED_ORDER_BY = new Set([
+  'total_score',
+  'games_won',
+  'win_rate',
+  'elo_rating',
+  'season_peak_elo',
+]);
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 // 從環境變數讀取設定，若無則使用預設值（開發用）
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvlmpnovbrksqwtihwqi.supabase.co';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2bG1wbm92YnJrc3F3dGlod3FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMDMxNDUsImV4cCI6MjA4NDc3OTE0NX0.wLuRDB0gaNc2rRyDOZ8ea8aTBzT2jF8f7m3TCCaCcMU';
@@ -174,14 +183,7 @@ async function saveGameParticipants(gameHistoryId, participants) {
  */
 async function getLeaderboard(orderBy = 'total_score', limit = 10) {
   try {
-    const allowedOrderBy = new Set([
-      'total_score',
-      'games_won',
-      'win_rate',
-      'elo_rating',
-      'season_peak_elo',
-    ]);
-    const safeOrderBy = allowedOrderBy.has(orderBy) ? orderBy : 'elo_rating';
+    const safeOrderBy = LEADERBOARD_ALLOWED_ORDER_BY.has(orderBy) ? orderBy : 'elo_rating';
 
     const { data, error } = await supabase
       .from('players')
@@ -439,8 +441,7 @@ async function getPlayerIdByFirebaseUid(firebaseUid) {
  */
 async function getPlayerEloHistory(playerIdentifier, limit = 50) {
   try {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const idColumn = uuidRegex.test(playerIdentifier) ? 'id' : 'firebase_uid';
+    const idColumn = UUID_REGEX.test(playerIdentifier) ? 'id' : 'firebase_uid';
 
     const { data: player, error: playerError } = await supabase
       .from('players')
