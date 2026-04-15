@@ -439,10 +439,13 @@ async function getPlayerIdByFirebaseUid(firebaseUid) {
  */
 async function getPlayerEloHistory(playerIdentifier, limit = 50) {
   try {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const idColumn = uuidRegex.test(playerIdentifier) ? 'id' : 'firebase_uid';
+
     const { data: player, error: playerError } = await supabase
       .from('players')
       .select('id')
-      .or(`id.eq.${playerIdentifier},firebase_uid.eq.${playerIdentifier}`)
+      .eq(idColumn, playerIdentifier)
       .maybeSingle();
 
     if (playerError || !player) {
