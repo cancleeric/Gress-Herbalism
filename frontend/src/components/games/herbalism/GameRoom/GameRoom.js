@@ -425,7 +425,9 @@ function GameRoom() {
         winner: newState.winner,
         hiddenCards: newState.hiddenCards,
         gameHistory: newState.gameHistory,
-        maxPlayers: newState.maxPlayers
+        maxPlayers: newState.maxPlayers,
+        eloChanges: newState.eloChanges,
+        currentSeason: newState.currentSeason,
       }));
       setIsLoading(false);
     });
@@ -586,6 +588,8 @@ function GameRoom() {
         scores: reconnState.scores,
         currentRound: reconnState.currentRound,
         predictions: reconnState.predictions,
+        eloChanges: reconnState.eloChanges,
+        currentSeason: reconnState.currentSeason,
       }));
       setIsLoading(false);
       // 工單 0210：清除重連狀態
@@ -1978,6 +1982,28 @@ function GameRoom() {
               {gameState.gamePhase === GAME_PHASE_FINISHED && (
                 <div className="gr-winner-announcement">
                   恭喜 <span className="gr-winner-name">{gameState.players.find(p => p.id === gameState.winner)?.name || '獲勝者'}</span> 獲勝！
+                </div>
+              )}
+
+              {gameState.gamePhase === GAME_PHASE_FINISHED && gameState.eloChanges && (
+                <div className="gr-section">
+                  <h3 className="gr-section-title">
+                    <span className="material-symbols-outlined">monitoring</span>
+                    ELO 變化
+                  </h3>
+                  <div className="gr-card-list">
+                    {Object.values(gameState.eloChanges).map((change) => (
+                      <div key={change.playerId} className="gr-ranking-item gr-elo-item">
+                        <div className="gr-ranking-info">
+                          <p className="gr-rank-name">{change.playerName}</p>
+                          <p className="gr-player-desc">ELO：{change.eloBefore} → {change.eloAfter}</p>
+                        </div>
+                        <div className={`gr-rank-score ${change.eloChange >= 0 ? 'gr-score-positive' : 'gr-score-negative'}`}>
+                          {change.eloChange >= 0 ? `+${change.eloChange}` : change.eloChange}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

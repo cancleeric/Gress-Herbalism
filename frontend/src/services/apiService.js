@@ -64,6 +64,25 @@ export async function getLeaderboard(orderBy = 'total_score', limit = 10) {
 }
 
 /**
+ * 取得 ELO 排行榜
+ * @param {object} options - { scope: 'global' | 'season', limit }
+ */
+export async function getEloLeaderboard(options = {}) {
+  const scope = options.scope || 'global';
+  const limit = options.limit || 100;
+  return apiRequest(`/api/leaderboard?scope=${scope}&orderBy=elo_rating&limit=${limit}`);
+}
+
+/**
+ * 取得玩家 ELO 歷史
+ * @param {string} playerIdOrUid
+ * @param {number} limit
+ */
+export async function getPlayerEloHistory(playerIdOrUid, limit = 50) {
+  return apiRequest(`/api/players/${playerIdOrUid}/elo-history?limit=${limit}`);
+}
+
+/**
  * 健康檢查
  */
 export async function healthCheck() {
@@ -75,5 +94,7 @@ export default {
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
+  getEloLeaderboard,
+  getPlayerEloHistory,
   healthCheck,
 };

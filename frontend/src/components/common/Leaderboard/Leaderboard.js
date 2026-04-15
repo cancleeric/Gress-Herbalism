@@ -1,68 +1,119 @@
 /**
- * 排行榜頁面
- * 工單 0060, 0141
- * 中國風草藥主題設計
+ * 全球排行榜頁面（ELO + 賽季）
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getLeaderboard } from '../../../services/apiService';
+import { useAuth } from '../../../firebase';
+import { getEloLeaderboard, getPlayerEloHistory } from '../../../services/apiService';
 import './Leaderboard.css';
+
+const SCOPE = {
+  GLOBAL: 'global',
+  SEASON: 'season',
+};
+
+function EloTrendChart({ points }) {
+  if (!points || points.length < 2) {
+    return <p className="elo-trend-empty">暫無足夠資料繪製曲線</p>;
+  }
+
+  const width = 420;
+  const height = 120;
+  const padding = 12;
+  const values = points.map((p) => p.elo_after ?? 0);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(1, max - min);
+  const stepX = (width - padding * 2) / Math.max(1, values.length - 1);
+
+  const polylinePoints = values
+    .map((value, index) => {
+      const x = padding + stepX * index;
+      const y = height - padding - ((value - min) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="elo-trend-chart" role="img" aria-label="ELO 趨勢圖">
+      <polyline points={polylinePoints} fill="none" stroke="#2E7D32" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function Leaderboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [scope, setScope] = useState(SCOPE.GLOBAL);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [sortBy, setSortBy] = useState('games_won');
+  const [season, setSeason] = useState(null);
+  const [eloHistory, setEloHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadLeaderboard();
-  }, [sortBy]);
-
-  const loadLeaderboard = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const result = await getLeaderboard(sortBy, 20);
-      if (result.success) {
-        setLeaderboard(result.data);
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const result = await getEloLeaderboard({ scope, limit: 100 });
+        if (!active) return;
+        setLeaderboard(result?.data || []);
+        setSeason(result?.season || null);
+      } catch (err) {
+        if (!active) return;
+        setError('載入排行榜失敗');
+      } finally {
+        if (active) setLoading(false);
       }
-    } catch (err) {
-      setError('載入排行榜失敗');
-      console.error('載入排行榜失敗:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [scope]);
 
-  const handleBack = () => {
-    // 返回上一頁（可能是本草大廳或演化論大廳）
-    navigate(-1);
-  };
+  const myEntry = useMemo(
+    () => leaderboard.find((player) => player.firebase_uid && player.firebase_uid === user?.uid),
+    [leaderboard, user?.uid]
+  );
+
+  useEffect(() => {
+    let active = true;
+    const loadMyHistory = async () => {
+      if (!user?.uid) return;
+      try {
+        const result = await getPlayerEloHistory(user.uid, 50);
+        if (!active) return;
+        setEloHistory(result?.data || []);
+      } catch (err) {
+        if (!active) return;
+        setEloHistory([]);
+      }
+    };
+    loadMyHistory();
+    return () => {
+      active = false;
+    };
+  }, [user?.uid]);
+
+  const handleBack = () => navigate(-1);
 
   const getRankDisplay = (rank) => {
-    switch (rank) {
-      case 1:
-        return <span className="rank-medal gold">🥇</span>;
-      case 2:
-        return <span className="rank-medal silver">🥈</span>;
-      case 3:
-        return <span className="rank-medal bronze">🥉</span>;
-      default:
-        return <span className="rank-number">{rank}</span>;
-    }
+    if (rank === 1) return <span className="rank-medal gold">🥇</span>;
+    if (rank === 2) return <span className="rank-medal silver">🥈</span>;
+    if (rank === 3) return <span className="rank-medal bronze">🥉</span>;
+    return <span className="rank-number">{rank}</span>;
   };
 
   return (
     <div className="leaderboard-page">
-      {/* Background Decorations */}
       <div className="bg-decoration bg-decoration-top"></div>
       <div className="bg-decoration bg-decoration-bottom"></div>
 
       <div className="leaderboard-layout">
-        {/* 導航欄 */}
         <header className="leaderboard-nav">
           <button className="back-btn" onClick={handleBack}>
             ← 返回大廳
@@ -77,33 +128,30 @@ function Leaderboard() {
 
         <main className="leaderboard-main">
           <div className="leaderboard-card">
-            <h1 className="leaderboard-title">排行榜</h1>
+            <h1 className="leaderboard-title">全球排行榜（ELO）</h1>
+            {season && (
+              <p className="leaderboard-season-label">
+                當前賽季：{season.name || `Season ${season.id}`}
+              </p>
+            )}
 
-            {/* 排序選項 */}
             <div className="sort-tabs">
-              <button
-                className={`sort-tab ${sortBy === 'games_won' ? 'active' : ''}`}
-                onClick={() => setSortBy('games_won')}
-              >
-                勝場數
+              <button className={`sort-tab ${scope === SCOPE.GLOBAL ? 'active' : ''}`} onClick={() => setScope(SCOPE.GLOBAL)}>
+                全球排行
               </button>
-              <button
-                className={`sort-tab ${sortBy === 'win_rate' ? 'active' : ''}`}
-                onClick={() => setSortBy('win_rate')}
-              >
-                勝率
-              </button>
-              <button
-                className={`sort-tab ${sortBy === 'total_score' ? 'active' : ''}`}
-                onClick={() => setSortBy('total_score')}
-              >
-                總得分
+              <button className={`sort-tab ${scope === SCOPE.SEASON ? 'active' : ''}`} onClick={() => setScope(SCOPE.SEASON)}>
+                賽季排行
               </button>
             </div>
 
+            {myEntry && (
+              <div className="leaderboard-my-rank">
+                我的排名：<strong>#{myEntry.rank}</strong>（ELO {myEntry.elo_rating || 0}）
+              </div>
+            )}
+
             {error && <div className="leaderboard-error">{error}</div>}
 
-            {/* 排行榜列表 */}
             {loading ? (
               <div className="leaderboard-loading">載入中...</div>
             ) : leaderboard.length === 0 ? (
@@ -118,42 +166,47 @@ function Leaderboard() {
                     <tr>
                       <th className="col-rank">排名</th>
                       <th className="col-player">玩家</th>
+                      <th className="col-elo">ELO</th>
+                      <th className="col-wins">勝</th>
+                      <th className="col-losses">負</th>
                       <th className="col-games">場數</th>
-                      <th className="col-wins">勝場</th>
-                      <th className="col-rate">勝率</th>
-                      <th className="col-score">總分</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {leaderboard.map((player) => (
-                      <tr key={player.id} className={player.rank <= 3 ? 'top-rank' : ''}>
-                        <td className="col-rank">{getRankDisplay(player.rank)}</td>
-                        <td className="col-player">
-                          <div className="player-cell">
-                            {player.avatar_url ? (
-                              <img
-                                src={player.avatar_url}
-                                alt=""
-                                className="mini-avatar"
-                              />
-                            ) : (
-                              <div className="mini-avatar-placeholder">
-                                {(player.display_name || '?')[0]}
-                              </div>
-                            )}
-                            <span className="player-name">{player.display_name}</span>
-                          </div>
-                        </td>
-                        <td className="col-games">{player.games_played}</td>
-                        <td className="col-wins">{player.games_won}</td>
-                        <td className="col-rate">{player.win_rate}%</td>
-                        <td className="col-score">{player.total_score}</td>
-                      </tr>
-                    ))}
+                    {leaderboard.map((player) => {
+                      const losses = Math.max(0, (player.games_played || 0) - (player.games_won || 0));
+                      return (
+                        <tr key={player.id} className={player.rank <= 3 ? 'top-rank' : ''}>
+                          <td className="col-rank">{getRankDisplay(player.rank)}</td>
+                          <td className="col-player">
+                            <div className="player-cell">
+                              {player.avatar_url ? (
+                                <img src={player.avatar_url} alt="" className="mini-avatar" />
+                              ) : (
+                                <div className="mini-avatar-placeholder">{(player.display_name || '?')[0]}</div>
+                              )}
+                              <span className="player-name">{player.display_name}</span>
+                              {scope === SCOPE.SEASON && player.rank <= 10 && (
+                                <span className="season-badge">Top 10</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="col-elo">{player.elo_rating || 0}</td>
+                          <td className="col-wins">{player.games_won || 0}</td>
+                          <td className="col-losses">{losses}</td>
+                          <td className="col-games">{player.games_played || 0}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
+
+            <div className="leaderboard-history">
+              <h2 className="leaderboard-history-title">我的 ELO 變化</h2>
+              <EloTrendChart points={eloHistory} />
+            </div>
           </div>
         </main>
 

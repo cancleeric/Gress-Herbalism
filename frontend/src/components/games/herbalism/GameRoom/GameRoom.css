@@ -3191,6 +3191,12 @@
   padding: 12px;
 }
 
+.gr-elo-item .gr-ranking-info {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 .gr-ranking-other {
   opacity: 0.6;
   padding: 8px 12px;

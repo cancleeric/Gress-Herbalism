@@ -4,6 +4,7 @@
  */
 
 const { createClient } = require('@supabase/supabase-js');
+const { calculateMultiplayerEloDeltas, DEFAULT_ELO } = require('../services/eloService');
 
 // 從環境變數讀取設定，若無則使用預設值（開發用）
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvlmpnovbrksqwtihwqi.supabase.co';
@@ -173,11 +174,20 @@ async function saveGameParticipants(gameHistoryId, participants) {
  */
 async function getLeaderboard(orderBy = 'total_score', limit = 10) {
   try {
+    const allowedOrderBy = new Set([
+      'total_score',
+      'games_won',
+      'win_rate',
+      'elo_rating',
+      'season_peak_elo',
+    ]);
+    const safeOrderBy = allowedOrderBy.has(orderBy) ? orderBy : 'elo_rating';
+
     const { data, error } = await supabase
       .from('players')
-      .select('id, display_name, avatar_url, total_score, games_played, games_won, win_rate, highest_score')
+      .select('id, firebase_uid, display_name, avatar_url, total_score, games_played, games_won, win_rate, highest_score, elo_rating, season_peak_elo')
       .gt('games_played', 0) // 至少玩過一場
-      .order(orderBy, { ascending: false })
+      .order(safeOrderBy, { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -193,6 +203,67 @@ async function getLeaderboard(orderBy = 'total_score', limit = 10) {
   } catch (err) {
     console.error('getLeaderboard 錯誤:', err.message);
     return [];
+  }
+}
+
+/**
+ * 取得目前賽季資料
+ * @returns {Promise<object|null>}
+ */
+async function getActiveSeason() {
+  try {
+    const { data, error } = await supabase
+      .from('seasons')
+      .select('id, name, start_date, end_date, status')
+      .eq('status', 'active')
+      .order('start_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('取得目前賽季失敗:', error.message);
+      return null;
+    }
+
+    return data || null;
+  } catch (err) {
+    console.error('getActiveSeason 錯誤:', err.message);
+    return null;
+  }
+}
+
+/**
+ * 取得賽季排行榜
+ * @param {number} limit
+ * @returns {Promise<{season: object|null, players: Array}>}
+ */
+async function getSeasonLeaderboard(limit = 100) {
+  try {
+    const season = await getActiveSeason();
+
+    const { data, error } = await supabase
+      .from('players')
+      .select('id, firebase_uid, display_name, avatar_url, games_played, games_won, win_rate, total_score, elo_rating, season_peak_elo')
+      .gt('games_played', 0)
+      .order('season_peak_elo', { ascending: false })
+      .order('elo_rating', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('取得賽季排行榜失敗:', error.message);
+      return { season, players: [] };
+    }
+
+    return {
+      season,
+      players: (data || []).map((player, index) => ({
+        rank: index + 1,
+        ...player,
+      })),
+    };
+  } catch (err) {
+    console.error('getSeasonLeaderboard 錯誤:', err.message);
+    return { season: null, players: [] };
   }
 }
 
@@ -270,7 +341,7 @@ async function updatePlayerGameStats(playerId, gameResult) {
     // 先取得目前統計
     const { data: player, error: fetchError } = await supabase
       .from('players')
-      .select('games_played, games_won, total_score, highest_score')
+      .select('games_played, games_won, total_score, highest_score, elo_rating, season_peak_elo')
       .eq('id', playerId)
       .single();
 
@@ -279,12 +350,19 @@ async function updatePlayerGameStats(playerId, gameResult) {
       return;
     }
 
+    const currentElo = player.elo_rating ?? DEFAULT_ELO;
+    const eloChange = Number.isFinite(gameResult.eloChange) ? gameResult.eloChange : 0;
+    const eloAfter = Math.max(0, currentElo + eloChange);
+    const seasonPeakElo = Math.max(player.season_peak_elo ?? currentElo, eloAfter);
+
     // 計算新統計
     const newStats = {
       games_played: player.games_played + 1,
       games_won: player.games_won + (gameResult.isWinner ? 1 : 0),
       total_score: player.total_score + gameResult.score,
       highest_score: Math.max(player.highest_score, gameResult.score),
+      elo_rating: eloAfter,
+      season_peak_elo: seasonPeakElo,
       last_played_at: new Date().toISOString(),
     };
 
@@ -296,9 +374,36 @@ async function updatePlayerGameStats(playerId, gameResult) {
 
     if (updateError) {
       console.error('更新玩家統計失敗:', updateError.message);
+      return null;
     }
+
+    if (gameResult.gameHistoryId && eloChange !== 0) {
+      const { error: historyError } = await supabase
+        .from('player_elo_history')
+        .insert({
+          player_id: playerId,
+          game_history_id: gameResult.gameHistoryId,
+          season_id: gameResult.seasonId || null,
+          elo_before: currentElo,
+          elo_after: eloAfter,
+          elo_change: eloChange,
+        });
+
+      if (historyError) {
+        console.error('寫入 ELO 歷史失敗:', historyError.message);
+      }
+    }
+
+    return {
+      playerId,
+      eloBefore: currentElo,
+      eloAfter,
+      eloChange,
+      seasonPeakElo,
+    };
   } catch (err) {
     console.error('updatePlayerGameStats 錯誤:', err.message);
+    return null;
   }
 }
 
@@ -326,6 +431,87 @@ async function getPlayerIdByFirebaseUid(firebaseUid) {
   }
 }
 
+/**
+ * 取得玩家 ELO 歷史
+ * @param {string} playerIdentifier - players.id 或 firebase_uid
+ * @param {number} limit
+ * @returns {Promise<Array>}
+ */
+async function getPlayerEloHistory(playerIdentifier, limit = 50) {
+  try {
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select('id')
+      .or(`id.eq.${playerIdentifier},firebase_uid.eq.${playerIdentifier}`)
+      .maybeSingle();
+
+    if (playerError || !player) {
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from('player_elo_history')
+      .select('id, game_history_id, season_id, elo_before, elo_after, elo_change, created_at')
+      .eq('player_id', player.id)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      console.error('取得玩家 ELO 歷史失敗:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('getPlayerEloHistory 錯誤:', err.message);
+    return [];
+  }
+}
+
+/**
+ * 計算多人對局 ELO 變化
+ * @param {Array<{id:string,games_played:number,elo_rating:number}>} players
+ * @param {string|null} winnerPlayerId
+ * @returns {Record<string, number>}
+ */
+function calculateGameEloChanges(players, winnerPlayerId) {
+  const normalizedPlayers = (players || []).map((player) => ({
+    playerId: player.id,
+    gamesPlayed: player.games_played || 0,
+    rating: player.elo_rating ?? DEFAULT_ELO,
+  }));
+
+  return calculateMultiplayerEloDeltas(normalizedPlayers, winnerPlayerId);
+}
+
+/**
+ * 查詢指定玩家的 ELO 基礎資料
+ * @param {Array<string>} playerIds
+ * @returns {Promise<Array>}
+ */
+async function getPlayersByIds(playerIds) {
+  if (!Array.isArray(playerIds) || playerIds.length === 0) {
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('players')
+      .select('id, games_played, elo_rating, season_peak_elo')
+      .in('id', playerIds);
+
+    if (error) {
+      console.error('查詢玩家 ELO 資料失敗:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('getPlayersByIds 錯誤:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   supabase,
   testConnection,
@@ -334,9 +520,14 @@ module.exports = {
   saveGameRecord,
   saveGameParticipants,
   getLeaderboard,
+  getSeasonLeaderboard,
+  getActiveSeason,
   // 工單 0060 新增
   getPlayerStats,
   getPlayerHistory,
+  getPlayerEloHistory,
+  calculateGameEloChanges,
+  getPlayersByIds,
   updatePlayerGameStats,
   getPlayerIdByFirebaseUid,
 };

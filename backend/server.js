@@ -19,10 +19,15 @@ const {
   saveGameRecord,
   saveGameParticipants,
   getLeaderboard,
+  getSeasonLeaderboard,
+  getActiveSeason,
   getOrCreatePlayer,
   getPlayerStats,
   getPlayerHistory,
+  getPlayerEloHistory,
   getPlayerIdByFirebaseUid,
+  getPlayersByIds,
+  calculateGameEloChanges,
   updatePlayerGameStats,
 } = require('./db/supabase');
 
@@ -65,10 +70,18 @@ app.use(express.json());
 // 取得排行榜
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const orderBy = req.query.orderBy || 'total_score';
-    const limit = parseInt(req.query.limit) || 10;
+    const orderBy = req.query.orderBy || 'elo_rating';
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 500);
+    const scope = req.query.scope || 'global';
+
+    if (scope === 'season') {
+      const { season, players } = await getSeasonLeaderboard(limit);
+      return res.json({ success: true, scope, season, data: players });
+    }
+
     const leaderboard = await getLeaderboard(orderBy, limit);
-    res.json({ success: true, data: leaderboard });
+    const season = await getActiveSeason();
+    res.json({ success: true, scope, season, data: leaderboard });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -127,6 +140,18 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
     }
 
     const history = await getPlayerHistory(playerId, limit);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家 ELO 歷史（支援 players.id / firebaseUid）
+app.get('/api/players/:id/elo-history', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const history = await getPlayerEloHistory(id, limit);
     res.json({ success: true, data: history });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -666,7 +691,7 @@ io.on('connection', (socket) => {
   });
 
   // 處理遊戲動作
-  socket.on('gameAction', ({ gameId, action }) => {
+  socket.on('gameAction', async ({ gameId, action }) => {
     console.log(`[gameAction] 收到動作:`, action.type, action.playerId);
     const gameState = gameRooms.get(gameId);
 
@@ -676,7 +701,7 @@ io.on('connection', (socket) => {
     }
 
     // 處理問牌或猜牌
-    const result = processGameAction(gameState, action);
+    const result = await processGameAction(gameState, action);
     console.log(`[gameAction] 處理結果:`, {
       success: result.success,
       requireColorChoice: result.requireColorChoice,
@@ -804,7 +829,8 @@ io.on('connection', (socket) => {
               guessingPlayerId: action.playerId,
               followingPlayers: [],
               predictionResults: result.predictionResults || [],
-              continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
+              continueGame: result.continueGame,  // 工單 0149：猜錯但遊戲繼續
+              eloChanges: result.gameState.eloChanges || null,
             });
 
             // 工單 0207：初始化全員確認追蹤
@@ -968,7 +994,7 @@ io.on('connection', (socket) => {
   });
 
   // 處理跟猜回應
-  socket.on('followGuessResponse', ({ gameId, playerId, isFollowing }) => {
+  socket.on('followGuessResponse', async ({ gameId, playerId, isFollowing }) => {
     const gameState = gameRooms.get(gameId);
     const followState = followGuessStates.get(gameId);
 
@@ -1016,7 +1042,7 @@ io.on('connection', (socket) => {
     // 檢查是否所有人都已決定
     if (!hasMoreDeciders) {
       // 所有人都決定了，驗證結果
-      const result = validateGuessResult(
+      const result = await validateGuessResult(
         gameState,
         followState.guessingPlayerId,
         followState.guessedColors,
@@ -1042,7 +1068,8 @@ io.on('connection', (socket) => {
         guessingPlayerId: followState.guessingPlayerId,
         followingPlayers: followState.followingPlayers,
         predictionResults: result.predictionResults || [],
-        continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
+        continueGame: result.continueGame,  // 工單 0149：猜錯但遊戲繼續
+        eloChanges: result.gameState.eloChanges || null,
       });
 
       // 工單 0207：初始化全員確認追蹤
@@ -1515,7 +1542,7 @@ function dealCards(deck, playerCount) {
 
 // ==================== 遊戲動作處理 ====================
 
-function processGameAction(gameState, action) {
+async function processGameAction(gameState, action) {
   if (action.type === 'question') {
     return processQuestionAction(gameState, action);
   } else if (action.type === 'guess') {
@@ -1720,7 +1747,7 @@ function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenCol
   };
 }
 
-function processGuessAction(gameState, action) {
+async function processGuessAction(gameState, action) {
   const { playerId, guessedColors } = action;
 
   const playerIndex = gameState.players.findIndex(p => p.id === playerId);
@@ -1755,7 +1782,7 @@ function processGuessAction(gameState, action) {
 /**
  * 驗證猜測結果並計算分數
  */
-function validateGuessResult(gameState, guessingPlayerId, guessedColors, followingPlayers) {
+async function validateGuessResult(gameState, guessingPlayerId, guessedColors, followingPlayers) {
   const hiddenColors = gameState.hiddenCards.map(c => c.color).sort();
   const guessedSorted = [...guessedColors].sort();
   const isCorrect = hiddenColors[0] === guessedSorted[0] && hiddenColors[1] === guessedSorted[1];
@@ -1796,7 +1823,7 @@ function validateGuessResult(gameState, guessingPlayerId, guessedColors, followi
 
       // 保存遊戲記錄到 Supabase
       const winnerPlayer = gameState.players.find(p => p.id === winner);
-      saveGameToDatabase(gameState, winnerPlayer);
+      await saveGameToDatabase(gameState, winnerPlayer);
     } else {
       // 進入局結束，準備下一局
       gameState.gamePhase = 'roundEnd';
@@ -1955,16 +1982,41 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
 
       await saveGameParticipants(gameHistoryId, participants);
 
-      // 工單 0174：更新每位 Google 登入玩家的統計
+      const dbPlayerIds = Object.values(playerIdMap);
+      const eloPlayers = await getPlayersByIds(dbPlayerIds);
+      const winnerDbPlayerId = winnerPlayer ? playerIdMap[winnerPlayer.id] : null;
+      const eloChangesByDbPlayerId = calculateGameEloChanges(eloPlayers, winnerDbPlayerId);
+      const activeSeason = await getActiveSeason();
+      const eloChangesBySocketPlayerId = {};
+
+      // 工單 0174：更新每位 Google 登入玩家的統計（含 ELO）
       for (const player of gameState.players) {
         const dbPlayerId = playerIdMap[player.id];
         if (dbPlayerId) {
-          await updatePlayerGameStats(dbPlayerId, {
+          const eloChange = eloChangesByDbPlayerId[dbPlayerId] || 0;
+          const updatedStats = await updatePlayerGameStats(dbPlayerId, {
             score: gameState.scores[player.id] || 0,
             isWinner: player.id === gameState.winner,
+            eloChange,
+            gameHistoryId,
+            seasonId: activeSeason?.id || null,
           });
+
+          if (updatedStats) {
+            eloChangesBySocketPlayerId[player.id] = {
+              playerId: player.id,
+              playerName: player.name,
+              dbPlayerId,
+              eloBefore: updatedStats.eloBefore,
+              eloAfter: updatedStats.eloAfter,
+              eloChange: updatedStats.eloChange,
+            };
+          }
         }
       }
+
+      gameState.eloChanges = eloChangesBySocketPlayerId;
+      gameState.currentSeason = activeSeason || null;
 
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);
     }
