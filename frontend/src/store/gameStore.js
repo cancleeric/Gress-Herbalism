@@ -24,6 +24,9 @@ import questReducer from './questSlice';
 // Issue #63：引入本草百科收藏 reducer
 import collectionReducer from './collectionSlice';
 
+// Issue #62：引入觀戰模式 reducer
+import spectatorReducer from './spectatorSlice';
+
 // ==================== Redux Persist 設定 ====================
 
 /**
@@ -279,6 +282,7 @@ const rootReducer = combineReducers({
   evolution: evolutionReducer,
   quest: questReducer,
   collection: collectionReducer,
+  spectator: spectatorReducer,
 });
 
 /**

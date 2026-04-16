@@ -827,3 +827,74 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ==================== 工單 0379 結束 ====================
+
+// ==================== Issue #62：觀戰模式 ====================
+
+/**
+ * 加入觀戰
+ * @param {string} gameId - 遊戲 ID
+ * @param {{ id: string, name: string }} spectator - 觀戰者資訊
+ */
+export function spectatorJoin(gameId, spectator) {
+  const s = getSocket();
+  s.emit('spectator:join', { gameId, spectator });
+}
+
+/**
+ * 離開觀戰
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorId - 觀戰者 ID
+ */
+export function spectatorLeave(gameId, spectatorId) {
+  const s = getSocket();
+  s.emit('spectator:leave', { gameId, spectatorId });
+}
+
+/**
+ * 發送觀戰聊天訊息
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorId - 觀戰者 ID
+ * @param {string} spectatorName - 觀戰者名稱
+ * @param {string} message - 訊息內容
+ */
+export function sendSpectatorChat(gameId, spectatorId, spectatorName, message) {
+  const s = getSocket();
+  s.emit('spectator:chat', { gameId, spectatorId, spectatorName, message });
+}
+
+/**
+ * 監聽觀戰狀態同步
+ */
+export function onSpectatorSync(callback) {
+  return safeOn('spectator:sync', callback);
+}
+
+/**
+ * 監聽觀戰者加入
+ */
+export function onSpectatorJoined(callback) {
+  return safeOn('spectator:joined', callback);
+}
+
+/**
+ * 監聽觀戰者離開
+ */
+export function onSpectatorLeft(callback) {
+  return safeOn('spectator:left', callback);
+}
+
+/**
+ * 監聽觀戰聊天訊息
+ */
+export function onSpectatorChat(callback) {
+  return safeOn('spectator:chat', callback);
+}
+
+/**
+ * 監聽觀戰錯誤
+ */
+export function onSpectatorError(callback) {
+  return safeOn('spectator:error', callback);
+}
+
+// ==================== Issue #62 結束 ====================

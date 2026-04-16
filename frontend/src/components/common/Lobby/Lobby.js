@@ -640,7 +640,7 @@ function Lobby() {
           </div>
 
           {/* 房間列表表格 */}
-          {/* 工單 0276：只顯示本草房間 */}
+          {/* 工單 0276：只顯示本草房間；Issue #62：分為等待中和進行中 */}
           <div className="room-table-container">
             {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').length === 0 ? (
               <div className="no-rooms">
@@ -668,6 +668,10 @@ function Lobby() {
                           {room.isPrivate && (
                             <span className="material-symbols-outlined private-icon">lock</span>
                           )}
+                          {/* Issue #62：進行中標籤 */}
+                          {room.isLive && (
+                            <span className="room-live-badge">進行中</span>
+                          )}
                         </span>
                       </td>
                       <td>
@@ -678,24 +682,43 @@ function Lobby() {
                           <span className={`room-players-count ${!canJoinRoom(room) ? 'full' : ''}`}>
                             {room.playerCount}/{room.maxPlayers || 4}
                           </span>
+                          {/* Issue #62：顯示觀戰人數 */}
+                          {room.isLive && room.spectatorAllowed && (
+                            <span className="room-spectator-count">
+                              <span className="material-symbols-outlined">visibility</span>
+                              {room.spectatorCount || 0}
+                            </span>
+                          )}
                         </span>
                       </td>
                       <td>
-                        <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
-                          {canJoinRoom(room) ? '等待中' : '已滿'}
+                        <span className={`room-status ${room.isLive ? 'live' : canJoinRoom(room) ? 'waiting' : 'full'}`}>
+                          {room.isLive ? '遊戲中' : canJoinRoom(room) ? '等待中' : '已滿'}
                         </span>
                       </td>
                       <td>
-                        <button
-                          className="room-action-btn"
-                          onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                          disabled={isLoading || !isConnected || !canJoinRoom(room)}
-                        >
-                          <span className="material-symbols-outlined">
-                            {canJoinRoom(room) ? 'login' : 'block'}
-                          </span>
-                          {canJoinRoom(room) ? '加入' : '已滿'}
-                        </button>
+                        {/* Issue #62：進行中的房間顯示觀戰按鈕 */}
+                        {room.isLive ? (
+                          <button
+                            className="room-action-btn room-spectate-btn"
+                            onClick={() => navigate(`/spectate/${room.id}`)}
+                            disabled={isLoading || !isConnected}
+                          >
+                            <span className="material-symbols-outlined">visibility</span>
+                            觀戰
+                          </button>
+                        ) : (
+                          <button
+                            className="room-action-btn"
+                            onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                            disabled={isLoading || !isConnected || !canJoinRoom(room)}
+                          >
+                            <span className="material-symbols-outlined">
+                              {canJoinRoom(room) ? 'login' : 'block'}
+                            </span>
+                            {canJoinRoom(room) ? '加入' : '已滿'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

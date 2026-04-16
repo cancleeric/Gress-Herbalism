@@ -465,6 +465,60 @@
   color: var(--text-muted);
 }
 
+/* Issue #62：進行中狀態 */
+.room-status.live {
+  background-color: rgba(198, 40, 40, 0.1);
+  color: #c62828;
+}
+
+.room-status.live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: #c62828;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+/* Issue #62：進行中標籤 */
+.room-live-badge {
+  display: inline-block;
+  background: #c62828;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Issue #62：觀戰人數 */
+.room-spectator-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.room-spectator-count .material-symbols-outlined {
+  font-size: 13px;
+}
+
+/* Issue #62：觀戰按鈕 */
+.room-spectate-btn {
+  background-color: #1976d2;
+}
+
+.room-spectate-btn:hover:not(:disabled) {
+  background-color: #1565c0;
+}
+
 .room-status.full {
   background-color: rgba(107, 128, 108, 0.1);
   color: var(--text-muted);

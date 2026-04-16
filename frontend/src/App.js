@@ -14,6 +14,7 @@ import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage, QuestPanel } from './components/common';
 import { GameRoom } from './components/games/herbalism';
+import SpectatorView from './components/games/herbalism/SpectatorView';
 import { EvolutionRoom } from './components/games/evolution';
 import HerbariumPage from './pages/Herbarium';
 import './styles/App.css';
@@ -151,6 +152,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Friends />
+            </ProtectedRoute>
+          }
+        />
+        {/* Issue #62：觀戰模式路由 */}
+        <Route
+          path="/spectate/:gameId"
+          element={
+            <ProtectedRoute>
+              <SpectatorView />
             </ProtectedRoute>
           }
         />
