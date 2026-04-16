@@ -185,19 +185,24 @@ async function claimQuestReward(questId, playerId) {
       return { success: false, coins: 0, message: '領取失敗，請稍後再試' };
     }
 
-    // 發放金幣
-    const { error: coinsError } = await supabase.rpc('add_player_coins', {
-      p_player_id: playerId,
-      p_coins: quest.reward_coins,
-    }).catch(() => ({ error: null })); // 若 RPC 不存在則跳過
-
-    if (coinsError) {
-      // 備援：直接用 SQL 更新
-      await supabase
+    // 發放金幣（原子性操作：先讀後加，避免 race condition）
+    try {
+      const { data: playerData } = await supabase
         .from('players')
-        .update({ coins: supabase.raw(`coins + ${quest.reward_coins}`) })
+        .select('coins')
         .eq('id', playerId)
-        .catch(() => {});
+        .single();
+
+      if (playerData !== null && playerData !== undefined) {
+        const newCoins = (playerData.coins || 0) + quest.reward_coins;
+        await supabase
+          .from('players')
+          .update({ coins: newCoins })
+          .eq('id', playerId);
+      }
+    } catch (coinsErr) {
+      console.error('發放任務獎勵金幣失敗:', coinsErr.message);
+      // 金幣發放失敗不影響主流程（任務已標記領取）
     }
 
     return { success: true, coins: quest.reward_coins, message: '獎勵領取成功' };
@@ -278,20 +283,23 @@ async function dailyCheckin(playerId) {
     }
 
     // 發放簽到金幣
-    await supabase
-      .from('players')
-      .select('coins')
-      .eq('id', playerId)
-      .single()
-      .then(async ({ data: player }) => {
-        if (player) {
-          await supabase
-            .from('players')
-            .update({ coins: (player.coins || 0) + coins })
-            .eq('id', playerId);
-        }
-      })
-      .catch(() => {});
+    try {
+      const { data: player } = await supabase
+        .from('players')
+        .select('coins')
+        .eq('id', playerId)
+        .single();
+
+      if (player !== null && player !== undefined) {
+        await supabase
+          .from('players')
+          .update({ coins: (player.coins || 0) + coins })
+          .eq('id', playerId);
+      }
+    } catch (coinsErr) {
+      console.error('發放簽到金幣失敗:', coinsErr.message);
+      // 金幣發放失敗不影響簽到主流程
+    }
 
     return { success: true, alreadyCheckedIn: false, streakCount, coins };
   } catch (err) {

@@ -70,9 +70,13 @@ const CHECKIN_REWARDS = {
  */
 function getTodayUTC8() {
   const now = new Date();
-  // UTC+8 = UTC + 8 小時
-  const utc8 = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  return utc8.toISOString().slice(0, 10);
+  // 用 UTC 時間加 8 小時偏移後取日期，避免受本地時區影響
+  const utc8Ms = now.getTime() + (8 * 60 * 60 * 1000);
+  const utc8Date = new Date(utc8Ms);
+  const y = utc8Date.getUTCFullYear();
+  const m = String(utc8Date.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(utc8Date.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 /**
@@ -81,8 +85,12 @@ function getTodayUTC8() {
  */
 function getYesterdayUTC8() {
   const now = new Date();
-  const utc8 = new Date(now.getTime() + 8 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000);
-  return utc8.toISOString().slice(0, 10);
+  const utc8Ms = now.getTime() + (8 * 60 * 60 * 1000) - (24 * 60 * 60 * 1000);
+  const utc8Date = new Date(utc8Ms);
+  const y = utc8Date.getUTCFullYear();
+  const m = String(utc8Date.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(utc8Date.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 // ==================== 任務生成邏輯 ====================
