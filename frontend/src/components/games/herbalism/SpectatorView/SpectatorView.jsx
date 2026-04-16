@@ -97,7 +97,7 @@ function SpectatorView() {
   const [showChat, setShowChat] = useState(false);
   const chatEndRef = useRef(null);
 
-  const spectatorId = useRef(`spec_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`).current;
+  const spectatorId = useRef(`spec_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`).current;
   const spectatorName = user?.displayName || user?.email || '觀戰者';
 
   // 自動滾動聊天至底部
@@ -108,6 +108,7 @@ function SpectatorView() {
   }, [chatMessages, showChat]);
 
   // 初始化 socket 並加入觀戰
+  // spectatorId and spectatorName are stable refs/values derived from stable sources.
   useEffect(() => {
     initSocket();
     dispatch(startSpectating({ gameId }));
@@ -146,8 +147,7 @@ function SpectatorView() {
       unsubChat();
       unsubError();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId, spectatorId, spectatorName, dispatch]);
 
   const handleLeave = useCallback(() => {
     spectatorLeave(gameId, spectatorId);
