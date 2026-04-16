@@ -1,0 +1,94 @@
+/* 段位徽章樣式 - 工單 0064 */
+
+.tier-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--tier-color, #7cb87c);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1));
+  color: var(--tier-color, #7cb87c);
+  font-family: inherit;
+}
+
+/* 尺寸變體 */
+.tier-badge--sm {
+  padding: 4px 8px;
+  gap: 2px;
+}
+
+.tier-badge--sm .tier-badge__icon {
+  font-size: 1rem;
+}
+
+.tier-badge--sm .tier-badge__name {
+  font-size: 0.75rem;
+}
+
+.tier-badge--md .tier-badge__icon {
+  font-size: 1.5rem;
+}
+
+.tier-badge--md .tier-badge__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.tier-badge--lg {
+  padding: 12px 20px;
+  gap: 6px;
+}
+
+.tier-badge--lg .tier-badge__icon {
+  font-size: 2.5rem;
+}
+
+.tier-badge--lg .tier-badge__name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* ELO 顯示 */
+.tier-badge__elo {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* 最高段位 */
+.tier-badge__max {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* 進度條 */
+.tier-badge__progress {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.tier-badge__progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tier-badge__progress-fill {
+  height: 100%;
+  background: var(--tier-color, #7cb87c);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.tier-badge__progress-label {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  text-align: center;
+}

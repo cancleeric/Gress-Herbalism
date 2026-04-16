@@ -32,6 +32,9 @@ const friendService = require('./services/friendService');
 const invitationService = require('./services/invitationService');
 const presenceService = require('./services/presenceService');
 
+// 工單 0064 - 賽季聯賽服務
+const seasonService = require('./services/seasonService');
+
 // 工單 0261 - 演化論遊戲房間管理（舊模組，保留但不使用）
 // const evolutionRoomManager = require('./services/evolutionRoomManager');
 
@@ -148,6 +151,52 @@ app.get('/api/players/:firebaseUid/elo-history', async (req, res) => {
 
     const history = await getPlayerEloHistory(playerId, limit);
     res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==================== 工單 0064 賽季 API ====================
+
+// 取得當前賽季資訊（含玩家段位、倒計時）
+app.get('/api/seasons/current', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    let playerId = null;
+
+    if (firebaseUid) {
+      playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    }
+
+    const data = await seasonService.getCurrentSeason(playerId);
+
+    if (!data) {
+      return res.json({ success: true, data: null, message: '目前無活躍賽季' });
+    }
+
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 領取賽季獎勵
+app.post('/api/seasons/claim-reward', async (req, res) => {
+  try {
+    const { firebaseUid, seasonId } = req.body;
+
+    if (!firebaseUid || !seasonId) {
+      return res.status(400).json({ success: false, message: '缺少必要參數' });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const result = await seasonService.claimSeasonReward(seasonId, playerId);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

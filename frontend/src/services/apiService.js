@@ -73,6 +73,29 @@ export async function getEloHistory(firebaseUid, limit = 20) {
 }
 
 /**
+ * 取得當前賽季資訊（含玩家段位和倒計時）
+ * 工單 0064 - 賽季聯賽系統
+ * @param {string|null} firebaseUid - Firebase UID（可選，用於取得個人段位）
+ */
+export async function getCurrentSeason(firebaseUid = null) {
+  const query = firebaseUid ? `?firebaseUid=${encodeURIComponent(firebaseUid)}` : '';
+  return apiRequest(`/api/seasons/current${query}`);
+}
+
+/**
+ * 領取賽季獎勵（冪等性保護）
+ * 工單 0064 - 賽季聯賽系統
+ * @param {string} firebaseUid - Firebase UID
+ * @param {number} seasonId - 賽季 ID
+ */
+export async function claimSeasonReward(firebaseUid, seasonId) {
+  return apiRequest('/api/seasons/claim-reward', {
+    method: 'POST',
+    body: JSON.stringify({ firebaseUid, seasonId }),
+  });
+}
+
+/**
  * 健康檢查
  */
 export async function healthCheck() {
@@ -85,6 +108,8 @@ const apiService = {
   getPlayerHistory,
   getLeaderboard,
   getEloHistory,
+  getCurrentSeason,
+  claimSeasonReward,
   healthCheck,
 };
 

@@ -1,0 +1,123 @@
+/* 賽季 Banner 樣式 - 工單 0064 */
+
+.season-banner {
+  background: linear-gradient(135deg, #1a2a1a, #2a3a2a);
+  border: 1px solid #4a7c4a;
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: #c8e6c9;
+  font-family: inherit;
+  margin-bottom: 16px;
+}
+
+.season-banner--loading {
+  opacity: 0.6;
+  text-align: center;
+}
+
+/* 標題列 */
+.season-banner__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.season-banner__season-icon {
+  font-size: 1.2rem;
+}
+
+.season-banner__season-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #a5d6a7;
+  letter-spacing: 0.05em;
+}
+
+/* 主體內容 */
+.season-banner__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 玩家段位資訊 */
+.season-banner__player-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.season-banner__rank {
+  font-size: 0.85rem;
+  color: #a5d6a7;
+}
+
+.season-banner__rank strong {
+  color: #fff;
+}
+
+/* 倒計時 */
+.season-banner__timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.season-banner__timer-label {
+  font-size: 0.75rem;
+  color: #81c784;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.season-banner__countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.season-banner__countdown-unit {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 0.85rem;
+  color: #c8e6c9;
+}
+
+.season-banner__countdown-unit strong {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.season-banner__countdown-ended {
+  font-size: 0.9rem;
+  color: #ef9a9a;
+  font-style: italic;
+}
+
+/* 響應式 */
+@media (max-width: 480px) {
+  .season-banner__body {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .season-banner__player-info,
+  .season-banner__timer {
+    width: 100%;
+  }
+}

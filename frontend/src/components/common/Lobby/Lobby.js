@@ -31,6 +31,7 @@ import {
 } from '../../../services/socketService';
 import { MIN_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
 import VersionInfo from '../VersionInfo';
+import SeasonBanner from '../SeasonBanner/SeasonBanner';
 import {
   saveNickname,
   getNickname,
@@ -560,6 +561,9 @@ function Lobby() {
 
         {/* 主內容 */}
         <main className="lobby-content">
+          {/* 賽季 Banner - 工單 0064 */}
+          <SeasonBanner firebaseUid={user?.uid} className="lobby-season-banner" />
+
           {/* 遊戲暱稱輸入 */}
           <div className="nickname-section">
             <label className="nickname-label" htmlFor="nickname">遊戲暱稱</label>
