@@ -14,3 +14,4 @@ export { default as ConnectionStatus } from './ConnectionStatus';
 export { default as VersionInfo } from './VersionInfo';
 export { default as GameSelection } from './GameSelection';
 export { default as EvolutionLobbyPage } from './EvolutionLobbyPage';
+export { default as QuestPanel } from './QuestPanel';
