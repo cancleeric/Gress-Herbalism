@@ -18,6 +18,9 @@ import {
 // 工單 0261：引入演化論 reducer
 import evolutionReducer from './evolution/evolutionStore';
 
+// Issue #61：引入每日任務 reducer
+import questReducer from './questSlice';
+
 // ==================== Redux Persist 設定 ====================
 
 /**
@@ -270,7 +273,8 @@ export function gameReducer(state = initialState, action) {
  */
 const rootReducer = combineReducers({
   herbalism: gameReducer,
-  evolution: evolutionReducer
+  evolution: evolutionReducer,
+  quest: questReducer,
 });
 
 /**

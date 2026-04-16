@@ -35,6 +35,9 @@ const presenceService = require('./services/presenceService');
 // 工單 0064 - 賽季聯賽服務
 const seasonService = require('./services/seasonService');
 
+// Issue #61 - 每日任務服務
+const questService = require('./services/questService');
+
 // 工單 0261 - 演化論遊戲房間管理（舊模組，保留但不使用）
 // const evolutionRoomManager = require('./services/evolutionRoomManager');
 
@@ -394,6 +397,79 @@ app.put('/api/friends/invitations/:invitationId', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
+  }
+});
+
+// ==================== Issue #61 每日任務 API ====================
+
+// 取得今日任務（若無則自動生成）
+app.get('/api/quests/daily', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: '缺少 firebaseUid' });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const [quests, checkin] = await Promise.all([
+      questService.getDailyQuests(playerId),
+      questService.getCheckinInfo(playerId),
+    ]);
+
+    res.json({ success: true, data: { quests, checkin } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 每日簽到
+app.post('/api/quests/daily/checkin', async (req, res) => {
+  try {
+    const { firebaseUid } = req.body;
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: '缺少 firebaseUid' });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const result = await questService.dailyCheckin(playerId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 領取任務獎勵
+app.post('/api/quests/:questId/claim', async (req, res) => {
+  try {
+    const { questId } = req.params;
+    const { firebaseUid } = req.body;
+
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: '缺少 firebaseUid' });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const result = await questService.claimQuestReward(Number(questId), playerId);
+
+    if (!result.success) {
+      return res.status(400).json({ success: false, message: result.message });
+    }
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
