@@ -4,6 +4,7 @@
  */
 
 const { createClient } = require('@supabase/supabase-js');
+const { DEFAULT_ELO } = require('../logic/common/eloLogic');
 
 // 從環境變數讀取設定，若無則使用預設值（開發用）
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rvlmpnovbrksqwtihwqi.supabase.co';
@@ -191,8 +192,8 @@ async function getLeaderboard(orderBy = 'total_score', limit = 10) {
     return (data || []).map((player, index) => ({
       rank: index + 1,
       ...player,
-      elo_rating: player.elo_rating || 1000,
-      season_peak_elo: player.season_peak_elo || 1000,
+      elo_rating: player.elo_rating || DEFAULT_ELO,
+      season_peak_elo: player.season_peak_elo || DEFAULT_ELO,
     }));
   } catch (err) {
     console.error('getLeaderboard 錯誤:', err.message);
@@ -392,7 +393,7 @@ async function saveEloChange(playerId, oldRating, newRating, gameId = null) {
       .eq('id', playerId)
       .single();
 
-    const currentPeak = (player && player.season_peak_elo) || 0;
+    const currentPeak = (player && player.season_peak_elo) || DEFAULT_ELO;
     const updateData = {
       elo_rating: newRating,
       updated_at: new Date().toISOString(),

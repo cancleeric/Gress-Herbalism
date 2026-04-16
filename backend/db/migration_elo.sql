@@ -63,15 +63,21 @@ CREATE POLICY "Allow public insert elo_history" ON elo_history
   FOR INSERT WITH CHECK (true);
 
 -- ==================== 插入預設賽季 ====================
+-- 僅在尚無活躍賽季時插入
 
-INSERT INTO seasons (name, start_date, end_date, status)
-VALUES (
-  '第一賽季',
-  NOW(),
-  NOW() + INTERVAL '90 days',
-  'active'
-)
-ON CONFLICT DO NOTHING;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM seasons WHERE status = 'active') THEN
+    INSERT INTO seasons (name, start_date, end_date, status)
+    VALUES (
+      '第一賽季',
+      NOW(),
+      NOW() + INTERVAL '90 days',
+      'active'
+    );
+  END IF;
+END
+$$;
 
 -- ==================== 完成 ====================
 -- 執行完成後，可以用以下 SQL 驗證

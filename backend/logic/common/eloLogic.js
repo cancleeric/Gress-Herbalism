@@ -62,7 +62,7 @@ function calculateEloChange(ratingWinner, ratingLoser, gamesPlayedWinner = 0, ga
 
   // 勝者實際得分 = 1，敗者實際得分 = 0
   const winnerDelta = Math.round(kWinner * (1 - expectedWinner));
-  const loserDelta = Math.round(kLoser * (0 - expectedLoser));
+  const loserDelta = Math.round(kLoser * (-expectedLoser));
 
   const newWinnerRating = Math.max(MIN_ELO, ratingWinner + winnerDelta);
   const newLoserRating = Math.max(MIN_ELO, ratingLoser + loserDelta);

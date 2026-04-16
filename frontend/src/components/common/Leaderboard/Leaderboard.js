@@ -19,6 +19,7 @@ function Leaderboard() {
   useEffect(() => {
     loadLeaderboard();
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // loadLeaderboard is defined in this component and only depends on sortBy (tracked here)
   }, [sortBy]);
 
   const loadLeaderboard = async () => {
