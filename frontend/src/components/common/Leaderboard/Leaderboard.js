@@ -12,12 +12,14 @@ import './Leaderboard.css';
 function Leaderboard() {
   const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState([]);
-  const [sortBy, setSortBy] = useState('games_won');
+  const [sortBy, setSortBy] = useState('elo_rating');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadLeaderboard();
+  // loadLeaderboard is defined in this component and only depends on sortBy (tracked here)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
   const loadLeaderboard = async () => {
@@ -25,7 +27,7 @@ function Leaderboard() {
     setError('');
 
     try {
-      const result = await getLeaderboard(sortBy, 20);
+      const result = await getLeaderboard(sortBy, 100);
       if (result.success) {
         setLeaderboard(result.data);
       }
@@ -38,8 +40,7 @@ function Leaderboard() {
   };
 
   const handleBack = () => {
-    // 返回上一頁（可能是本草大廳或演化論大廳）
-    navigate(-1);
+    navigate('/');
   };
 
   const getRankDisplay = (rank) => {
@@ -53,6 +54,86 @@ function Leaderboard() {
       default:
         return <span className="rank-number">{rank}</span>;
     }
+  };
+
+  const renderTableHeaders = () => {
+    if (sortBy === 'elo_rating') {
+      return (
+        <tr>
+          <th className="col-rank">排名</th>
+          <th className="col-player">玩家</th>
+          <th className="col-games">場數</th>
+          <th className="col-wins">勝場</th>
+          <th className="col-elo">ELO</th>
+          <th className="col-peak">賽季峰值</th>
+        </tr>
+      );
+    }
+    return (
+      <tr>
+        <th className="col-rank">排名</th>
+        <th className="col-player">玩家</th>
+        <th className="col-games">場數</th>
+        <th className="col-wins">勝場</th>
+        <th className="col-rate">勝率</th>
+        <th className="col-score">總分</th>
+      </tr>
+    );
+  };
+
+  const renderTableRow = (player) => {
+    if (sortBy === 'elo_rating') {
+      return (
+        <tr key={player.id} className={player.rank <= 3 ? 'top-rank' : ''}>
+          <td className="col-rank">{getRankDisplay(player.rank)}</td>
+          <td className="col-player">
+            <div className="player-cell">
+              {player.avatar_url ? (
+                <img
+                  src={player.avatar_url}
+                  alt=""
+                  className="mini-avatar"
+                />
+              ) : (
+                <div className="mini-avatar-placeholder">
+                  {(player.display_name || '?')[0]}
+                </div>
+              )}
+              <span className="player-name">{player.display_name}</span>
+            </div>
+          </td>
+          <td className="col-games">{player.games_played}</td>
+          <td className="col-wins">{player.games_won}</td>
+          <td className="col-elo elo-score">{player.elo_rating || 1000}</td>
+          <td className="col-peak">{player.season_peak_elo || player.elo_rating || 1000}</td>
+        </tr>
+      );
+    }
+    return (
+      <tr key={player.id} className={player.rank <= 3 ? 'top-rank' : ''}>
+        <td className="col-rank">{getRankDisplay(player.rank)}</td>
+        <td className="col-player">
+          <div className="player-cell">
+            {player.avatar_url ? (
+              <img
+                src={player.avatar_url}
+                alt=""
+                className="mini-avatar"
+              />
+            ) : (
+              <div className="mini-avatar-placeholder">
+                {(player.display_name || '?')[0]}
+              </div>
+            )}
+            <span className="player-name">{player.display_name}</span>
+          </div>
+        </td>
+        <td className="col-games">{player.games_played}</td>
+        <td className="col-wins">{player.games_won}</td>
+        <td className="col-rate">{player.win_rate}%</td>
+        <td className="col-score">{player.total_score}</td>
+      </tr>
+    );
   };
 
   return (
@@ -77,10 +158,16 @@ function Leaderboard() {
 
         <main className="leaderboard-main">
           <div className="leaderboard-card">
-            <h1 className="leaderboard-title">排行榜</h1>
+            <h1 className="leaderboard-title">全球排行榜</h1>
 
             {/* 排序選項 */}
             <div className="sort-tabs">
+              <button
+                className={`sort-tab ${sortBy === 'elo_rating' ? 'active' : ''}`}
+                onClick={() => setSortBy('elo_rating')}
+              >
+                ELO 積分
+              </button>
               <button
                 className={`sort-tab ${sortBy === 'games_won' ? 'active' : ''}`}
                 onClick={() => setSortBy('games_won')}
@@ -115,41 +202,10 @@ function Leaderboard() {
               <div className="leaderboard-table-wrapper">
                 <table className="leaderboard-table">
                   <thead>
-                    <tr>
-                      <th className="col-rank">排名</th>
-                      <th className="col-player">玩家</th>
-                      <th className="col-games">場數</th>
-                      <th className="col-wins">勝場</th>
-                      <th className="col-rate">勝率</th>
-                      <th className="col-score">總分</th>
-                    </tr>
+                    {renderTableHeaders()}
                   </thead>
                   <tbody>
-                    {leaderboard.map((player) => (
-                      <tr key={player.id} className={player.rank <= 3 ? 'top-rank' : ''}>
-                        <td className="col-rank">{getRankDisplay(player.rank)}</td>
-                        <td className="col-player">
-                          <div className="player-cell">
-                            {player.avatar_url ? (
-                              <img
-                                src={player.avatar_url}
-                                alt=""
-                                className="mini-avatar"
-                              />
-                            ) : (
-                              <div className="mini-avatar-placeholder">
-                                {(player.display_name || '?')[0]}
-                              </div>
-                            )}
-                            <span className="player-name">{player.display_name}</span>
-                          </div>
-                        </td>
-                        <td className="col-games">{player.games_played}</td>
-                        <td className="col-wins">{player.games_won}</td>
-                        <td className="col-rate">{player.win_rate}%</td>
-                        <td className="col-score">{player.total_score}</td>
-                      </tr>
-                    ))}
+                    {leaderboard.map((player) => renderTableRow(player))}
                   </tbody>
                 </table>
               </div>

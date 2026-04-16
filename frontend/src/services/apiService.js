@@ -64,16 +64,28 @@ export async function getLeaderboard(orderBy = 'total_score', limit = 10) {
 }
 
 /**
+ * 取得玩家 ELO 歷史
+ * @param {string} firebaseUid - Firebase UID
+ * @param {number} limit - 限制筆數
+ */
+export async function getEloHistory(firebaseUid, limit = 20) {
+  return apiRequest(`/api/players/${firebaseUid}/elo-history?limit=${limit}`);
+}
+
+/**
  * 健康檢查
  */
 export async function healthCheck() {
   return apiRequest('/api/health');
 }
 
-export default {
+const apiService = {
   syncPlayer,
   getPlayerStats,
   getPlayerHistory,
   getLeaderboard,
+  getEloHistory,
   healthCheck,
 };
+
+export default apiService;

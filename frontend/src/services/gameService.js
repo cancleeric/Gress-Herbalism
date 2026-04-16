@@ -16,7 +16,6 @@ import {
 } from '../utils/herbalism/gameRules';
 import {
   processAction as processActionHandler,
-  getHiddenCardsForPlayer
 } from '../utils/herbalism/actionHandlers';
 import {
   GAME_PHASE_WAITING,

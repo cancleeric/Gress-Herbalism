@@ -18,7 +18,7 @@
  * @readonly
  * @enum {string}
  */
-export const COLORS = {
+const COLORS = {
   /** 紅色 */
   RED: 'red',
   /** 黃色 */
@@ -34,7 +34,7 @@ export const COLORS = {
  * @readonly
  * @type {Object<string, number>}
  */
-export const CARD_COUNTS = {
+const CARD_COUNTS = {
   [COLORS.RED]: 2,      // 紅色2張
   [COLORS.YELLOW]: 3,  // 黃色3張
   [COLORS.GREEN]: 4,   // 綠色4張
@@ -46,14 +46,14 @@ export const CARD_COUNTS = {
  * @readonly
  * @type {number}
  */
-export const TOTAL_CARDS = 14;
+const TOTAL_CARDS = 14;
 
 /**
  * 所有顏色的陣列
  * @readonly
  * @type {string[]}
  */
-export const ALL_COLORS = Object.values(COLORS);
+const ALL_COLORS = Object.values(COLORS);
 
 // ==================== 遊戲規則常數 ====================
 
@@ -62,21 +62,21 @@ export const ALL_COLORS = Object.values(COLORS);
  * @readonly
  * @type {number}
  */
-export const MIN_PLAYERS = 3;
+const MIN_PLAYERS = 3;
 
 /**
  * 最大玩家數
  * @readonly
  * @type {number}
  */
-export const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 4;
 
 /**
  * 蓋牌數量
  * @readonly
  * @type {number}
  */
-export const HIDDEN_CARDS_COUNT = 2;
+const HIDDEN_CARDS_COUNT = 2;
 
 // ==================== 計分相關常數 ====================
 
@@ -85,49 +85,49 @@ export const HIDDEN_CARDS_COUNT = 2;
  * @readonly
  * @type {number}
  */
-export const WINNING_SCORE = 7;
+const WINNING_SCORE = 7;
 
 /**
  * 猜對得分
  * @readonly
  * @type {number}
  */
-export const GUESS_CORRECT_POINTS = 3;
+const GUESS_CORRECT_POINTS = 3;
 
 /**
  * 跟猜正確得分
  * @readonly
  * @type {number}
  */
-export const FOLLOW_CORRECT_POINTS = 1;
+const FOLLOW_CORRECT_POINTS = 1;
 
 /**
  * 跟猜錯誤扣分
  * @readonly
  * @type {number}
  */
-export const FOLLOW_WRONG_POINTS = -1;
+const FOLLOW_WRONG_POINTS = -1;
 
 /**
  * 預測正確得分
  * @readonly
  * @type {number}
  */
-export const PREDICTION_CORRECT_POINTS = 1;
+const PREDICTION_CORRECT_POINTS = 1;
 
 /**
  * 預測錯誤扣分
  * @readonly
  * @type {number}
  */
-export const PREDICTION_WRONG_POINTS = -1;
+const PREDICTION_WRONG_POINTS = -1;
 
 /**
  * 最低分數（分數不會低於此值）
  * @readonly
  * @type {number}
  */
-export const MIN_SCORE = 0;
+const MIN_SCORE = 0;
 
 // ==================== 遊戲階段常數 ====================
 
@@ -136,49 +136,49 @@ export const MIN_SCORE = 0;
  * @readonly
  * @type {string}
  */
-export const GAME_PHASE_WAITING = 'waiting';
+const GAME_PHASE_WAITING = 'waiting';
 
 /**
  * 遊戲階段：進行中
  * @readonly
  * @type {string}
  */
-export const GAME_PHASE_PLAYING = 'playing';
+const GAME_PHASE_PLAYING = 'playing';
 
 /**
  * 遊戲階段：跟猜中
  * @readonly
  * @type {string}
  */
-export const GAME_PHASE_FOLLOW_GUESSING = 'followGuessing';
+const GAME_PHASE_FOLLOW_GUESSING = 'followGuessing';
 
 /**
  * 遊戲階段：局結束
  * @readonly
  * @type {string}
  */
-export const GAME_PHASE_ROUND_END = 'roundEnd';
+const GAME_PHASE_ROUND_END = 'roundEnd';
 
 /**
  * 遊戲階段：已結束
  * @readonly
  * @type {string}
  */
-export const GAME_PHASE_FINISHED = 'finished';
+const GAME_PHASE_FINISHED = 'finished';
 
 /**
  * 遊戲階段：問牌後預測
  * @readonly
  * @type {string}
  */
-export const GAME_PHASE_POST_QUESTION = 'postQuestion';
+const GAME_PHASE_POST_QUESTION = 'postQuestion';
 
 /**
  * 所有遊戲階段
  * @readonly
  * @type {string[]}
  */
-export const GAME_PHASES = [
+const GAME_PHASES = [
   GAME_PHASE_WAITING,
   GAME_PHASE_PLAYING,
   GAME_PHASE_POST_QUESTION,
@@ -194,28 +194,28 @@ export const GAME_PHASES = [
  * @readonly
  * @type {number}
  */
-export const QUESTION_TYPE_ONE_EACH = 1;
+const QUESTION_TYPE_ONE_EACH = 1;
 
 /**
  * 問牌類型：其中一種顏色全部
  * @readonly
  * @type {number}
  */
-export const QUESTION_TYPE_ALL_ONE_COLOR = 2;
+const QUESTION_TYPE_ALL_ONE_COLOR = 2;
 
 /**
  * 問牌類型：給其中一種顏色一張，要另一種顏色全部
  * @readonly
  * @type {number}
  */
-export const QUESTION_TYPE_GIVE_ONE_GET_ALL = 3;
+const QUESTION_TYPE_GIVE_ONE_GET_ALL = 3;
 
 /**
  * 所有問牌類型
  * @readonly
  * @type {number[]}
  */
-export const QUESTION_TYPES = [
+const QUESTION_TYPES = [
   QUESTION_TYPE_ONE_EACH,
   QUESTION_TYPE_ALL_ONE_COLOR,
   QUESTION_TYPE_GIVE_ONE_GET_ALL
@@ -226,7 +226,7 @@ export const QUESTION_TYPES = [
  * @readonly
  * @type {Object<number, string>}
  */
-export const QUESTION_TYPE_DESCRIPTIONS = {
+const QUESTION_TYPE_DESCRIPTIONS = {
   [QUESTION_TYPE_ONE_EACH]: '兩個顏色各一張',
   [QUESTION_TYPE_ALL_ONE_COLOR]: '其中一種顏色全部',
   [QUESTION_TYPE_GIVE_ONE_GET_ALL]: '給其中一種顏色一張，要另一種顏色全部'
@@ -239,21 +239,21 @@ export const QUESTION_TYPE_DESCRIPTIONS = {
  * @readonly
  * @type {string}
  */
-export const ACTION_TYPE_QUESTION = 'question';
+const ACTION_TYPE_QUESTION = 'question';
 
 /**
  * 動作類型：猜牌
  * @readonly
  * @type {string}
  */
-export const ACTION_TYPE_GUESS = 'guess';
+const ACTION_TYPE_GUESS = 'guess';
 
 /**
  * 所有動作類型
  * @readonly
  * @type {string[]}
  */
-export const ACTION_TYPES = [
+const ACTION_TYPES = [
   ACTION_TYPE_QUESTION,
   ACTION_TYPE_GUESS
 ];
@@ -266,7 +266,7 @@ export const ACTION_TYPES = [
  * @readonly
  * @type {Array<{id: string, colors: string[], name: string}>}
  */
-export const COLOR_COMBINATION_CARDS = [
+const COLOR_COMBINATION_CARDS = [
   { id: 'red-green', colors: ['red', 'green'], name: '紅綠' },
   { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍' },
   { id: 'green-yellow', colors: ['green', 'yellow'], name: '綠黃' },
@@ -282,7 +282,7 @@ export const COLOR_COMBINATION_CARDS = [
  * @readonly
  * @type {Object}
  */
-export const DEFAULT_GAME_CONFIG = {
+const DEFAULT_GAME_CONFIG = {
   minPlayers: MIN_PLAYERS,
   maxPlayers: MAX_PLAYERS,
   totalCards: TOTAL_CARDS,
@@ -297,7 +297,7 @@ export const DEFAULT_GAME_CONFIG = {
  * @param {string} color - 要驗證的顏色
  * @returns {boolean} 顏色是否有效
  */
-export function isValidColor(color) {
+function isValidColor(color) {
   return ALL_COLORS.includes(color);
 }
 
@@ -306,7 +306,7 @@ export function isValidColor(color) {
  * @param {number} count - 玩家數量
  * @returns {boolean} 玩家數量是否有效
  */
-export function isValidPlayerCount(count) {
+function isValidPlayerCount(count) {
   return count >= MIN_PLAYERS && count <= MAX_PLAYERS;
 }
 
@@ -315,7 +315,7 @@ export function isValidPlayerCount(count) {
  * @param {number} type - 問牌類型
  * @returns {boolean} 問牌類型是否有效
  */
-export function isValidQuestionType(type) {
+function isValidQuestionType(type) {
   return QUESTION_TYPES.includes(type);
 }
 
@@ -324,7 +324,7 @@ export function isValidQuestionType(type) {
  * @param {string} phase - 遊戲階段
  * @returns {boolean} 遊戲階段是否有效
  */
-export function isValidGamePhase(phase) {
+function isValidGamePhase(phase) {
   return GAME_PHASES.includes(phase);
 }
 
@@ -333,7 +333,7 @@ export function isValidGamePhase(phase) {
  * @param {string} color - 顏色
  * @returns {number} 該顏色的牌數
  */
-export function getCardCount(color) {
+function getCardCount(color) {
   return CARD_COUNTS[color] || 0;
 }
 
@@ -342,6 +342,46 @@ export function getCardCount(color) {
  * @param {number} type - 問牌類型
  * @returns {string} 問牌類型描述
  */
-export function getQuestionTypeDescription(type) {
+function getQuestionTypeDescription(type) {
   return QUESTION_TYPE_DESCRIPTIONS[type] || '未知類型';
 }
+
+module.exports = {
+  COLORS,
+  CARD_COUNTS,
+  TOTAL_CARDS,
+  ALL_COLORS,
+  MIN_PLAYERS,
+  MAX_PLAYERS,
+  HIDDEN_CARDS_COUNT,
+  WINNING_SCORE,
+  GUESS_CORRECT_POINTS,
+  FOLLOW_CORRECT_POINTS,
+  FOLLOW_WRONG_POINTS,
+  PREDICTION_CORRECT_POINTS,
+  PREDICTION_WRONG_POINTS,
+  MIN_SCORE,
+  GAME_PHASE_WAITING,
+  GAME_PHASE_PLAYING,
+  GAME_PHASE_FOLLOW_GUESSING,
+  GAME_PHASE_ROUND_END,
+  GAME_PHASE_FINISHED,
+  GAME_PHASE_POST_QUESTION,
+  GAME_PHASES,
+  QUESTION_TYPE_ONE_EACH,
+  QUESTION_TYPE_ALL_ONE_COLOR,
+  QUESTION_TYPE_GIVE_ONE_GET_ALL,
+  QUESTION_TYPES,
+  QUESTION_TYPE_DESCRIPTIONS,
+  ACTION_TYPE_QUESTION,
+  ACTION_TYPE_GUESS,
+  ACTION_TYPES,
+  COLOR_COMBINATION_CARDS,
+  DEFAULT_GAME_CONFIG,
+  isValidColor,
+  isValidPlayerCount,
+  isValidQuestionType,
+  isValidGamePhase,
+  getCardCount,
+  getQuestionTypeDescription,
+};

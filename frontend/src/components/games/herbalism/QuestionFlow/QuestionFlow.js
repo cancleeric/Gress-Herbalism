@@ -59,8 +59,8 @@ function QuestionFlow({
     p => p.id !== currentPlayerId
   );
 
-  // 選擇的顏色
-  const colors = selectedCard?.colors || [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const colors = React.useMemo(() => selectedCard?.colors || [], [selectedCard]);
 
   /**
    * 檢查要牌方是否擁有選定顏色的牌

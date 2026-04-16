@@ -11,7 +11,7 @@ const {
   calculateFollowGuessScore,
   applyScoreChange,
   calculateRoundScores
-} = require('../../logic/scoreLogic');
+} = require('../../logic/herbalism/scoreLogic');
 
 describe('scoreLogic', () => {
   describe('常數', () => {
