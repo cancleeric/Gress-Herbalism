@@ -8,13 +8,13 @@
 import React, { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { useAuth } from '../../../firebase/AuthContext';
+import { useAuth } from '../../firebase/AuthContext';
 import {
   fetchPlayerCollection,
   fetchEncyclopediaEntry,
   selectEntry,
   clearSelectedEntry,
-} from '../../../store/collectionSlice';
+} from '../../store/collectionSlice';
 import './HerbariumPage.css';
 
 // 稀有度標籤
@@ -236,7 +236,10 @@ function HerbariumPage() {
       {error && !loading && (
         <div className="herbarium-error">
           <p>載入失敗：{error}</p>
-          <button onClick={() => user?.uid && dispatch(fetchPlayerCollection(user.uid))}>
+          <button
+            aria-label="重新載入圖鑑"
+            onClick={() => user?.uid && dispatch(fetchPlayerCollection(user.uid))}
+          >
             重試
           </button>
         </div>

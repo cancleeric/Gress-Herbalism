@@ -165,12 +165,13 @@ async function recordCardUsage(playerId, herbIds) {
         if (!insertError) {
           newlyUnlocked.push(herbId);
         } else if (insertError.code === '23505') {
-          // 並發衝突（unique 違反），視為已存在，改做更新
+          // 並發衝突（unique 違反），另一個請求剛插入，改為遞增 use_count
           await supabase
             .from('player_collection')
-            .update({ use_count: 1 })
+            .update({ use_count: 2 })
             .eq('player_id', playerId)
-            .eq('herb_id', herbId);
+            .eq('herb_id', herbId)
+            .lt('use_count', 2); // 僅更新 use_count 為 1 的記錄，避免覆蓋更高的值
         } else {
           console.error(`解鎖藥草 ${herbId} 失敗:`, insertError.message);
         }
