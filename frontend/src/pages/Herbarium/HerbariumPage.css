@@ -1,0 +1,370 @@
+/**
+ * 本草百科頁面樣式
+ * Issue #63 - 本草百科集收藏系統
+ */
+
+/* ==================== 頁面佈局 ==================== */
+
+.herbarium-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f0e8 0%, #e8f5e9 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== 頂部欄 ==================== */
+
+.herbarium-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  gap: 12px;
+}
+
+.herbarium-back-btn {
+  background: none;
+  border: 1px solid #bdbdbd;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.herbarium-back-btn:hover {
+  background: #f0f0f0;
+}
+
+.herbarium-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.herbarium-header-spacer {
+  width: 80px; /* 與 back-btn 等寬以保持標題置中 */
+}
+
+/* ==================== 收藏進度 ==================== */
+
+.herbarium-progress-section {
+  padding: 16px 20px 0;
+}
+
+.collection-progress {
+  background: white;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.collection-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.collection-progress-bar {
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.collection-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #43a047, #66bb6a);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.collection-progress-pct {
+  text-align: right;
+  font-size: 12px;
+  color: #43a047;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* ==================== 篩選器 ==================== */
+
+.herbarium-filter {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px;
+  justify-content: center;
+}
+
+.filter-btn {
+  padding: 6px 18px;
+  border: 1px solid #bdbdbd;
+  border-radius: 20px;
+  background: white;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: #f5f5f5;
+}
+
+.filter-btn.active {
+  background: #2e7d32;
+  color: white;
+  border-color: #2e7d32;
+}
+
+/* ==================== 草藥卡牌格 ==================== */
+
+.herb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  padding: 0 20px 24px;
+  flex: 1;
+}
+
+.herbarium-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #9e9e9e;
+  padding: 40px 0;
+  font-size: 15px;
+}
+
+/* ==================== 草藥卡牌 ==================== */
+
+.herb-card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  min-height: 140px;
+}
+
+.herb-card.unlocked {
+  cursor: pointer;
+}
+
+.herb-card.unlocked:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+.herb-card.locked {
+  opacity: 0.65;
+  filter: grayscale(0.4);
+}
+
+.herb-card-color-band {
+  height: 6px;
+  background: var(--herb-color, #9e9e9e);
+}
+
+.herb-card-body {
+  padding: 12px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.herb-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #222;
+}
+
+.herb-card-scientific {
+  font-size: 11px;
+  color: #888;
+  font-style: italic;
+}
+
+.herb-card-rarity {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.herb-card-seen {
+  font-size: 11px;
+  color: #9e9e9e;
+  margin-top: auto;
+}
+
+.herb-card-lock-icon {
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 6px;
+  opacity: 0.5;
+}
+
+.herb-card-unlock-hint {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ==================== 草藥詳情面板 ==================== */
+
+.herb-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.herb-detail-panel {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  border-top: 6px solid var(--herb-color, #9e9e9e);
+}
+
+.herb-detail-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+  padding: 2px 6px;
+}
+
+.herb-detail-close:hover {
+  color: #333;
+}
+
+.herb-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.herb-detail-color-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.herb-detail-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 2px;
+}
+
+.herb-detail-scientific {
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+  margin: 0;
+}
+
+.herb-detail-rarity-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.herb-detail-section {
+  margin-bottom: 16px;
+}
+
+.herb-detail-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px;
+}
+
+.herb-detail-section p {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==================== 狀態顯示 ==================== */
+
+.herbarium-loading,
+.herbarium-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #777;
+  font-size: 15px;
+}
+
+.herbarium-error button {
+  margin-top: 12px;
+  padding: 8px 20px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.herbarium-guest-notice {
+  text-align: center;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #666;
+  font-size: 13px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* ==================== 響應式 ==================== */
+
+@media (max-width: 480px) {
+  .herb-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 12px 20px;
+  }
+
+  .herbarium-title {
+    font-size: 18px;
+  }
+
+  .herbarium-header-spacer {
+    display: none;
+  }
+}

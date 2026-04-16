@@ -133,6 +133,13 @@ function GameSelection() {
             <span className="material-symbols-outlined">leaderboard</span>
             排行榜
           </button>
+          <button
+            className="gs-nav-btn"
+            onClick={() => navigate('/herbarium')}
+          >
+            <span className="material-symbols-outlined">local_florist</span>
+            本草百科
+          </button>
         </div>
       </main>
     </div>
