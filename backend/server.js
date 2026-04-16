@@ -38,6 +38,9 @@ const seasonService = require('./services/seasonService');
 // Issue #61 - 每日任務服務
 const questService = require('./services/questService');
 
+// Issue #63 - 本草百科收藏服務
+const collectionService = require('./services/collectionService');
+
 // 工單 0261 - 演化論遊戲房間管理（舊模組，保留但不使用）
 // const evolutionRoomManager = require('./services/evolutionRoomManager');
 
@@ -467,6 +470,52 @@ app.post('/api/quests/:questId/claim', async (req, res) => {
       return res.status(400).json({ success: false, message: result.message });
     }
 
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==================== Issue #63 - 本草百科 API ====================
+
+// GET /api/encyclopedia - 取得完整本草百科
+app.get('/api/encyclopedia', async (req, res) => {
+  try {
+    const herbs = await collectionService.getEncyclopedia();
+    res.json({ success: true, data: herbs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/encyclopedia/:herbId - 取得特定草藥詳情
+app.get('/api/encyclopedia/:herbId', async (req, res) => {
+  try {
+    const { herbId } = req.params;
+    const herb = await collectionService.getHerbById(herbId);
+    if (!herb) {
+      return res.status(404).json({ success: false, message: '草藥不存在' });
+    }
+    res.json({ success: true, data: herb });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/collection - 取得玩家收藏狀態
+app.get('/api/collection', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: '缺少 firebaseUid' });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const result = await collectionService.getPlayerCollection(playerId);
     res.json({ success: true, data: result });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -2110,6 +2159,27 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
             score: gameState.scores[player.id] || 0,
             isWinner: player.id === gameState.winner,
           });
+
+          // Issue #63：更新本草百科收藏（解鎖新草藥）
+          try {
+            const { data: updatedStats } = await supabase
+              .from('players')
+              .select('games_played, games_won')
+              .eq('id', dbPlayerId)
+              .single();
+
+            if (updatedStats) {
+              const newlyUnlocked = await collectionService.updateCollectionAfterGame(
+                dbPlayerId,
+                updatedStats
+              );
+              if (newlyUnlocked.length > 0) {
+                console.log(`玩家 ${player.name} 解鎖新草藥: ${newlyUnlocked.join(', ')}`);
+              }
+            }
+          } catch (collectionErr) {
+            console.error('更新收藏失敗:', collectionErr.message);
+          }
         }
       }
 

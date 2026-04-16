@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage, QuestPanel } from './components/common';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
+import HerbariumPage from './pages/Herbarium';
 import './styles/App.css';
 
 /**
@@ -150,6 +151,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Friends />
+            </ProtectedRoute>
+          }
+        />
+        {/* Issue #63：本草百科 */}
+        <Route
+          path="/herbarium"
+          element={
+            <ProtectedRoute>
+              <HerbariumPage />
             </ProtectedRoute>
           }
         />
