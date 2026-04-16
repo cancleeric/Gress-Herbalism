@@ -42,6 +42,10 @@ async function getEncyclopedia() {
  * @returns {Promise<object|null>} 草藥資料
  */
 async function getHerbById(herbId) {
+  const { HERB_IDS } = require('../logic/herbalism/collectionLogic');
+  if (!HERB_IDS.includes(herbId)) {
+    return null;
+  }
   try {
     const { data, error } = await supabase
       .from('herb_encyclopedia')
@@ -50,7 +54,7 @@ async function getHerbById(herbId) {
       .single();
 
     if (error) {
-      console.error(`取得草藥 ${herbId} 失敗:`, error.message);
+      console.error('取得草藥詳情失敗:', error.message);
       return null;
     }
 
@@ -149,22 +153,24 @@ async function incrementTimesSeen(playerId, seenHerbIds) {
   if (!seenHerbIds || seenHerbIds.length === 0) return;
 
   try {
-    for (const herbId of seenHerbIds) {
-      // 嘗試更新已解鎖的記錄
-      const { data: existing } = await supabase
-        .from('player_collection')
-        .select('id, times_seen')
-        .eq('player_id', playerId)
-        .eq('herb_id', herbId)
-        .single();
+    // 批次取得所有已解鎖記錄，避免 N+1 查詢
+    const { data: existing } = await supabase
+      .from('player_collection')
+      .select('id, herb_id, times_seen')
+      .eq('player_id', playerId)
+      .in('herb_id', seenHerbIds);
 
-      if (existing) {
-        await supabase
+    if (!existing || existing.length === 0) return;
+
+    // 批次更新（每筆仍需單獨 update，但查詢次數從 2N 降至 1+N）
+    await Promise.all(
+      existing.map((record) =>
+        supabase
           .from('player_collection')
-          .update({ times_seen: (existing.times_seen || 1) + 1 })
-          .eq('id', existing.id);
-      }
-    }
+          .update({ times_seen: (record.times_seen || 1) + 1 })
+          .eq('id', record.id)
+      )
+    );
   } catch (err) {
     console.error('incrementTimesSeen 錯誤:', err.message);
   }

@@ -5,7 +5,7 @@
  * 顯示所有草藥卡牌，標示解鎖/鎖定狀態，並提供詳情查看。
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../firebase/AuthContext';
@@ -175,11 +175,14 @@ function HerbariumPage() {
 
   const [filterUnlocked, setFilterUnlocked] = useState('all');
 
-  // 建立已解鎖的 herbId → 詳細收藏資訊 的映射
-  const collectionMap = {};
-  for (const entry of collection) {
-    collectionMap[entry.herb_id] = entry;
-  }
+  // 建立已解鎖的 herbId → 詳細收藏資訊 的映射（memoized）
+  const collectionMap = useMemo(() => {
+    const map = {};
+    for (const entry of collection) {
+      map[entry.herb_id] = entry;
+    }
+    return map;
+  }, [collection]);
 
   const loadData = useCallback(() => {
     dispatch(fetchEncyclopedia());
