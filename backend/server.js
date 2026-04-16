@@ -176,7 +176,8 @@ app.get('/api/seasons/current', async (req, res) => {
 
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[seasons/current] 錯誤:', err.message);
+    res.status(500).json({ success: false, message: '載入賽季資訊失敗' });
   }
 });
 
@@ -198,7 +199,8 @@ app.post('/api/seasons/claim-reward', async (req, res) => {
     const result = await seasonService.claimSeasonReward(seasonId, playerId);
     res.json(result);
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[seasons/claim-reward] 錯誤:', err.message);
+    res.status(500).json({ success: false, message: '領取獎勵失敗' });
   }
 });
 

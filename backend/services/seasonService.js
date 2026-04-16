@@ -234,7 +234,7 @@ async function endSeason(seasonId) {
       const tier = getTierByElo(elo);
       const newElo = calculateSoftResetElo(elo);
 
-      // 記錄賽季結果（upsert 防止重複）
+      // 記錄賽季結果（upsert：如已存在則更新最終 ELO 和段位）
       await supabase
         .from('season_results')
         .upsert(
@@ -245,7 +245,7 @@ async function endSeason(seasonId) {
             tier: tier.id,
             rewards_claimed: false,
           },
-          { onConflict: 'season_id,player_id', ignoreDuplicates: true }
+          { onConflict: 'season_id,player_id' }
         );
 
       // 軟重置 ELO 並重置賽季峰值
