@@ -79,7 +79,7 @@ export async function healthCheck() {
   return apiRequest('/api/health');
 }
 
-export default {
+const apiService = {
   syncPlayer,
   getPlayerStats,
   getPlayerHistory,
@@ -87,3 +87,5 @@ export default {
   getEloHistory,
   healthCheck,
 };
+
+export default apiService;

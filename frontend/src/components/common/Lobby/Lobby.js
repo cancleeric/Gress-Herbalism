@@ -29,7 +29,7 @@ import {
   emitPlayerRefreshing,
   requestRoomList
 } from '../../../services/socketService';
-import { MIN_PLAYERS, MAX_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
+import { MIN_PLAYERS, AI_DIFFICULTY } from '../../../shared/constants';
 import VersionInfo from '../VersionInfo';
 import {
   saveNickname,

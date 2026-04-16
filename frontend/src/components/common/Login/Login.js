@@ -85,9 +85,9 @@ function Login() {
             <span className="nav-title">Herbalism</span>
           </div>
           <nav className="nav-links">
-            <a href="#">規則書</a>
-            <a href="#">卡牌</a>
-            <a href="#">關於</a>
+            <button type="button" className="nav-link-btn">規則書</button>
+            <button type="button" className="nav-link-btn">卡牌</button>
+            <button type="button" className="nav-link-btn">關於</button>
           </nav>
         </header>
 
