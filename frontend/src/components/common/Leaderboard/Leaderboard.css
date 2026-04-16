@@ -334,8 +334,16 @@
 .col-games,
 .col-wins,
 .col-rate,
-.col-score {
+.col-score,
+.col-elo,
+.col-peak {
   width: 80px;
+}
+
+/* ELO 積分強調色 */
+.elo-score {
+  font-weight: 700;
+  color: #1565C0;
 }
 
 /* ==================== 頁尾 ==================== */

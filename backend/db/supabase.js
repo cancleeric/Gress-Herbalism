@@ -167,17 +167,19 @@ async function saveGameParticipants(gameHistoryId, participants) {
 
 /**
  * 取得排行榜
- * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'win_rate')
+ * @param {string} orderBy - 排序欄位 ('total_score' | 'games_won' | 'win_rate' | 'elo_rating')
  * @param {number} limit - 限制筆數
  * @returns {Promise<Array>} 排行榜資料
  */
 async function getLeaderboard(orderBy = 'total_score', limit = 10) {
+  const validOrderFields = ['total_score', 'games_won', 'win_rate', 'highest_score', 'elo_rating'];
+  const safeOrderBy = validOrderFields.includes(orderBy) ? orderBy : 'total_score';
   try {
     const { data, error } = await supabase
       .from('players')
-      .select('id, display_name, avatar_url, total_score, games_played, games_won, win_rate, highest_score')
+      .select('id, display_name, avatar_url, total_score, games_played, games_won, win_rate, highest_score, elo_rating, season_peak_elo')
       .gt('games_played', 0) // 至少玩過一場
-      .order(orderBy, { ascending: false })
+      .order(safeOrderBy, { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -189,6 +191,8 @@ async function getLeaderboard(orderBy = 'total_score', limit = 10) {
     return (data || []).map((player, index) => ({
       rank: index + 1,
       ...player,
+      elo_rating: player.elo_rating || 1000,
+      season_peak_elo: player.season_peak_elo || 1000,
     }));
   } catch (err) {
     console.error('getLeaderboard 錯誤:', err.message);
@@ -326,6 +330,116 @@ async function getPlayerIdByFirebaseUid(firebaseUid) {
   }
 }
 
+// ==================== 工單 0060 ELO 功能 ====================
+
+/**
+ * 取得玩家 ELO 歷史記錄
+ * @param {string} playerId - 玩家 ID (UUID)
+ * @param {number} limit - 限制筆數
+ * @returns {Promise<Array>} ELO 歷史記錄
+ */
+async function getPlayerEloHistory(playerId, limit = 20) {
+  try {
+    const { data, error } = await supabase
+      .from('elo_history')
+      .select('id, old_rating, new_rating, delta, game_id, created_at')
+      .eq('player_id', playerId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('取得 ELO 歷史失敗:', error.message);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('getPlayerEloHistory 錯誤:', err.message);
+    return [];
+  }
+}
+
+/**
+ * 記錄 ELO 變化並更新玩家積分
+ * @param {string} playerId - 玩家 ID (UUID)
+ * @param {number} oldRating - 舊 ELO
+ * @param {number} newRating - 新 ELO
+ * @param {string|null} gameId - 遊戲 ID
+ * @returns {Promise<void>}
+ */
+async function saveEloChange(playerId, oldRating, newRating, gameId = null) {
+  const delta = newRating - oldRating;
+  try {
+    // 記錄歷史
+    const { error: historyError } = await supabase
+      .from('elo_history')
+      .insert({
+        player_id: playerId,
+        old_rating: oldRating,
+        new_rating: newRating,
+        delta,
+        game_id: gameId,
+      });
+
+    if (historyError) {
+      console.error('記錄 ELO 歷史失敗:', historyError.message);
+    }
+
+    // 更新玩家積分
+    const { data: player } = await supabase
+      .from('players')
+      .select('season_peak_elo')
+      .eq('id', playerId)
+      .single();
+
+    const currentPeak = (player && player.season_peak_elo) || 0;
+    const updateData = {
+      elo_rating: newRating,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (newRating > currentPeak) {
+      updateData.season_peak_elo = newRating;
+    }
+
+    const { error: updateError } = await supabase
+      .from('players')
+      .update(updateData)
+      .eq('id', playerId);
+
+    if (updateError) {
+      console.error('更新玩家 ELO 失敗:', updateError.message);
+    }
+  } catch (err) {
+    console.error('saveEloChange 錯誤:', err.message);
+  }
+}
+
+/**
+ * 取得目前活躍賽季
+ * @returns {Promise<Object|null>}
+ */
+async function getActiveSeason() {
+  try {
+    const { data, error } = await supabase
+      .from('seasons')
+      .select('*')
+      .eq('status', 'active')
+      .order('start_date', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error('getActiveSeason 錯誤:', err.message);
+    return null;
+  }
+}
+
 module.exports = {
   supabase,
   testConnection,
@@ -339,4 +453,8 @@ module.exports = {
   getPlayerHistory,
   updatePlayerGameStats,
   getPlayerIdByFirebaseUid,
+  // 工單 0060 ELO 功能
+  getPlayerEloHistory,
+  saveEloChange,
+  getActiveSeason,
 };

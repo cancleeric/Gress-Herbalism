@@ -24,6 +24,7 @@ const {
   getPlayerHistory,
   getPlayerIdByFirebaseUid,
   updatePlayerGameStats,
+  getPlayerEloHistory,
 } = require('./db/supabase');
 
 // 工單 0061 - 好友服務
@@ -127,6 +128,25 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
     }
 
     const history = await getPlayerHistory(playerId, limit);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家 ELO 歷史（工單 0060）
+app.get('/api/players/:firebaseUid/elo-history', async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const history = await getPlayerEloHistory(playerId, limit);
     res.json({ success: true, data: history });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
