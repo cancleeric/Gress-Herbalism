@@ -1,0 +1,329 @@
+/* QuestPanel 樣式
+ * Issue #61 - 每日任務系統
+ */
+
+/* ==================== 面板容器 ==================== */
+.quest-panel {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
+
+/* ==================== 切換按鈕 ==================== */
+.quest-panel-toggle {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px 0 0 8px;
+  border: none;
+  background: #2196f3;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  transition: background 0.2s;
+}
+
+.quest-panel-toggle:hover {
+  background: #1976d2;
+}
+
+.quest-notification-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #f44336;
+  border-radius: 50%;
+}
+
+/* ==================== 面板內容 ==================== */
+.quest-panel-content {
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quest-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.quest-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.quest-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.quest-panel-close:hover {
+  background: #f5f5f5;
+}
+
+/* ==================== 獎勵提示 ==================== */
+.quest-reward-toast {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #2e7d32;
+  font-weight: 600;
+  text-align: center;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.quest-error {
+  background: #ffebee;
+  border: 1px solid #f44336;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #c62828;
+  font-size: 13px;
+}
+
+/* ==================== 簽到區域 ==================== */
+.checkin-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.checkin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.checkin-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.streak-badge {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.checkin-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  background: #e0e0e0;
+  color: #666;
+}
+
+.calendar-day.checked {
+  background: #4caf50;
+  color: white;
+}
+
+.calendar-day.today {
+  border: 2px solid #2196f3;
+  font-weight: 700;
+}
+
+.checkin-btn {
+  width: 100%;
+  padding: 8px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.checkin-btn:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.checkin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkin-done {
+  text-align: center;
+  color: #4caf50;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* ==================== 任務列表 ==================== */
+.quest-list-section h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.quest-loading,
+.quest-empty {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 16px;
+}
+
+/* ==================== 任務卡片 ==================== */
+.quest-card {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+
+.quest-card.completed {
+  border-color: #4caf50;
+  background: #f1f8f1;
+}
+
+.quest-card.claimed {
+  opacity: 0.7;
+}
+
+.quest-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.quest-difficulty-badge {
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.quest-type {
+  font-size: 12px;
+  color: #666;
+}
+
+.quest-description {
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+/* ==================== 進度條 ==================== */
+.quest-progress-bar {
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.quest-progress-fill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ==================== 任務卡片底部 ==================== */
+.quest-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.quest-progress-text {
+  font-size: 12px;
+  color: #888;
+}
+
+.quest-reward {
+  font-size: 12px;
+  color: #e65100;
+  font-weight: 600;
+}
+
+.quest-claim-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.quest-claim-btn:hover:not(:disabled) {
+  background: #388e3c;
+}
+
+.quest-claim-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.quest-claimed-badge {
+  color: #4caf50;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ==================== RWD ==================== */
+@media (max-width: 480px) {
+  .quest-panel-content {
+    width: 280px;
+  }
+
+  .checkin-calendar {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
