@@ -38,6 +38,9 @@ const seasonService = require('./services/seasonService');
 // Issue #61 - 每日任務服務
 const questService = require('./services/questService');
 
+// Issue #63 - 本草圖鑑收藏服務
+const collectionService = require('./services/collectionService');
+
 // 工單 0261 - 演化論遊戲房間管理（舊模組，保留但不使用）
 // const evolutionRoomManager = require('./services/evolutionRoomManager');
 
@@ -473,7 +476,77 @@ app.post('/api/quests/:questId/claim', async (req, res) => {
   }
 });
 
-const io = new Server(server, {
+// ==================== Issue #63 本草圖鑑 API ====================
+
+// 取得所有圖鑑條目（公開，不含敏感詳情）
+app.get('/api/encyclopedia', async (req, res) => {
+  try {
+    const entries = await collectionService.getAllEncyclopediaEntries();
+    res.json({ success: true, data: entries });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得單一圖鑑條目詳情（需已解鎖）
+app.get('/api/encyclopedia/:herbId', async (req, res) => {
+  try {
+    const { herbId } = req.params;
+    const { firebaseUid } = req.query;
+
+    const entry = await collectionService.getEncyclopediaEntry(herbId);
+    if (!entry) {
+      return res.status(404).json({ success: false, message: '圖鑑條目不存在' });
+    }
+
+    // 若提供 firebaseUid，驗證是否已解鎖
+    if (firebaseUid) {
+      const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+      if (playerId) {
+        const collection = await collectionService.getPlayerCollection(playerId);
+        const isUnlocked = collection.entries.some(e => e.herb_id === herbId && e.unlocked);
+        if (!isUnlocked) {
+          return res.status(403).json({ success: false, message: '尚未解鎖此藥草圖鑑' });
+        }
+      }
+    }
+
+    res.json({ success: true, data: entry });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家收藏清單
+app.get('/api/collection/:playerId', async (req, res) => {
+  try {
+    const { playerId } = req.params;
+    const collection = await collectionService.getPlayerCollection(playerId);
+    res.json({ success: true, data: collection });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 取得玩家收藏清單（透過 firebaseUid）
+app.get('/api/collection', async (req, res) => {
+  try {
+    const { firebaseUid } = req.query;
+    if (!firebaseUid) {
+      return res.status(400).json({ success: false, message: '缺少 firebaseUid' });
+    }
+
+    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    if (!playerId) {
+      return res.status(404).json({ success: false, message: '玩家不存在' });
+    }
+
+    const collection = await collectionService.getPlayerCollection(playerId);
+    res.json({ success: true, data: collection });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
   cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
@@ -2109,6 +2182,19 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
           await updatePlayerGameStats(dbPlayerId, {
             score: gameState.scores[player.id] || 0,
             isWinner: player.id === gameState.winner,
+          });
+        }
+      }
+
+      // Issue #63：更新玩家本草圖鑑收藏（記錄本局出現的藥草顏色）
+      const gameHerbIds = [...new Set(
+        (gameState.hiddenCards || []).map(c => c.color)
+      )];
+      for (const player of gameState.players) {
+        const dbPlayerId = playerIdMap[player.id];
+        if (dbPlayerId && gameHerbIds.length > 0) {
+          collectionService.recordCardUsage(dbPlayerId, gameHerbIds).catch(err => {
+            console.error(`[圖鑑] 更新玩家 ${player.name} 收藏失敗:`, err.message);
           });
         }
       }

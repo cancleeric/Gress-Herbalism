@@ -21,6 +21,9 @@ import evolutionReducer from './evolution/evolutionStore';
 // Issue #61：引入每日任務 reducer
 import questReducer from './questSlice';
 
+// Issue #63：引入本草圖鑑收藏 reducer
+import collectionReducer from './collectionSlice';
+
 // ==================== Redux Persist 設定 ====================
 
 /**
@@ -275,6 +278,7 @@ const rootReducer = combineReducers({
   herbalism: gameReducer,
   evolution: evolutionReducer,
   quest: questReducer,
+  collection: collectionReducer,
 });
 
 /**

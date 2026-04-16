@@ -114,6 +114,13 @@ function GameSelection() {
         <div className="gs-nav">
           <button
             className="gs-nav-btn"
+            onClick={() => navigate('/herbarium')}
+          >
+            <span className="material-symbols-outlined">menu_book</span>
+            本草圖鑑
+          </button>
+          <button
+            className="gs-nav-btn"
             onClick={() => navigate('/profile')}
           >
             <span className="material-symbols-outlined">person</span>
