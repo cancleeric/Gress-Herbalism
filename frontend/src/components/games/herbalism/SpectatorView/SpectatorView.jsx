@@ -49,7 +49,7 @@ function SpectatorView() {
   const spectatorState = useSelector(state => state.spectator);
 
   const [spectatorId] = useState(
-    `spectator_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+    `spectator_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   );
   const [spectatorName] = useState(
     user?.isAnonymous ? '訪客觀眾' : (user?.displayName || '觀眾')

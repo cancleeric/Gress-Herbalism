@@ -106,7 +106,7 @@ function buildPublicGameState(gameState) {
       isDisconnected: player.isDisconnected,
       isHost: player.isHost,
       score: player.score,
-      handCount: (player.hand || []).length  // 只顯示手牌數量，不顯示具體牌面
+      handCount: (player.hand || []).length
     })),
     maxPlayers: gameState.maxPlayers
   };
