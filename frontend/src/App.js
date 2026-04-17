@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
+import { SpectatorView } from './components/games/herbalism';
 import './styles/App.css';
 
 /**
@@ -125,6 +126,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <GameRoom />
+            </ProtectedRoute>
+          }
+        />
+        {/* 工單 0062：觀戰路由 */}
+        <Route
+          path="/spectate/:gameId"
+          element={
+            <ProtectedRoute>
+              <SpectatorView />
             </ProtectedRoute>
           }
         />

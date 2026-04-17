@@ -357,6 +357,10 @@ const postQuestionStates = new Map();
 // 工單 0207：猜牌結果全員確認追蹤
 const guessResultConfirmations = new Map();
 
+// 工單 0062：觀戰者追蹤 Map<gameId, Map<spectatorId, {id, name, socketId}>>
+const spectatorRooms = new Map();
+const MAX_SPECTATORS = 10;
+
 // 工單 0079：斷線重連計時器
 const disconnectTimeouts = new Map();
 const DISCONNECT_TIMEOUT = 60000; // 60 秒（遊戲中）
@@ -447,20 +451,43 @@ setInterval(() => {
 }, 30000);
 
 /**
- * 廣播房間列表給所有人
+ * 工單 0062：取得觀戰者數量
+ */
+function getSpectatorCount(gameId) {
+  const spectators = spectatorRooms.get(gameId);
+  return spectators ? spectators.size : 0;
+}
+
+/**
+ * 廣播房間列表給所有人（包含進行中的房間供觀戰）
  */
 function broadcastRoomList() {
   const rooms = [];
   gameRooms.forEach((state, gameId) => {
+    const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
+    const roomName = hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`;
     if (state.gamePhase === 'waiting') {
-      const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
       rooms.push({
         id: gameId,
-        name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
+        name: roomName,
         playerCount: state.players.length,
         maxPlayers: state.maxPlayers || 4,
         isPrivate: state.isPrivate || false,
-        gameType: 'herbalism'  // 標記為本草遊戲房間
+        gameType: 'herbalism',
+        spectatorCount: getSpectatorCount(gameId)
+      });
+    } else if (state.gamePhase !== 'finished') {
+      // 工單 0062：進行中的房間也顯示，供觀戰
+      rooms.push({
+        id: gameId,
+        name: roomName,
+        playerCount: state.players.filter(p => p.isActive !== false).length,
+        maxPlayers: state.maxPlayers || 4,
+        isPrivate: false,
+        gameType: 'herbalism',
+        gamePhase: state.gamePhase,
+        spectatorCount: getSpectatorCount(gameId),
+        isSpectatable: true
       });
     }
   });
@@ -468,13 +495,26 @@ function broadcastRoomList() {
 }
 
 /**
- * 廣播遊戲狀態給房間內所有玩家
+ * 廣播遊戲狀態給房間內所有玩家及觀戰者
  */
 function broadcastGameState(gameId) {
   const gameState = gameRooms.get(gameId);
   // 工單 0148：確保房間存在且有玩家時才廣播
   if (gameState && gameState.players && gameState.players.length > 0) {
     io.to(gameId).emit('gameState', gameState);
+    // 工單 0062：同步給觀戰者（隱藏蓋牌資訊）
+    const spectators = spectatorRooms.get(gameId);
+    if (spectators && spectators.size > 0) {
+      const spectatorState = { ...gameState, hiddenCards: gameState.hiddenCards.map(() => ({ color: null })) };
+      io.to(`spectator:${gameId}`).emit('spectator:sync', {
+        gameState: spectatorState,
+        spectatorCount: spectators.size
+      });
+    }
+    // 工單 0062：遊戲結束時清理觀戰者
+    if (gameState.gamePhase === 'finished') {
+      cleanupSpectatorsForGame(gameId);
+    }
   }
 }
 
@@ -1178,6 +1218,11 @@ io.on('connection', (socket) => {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
     }
 
+    // 工單 0062：觀戰者斷線處理
+    if (socket.spectatorGameId && socket.spectatorId) {
+      handleSpectatorLeave(socket, socket.spectatorGameId);
+    }
+
     // 工單 0313-0316：演化論遊戲斷線處理
     evolutionHandler.handleDisconnect(socket, io);
 
@@ -1198,6 +1243,57 @@ io.on('connection', (socket) => {
   // 工單 0079：重連處理
   socket.on('reconnect', ({ roomId, playerId, playerName }) => {
     handlePlayerReconnect(socket, roomId, playerId, playerName);
+  });
+
+  // ==================== 工單 0062：觀戰者 Socket 事件 ====================
+
+  // 加入觀戰
+  socket.on('spectator:join', ({ gameId, spectator }) => {
+    const gameState = gameRooms.get(gameId);
+    if (!gameState) {
+      socket.emit('error', { message: '遊戲不存在' });
+      return;
+    }
+    if (gameState.gamePhase === 'waiting' || gameState.gamePhase === 'finished') {
+      socket.emit('error', { message: '此遊戲目前無法觀戰' });
+      return;
+    }
+
+    if (!spectatorRooms.has(gameId)) {
+      spectatorRooms.set(gameId, new Map());
+    }
+    const spectators = spectatorRooms.get(gameId);
+
+    if (spectators.size >= MAX_SPECTATORS) {
+      socket.emit('error', { message: `觀戰人數已達上限（${MAX_SPECTATORS} 人）` });
+      return;
+    }
+
+    spectators.set(spectator.id, { id: spectator.id, name: spectator.name, socketId: socket.id });
+    socket.join(`spectator:${gameId}`);
+    socket.spectatorGameId = gameId;
+    socket.spectatorId = spectator.id;
+
+    // 發送當前遊戲狀態（隱藏蓋牌）
+    const spectatorState = {
+      ...gameState,
+      hiddenCards: gameState.hiddenCards.map(() => ({ color: null }))
+    };
+    socket.emit('spectator:joined', {
+      gameId,
+      gameState: spectatorState,
+      spectatorCount: spectators.size
+    });
+
+    // 通知房間內玩家觀戰人數更新
+    io.to(gameId).emit('spectator:count', { spectatorCount: spectators.size });
+    broadcastRoomList();
+    console.log(`[觀戰] ${spectator.name} 開始觀戰房間 ${gameId}，目前觀戰人數: ${spectators.size}`);
+  });
+
+  // 離開觀戰
+  socket.on('spectator:leave', ({ gameId }) => {
+    handleSpectatorLeave(socket, gameId);
   });
 
   // ==================== 工單 0313-0316：演化論遊戲 Socket 事件（使用新模組） ====================
@@ -1224,6 +1320,56 @@ io.on('connection', (socket) => {
 
   // ==================== 工單 0313-0316 結束 ====================
 });
+
+/**
+ * 工單 0062：處理觀戰者離開
+ */
+function handleSpectatorLeave(socket, gameId) {
+  const spectators = spectatorRooms.get(gameId);
+  if (!spectators) return;
+
+  const spectatorId = socket.spectatorId;
+  if (!spectatorId || !spectators.has(spectatorId)) return;
+
+  const spectator = spectators.get(spectatorId);
+  spectators.delete(spectatorId);
+  socket.leave(`spectator:${gameId}`);
+  delete socket.spectatorGameId;
+  delete socket.spectatorId;
+
+  if (spectators.size === 0) {
+    spectatorRooms.delete(gameId);
+  }
+
+  // 通知房間內玩家觀戰人數更新
+  io.to(gameId).emit('spectator:count', { spectatorCount: spectators.size || 0 });
+  broadcastRoomList();
+  console.log(`[觀戰] ${spectator ? spectator.name : spectatorId} 停止觀戰房間 ${gameId}，目前觀戰人數: ${spectators.size || 0}`);
+}
+
+/**
+ * 工單 0062：遊戲結束時清理觀戰者
+ */
+function cleanupSpectatorsForGame(gameId) {
+  const spectators = spectatorRooms.get(gameId);
+  if (!spectators || spectators.size === 0) return;
+
+  io.to(`spectator:${gameId}`).emit('spectator:gameEnded', { gameId });
+  // 通知所有觀戰者離開 socket room
+  const room = io.sockets.adapter.rooms.get(`spectator:${gameId}`);
+  if (room) {
+    room.forEach(socketId => {
+      const s = io.sockets.sockets.get(socketId);
+      if (s) {
+        s.leave(`spectator:${gameId}`);
+        delete s.spectatorGameId;
+        delete s.spectatorId;
+      }
+    });
+  }
+  spectatorRooms.delete(gameId);
+  console.log(`[觀戰] 遊戲 ${gameId} 結束，已清理所有觀戰者`);
+}
 
 function handlePlayerLeave(socket, gameId, playerId) {
   // 工單 0109：房間操作日誌
@@ -1457,15 +1603,30 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
 function getAvailableRooms() {
   const rooms = [];
   gameRooms.forEach((state, gameId) => {
+    const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
+    const roomName = hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`;
     if (state.gamePhase === 'waiting') {
-      const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
       rooms.push({
         id: gameId,
-        name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
+        name: roomName,
         playerCount: state.players.length,
         maxPlayers: state.maxPlayers || 4,
         isPrivate: state.isPrivate || false,
-        gameType: 'herbalism'  // 標記為本草遊戲房間
+        gameType: 'herbalism',
+        spectatorCount: getSpectatorCount(gameId)
+      });
+    } else if (state.gamePhase !== 'finished') {
+      // 工單 0062：進行中的房間也顯示，供觀戰
+      rooms.push({
+        id: gameId,
+        name: roomName,
+        playerCount: state.players.filter(p => p.isActive !== false).length,
+        maxPlayers: state.maxPlayers || 4,
+        isPrivate: false,
+        gameType: 'herbalism',
+        gamePhase: state.gamePhase,
+        spectatorCount: getSpectatorCount(gameId),
+        isSpectatable: true
       });
     }
   });

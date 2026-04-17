@@ -636,7 +636,7 @@ function Lobby() {
           </div>
 
           {/* 房間列表表格 */}
-          {/* 工單 0276：只顯示本草房間 */}
+          {/* 工單 0276：只顯示本草房間；工單 0062：新增進行中房間（可觀戰） */}
           <div className="room-table-container">
             {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').length === 0 ? (
               <div className="no-rooms">
@@ -655,7 +655,7 @@ function Lobby() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* 工單 0276：只顯示本草房間 */}
+                  {/* 工單 0276：只顯示本草房間；工單 0062：顯示進行中房間 */}
                   {rooms.filter(room => !room.gameType || room.gameType === 'herbalism').map((room) => (
                     <tr key={room.id}>
                       <td>
@@ -671,27 +671,50 @@ function Lobby() {
                       </td>
                       <td>
                         <span className="room-players">
-                          <span className={`room-players-count ${!canJoinRoom(room) ? 'full' : ''}`}>
+                          <span className={`room-players-count ${!room.isSpectatable && !canJoinRoom(room) ? 'full' : ''}`}>
                             {room.playerCount}/{room.maxPlayers || 4}
                           </span>
+                          {/* 工單 0062：顯示觀戰人數 */}
+                          {room.spectatorCount > 0 && (
+                            <span className="room-spectator-count" title="觀戰人數">
+                              <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>visibility</span>
+                              {room.spectatorCount}
+                            </span>
+                          )}
                         </span>
                       </td>
                       <td>
-                        <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
-                          {canJoinRoom(room) ? '等待中' : '已滿'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="room-action-btn"
-                          onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                          disabled={isLoading || !isConnected || !canJoinRoom(room)}
-                        >
-                          <span className="material-symbols-outlined">
-                            {canJoinRoom(room) ? 'login' : 'block'}
+                        {room.isSpectatable ? (
+                          <span className="room-status playing">進行中</span>
+                        ) : (
+                          <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
+                            {canJoinRoom(room) ? '等待中' : '已滿'}
                           </span>
-                          {canJoinRoom(room) ? '加入' : '已滿'}
-                        </button>
+                        )}
+                      </td>
+                      <td>
+                        {/* 工單 0062：進行中房間顯示觀戰按鈕 */}
+                        {room.isSpectatable ? (
+                          <button
+                            className="room-action-btn spectate"
+                            onClick={() => navigate(`/spectate/${room.id}`)}
+                            disabled={!isConnected}
+                          >
+                            <span className="material-symbols-outlined">visibility</span>
+                            觀戰
+                          </button>
+                        ) : (
+                          <button
+                            className="room-action-btn"
+                            onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                            disabled={isLoading || !isConnected || !canJoinRoom(room)}
+                          >
+                            <span className="material-symbols-outlined">
+                              {canJoinRoom(room) ? 'login' : 'block'}
+                            </span>
+                            {canJoinRoom(room) ? '加入' : '已滿'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

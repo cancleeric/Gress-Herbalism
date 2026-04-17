@@ -503,6 +503,56 @@ export function disconnect() {
   }
 }
 
+// ==================== 工單 0062：觀戰模式 ====================
+
+/**
+ * 加入觀戰
+ * @param {string} gameId - 遊戲 ID
+ * @param {Object} spectator - 觀戰者資訊 { id, name }
+ */
+export function joinAsSpectator(gameId, spectator) {
+  const s = getSocket();
+  s.emit('spectator:join', { gameId, spectator });
+}
+
+/**
+ * 離開觀戰
+ * @param {string} gameId - 遊戲 ID
+ */
+export function leaveSpectator(gameId) {
+  const s = getSocket();
+  s.emit('spectator:leave', { gameId });
+}
+
+/**
+ * 監聽觀戰加入成功（取得初始遊戲狀態）
+ */
+export function onSpectatorJoined(callback) {
+  return safeOn('spectator:joined', callback);
+}
+
+/**
+ * 監聽觀戰同步（遊戲狀態更新）
+ */
+export function onSpectatorSync(callback) {
+  return safeOn('spectator:sync', callback);
+}
+
+/**
+ * 監聽觀戰人數更新
+ */
+export function onSpectatorCount(callback) {
+  return safeOn('spectator:count', callback);
+}
+
+/**
+ * 監聽觀戰結束（遊戲結束）
+ */
+export function onSpectatorGameEnded(callback) {
+  return safeOn('spectator:gameEnded', callback);
+}
+
+
 // ==================== 工單 0272：演化論遊戲 Socket 服務 ====================
 
 /**

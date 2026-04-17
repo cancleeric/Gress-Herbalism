@@ -46,7 +46,8 @@ import {
   confirmGuessResult as socketConfirmGuessResult,  // 工單 0207
   onConnectionChange,  // 工單 0196
   attemptReconnect,  // 工單 0196
-  onReconnected  // 工單 0196
+  onReconnected,  // 工單 0196
+  onSpectatorCount  // 工單 0062
 } from '../../../../services/socketService';
 import {
   GAME_PHASE_WAITING,
@@ -187,6 +188,8 @@ function GameRoom() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const reconnectTimerRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
+  // 工單 0062：觀戰人數
+  const [spectatorCount, setSpectatorCount] = useState(0);
 
   // Firebase Auth（工單 0123）
   const { user: authUser } = useAuth();
@@ -663,6 +666,17 @@ function GameRoom() {
       }
     };
   }, [gameId, isLocalMode]);
+
+  /**
+   * 工單 0062：監聽觀戰人數更新
+   */
+  useEffect(() => {
+    if (isLocalMode) return;
+    const unsub = onSpectatorCount(({ spectatorCount: count }) => {
+      setSpectatorCount(count);
+    });
+    return () => unsub();
+  }, [isLocalMode]);
 
   /**
    * 工單 0093：重連時恢復預測 UI 狀態
@@ -2037,6 +2051,13 @@ function GameRoom() {
           <h1>遊戲房間</h1>
           <span className="game-id">房間ID: {gameId}</span>
           <span className="game-phase">{getGamePhaseText()}</span>
+          {/* 工單 0062：觀戰人數 */}
+          {spectatorCount > 0 && (
+            <span className="spectator-count-badge" title="目前觀戰人數">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle' }}>visibility</span>
+              {' '}{spectatorCount} 人觀戰
+            </span>
+          )}
         </div>
         <div className="header-actions">
           <button
