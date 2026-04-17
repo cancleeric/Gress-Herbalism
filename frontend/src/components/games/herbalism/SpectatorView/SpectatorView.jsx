@@ -44,7 +44,11 @@ function SpectatorView() {
   const [error, setError] = useState('');
   const [gameEnded, setGameEnded] = useState(false);
 
-  const spectatorIdRef = useRef(`spectator_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
+  const spectatorIdRef = useRef(
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? `spectator_${crypto.randomUUID()}`
+      : `spectator_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  );
   const spectatorName = user?.isAnonymous
     ? '訪客觀眾'
     : (user?.displayName || '觀眾');

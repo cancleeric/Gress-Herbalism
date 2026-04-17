@@ -459,13 +459,20 @@ function getSpectatorCount(gameId) {
 }
 
 /**
+ * 工單 0062：取得房間顯示名稱
+ */
+function getRoomName(state, gameId) {
+  const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
+  return hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`;
+}
+
+/**
  * 廣播房間列表給所有人（包含進行中的房間供觀戰）
  */
 function broadcastRoomList() {
   const rooms = [];
   gameRooms.forEach((state, gameId) => {
-    const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
-    const roomName = hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`;
+    const roomName = getRoomName(state, gameId);
     if (state.gamePhase === 'waiting') {
       rooms.push({
         id: gameId,
@@ -1603,8 +1610,7 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
 function getAvailableRooms() {
   const rooms = [];
   gameRooms.forEach((state, gameId) => {
-    const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
-    const roomName = hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`;
+    const roomName = getRoomName(state, gameId);
     if (state.gamePhase === 'waiting') {
       rooms.push({
         id: gameId,
