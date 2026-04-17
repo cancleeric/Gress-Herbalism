@@ -465,6 +465,12 @@
   color: var(--text-muted);
 }
 
+/* 工單 0062：進行中狀態 */
+.room-status.in-progress {
+  background-color: rgba(66, 153, 225, 0.12);
+  color: #2b6cb0;
+}
+
 .room-status.full {
   background-color: rgba(107, 128, 108, 0.1);
   color: var(--text-muted);
@@ -492,6 +498,15 @@
 
 .room-action-btn:hover:not(:disabled) {
   background-color: var(--primary-dark);
+}
+
+/* 工單 0062：觀戰按鈕 */
+.room-action-btn.watch-btn {
+  background-color: #553c9a;
+}
+
+.room-action-btn.watch-btn:hover:not(:disabled) {
+  background-color: #44337a;
 }
 
 .room-action-btn:disabled {

@@ -677,21 +677,32 @@ function Lobby() {
                         </span>
                       </td>
                       <td>
-                        <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
-                          {canJoinRoom(room) ? '等待中' : '已滿'}
+                        <span className={`room-status ${room.isInProgress ? 'in-progress' : canJoinRoom(room) ? 'waiting' : 'full'}`}>
+                          {room.isInProgress ? '進行中' : canJoinRoom(room) ? '等待中' : '已滿'}
                         </span>
                       </td>
                       <td>
-                        <button
-                          className="room-action-btn"
-                          onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                          disabled={isLoading || !isConnected || !canJoinRoom(room)}
-                        >
-                          <span className="material-symbols-outlined">
-                            {canJoinRoom(room) ? 'login' : 'block'}
-                          </span>
-                          {canJoinRoom(room) ? '加入' : '已滿'}
-                        </button>
+                        {room.isSpectatable ? (
+                          <button
+                            className="room-action-btn watch-btn"
+                            onClick={() => navigate(`/spectate/${room.id}`)}
+                            disabled={isLoading || !isConnected}
+                          >
+                            <span className="material-symbols-outlined">visibility</span>
+                            觀戰
+                          </button>
+                        ) : (
+                          <button
+                            className="room-action-btn"
+                            onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                            disabled={isLoading || !isConnected || !canJoinRoom(room)}
+                          >
+                            <span className="material-symbols-outlined">
+                              {canJoinRoom(room) ? 'login' : 'block'}
+                            </span>
+                            {canJoinRoom(room) ? '加入' : '已滿'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

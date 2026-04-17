@@ -821,6 +821,59 @@ export function diagnoseConnection() {
   };
 }
 
+// ==================== 工單 0062：觀戰模式 ====================
+
+/**
+ * 以觀戰者身份加入遊戲
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorId - 觀戰者 ID
+ * @param {string} spectatorName - 觀戰者名稱
+ */
+export function joinAsSpectator(gameId, spectatorId, spectatorName) {
+  const s = getSocket();
+  s.emit('spectator:join', { gameId, spectatorId, spectatorName });
+}
+
+/**
+ * 離開觀戰
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorId - 觀戰者 ID
+ */
+export function leaveAsSpectator(gameId, spectatorId) {
+  const s = getSocket();
+  s.emit('spectator:leave', { gameId, spectatorId });
+}
+
+/**
+ * 監聽觀戰加入成功（收到初始遊戲狀態）
+ */
+export function onSpectatorJoined(callback) {
+  return safeOn('spectator:joined', callback);
+}
+
+/**
+ * 監聽觀戰狀態同步（遊戲狀態更新）
+ */
+export function onSpectatorSync(callback) {
+  return safeOn('spectator:sync', callback);
+}
+
+/**
+ * 監聽觀戰人數更新
+ */
+export function onSpectatorCount(callback) {
+  return safeOn('spectator:count', callback);
+}
+
+/**
+ * 監聽遊戲結束（觀戰者視角）
+ */
+export function onSpectatorGameEnded(callback) {
+  return safeOn('spectator:gameEnded', callback);
+}
+
+// ==================== 工單 0062 結束 ====================
+
 // 開發模式下將診斷函數掛載到 window
 if (process.env.NODE_ENV === 'development') {
   window.diagnoseSocket = diagnoseConnection;

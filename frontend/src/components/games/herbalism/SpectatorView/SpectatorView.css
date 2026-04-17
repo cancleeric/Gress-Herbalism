@@ -1,0 +1,376 @@
+/**
+ * 觀戰視圖樣式
+ * 工單 0062：觀戰模式
+ */
+
+/* ==================== 容器 ==================== */
+
+.spectator-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f0f2f5;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+/* ==================== 頂部列 ==================== */
+
+.spectator-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #1a1a2e;
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.spectator-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 165, 0, 0.25);
+  border: 1px solid rgba(255, 165, 0, 0.6);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffa500;
+}
+
+.spectator-badge .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.spectator-game-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 1;
+}
+
+.spectator-phase {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 3px 12px;
+  font-size: 13px;
+}
+
+.spectator-round {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.spectator-count-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.spectator-count-info .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.spectator-leave-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.spectator-leave-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ==================== 勝者橫幅 ==================== */
+
+.spectator-winner-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.spectator-winner-banner .material-symbols-outlined {
+  font-size: 24px;
+}
+
+/* ==================== 主內容 ==================== */
+
+.spectator-main {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ==================== 玩家列表 ==================== */
+
+.spectator-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.spectator-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spectator-player-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border: 2px solid transparent;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.spectator-player-card.current-turn {
+  border-color: #4299e1;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.25);
+}
+
+.spectator-player-card.inactive {
+  opacity: 0.55;
+}
+
+.spectator-player-card.disconnected {
+  border-color: #e53e3e;
+  opacity: 0.7;
+}
+
+.spectator-player-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.spectator-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.spectator-player-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.host-icon {
+  font-size: 16px !important;
+  color: #f59e0b;
+}
+
+.turn-icon {
+  font-size: 16px !important;
+  color: #4299e1;
+}
+
+.spectator-player-stats {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.spectator-hand-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.spectator-hand-count .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.spectator-status-label {
+  font-size: 11px;
+  border-radius: 10px;
+  padding: 2px 8px;
+  margin-top: 4px;
+  display: inline-block;
+  font-weight: 600;
+}
+
+.disconnected-label {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.inactive-label {
+  background: #e2e8f0;
+  color: #718096;
+}
+
+.spectator-player-score-big {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3748;
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.score-unit {
+  font-size: 13px;
+  font-weight: 400;
+  color: #718096;
+  margin-left: 2px;
+}
+
+/* ==================== 當前回合資訊 ==================== */
+
+.spectator-turn-info {
+  background: #ebf8ff;
+  border: 1px solid #bee3f8;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.spectator-turn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: #2b6cb0;
+}
+
+.spectator-turn-indicator .material-symbols-outlined {
+  font-size: 20px;
+}
+
+/* ==================== 元資訊 ==================== */
+
+.spectator-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.spectator-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #718096;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.spectator-meta-item .material-symbols-outlined {
+  font-size: 17px;
+}
+
+/* ==================== 載入與錯誤 ==================== */
+
+.spectator-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  color: #718096;
+}
+
+.spectator-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #4299e1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spectator-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  color: #e53e3e;
+  text-align: center;
+  padding: 24px;
+}
+
+.spectator-error .material-symbols-outlined {
+  font-size: 48px;
+}
+
+.spectator-back-btn {
+  background: #4299e1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.spectator-back-btn:hover {
+  background: #3182ce;
+}
+
+/* ==================== 響應式 ==================== */
+
+@media (max-width: 600px) {
+  .spectator-header {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .spectator-player-card {
+    padding: 10px 12px;
+  }
+
+  .spectator-player-score-big {
+    font-size: 22px;
+    min-width: 48px;
+  }
+}

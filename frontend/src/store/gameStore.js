@@ -19,6 +19,9 @@ import {
 // 工單 0261：引入演化論 reducer
 import evolutionReducer from './evolution/evolutionStore';
 
+// 工單 0062：引入觀戰模式 reducer
+import spectatorReducer from './spectatorSlice';
+
 // ==================== Redux Persist 設定 ====================
 
 /**
@@ -268,10 +271,12 @@ export function gameReducer(state = initialState, action) {
 /**
  * 合併所有 reducers
  * 工單 0261：添加 evolution reducer
+ * 工單 0062：添加 spectator reducer
  */
 const rootReducer = combineReducers({
   herbalism: gameReducer,
-  evolution: evolutionReducer
+  evolution: evolutionReducer,
+  spectator: spectatorReducer
 });
 
 /**
