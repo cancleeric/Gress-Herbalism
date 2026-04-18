@@ -14,7 +14,7 @@ const MAX_SPECTATORS = 10;
  * @returns {string}
  */
 function generateSpectatorId() {
-  return `spectator_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  return `spectator_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
