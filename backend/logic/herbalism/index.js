@@ -8,11 +8,13 @@
 const cardLogic = require('./cardLogic');
 const gameLogic = require('./gameLogic');
 const scoreLogic = require('./scoreLogic');
+const spectatorLogic = require('./spectatorLogic');
 
 module.exports = {
   cardLogic,
   gameLogic,
   scoreLogic,
+  spectatorLogic,
   // 展開匯出以保持向後相容
   ...cardLogic,
   ...gameLogic,

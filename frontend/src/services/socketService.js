@@ -827,3 +827,72 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ==================== 工單 0379 結束 ====================
+
+
+// ==================== 工單 0062：觀戰模式 ====================
+
+/**
+ * 加入觀戰
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorName - 觀戰者名稱
+ */
+export function joinSpectator(gameId, spectatorName) {
+  const s = getSocket();
+  if (s) s.emit('spectator:join', { gameId, spectatorName });
+}
+
+/**
+ * 離開觀戰
+ * @param {string} gameId - 遊戲 ID
+ */
+export function leaveSpectator(gameId) {
+  const s = getSocket();
+  if (s) s.emit('spectator:leave', { gameId });
+}
+
+/**
+ * 觀戰者已加入回調
+ * @param {Function} callback
+ * @returns {Function} 取消訂閱函數
+ */
+export function onSpectatorJoined(callback) {
+  return safeOn('spectator:joined', callback);
+}
+
+/**
+ * 觀戰同步（收到遊戲狀態快照）
+ * @param {Function} callback
+ * @returns {Function} 取消訂閱函數
+ */
+export function onSpectatorSync(callback) {
+  return safeOn('spectator:sync', callback);
+}
+
+/**
+ * 遊戲結束通知（觀戰者）
+ * @param {Function} callback
+ * @returns {Function} 取消訂閱函數
+ */
+export function onSpectatorGameEnded(callback) {
+  return safeOn('spectator:gameEnded', callback);
+}
+
+/**
+ * 觀戰人數更新（給遊戲內玩家）
+ * @param {Function} callback
+ * @returns {Function} 取消訂閱函數
+ */
+export function onSpectatorCount(callback) {
+  return safeOn('spectator:count', callback);
+}
+
+/**
+ * 觀戰錯誤
+ * @param {Function} callback
+ * @returns {Function} 取消訂閱函數
+ */
+export function onSpectatorError(callback) {
+  return safeOn('spectator:error', callback);
+}
+
+// ==================== 工單 0062 結束 ====================

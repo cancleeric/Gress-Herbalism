@@ -1,0 +1,363 @@
+/**
+ * 觀戰視圖樣式
+ * 工單 0062 - 觀戰模式
+ */
+
+/* ==================== 基礎佈局 ==================== */
+
+.spectator-view {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Noto Serif TC', serif;
+}
+
+/* ==================== 狀態頁面 ==================== */
+
+.spectator-view--loading,
+.spectator-view--error,
+.spectator-view--ended {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.spectator-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #4fc3f7;
+  border-radius: 50%;
+  animation: spectator-spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spectator-spin {
+  to { transform: rotate(360deg); }
+}
+
+.spectator-error-box,
+.spectator-ended-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 2.5rem;
+  max-width: 480px;
+  width: 100%;
+}
+
+.spectator-error-title,
+.spectator-ended-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.spectator-error-message {
+  color: #ef9a9a;
+  margin: 0 0 1.5rem;
+}
+
+.spectator-ended-winner {
+  font-size: 1.2rem;
+  color: #ffd54f;
+  margin: 0 0 1.5rem;
+}
+
+.spectator-final-scores {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.spectator-final-scores h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #b0bec5;
+}
+
+.spectator-final-scores ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.spectator-final-scores li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.9rem;
+}
+
+/* ==================== 標題列 ==================== */
+
+.spectator-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.spectator-header-left,
+.spectator-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.spectator-header-center {
+  flex: 1;
+  text-align: center;
+}
+
+.spectator-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #b0bec5;
+}
+
+.spectator-badge {
+  background: rgba(79, 195, 247, 0.2);
+  border: 1px solid rgba(79, 195, 247, 0.4);
+  color: #4fc3f7;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.spectator-phase-label,
+.spectator-round-label {
+  font-size: 0.8rem;
+  color: #90a4ae;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.spectator-count-label {
+  font-size: 0.8rem;
+  color: #80cbc4;
+}
+
+/* ==================== 按鈕 ==================== */
+
+.spectator-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: rgba(79, 195, 247, 0.8);
+  color: #0d1b2a;
+}
+
+.spectator-btn:hover {
+  background: #4fc3f7;
+  transform: translateY(-1px);
+}
+
+.spectator-btn--leave {
+  background: rgba(239, 154, 154, 0.6);
+  color: #fff;
+}
+
+.spectator-btn--leave:hover {
+  background: rgba(239, 83, 80, 0.8);
+}
+
+/* ==================== 主內容 ==================== */
+
+.spectator-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+}
+
+.spectator-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #90a4ae;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ==================== 玩家列表 ==================== */
+
+.spectator-players {
+  grid-column: 1 / -1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.spectator-players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.spectator-player-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  position: relative;
+  transition: border-color 0.2s ease;
+}
+
+.spectator-player-card--current {
+  border-color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.08);
+}
+
+.spectator-player-card--inactive {
+  opacity: 0.5;
+}
+
+.spectator-player-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spectator-player-score,
+.spectator-player-hand {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #b0bec5;
+  margin-bottom: 0.25rem;
+}
+
+.spectator-score-value {
+  color: #ffd54f;
+  font-weight: 700;
+}
+
+.spectator-player-badge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.spectator-player-badge--out {
+  background: rgba(239, 83, 80, 0.3);
+  color: #ef9a9a;
+}
+
+.spectator-player-badge--turn {
+  background: rgba(79, 195, 247, 0.3);
+  color: #4fc3f7;
+}
+
+/* ==================== 蓋牌區 ==================== */
+
+.spectator-hidden-cards {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.spectator-hidden-cards-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.spectator-hidden-card {
+  width: 60px;
+  height: 80px;
+  background: linear-gradient(135deg, #2e3a4e, #1e2a3e);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spectator-hidden-card-label {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+}
+
+.spectator-hidden-cards-hint {
+  font-size: 0.75rem;
+  color: #78909c;
+  margin: 0;
+}
+
+/* ==================== 遊戲記錄 ==================== */
+
+.spectator-history {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.spectator-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  max-height: 260px;
+  flex: 1;
+}
+
+.spectator-history-item {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.8rem;
+  color: #b0bec5;
+  line-height: 1.4;
+}
+
+.spectator-history-empty {
+  font-size: 0.8rem;
+  color: #546e7a;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* ==================== 響應式 ==================== */
+
+@media (max-width: 640px) {
+  .spectator-main {
+    grid-template-columns: 1fr;
+  }
+
+  .spectator-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .spectator-header-center {
+    text-align: left;
+  }
+}

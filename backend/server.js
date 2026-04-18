@@ -37,6 +37,9 @@ const presenceService = require('./services/presenceService');
 // 工單 0313-0316 - 演化論遊戲處理（新模組）
 const evolutionHandler = require('./evolutionGameHandler');
 
+// 工單 0062 - 觀戰模式
+const spectatorLogic = require('./logic/herbalism/spectatorLogic');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -368,6 +371,9 @@ const WAITING_PHASE_DISCONNECT_TIMEOUT = 30000; // 30 秒（等待階段）
 const refreshingPlayers = new Set();
 const REFRESH_GRACE_PERIOD = 30000; // 30 秒重整寬限期
 
+// 工單 0062：觀戰房間 Map<gameId, Map<spectatorId, { id, name, socketId, joinedAt }>>
+const spectatorRooms = new Map();
+
 /**
  * 產生唯一遊戲 ID
  */
@@ -450,32 +456,34 @@ setInterval(() => {
  * 廣播房間列表給所有人
  */
 function broadcastRoomList() {
-  const rooms = [];
-  gameRooms.forEach((state, gameId) => {
-    if (state.gamePhase === 'waiting') {
-      const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
-      rooms.push({
-        id: gameId,
-        name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
-        playerCount: state.players.length,
-        maxPlayers: state.maxPlayers || 4,
-        isPrivate: state.isPrivate || false,
-        gameType: 'herbalism'  // 標記為本草遊戲房間
-      });
-    }
-  });
-  io.emit('roomList', rooms);
+  io.emit('roomList', getAvailableRooms());
 }
 
 /**
- * 廣播遊戲狀態給房間內所有玩家
+ * 廣播遊戲狀態給房間內所有玩家，並同步給觀戰者
+ * 工單 0062：同時向觀戰者推送遊戲狀態快照
  */
 function broadcastGameState(gameId) {
   const gameState = gameRooms.get(gameId);
   // 工單 0148：確保房間存在且有玩家時才廣播
   if (gameState && gameState.players && gameState.players.length > 0) {
     io.to(gameId).emit('gameState', gameState);
+    // 工單 0062：向觀戰者廣播遊戲狀態快照
+    broadcastSpectatorSync(gameId);
   }
+}
+
+/**
+ * 工單 0062：向觀戰者廣播遊戲狀態快照
+ */
+function broadcastSpectatorSync(gameId) {
+  const gameState = gameRooms.get(gameId);
+  if (!gameState) return;
+  const spectatorRoom = spectatorRooms.get(gameId);
+  if (!spectatorRoom || spectatorRoom.size === 0) return;
+  const snapshot = spectatorLogic.buildSpectatorGameState(gameState);
+  const spectatorCount = spectatorLogic.getSpectatorCount(spectatorRooms, gameId);
+  io.to(`spectate_${gameId}`).emit('spectator:sync', { gameState: snapshot, spectatorCount });
 }
 
 io.on('connection', (socket) => {
@@ -795,6 +803,15 @@ io.on('connection', (socket) => {
         if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
           broadcastRoomList();
 
+          // 工單 0062：遊戲結束時通知觀戰者
+          if (result.gameState.gamePhase === 'finished') {
+            io.to(`spectate_${gameId}`).emit('spectator:gameEnded', {
+              winner: gameState.winner,
+              scores: gameState.scores
+            });
+            spectatorLogic.cleanupSpectatorRoom(spectatorRooms, gameId);
+          }
+
           // 如果是局結束，廣播結果（包含預測結算）
           if (result.isCorrect !== undefined) {
             io.to(gameId).emit('guessResult', {
@@ -1059,6 +1076,14 @@ io.on('connection', (socket) => {
 
       if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
         broadcastRoomList();
+        // 工單 0062：遊戲結束時通知觀戰者
+        if (result.gameState.gamePhase === 'finished') {
+          io.to(`spectate_${gameId}`).emit('spectator:gameEnded', {
+            winner: gameState.winner,
+            scores: gameState.scores
+          });
+          spectatorLogic.cleanupSpectatorRoom(spectatorRooms, gameId);
+        }
       }
     }
   });
@@ -1171,11 +1196,72 @@ io.on('connection', (socket) => {
   });
 
   // 斷線處理
+  // ==================== 工單 0062：觀戰模式 ====================
+
+  // 觀戰者加入
+  socket.on('spectator:join', ({ gameId, spectatorName }) => {
+    const gameState = gameRooms.get(gameId);
+    if (!gameState) {
+      socket.emit('spectator:error', { message: '找不到該遊戲' });
+      return;
+    }
+    if (!spectatorLogic.isGameSpectatable(gameState)) {
+      socket.emit('spectator:error', { message: '該遊戲目前無法觀戰' });
+      return;
+    }
+
+    const spectatorId = `spectator_${socket.id}`;
+    const result = spectatorLogic.joinSpectator(spectatorRooms, gameId, {
+      id: spectatorId,
+      name: spectatorName || '觀戰者',
+      socketId: socket.id
+    });
+
+    if (!result.success) {
+      socket.emit('spectator:error', { message: result.error });
+      return;
+    }
+
+    socket.join(`spectate_${gameId}`);
+    socket.spectatorGameId = gameId;
+    socket.spectatorId = result.spectatorId;
+
+    const spectatorCount = spectatorLogic.getSpectatorCount(spectatorRooms, gameId);
+    const snapshot = spectatorLogic.buildSpectatorGameState(gameState);
+
+    socket.emit('spectator:joined', {
+      gameId,
+      spectatorId: result.spectatorId,
+      gameState: snapshot,
+      spectatorCount
+    });
+
+    // 通知遊戲內玩家有人加入觀戰
+    io.to(gameId).emit('spectator:count', { spectatorCount });
+
+    // 更新大廳房間列表
+    broadcastRoomList();
+
+    console.log(`[觀戰] ${spectatorName || '觀戰者'} 加入觀戰: ${gameId}`);
+  });
+
+  // 觀戰者離開
+  socket.on('spectator:leave', ({ gameId }) => {
+    handleSpectatorLeave(socket, gameId);
+  });
+
+  // ==================== 工單 0062 結束 ====================
+
   socket.on('disconnect', async (reason) => {
     // 本草遊戲斷線處理
     const playerInfo = playerSockets.get(socket.id);
     if (playerInfo) {
       handlePlayerDisconnect(socket, playerInfo.gameId, playerInfo.playerId);
+    }
+
+    // 工單 0062：觀戰者斷線處理
+    if (socket.spectatorGameId) {
+      handleSpectatorLeave(socket, socket.spectatorGameId);
     }
 
     // 工單 0313-0316：演化論遊戲斷線處理
@@ -1224,6 +1310,31 @@ io.on('connection', (socket) => {
 
   // ==================== 工單 0313-0316 結束 ====================
 });
+
+// ==================== 工單 0062：觀戰模式輔助函數 ====================
+
+/**
+ * 處理觀戰者離開
+ */
+function handleSpectatorLeave(socket, gameId) {
+  const spectatorId = socket.spectatorId;
+  if (!spectatorId) return;
+
+  spectatorLogic.leaveSpectator(spectatorRooms, gameId, spectatorId);
+  socket.leave(`spectate_${gameId}`);
+  socket.spectatorGameId = null;
+  socket.spectatorId = null;
+
+  const spectatorCount = spectatorLogic.getSpectatorCount(spectatorRooms, gameId);
+  // 通知遊戲內玩家觀戰人數更新
+  io.to(gameId).emit('spectator:count', { spectatorCount });
+  // 更新大廳房間列表
+  broadcastRoomList();
+
+  console.log(`[觀戰] 觀戰者離開: ${gameId}`);
+}
+
+// ==================== 工單 0062 結束 ====================
 
 function handlePlayerLeave(socket, gameId, playerId) {
   // 工單 0109：房間操作日誌
@@ -1457,15 +1568,30 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
 function getAvailableRooms() {
   const rooms = [];
   gameRooms.forEach((state, gameId) => {
+    const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
+    const roomName = hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`;
     if (state.gamePhase === 'waiting') {
-      const hostPlayer = state.players.find(p => p.isHost) || state.players[0];
       rooms.push({
         id: gameId,
-        name: hostPlayer ? `${hostPlayer.name} 的房間` : `房間 ${gameId.slice(-6)}`,
+        name: roomName,
         playerCount: state.players.length,
         maxPlayers: state.maxPlayers || 4,
         isPrivate: state.isPrivate || false,
         gameType: 'herbalism'  // 標記為本草遊戲房間
+      });
+    } else if (spectatorLogic.isGameSpectatable(state)) {
+      // 工單 0062：進行中對局可觀戰
+      const spectatorCount = spectatorLogic.getSpectatorCount(spectatorRooms, gameId);
+      rooms.push({
+        id: gameId,
+        name: roomName,
+        playerCount: state.players.length,
+        maxPlayers: state.maxPlayers || 4,
+        isPrivate: false,
+        gameType: 'herbalism',
+        isSpectatable: true,
+        spectatorCount,
+        gamePhase: state.gamePhase
       });
     }
   });
