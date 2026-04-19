@@ -677,21 +677,39 @@ function Lobby() {
                         </span>
                       </td>
                       <td>
-                        <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
-                          {canJoinRoom(room) ? '等待中' : '已滿'}
-                        </span>
+                        {room.isSpectatable ? (
+                          <span className="room-status spectating">
+                            進行中
+                            {room.spectatorCount > 0 && ` · 👁 ${room.spectatorCount}`}
+                          </span>
+                        ) : (
+                          <span className={`room-status ${canJoinRoom(room) ? 'waiting' : 'full'}`}>
+                            {canJoinRoom(room) ? '等待中' : '已滿'}
+                          </span>
+                        )}
                       </td>
                       <td>
-                        <button
-                          className="room-action-btn"
-                          onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
-                          disabled={isLoading || !isConnected || !canJoinRoom(room)}
-                        >
-                          <span className="material-symbols-outlined">
-                            {canJoinRoom(room) ? 'login' : 'block'}
-                          </span>
-                          {canJoinRoom(room) ? '加入' : '已滿'}
-                        </button>
+                        {room.isSpectatable ? (
+                          <button
+                            className="room-action-btn spectate-btn"
+                            onClick={() => navigate(`/spectate/${room.id}`)}
+                            disabled={!isConnected}
+                          >
+                            <span className="material-symbols-outlined">visibility</span>
+                            觀戰
+                          </button>
+                        ) : (
+                          <button
+                            className="room-action-btn"
+                            onClick={() => handleQuickJoin(room.id, room.isPrivate, room.name)}
+                            disabled={isLoading || !isConnected || !canJoinRoom(room)}
+                          >
+                            <span className="material-symbols-outlined">
+                              {canJoinRoom(room) ? 'login' : 'block'}
+                            </span>
+                            {canJoinRoom(room) ? '加入' : '已滿'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

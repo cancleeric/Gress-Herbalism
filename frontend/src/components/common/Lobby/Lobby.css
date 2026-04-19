@@ -470,6 +470,12 @@
   color: var(--text-muted);
 }
 
+/* 工單 0062：觀戰中狀態 */
+.room-status.spectating {
+  background-color: rgba(78, 205, 196, 0.1);
+  color: #4ecdc4;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -502,6 +508,18 @@
 
 .room-action-btn .material-symbols-outlined {
   font-size: 16px;
+}
+
+/* 工單 0062：觀戰按鈕樣式 */
+.room-action-btn.spectate-btn {
+  background-color: rgba(78, 205, 196, 0.15);
+  border: 1px solid rgba(78, 205, 196, 0.5);
+  color: #4ecdc4;
+}
+
+.room-action-btn.spectate-btn:hover:not(:disabled) {
+  background-color: rgba(78, 205, 196, 0.3);
+  border-color: #4ecdc4;
 }
 
 /* ==================== 無房間提示 ==================== */

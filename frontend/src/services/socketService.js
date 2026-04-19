@@ -827,3 +827,88 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ==================== 工單 0379 結束 ====================
+
+// ==================== 工單 0062：觀戰模式 ====================
+
+/**
+ * 發送加入觀戰請求
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorId - 觀戰者 ID
+ * @param {string} spectatorName - 觀戰者名稱
+ */
+export function joinSpectate(gameId, spectatorId, spectatorName) {
+  const s = getSocket();
+  if (!s) return;
+  s.emit('spectator:join', { gameId, spectatorId, spectatorName });
+}
+
+/**
+ * 發送離開觀戰請求
+ * @param {string} gameId - 遊戲 ID
+ * @param {string} spectatorId - 觀戰者 ID
+ */
+export function leaveSpectate(gameId, spectatorId) {
+  const s = getSocket();
+  if (!s) return;
+  s.emit('spectator:leave', { gameId, spectatorId });
+}
+
+/**
+ * 監聽觀戰加入成功事件
+ * @param {Function} callback - ({ gameId, gameState, spectatorCount }) => void
+ * @returns {Function} 取消監聽函數
+ */
+export function onSpectatorJoined(callback) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('spectator:joined', callback);
+  return () => s.off('spectator:joined', callback);
+}
+
+/**
+ * 監聽觀戰同步事件（遊戲狀態更新）
+ * @param {Function} callback - ({ gameState }) => void
+ * @returns {Function} 取消監聽函數
+ */
+export function onSpectatorSync(callback) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('spectator:sync', callback);
+  return () => s.off('spectator:sync', callback);
+}
+
+/**
+ * 監聽觀戰人數更新事件
+ * @param {Function} callback - ({ count }) => void
+ * @returns {Function} 取消監聽函數
+ */
+export function onSpectatorCount(callback) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('spectator:count', callback);
+  return () => s.off('spectator:count', callback);
+}
+
+/**
+ * 監聽遊戲結束通知（觀戰版）
+ * @param {Function} callback - ({ winner, scores }) => void
+ * @returns {Function} 取消監聽函數
+ */
+export function onSpectatorGameEnded(callback) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('spectator:gameEnded', callback);
+  return () => s.off('spectator:gameEnded', callback);
+}
+
+/**
+ * 監聽觀戰錯誤事件
+ * @param {Function} callback - ({ message }) => void
+ * @returns {Function} 取消監聽函數
+ */
+export function onSpectatorError(callback) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('spectator:error', callback);
+  return () => s.off('spectator:error', callback);
+}
