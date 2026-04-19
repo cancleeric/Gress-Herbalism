@@ -106,7 +106,7 @@ function SpectatorView() {
   );
 
   const spectatorId = useRef(
-    `spectator_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+    `spectator_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
   );
   const spectatorName = user?.displayName || user?.email || '觀戰者';
 
