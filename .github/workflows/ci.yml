@@ -78,7 +78,7 @@ jobs:
           CI: true
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           directory: ${{ matrix.component }}/coverage
           flags: ${{ matrix.component }}
