@@ -52,8 +52,13 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // 測試用 wrapper
+// GameRoom 使用 selectGameRoomState selector，從 state.herbalism 讀取
+// 必須用 combineReducers 建立正確的 state 結構
+const { combineReducers } = require('redux');
+const testRootReducer = combineReducers({ herbalism: gameReducer });
+
 const renderWithProviders = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-  const store = createStore(gameReducer, preloadedState);
+  const store = createStore(testRootReducer, { herbalism: preloadedState });
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={[`/game/${gameId}`]}>
@@ -1134,7 +1139,7 @@ describe('GameRoom - 工作單 0023', () => {
   describe('重連邏輯（工單 0200）', () => {
     // Helper: render with store access for verifying dispatch results
     const renderWithStore = (component, { preloadedState = initialState, gameId = 'test_room' } = {}) => {
-      const store = createStore(gameReducer, preloadedState);
+      const store = createStore(testRootReducer, { herbalism: preloadedState });
       const result = render(
         <Provider store={store}>
           <MemoryRouter initialEntries={[`/game/${gameId}`]}>

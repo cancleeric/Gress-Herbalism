@@ -84,14 +84,19 @@ jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
 
 /**
  * 創建測試用的 Redux store
+ * 注意：GameRoom 使用 selectGameRoomState selector，從 state.herbalism 讀取
+ * 因此需要用 combineReducers 包裝以符合正確的 state 結構
  */
+const { combineReducers } = require('redux');
+const testRootReducer = combineReducers({ herbalism: gameReducer });
+
 const createTestStore = (initialState = {}) => {
-  const mergedInitialState = {
+  const mergedHerbalismState = {
     ...defaultInitialState,
     ...initialState
   };
 
-  return createStore(gameReducer, mergedInitialState);
+  return createStore(testRootReducer, { herbalism: mergedHerbalismState });
 };
 
 describe('單人模式 E2E 測試', () => {
