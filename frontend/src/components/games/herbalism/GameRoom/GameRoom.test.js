@@ -15,26 +15,26 @@ import * as gameService from '../../../../services/gameService';
 import * as socketService from '../../../../services/socketService';
 
 // Mock gameService
-jest.mock('../../services/gameService');
+jest.mock('../../../../services/gameService');
 
 // Mock socketService
-jest.mock('../../services/socketService');
+jest.mock('../../../../services/socketService');
 
 // Mock useAuth（工單 0123）
 const mockUser = { displayName: null, isAnonymous: true, photoURL: null };
-jest.mock('../../firebase/AuthContext', () => ({
+jest.mock('../../../../firebase/AuthContext', () => ({
   useAuth: () => ({ user: mockUser })
 }));
 
 // Mock localStorage utils（工單 0200）
-jest.mock('../../utils/localStorage', () => ({
+jest.mock('../../../../utils/common/localStorage', () => ({
   getCurrentRoom: jest.fn(),
   clearCurrentRoom: jest.fn()
 }));
 
 // Partial mock gameStore — 保留 reducer，mock clearPersistedState（工單 0200）
-jest.mock('../../store/gameStore', () => {
-  const actual = jest.requireActual('../../store/gameStore');
+jest.mock('../../../../store/gameStore', () => {
+  const actual = jest.requireActual('../../../../store/gameStore');
   return {
     ...actual,
     clearPersistedState: jest.fn()

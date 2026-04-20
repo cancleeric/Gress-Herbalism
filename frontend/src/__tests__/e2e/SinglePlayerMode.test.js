@@ -17,8 +17,8 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { Provider } from 'react-redux';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { createStore } from 'redux';
-import GameRoom from '../../components/GameRoom/GameRoom';
-import AIPlayerSelector from '../../components/GameSetup/AIPlayerSelector';
+import GameRoom from '../../components/games/herbalism/GameRoom/GameRoom';
+import AIPlayerSelector from '../../components/games/herbalism/GameSetup/AIPlayerSelector';
 import LocalGameController from '../../controllers/herbalism/LocalGameController';
 import useAIPlayers from '../../hooks/herbalism/useAIPlayers';
 import { gameReducer, initialState as defaultInitialState } from '../../store/gameStore';
@@ -60,7 +60,7 @@ jest.mock('../../services/socketService', () => ({
   dismissGuessResult: jest.fn()
 }));
 
-jest.mock('../../controllers/LocalGameController');
+jest.mock('../../controllers/herbalism/LocalGameController');
 
 // 工單 0161：Mock useAuth
 jest.mock('../../firebase/AuthContext', () => ({
@@ -70,14 +70,14 @@ jest.mock('../../firebase/AuthContext', () => ({
 }));
 
 // Mock localStorage
-jest.mock('../../utils/localStorage', () => ({
+jest.mock('../../utils/common/localStorage', () => ({
   clearCurrentRoom: jest.fn(),
   saveCurrentRoom: jest.fn(),
   getCurrentRoom: jest.fn()
 }));
 
 // Mock useAIPlayers hook
-jest.mock('../../hooks/useAIPlayers', () => ({
+jest.mock('../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
   default: jest.fn()
 }));

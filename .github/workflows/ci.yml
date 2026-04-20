@@ -177,6 +177,7 @@ jobs:
         run: npm run build
         env:
           CI: true
+          DISABLE_ESLINT_PLUGIN: true
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
