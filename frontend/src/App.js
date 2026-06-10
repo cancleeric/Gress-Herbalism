@@ -9,7 +9,7 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
@@ -19,9 +19,11 @@ import './styles/App.css';
 
 /**
  * 受保護路由組件 - 需要登入才能訪問
+ * 工單 fix/login-redirect-deeplink：redirect 時帶原始位置 state
  */
 function ProtectedRoute({ children }) {
   const { isLoggedIn, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -32,7 +34,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;

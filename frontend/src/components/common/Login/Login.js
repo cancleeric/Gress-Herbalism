@@ -4,8 +4,8 @@
  * 重新設計：基於 Google Stitch 生成的中國風設計
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../firebase';
 import './Login.css';
 
@@ -22,10 +22,21 @@ function isConfigurationError(errorCode) {
 
 function Login() {
   const navigate = useNavigate();
-  const { loginWithGoogle, loginAsGuest, isLoading } = useAuth();
+  const location = useLocation();
+  const { loginWithGoogle, loginAsGuest, isLoading, isLoggedIn } = useAuth();
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // 登入後導向目標頁，from 由 ProtectedRoute 注入
+  const from = location.state?.from?.pathname ?? '/';
+
+  // 已登入用戶直接訪問 /login 時跳走（演化論 deep link 修正）
+  useEffect(() => {
+    if (!isLoading && isLoggedIn) {
+      navigate(from, { replace: true });
+    }
+  }, [isLoading, isLoggedIn, navigate, from]);
 
   const handleGoogleLogin = async () => {
     setIsProcessing(true);
@@ -35,7 +46,7 @@ function Login() {
     const result = await loginWithGoogle();
 
     if (result.success) {
-      navigate('/');
+      navigate(from, { replace: true });
     } else {
       setError(result.error || '登入失敗，請稍後再試');
       setErrorCode(result.errorCode || '');
@@ -52,7 +63,7 @@ function Login() {
     const result = await loginAsGuest();
 
     if (result.success) {
-      navigate('/');
+      navigate(from, { replace: true });
     } else {
       setError(result.error || '登入失敗，請稍後再試');
       setErrorCode(result.errorCode || '');
