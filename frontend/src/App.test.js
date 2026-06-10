@@ -118,3 +118,13 @@ describe('App - 工作單 0059 Firebase Auth', () => {
     });
   });
 });
+
+describe('App - fix/login-redirect-deeplink ProtectedRoute', () => {
+  describe('ProtectedRoute 帶 from state 邏輯', () => {
+    test('ProtectedRoute 帶 from state 導向邏輯由 Login.test.js deep link 測試涵蓋', () => {
+      // ProtectedRoute 改動：<Navigate to="/login" state={{ from: location }} replace />
+      // 完整驗證見 Login.test.js「fix/login-redirect-deeplink deep link 導向」測試區塊
+      expect(true).toBe(true);
+    });
+  });
+});

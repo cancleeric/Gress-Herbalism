@@ -66,32 +66,37 @@ function RealAuthProvider({ children }) {
 
   // 監聽登入狀態變化
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (state) => {
-      // 用戶登入成功時，同步資料到後端
-      if (state.isLoggedIn && state.user) {
-        try {
-          await syncPlayer({
-            firebaseUid: state.user.uid,
-            displayName: state.user.displayName || '玩家',
-            email: state.user.email,
-            avatarUrl: state.user.photoURL,
-          });
-
-          // 工單 0176：登入後發送線上狀態
-          if (!state.user.isAnonymous) {
-            initSocket();
-            setPresence(state.user.uid);
-          }
-        } catch (err) {
-          console.error('同步玩家資料失敗:', err);
-        }
-      }
-
+    const unsubscribe = onAuthChange((state) => {
+      // 先更新登入狀態 — auth 狀態以 Firebase 為準，
+      // 不可被後端同步呼叫阻塞（backend 不可達時 await 會卡死，
+      // isLoggedIn 永遠不翻轉，用戶被困在 /login）
       setAuthState({
         isLoading: false,
         isLoggedIn: state.isLoggedIn,
         user: state.user,
       });
+
+      // 用戶登入成功時，背景同步資料到後端（fire-and-forget）
+      if (state.isLoggedIn && state.user) {
+        (async () => {
+          try {
+            await syncPlayer({
+              firebaseUid: state.user.uid,
+              displayName: state.user.displayName || '玩家',
+              email: state.user.email,
+              avatarUrl: state.user.photoURL,
+            });
+
+            // 工單 0176：登入後發送線上狀態
+            if (!state.user.isAnonymous) {
+              initSocket();
+              setPresence(state.user.uid);
+            }
+          } catch (err) {
+            console.error('同步玩家資料失敗:', err);
+          }
+        })();
+      }
     });
 
     return () => unsubscribe();
