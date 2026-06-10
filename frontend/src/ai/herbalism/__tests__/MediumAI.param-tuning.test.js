@@ -9,7 +9,7 @@ import AIPlayer from '../AIPlayer';
 import MediumStrategy from '../strategies/MediumStrategy';
 import InformationTracker, { EVENT_TYPES } from '../InformationTracker';
 import DecisionMaker from '../DecisionMaker';
-import { AI_DIFFICULTY } from '../../shared/constants';
+import { AI_DIFFICULTY } from '../../../shared/constants';
 
 /**
  * 測試參數組合

@@ -3,7 +3,7 @@
  */
 
 import AIPlayer, { createAIPlayer } from '../AIPlayer';
-import { AI_DIFFICULTY, PLAYER_TYPE, AI_THINK_DELAY } from '../../shared/constants';
+import { AI_DIFFICULTY, PLAYER_TYPE, AI_THINK_DELAY } from '../../../shared/constants';
 
 describe('AIPlayer', () => {
   describe('constructor', () => {

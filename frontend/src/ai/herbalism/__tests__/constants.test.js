@@ -13,7 +13,7 @@ import {
   isValidAIDifficulty,
   getAIDifficultyDescription,
   getAIPlayerName
-} from '../../shared/constants';
+} from '../../../shared/constants';
 
 describe('AI Constants', () => {
   describe('AI_DIFFICULTY', () => {

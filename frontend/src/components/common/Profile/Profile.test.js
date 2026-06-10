@@ -18,7 +18,7 @@ jest.mock('react-router-dom', () => ({
 const mockLogout = jest.fn();
 let mockUser = { uid: 'test-uid', displayName: '測試用戶', email: 'test@example.com', photoURL: null };
 
-jest.mock('../../firebase', () => ({
+jest.mock('../../../firebase', () => ({
   useAuth: () => ({
     user: mockUser,
     logout: mockLogout,
@@ -28,7 +28,7 @@ jest.mock('../../firebase', () => ({
 // Mock apiService
 const mockGetPlayerStats = jest.fn();
 const mockGetPlayerHistory = jest.fn();
-jest.mock('../../services/apiService', () => ({
+jest.mock('../../../services/apiService', () => ({
   getPlayerStats: (...args) => mockGetPlayerStats(...args),
   getPlayerHistory: (...args) => mockGetPlayerHistory(...args),
 }));
@@ -162,7 +162,7 @@ describe('Profile 組件', () => {
       render(<MemoryRouter><Profile /></MemoryRouter>);
       await waitFor(() => expect(screen.getByText(/返回大廳/)).toBeInTheDocument());
       fireEvent.click(screen.getByText(/返回大廳/));
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
 
     test('點擊登出應呼叫 logout 並導航到登入頁', async () => {

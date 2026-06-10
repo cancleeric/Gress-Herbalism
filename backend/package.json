@@ -18,6 +18,14 @@
       "<rootDir>/backend",
       "<rootDir>/shared"
     ],
+    "transform": {
+      "^.+\\.js$": [
+        "babel-jest",
+        {
+          "configFile": "/Users/yinghaowang/HurricaneDigital/Gress-Herbalism/backend/babel.config.js"
+        }
+      ]
+    },
     "collectCoverageFrom": [
       "<rootDir>/backend/**/*.js",
       "<rootDir>/shared/**/*.js",

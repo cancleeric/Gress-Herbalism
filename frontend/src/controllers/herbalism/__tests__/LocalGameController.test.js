@@ -3,8 +3,8 @@
  */
 
 import LocalGameController from '../LocalGameController';
-import { createAIPlayer } from '../../ai';
-import { GAME_PHASE_PLAYING, GAME_PHASE_FOLLOW_GUESSING, GAME_PHASE_ROUND_END } from '../../shared/constants';
+import { createAIPlayer } from '../../../ai';
+import { GAME_PHASE_PLAYING, GAME_PHASE_FOLLOW_GUESSING, GAME_PHASE_ROUND_END } from '../../../shared/constants';
 
 describe('LocalGameController', () => {
   let controller;

@@ -24,7 +24,7 @@ import {
   QUESTION_TYPE_ONE_EACH,
   QUESTION_TYPE_ALL_ONE_COLOR,
   QUESTION_TYPE_GIVE_ONE_GET_ALL
-} from '../../shared/constants';
+} from '../../../shared/constants';
 import { ACTION_TYPE } from '../strategies/BaseStrategy';
 
 // 增加測試超時時間以應對 AI 思考延遲（1-3秒）

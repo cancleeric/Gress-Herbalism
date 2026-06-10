@@ -6,7 +6,7 @@
 
 import AIPlayer, { createAIPlayer } from '../AIPlayer';
 import MediumStrategy from '../strategies/MediumStrategy';
-import { AI_DIFFICULTY } from '../../shared/constants';
+import { AI_DIFFICULTY } from '../../../shared/constants';
 import { EVENT_TYPES } from '../InformationTracker';
 import InformationTracker from '../InformationTracker';
 import DecisionMaker from '../DecisionMaker';
