@@ -19,9 +19,38 @@ import { initSocket, setPresence } from '../services/socketService';
 const AuthContext = createContext(null);
 
 /**
- * Auth Provider 組件
+ * E2E 測試 mock 版 AuthProvider
+ * 僅在 REACT_APP_E2E=1 build 中編譯進來，生產 build 不包含此元件
+ * cy.login() 透過 window.__CYPRESS_E2E_AUTH 注入 mock 用戶資料
  */
-export function AuthProvider({ children }) {
+/* istanbul ignore next */
+function E2EAuthProvider({ children }) {
+  const mockUser = (typeof window !== 'undefined' && window.__CYPRESS_E2E_AUTH) || {
+    uid: 'e2e-test-user',
+    displayName: 'E2E Test User',
+    isAnonymous: true,
+    photoURL: null,
+  };
+  const mockValue = {
+    isLoading: false,
+    isLoggedIn: true,
+    user: mockUser,
+    loginWithGoogle: () => Promise.resolve({ success: true }),
+    loginAsGuest: () => Promise.resolve({ success: true }),
+    upgradeToGoogle: () => Promise.resolve({ success: true }),
+    logout: () => Promise.resolve({ success: true }),
+  };
+  return (
+    <AuthContext.Provider value={mockValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+/**
+ * 真實 Firebase Auth Provider（生產用）
+ */
+function RealAuthProvider({ children }) {
   const [authState, setAuthState] = useState({
     isLoading: true,
     isLoggedIn: false,
@@ -102,6 +131,19 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+/**
+ * Auth Provider 組件
+ * REACT_APP_E2E=1 時使用 E2EAuthProvider（mock），否則使用真實 Firebase auth
+ * process.env.REACT_APP_E2E 在 webpack build 時被替換為字面量，
+ * 生產 build 不含 E2EAuthProvider 邏輯
+ */
+export function AuthProvider({ children }) {
+  if (process.env.REACT_APP_E2E === '1') {
+    return <E2EAuthProvider>{children}</E2EAuthProvider>;
+  }
+  return <RealAuthProvider>{children}</RealAuthProvider>;
 }
 
 /**

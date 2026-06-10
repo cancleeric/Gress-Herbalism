@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 
 // Mock Firebase Auth
@@ -21,41 +22,39 @@ jest.mock('./firebase', () => ({
 }));
 
 // Mock 子元件以隔離 App 層級測試
-jest.mock('./components/Lobby', () => {
-  return function MockLobby() {
+jest.mock('./components/common', () => ({
+  Lobby: function MockLobby() {
     return <div className="lobby"><h1>本草 Herbalism</h1><p>3-4 人推理卡牌遊戲</p></div>;
-  };
-});
-jest.mock('./components/GameRoom', () => {
-  return function MockGameRoom() { return <div>GameRoom</div>; };
-});
-jest.mock('./components/Profile', () => {
-  return function MockProfile() { return <div>Profile</div>; };
-});
-jest.mock('./components/Leaderboard', () => {
-  return function MockLeaderboard() { return <div>Leaderboard</div>; };
-});
-jest.mock('./components/Friends', () => {
-  return function MockFriends() { return <div>Friends</div>; };
-});
-jest.mock('./components/Login', () => {
-  return function MockLogin() { return <div>Login</div>; };
-});
-jest.mock('./components/ConnectionStatus', () => {
-  return function MockConnectionStatus() { return null; };
-});
+  },
+  GameRoom: function MockGameRoom() { return <div>GameRoom</div>; },
+  Profile: function MockProfile() { return <div>Profile</div>; },
+  Leaderboard: function MockLeaderboard() { return <div>Leaderboard</div>; },
+  Friends: function MockFriends() { return <div>Friends</div>; },
+  Login: function MockLogin() { return <div>Login</div>; },
+  ConnectionStatus: function MockConnectionStatus() { return null; },
+  GameSelection: function MockGameSelection() { return <div>GameSelection</div>; },
+  EvolutionLobbyPage: function MockEvolutionLobbyPage() { return <div>EvolutionLobbyPage</div>; },
+}));
+jest.mock('./components/games/herbalism', () => ({
+  GameRoom: function MockHerbalismGameRoom() { return <div>HerbalismGameRoom</div>; },
+}));
+jest.mock('./components/games/evolution', () => ({
+  EvolutionRoom: function MockEvolutionRoom() { return <div>EvolutionRoom</div>; },
+}));
 
 describe('App - 工作單 0013', () => {
   describe('應用程式渲染', () => {
     test('應用程式應該正常渲染', () => {
       render(<App />);
-      // 檢查大廳標題是否顯示
-      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
+      // 根路徑顯示遊戲選擇頁面（工單 0276 後 root = GameSelection）
+      expect(screen.getByText('GameSelection')).toBeInTheDocument();
     });
 
-    test('首頁應顯示遊戲大廳', () => {
-      render(<App />);
-      expect(screen.getByText('3-4 人推理卡牌遊戲')).toBeInTheDocument();
+    test('MockLobby 元件包含本草大廳標題', () => {
+      // MockLobby 元件定義正確性驗證（工單 0276 後 Lobby 路由至 /lobby/herbalism）
+      const { Lobby: MockLobby } = jest.requireMock('./components/common');
+      const { container } = render(<MockLobby />);
+      expect(container.querySelector('h1').textContent).toBe('本草 Herbalism');
     });
 
     test('應用程式應包含 app 容器', () => {
@@ -63,8 +62,10 @@ describe('App - 工作單 0013', () => {
       expect(container.querySelector('.app')).toBeInTheDocument();
     });
 
-    test('大廳組件應包含 lobby 類別', () => {
-      const { container } = render(<App />);
+    test('MockLobby 元件包含 lobby 類別', () => {
+      // MockLobby 元件定義正確性驗證（工單 0276 後 Lobby 路由至 /lobby/herbalism）
+      const { Lobby: MockLobby } = jest.requireMock('./components/common');
+      const { container } = render(<MockLobby />);
       expect(container.querySelector('.lobby')).toBeInTheDocument();
     });
   });
@@ -94,9 +95,9 @@ describe('App - 工作單 0013', () => {
   });
 
   describe('路由設定', () => {
-    test('根路徑應渲染 Lobby 組件', () => {
+    test('根路徑應渲染遊戲選擇頁面（工單 0276）', () => {
       render(<App />);
-      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
+      expect(screen.getByText('GameSelection')).toBeInTheDocument();
     });
   });
 
@@ -112,7 +113,8 @@ describe('App - 工作單 0059 Firebase Auth', () => {
   describe('登入保護路由', () => {
     test('已登入用戶應可訪問首頁', () => {
       render(<App />);
-      expect(screen.getByText('本草 Herbalism')).toBeInTheDocument();
+      // 已登入時根路徑顯示 GameSelection（工單 0276）
+      expect(screen.getByText('GameSelection')).toBeInTheDocument();
     });
   });
 });

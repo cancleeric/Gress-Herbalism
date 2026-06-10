@@ -12,23 +12,26 @@ import {
 } from './selectors';
 
 describe('Redux Selectors', () => {
+  // selector 透過 state.herbalism 取值（工單 0261 重構後）
   const mockState = {
-    gameId: 'test-game',
-    players: [
-      { id: '1', name: 'P1', isActive: true },
-      { id: '2', name: 'P2', isActive: false },
-      { id: '3', name: 'P3', isActive: true }
-    ],
-    currentPlayerIndex: 0,
-    gamePhase: 'playing',
-    winner: null,
-    hiddenCards: [
-      { id: 'h1', color: 'red' },
-      { id: 'h2', color: 'blue' }
-    ],
-    gameHistory: [{ type: 'question', round: 1 }],
-    currentPlayerId: '1',
-    maxPlayers: 4
+    herbalism: {
+      gameId: 'test-game',
+      players: [
+        { id: '1', name: 'P1', isActive: true },
+        { id: '2', name: 'P2', isActive: false },
+        { id: '3', name: 'P3', isActive: true }
+      ],
+      currentPlayerIndex: 0,
+      gamePhase: 'playing',
+      winner: null,
+      hiddenCards: [
+        { id: 'h1', color: 'red' },
+        { id: 'h2', color: 'blue' }
+      ],
+      gameHistory: [{ type: 'question', round: 1 }],
+      currentPlayerId: '1',
+      maxPlayers: 4
+    }
   };
 
   beforeEach(() => {
@@ -60,7 +63,7 @@ describe('Redux Selectors', () => {
 
     test('不同輸入應返回不同引用', () => {
       const result1 = selectGameRoomState(mockState);
-      const newState = { ...mockState, gamePhase: 'finished' };
+      const newState = { herbalism: { ...mockState.herbalism, gamePhase: 'finished' } };
       const result2 = selectGameRoomState(newState);
       expect(result1).not.toBe(result2);
       expect(result2.gamePhase).toBe('finished');
@@ -75,17 +78,17 @@ describe('Redux Selectors', () => {
     });
 
     test('players 為空時應返回 null', () => {
-      const result = selectCurrentPlayer({ ...mockState, players: [] });
+      const result = selectCurrentPlayer({ herbalism: { ...mockState.herbalism, players: [] } });
       expect(result).toBeNull();
     });
 
     test('currentPlayerIndex 超出範圍時應返回 null', () => {
-      const result = selectCurrentPlayer({ ...mockState, currentPlayerIndex: 99 });
+      const result = selectCurrentPlayer({ herbalism: { ...mockState.herbalism, currentPlayerIndex: 99 } });
       expect(result).toBeNull();
     });
 
     test('players 為 undefined 時應返回 null', () => {
-      const result = selectCurrentPlayer({ ...mockState, players: undefined });
+      const result = selectCurrentPlayer({ herbalism: { ...mockState.herbalism, players: undefined } });
       expect(result).toBeNull();
     });
   });
@@ -98,12 +101,12 @@ describe('Redux Selectors', () => {
     });
 
     test('players 為空時應返回空陣列', () => {
-      const result = selectActivePlayers({ ...mockState, players: [] });
+      const result = selectActivePlayers({ herbalism: { ...mockState.herbalism, players: [] } });
       expect(result).toEqual([]);
     });
 
     test('players 為 undefined 時應返回空陣列', () => {
-      const result = selectActivePlayers({ ...mockState, players: undefined });
+      const result = selectActivePlayers({ herbalism: { ...mockState.herbalism, players: undefined } });
       expect(result).toEqual([]);
     });
   });
@@ -116,7 +119,7 @@ describe('Redux Selectors', () => {
     });
 
     test('gameHistory 為 undefined 時應返回空陣列', () => {
-      const result = selectGameHistory({ ...mockState, gameHistory: undefined });
+      const result = selectGameHistory({ herbalism: { ...mockState.herbalism, gameHistory: undefined } });
       expect(result).toEqual([]);
     });
   });
@@ -128,7 +131,7 @@ describe('Redux Selectors', () => {
     });
 
     test('有勝利者時應返回勝利者', () => {
-      const result = selectWinner({ ...mockState, winner: 'player-1' });
+      const result = selectWinner({ herbalism: { ...mockState.herbalism, winner: 'player-1' } });
       expect(result).toBe('player-1');
     });
   });

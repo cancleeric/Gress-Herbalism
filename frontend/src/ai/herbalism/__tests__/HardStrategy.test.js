@@ -4,7 +4,7 @@
 
 import HardStrategy, { createHardStrategy } from '../strategies/HardStrategy';
 import { ACTION_TYPE } from '../strategies/BaseStrategy';
-import { AI_DIFFICULTY, ALL_COLORS } from '../../shared/constants';
+import { AI_DIFFICULTY, ALL_COLORS } from '../../../shared/constants';
 
 describe('HardStrategy', () => {
   describe('constructor', () => {

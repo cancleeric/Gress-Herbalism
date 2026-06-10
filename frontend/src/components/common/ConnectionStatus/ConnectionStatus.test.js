@@ -11,7 +11,7 @@ import ConnectionStatus from './ConnectionStatus';
 const mockOnConnectionChange = jest.fn();
 const mockGetSocket = jest.fn();
 
-jest.mock('../../services/socketService', () => ({
+jest.mock('../../../services/socketService', () => ({
   onConnectionChange: (callback) => {
     mockOnConnectionChange(callback);
     return jest.fn(); // 返回 unsubscribe 函數

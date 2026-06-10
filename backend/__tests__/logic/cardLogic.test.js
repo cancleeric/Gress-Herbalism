@@ -10,7 +10,7 @@ const {
   createDeck,
   shuffleDeck,
   dealCards
-} = require('../../logic/cardLogic');
+} = require('../../logic/herbalism/cardLogic');
 
 describe('cardLogic', () => {
   describe('常數', () => {

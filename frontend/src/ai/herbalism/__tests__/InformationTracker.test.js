@@ -6,7 +6,7 @@ import InformationTracker, {
   createInformationTracker,
   EVENT_TYPES
 } from '../InformationTracker';
-import { ALL_COLORS, CARD_COUNTS, TOTAL_CARDS } from '../../shared/constants';
+import { ALL_COLORS, CARD_COUNTS, TOTAL_CARDS } from '../../../shared/constants';
 
 describe('InformationTracker', () => {
   describe('constructor', () => {

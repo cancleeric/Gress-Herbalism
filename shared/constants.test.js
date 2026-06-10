@@ -84,9 +84,13 @@ describe('遊戲階段常數', () => {
   });
 
   test('GAME_PHASES 應包含所有階段', () => {
-    expect(GAME_PHASES).toHaveLength(3);
+    // 工單 0161 後新增 postQuestion/followGuessing/roundEnd 三個中間階段
+    expect(GAME_PHASES).toHaveLength(6);
     expect(GAME_PHASES).toContain('waiting');
     expect(GAME_PHASES).toContain('playing');
+    expect(GAME_PHASES).toContain('postQuestion');
+    expect(GAME_PHASES).toContain('followGuessing');
+    expect(GAME_PHASES).toContain('roundEnd');
     expect(GAME_PHASES).toContain('finished');
   });
 });

@@ -9,25 +9,28 @@
 
 /**
  * 登入測試用戶
+ *
+ * 透過 window.__CYPRESS_E2E_AUTH 注入 mock 用戶資料，
+ * 讓 REACT_APP_E2E=1 build 的 E2EAuthProvider 讀取並自動視為已登入。
+ * 生產 build（無 REACT_APP_E2E）不含 E2EAuthProvider，此 mock 無法生效，
+ * 確保 auth 機制不被弱化。
+ *
+ * @param {string} username - 顯示名稱（預設 'E2E Test User'）
+ * @param {Object} options - 選項
+ * @param {boolean} options.isAnonymous - 是否為訪客（預設 true）
  */
-Cypress.Commands.add('login', (username, options = {}) => {
-  const { skipUI = false } = options;
-
-  if (skipUI) {
-    // 直接設置 localStorage 跳過 UI
-    cy.window().then((win) => {
-      win.localStorage.setItem('testUser', JSON.stringify({
-        id: `test-${username}`,
-        name: username,
-        isTestUser: true,
-      }));
-    });
-  } else {
-    // 使用 UI 登入
-    cy.get('[data-testid="username-input"]').type(username);
-    cy.get('[data-testid="login-button"]').click();
-    cy.get('[data-testid="user-display"]').should('contain', username);
-  }
+Cypress.Commands.add('login', (username = 'E2E Test User', options = {}) => {
+  const { isAnonymous = true } = options;
+  cy.window().then((win) => {
+    // 注入 mock 用戶資料到 window（E2EAuthProvider 讀取此值）
+    win.__CYPRESS_E2E_AUTH = {
+      uid: `e2e-${username.replace(/\s+/g, '-').toLowerCase()}`,
+      displayName: username,
+      isAnonymous,
+      photoURL: null,
+      email: isAnonymous ? null : `${username.toLowerCase().replace(/\s+/g, '.')}@e2e.test`,
+    };
+  });
 });
 
 /**
