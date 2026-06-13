@@ -7,8 +7,9 @@ import { io } from 'socket.io-client';
 import config from '../config';
 import { getCurrentRoom, clearCurrentRoom } from '../utils/common/localStorage';
 
-// 從設定檔取得後端 URL
+// 從設定檔取得後端 URL 與 Socket.io 路徑
 const SOCKET_URL = config.socketUrl;
+const SOCKET_PATH = config.socketPath;
 
 /**
  * 連線狀態枚舉（工單 0383）
@@ -34,6 +35,7 @@ export function initSocket() {
   connectionState = ConnectionState.CONNECTING;
 
   socket = io(SOCKET_URL, {
+    path: SOCKET_PATH,
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: Infinity,  // 無限重連
@@ -807,6 +809,7 @@ export function diagnoseConnection() {
 
   return {
     socketUrl: SOCKET_URL,
+    socketPath: SOCKET_PATH,
     connectionState: connectionState,
     isConnected: s?.connected ?? false,
     transport: s?.io?.engine?.transport?.name ?? 'unknown',

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "本草 Herbalism - 前端應用",
   "private": true,
+  "homepage": "/herbalism",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

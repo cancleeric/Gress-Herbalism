@@ -42,6 +42,14 @@ jest.mock('./components/games/evolution', () => ({
   EvolutionRoom: function MockEvolutionRoom() { return <div>EvolutionRoom</div>; },
 }));
 
+// basename="/herbalism" 需要 JSDOM URL 在 /herbalism/ 下，路由才能 match
+beforeEach(() => {
+  window.history.pushState({}, '', '/herbalism/');
+});
+afterEach(() => {
+  window.history.pushState({}, '', '/');
+});
+
 describe('App - 工作單 0013', () => {
   describe('應用程式渲染', () => {
     test('應用程式應該正常渲染', () => {

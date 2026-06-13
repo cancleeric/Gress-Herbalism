@@ -182,7 +182,7 @@ function App() {
       <PersistGate loading={<LoadingView />} persistor={persistor}>
         <ErrorBoundary>
           <AuthProvider>
-            <Router>
+            <Router basename="/herbalism">
               <AppContent />
             </Router>
           </AuthProvider>

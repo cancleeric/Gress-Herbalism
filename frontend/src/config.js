@@ -9,6 +9,9 @@ export const config = {
   // Socket.io 伺服器 URL
   socketUrl: process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001',
 
+  // Socket.io 路徑（閘道子路徑掛載用，預設 /herbalism/socket.io）
+  socketPath: process.env.REACT_APP_SOCKET_PATH || '/herbalism/socket.io',
+
   // 是否為開發環境
   isDevelopment: process.env.NODE_ENV === 'development',
 

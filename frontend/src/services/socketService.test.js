@@ -25,6 +25,7 @@ jest.mock('../config', () => ({
   __esModule: true,
   default: {
     socketUrl: 'http://localhost:3001',
+    socketPath: '/herbalism/socket.io',
   },
 }));
 
@@ -45,6 +46,7 @@ describe('socketService', () => {
       __esModule: true,
       default: {
         socketUrl: 'http://localhost:3001',
+        socketPath: '/herbalism/socket.io',
       },
     }));
 

@@ -13,8 +13,8 @@ RUN npm run build
 # Stage 2: Serve with nginx
 FROM nginx:alpine
 
-# Copy built files
-COPY --from=builder /app/build /usr/share/nginx/html
+# Copy built files into /herbalism/ sub-path so nginx can serve under /herbalism/
+COPY --from=builder /app/build /usr/share/nginx/html/herbalism
 
 # Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
