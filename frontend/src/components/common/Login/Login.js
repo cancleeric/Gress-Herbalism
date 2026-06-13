@@ -31,6 +31,12 @@ function Login() {
   // 登入後導向目標頁，from 由 ProtectedRoute 注入
   const from = location.state?.from?.pathname ?? '/';
 
+  // 統一大廳下：依進入的遊戲切換招牌（本草 vs 演化論），兩款共用同一 app/登入但品牌分流
+  const isEvolution = from.includes('evolution');
+  const brand = isEvolution
+    ? { navTitle: 'Evolution', title: '演化論 Evolution', subtitle: '2-5 人物種演化策略卡牌', tagline: '"運用特徵卡牌讓你的物種存活並壯大，模擬物種演化的桌遊。"' }
+    : { navTitle: 'Herbalism', title: '本草 Herbalism', subtitle: '3-4人線上推理桌遊', tagline: '"在古老的本草知識中，找出神秘藥方。融合推理、策略與智慧的桌遊。"' };
+
   // 已登入用戶直接訪問 /login 時跳走（演化論 deep link 修正）
   useEffect(() => {
     if (!isLoading && isLoggedIn) {
@@ -93,7 +99,7 @@ function Login() {
             <svg className="nav-icon" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
               <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
             </svg>
-            <span className="nav-title">Herbalism</span>
+            <span className="nav-title">{brand.navTitle}</span>
           </div>
           <nav className="nav-links">
             <a href="#">規則書</a>
@@ -105,9 +111,9 @@ function Login() {
         <main className="login-main">
           {/* Branding */}
           <div className="branding">
-            <h1 className="brand-title">本草 Herbalism</h1>
+            <h1 className="brand-title">{brand.title}</h1>
             <div className="brand-subtitle-wrapper">
-              <h2 className="brand-subtitle">3-4人線上推理桌遊</h2>
+              <h2 className="brand-subtitle">{brand.subtitle}</h2>
             </div>
           </div>
 
@@ -167,7 +173,7 @@ function Login() {
           {/* Game Introduction */}
           <div className="game-intro">
             <p className="intro-quote">
-              "在古老的本草知識中，找出神秘藥方。融合推理、策略與智慧的桌遊。"
+              {brand.tagline}
             </p>
             <div className="intro-features">
               <div className="feature">
