@@ -86,8 +86,10 @@ function AppContent() {
       <ConnectionStatus />
       <Routes>
         <Route path="/login" element={<Login />} />
-        {/* Phase 1 LIDS callback 骨架路由（/herbalism/callback） */}
-        <Route path="/herbalism/callback" element={<LidsCallback />} />
+        {/* Phase 2a LIDS callback 路由（basename="/herbalism" 已做前綴，此處只需相對 path） */}
+        {/* ⚠️ path="/callback" → 實際 URL = /herbalism/callback（與 LIDS client 白名單一致） */}
+        {/* ❌ 舊寫法 path="/herbalism/callback" 會造成 /herbalism/herbalism/callback 雙前綴 bug */}
+        <Route path="/callback" element={<LidsCallback />} />
         {/* 工單 0276：遊戲選擇頁面 */}
         <Route
           path="/"
