@@ -1464,7 +1464,7 @@ function GameRoom() {
                     >
                       {/* 工單 0217：使用雙色卡片圖片 */}
                       <img
-                        src={`/images/cards/${combo.id}.jpg`}
+                        src={`${process.env.PUBLIC_URL}/images/cards/${combo.id}.jpg`}
                         alt={combo.name}
                         className="playing-inquiry-card-image"
                         onError={(e) => { e.target.style.display = 'none'; }}

@@ -71,7 +71,7 @@ function ColorCard({
       {/* 卡牌圖片區域（工單 0215：使用雙色卡片圖片） */}
       <div className="card-illustration">
         <img
-          src={`/images/cards/${card.id}.jpg`}
+          src={`${process.env.PUBLIC_URL}/images/cards/${card.id}.jpg`}
           alt={card.name}
           className="card-image"
           onError={(e) => {
