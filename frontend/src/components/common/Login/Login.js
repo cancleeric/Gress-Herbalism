@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../firebase';
+import { loginWithLids, isLidsEnabled } from '../../../lids/lidsService';
 import './Login.css';
 
 /**
@@ -59,6 +60,20 @@ function Login() {
     }
 
     setIsProcessing(false);
+  };
+
+  // Phase 1 LIDS 登入（env flag REACT_APP_LIDS_ENABLED=true 才顯示）
+  const handleLidsLogin = async () => {
+    setIsProcessing(true);
+    setError('');
+    setErrorCode('');
+    try {
+      await loginWithLids();
+      // loginWithLids 會跳轉離開頁面，不會 return
+    } catch (err) {
+      setError('LIDS 登入跳轉失敗，請稍後再試');
+      setIsProcessing(false);
+    }
   };
 
   const handleGuestLogin = async () => {
@@ -133,6 +148,20 @@ function Login() {
                 </svg>
                 <span>使用 Google 帳號登入</span>
               </button>
+
+              {/* Phase 1 LIDS 登入按鈕：env flag REACT_APP_LIDS_ENABLED=true 才顯示 */}
+              {/* Phase 2（Kay 提供 client 後）：移除此條件渲染，改為預設顯示 */}
+              {isLidsEnabled() && (
+                <button
+                  className="btn btn-lids"
+                  onClick={handleLidsLogin}
+                  disabled={isProcessing}
+                  title="使用颶風集團帳號登入（LIDS SSO）"
+                >
+                  <span className="lids-icon">🌀</span>
+                  <span>使用颶風帳號登入（LIDS）</span>
+                </button>
+              )}
 
               <button
                 className="btn btn-guest"

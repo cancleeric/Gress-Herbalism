@@ -26,6 +26,9 @@ const {
   updatePlayerGameStats,
 } = require('./db/supabase');
 
+// P1 安全修復：Firebase ID token 驗簽 middleware
+const { verifyAuth } = require('./middleware/verifyAuth');
+
 // 工單 0061 - 好友服務
 const friendService = require('./services/friendService');
 const invitationService = require('./services/invitationService');
@@ -82,15 +85,14 @@ app.get('/api/health', (req, res) => {
 // ==================== 工單 0060 API ====================
 
 // 同步玩家資料（登入時呼叫）
-app.post('/api/players/sync', async (req, res) => {
+// P1：掛上 verifyAuth，使用 token 驗證後的 req.uid，不信任前端傳入的 firebaseUid
+app.post('/api/players/sync', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid, displayName, email, avatarUrl } = req.body;
+    const { displayName, email, avatarUrl } = req.body;
+    // req.uid 由 verifyAuth 從 Firebase ID token 中提取，不可被前端偽造
+    const uid = req.uid;
 
-    if (!firebaseUid) {
-      return res.status(400).json({ success: false, message: '缺少 Firebase UID' });
-    }
-
-    const player = await getOrCreatePlayer(displayName || '玩家', firebaseUid);
+    const player = await getOrCreatePlayer(displayName || '玩家', uid);
     res.json({ success: true, data: player });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -98,10 +100,12 @@ app.post('/api/players/sync', async (req, res) => {
 });
 
 // 取得玩家統計
-app.get('/api/players/:firebaseUid/stats', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準（URL 路徑的 :firebaseUid 僅供向下相容，不信任）
+app.get('/api/players/:firebaseUid/stats', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid } = req.params;
-    const stats = await getPlayerStats(firebaseUid);
+    // 使用 token 驗證後的 req.uid，不採用前端傳入的 URL param
+    const uid = req.uid;
+    const stats = await getPlayerStats(uid);
 
     if (!stats) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -114,13 +118,15 @@ app.get('/api/players/:firebaseUid/stats', async (req, res) => {
 });
 
 // 取得玩家遊戲歷史
-app.get('/api/players/:firebaseUid/history', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.get('/api/players/:firebaseUid/history', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid } = req.params;
+    // 使用 token 驗證後的 req.uid，不採用前端傳入的 URL param
+    const uid = req.uid;
     const limit = parseInt(req.query.limit) || 20;
 
     // 先取得玩家 ID
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -136,14 +142,15 @@ app.get('/api/players/:firebaseUid/history', async (req, res) => {
 // ==================== 工單 0061 好友 API ====================
 
 // 搜尋玩家
-app.get('/api/friends/search', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.get('/api/friends/search', verifyAuth, async (req, res) => {
   try {
-    const { q, firebaseUid } = req.query;
+    const { q } = req.query;
     if (!q || q.length < 2) {
       return res.json({ success: true, data: [] });
     }
 
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
     }
@@ -156,10 +163,10 @@ app.get('/api/friends/search', async (req, res) => {
 });
 
 // 取得好友列表
-app.get('/api/friends', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.get('/api/friends', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid } = req.query;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -173,10 +180,10 @@ app.get('/api/friends', async (req, res) => {
 });
 
 // 取得好友請求列表
-app.get('/api/friends/requests', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.get('/api/friends/requests', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid } = req.query;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -190,10 +197,10 @@ app.get('/api/friends/requests', async (req, res) => {
 });
 
 // 取得好友請求數量
-app.get('/api/friends/requests/count', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.get('/api/friends/requests/count', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid } = req.query;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.json({ success: true, data: { count: 0 } });
@@ -207,10 +214,11 @@ app.get('/api/friends/requests/count', async (req, res) => {
 });
 
 // 發送好友請求
-app.post('/api/friends/requests', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.post('/api/friends/requests', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid, toUserId, message } = req.body;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const { toUserId, message } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -234,11 +242,12 @@ app.post('/api/friends/requests', async (req, res) => {
 });
 
 // 回應好友請求
-app.put('/api/friends/requests/:requestId', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.put('/api/friends/requests/:requestId', verifyAuth, async (req, res) => {
   try {
     const { requestId } = req.params;
-    const { firebaseUid, action } = req.body;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const { action } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -257,11 +266,11 @@ app.put('/api/friends/requests/:requestId', async (req, res) => {
 });
 
 // 刪除好友
-app.delete('/api/friends/:friendId', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.delete('/api/friends/:friendId', verifyAuth, async (req, res) => {
   try {
     const { friendId } = req.params;
-    const { firebaseUid } = req.query;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -275,10 +284,11 @@ app.delete('/api/friends/:friendId', async (req, res) => {
 });
 
 // 發送遊戲邀請
-app.post('/api/friends/invitations', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.post('/api/friends/invitations', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid, toUserId, roomId } = req.body;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const { toUserId, roomId } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });
@@ -292,10 +302,10 @@ app.post('/api/friends/invitations', async (req, res) => {
 });
 
 // 取得遊戲邀請
-app.get('/api/friends/invitations', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.get('/api/friends/invitations', verifyAuth, async (req, res) => {
   try {
-    const { firebaseUid } = req.query;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.json({ success: true, data: [] });
@@ -309,11 +319,12 @@ app.get('/api/friends/invitations', async (req, res) => {
 });
 
 // 回應遊戲邀請
-app.put('/api/friends/invitations/:invitationId', async (req, res) => {
+// P1：掛上 verifyAuth，以 token 中的 uid 為準
+app.put('/api/friends/invitations/:invitationId', verifyAuth, async (req, res) => {
   try {
     const { invitationId } = req.params;
-    const { firebaseUid, action } = req.body;
-    const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
+    const { action } = req.body;
+    const playerId = await getPlayerIdByFirebaseUid(req.uid);
 
     if (!playerId) {
       return res.status(404).json({ success: false, message: '玩家不存在' });

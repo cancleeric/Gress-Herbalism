@@ -13,6 +13,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
+import LidsCallback from './components/common/LidsCallback';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
 import './styles/App.css';
@@ -85,6 +86,8 @@ function AppContent() {
       <ConnectionStatus />
       <Routes>
         <Route path="/login" element={<Login />} />
+        {/* Phase 1 LIDS callback 骨架路由（/herbalism/callback） */}
+        <Route path="/herbalism/callback" element={<LidsCallback />} />
         {/* 工單 0276：遊戲選擇頁面 */}
         <Route
           path="/"

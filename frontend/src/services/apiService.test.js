@@ -1,5 +1,9 @@
 /**
  * API 服務層測試
+ *
+ * P1 安全修復（2026-06-14）：
+ * - syncPlayer 不再傳 firebaseUid（後端從 Bearer token 取，不信任前端傳入的 uid）
+ * - apiRequest 自動帶 Authorization: Bearer <id_token>（若已登入）
  */
 
 import {
@@ -10,6 +14,13 @@ import {
   healthCheck,
 } from './apiService';
 
+// Mock Firebase config（避免 import 觸發 Firebase 初始化）
+jest.mock('../firebase/config', () => ({
+  auth: {
+    currentUser: null,  // 預設未登入，可在各測試中 override
+  },
+}));
+
 // Mock fetch
 global.fetch = jest.fn();
 
@@ -19,21 +30,24 @@ describe('apiService', () => {
   });
 
   describe('syncPlayer', () => {
-    test('成功同步玩家資料', async () => {
+    test('成功同步玩家資料（P1：不傳 firebaseUid）', async () => {
       const mockResponse = { success: true, data: { id: '123' } };
       global.fetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
 
+      // P1：傳入時含 firebaseUid，但 syncPlayer 應自動剔除它
       const userData = { firebaseUid: 'uid123', displayName: '測試玩家', email: 'test@example.com' };
       const result = await syncPlayer(userData);
 
+      // 確認：URL 正確
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/players/sync'),
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify(userData),
+          // P1：body 不包含 firebaseUid（已由後端從 token 取）
+          body: JSON.stringify({ displayName: '測試玩家', email: 'test@example.com' }),
         })
       );
       expect(result).toEqual(mockResponse);
@@ -196,6 +210,19 @@ describe('apiService', () => {
           }),
         })
       );
+    });
+
+    test('P1：未登入時不帶 Authorization header', async () => {
+      // auth.currentUser = null（預設 mock）
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ status: 'ok' }),
+      });
+
+      await healthCheck();
+
+      const callArgs = global.fetch.mock.calls[0][1];
+      expect(callArgs.headers).not.toHaveProperty('Authorization');
     });
   });
 });
