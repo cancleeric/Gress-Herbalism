@@ -224,5 +224,26 @@ describe('apiService', () => {
       const callArgs = global.fetch.mock.calls[0][1];
       expect(callArgs.headers).not.toHaveProperty('Authorization');
     });
+
+    test('P1：已登入時帶 Authorization: Bearer <idToken>', async () => {
+      // 模擬已登入的使用者
+      const { auth } = require('../firebase/config');
+      auth.currentUser = {
+        getIdToken: jest.fn().mockResolvedValue('fake-token'),
+      };
+
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ status: 'ok' }),
+      });
+
+      await healthCheck();
+
+      const callArgs = global.fetch.mock.calls[0][1];
+      expect(callArgs.headers).toHaveProperty('Authorization', 'Bearer fake-token');
+
+      // 還原為未登入狀態，避免影響其他測試
+      auth.currentUser = null;
+    });
   });
 });

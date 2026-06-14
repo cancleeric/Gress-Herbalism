@@ -57,6 +57,9 @@ async function lidsAuthMiddleware(req, res, next) {
   const token = authHeader.slice(7);
 
   try {
+    // TODO Phase2: 掛路由前必補 audience 驗證：
+    // jwtVerify 應加 audience: process.env.LIDS_CLIENT_ID 選項，
+    // 防止其他 LIDS client 的 token 被本服務接受（token confusion 攻擊）。
     const { payload } = await jwtVerify(token, getLidsJWKS(), {
       issuer: LIDS_ISSUER,
     });

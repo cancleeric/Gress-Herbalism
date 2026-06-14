@@ -1,5 +1,9 @@
 /**
  * 好友服務測試
+ *
+ * P1 安全修復（雙審補項）：
+ * friendService 現在透過 apiService.apiRequest 發請求（帶 Authorization: Bearer token）。
+ * 測試須 mock firebase/config，使 apiService 的 getFirebaseIdToken 可正常運作。
  */
 
 import {
@@ -14,6 +18,13 @@ import {
   getGameInvitations,
   respondToGameInvitation,
 } from './friendService';
+
+// Mock Firebase config（friendService → apiService → firebase/config）
+jest.mock('../firebase/config', () => ({
+  auth: {
+    currentUser: null, // 預設未登入，各測試可 override
+  },
+}));
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -267,6 +278,40 @@ describe('friendService', () => {
       });
 
       await expect(getFriends('uid123')).rejects.toThrow('操作失敗');
+    });
+  });
+
+  describe('P1 安全：Authorization header', () => {
+    test('已登入時請求帶 Authorization: Bearer token', async () => {
+      // mock firebase/config 讓 auth.currentUser 有效
+      const { auth } = require('../firebase/config');
+      auth.currentUser = { getIdToken: jest.fn().mockResolvedValue('friend-fake-token') };
+
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true, data: [] }),
+      });
+
+      await getFriends('uid123');
+
+      const callHeaders = global.fetch.mock.calls[0][1].headers;
+      expect(callHeaders).toHaveProperty('Authorization', 'Bearer friend-fake-token');
+
+      // 還原
+      auth.currentUser = null;
+    });
+
+    test('未登入時請求不帶 Authorization header', async () => {
+      // auth.currentUser 預設為 null（firebase mock）
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true, data: [] }),
+      });
+
+      await getFriends('uid123');
+
+      const callHeaders = global.fetch.mock.calls[0][1].headers;
+      expect(callHeaders).not.toHaveProperty('Authorization');
     });
   });
 });

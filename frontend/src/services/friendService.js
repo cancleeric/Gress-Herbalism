@@ -1,29 +1,30 @@
 /**
  * 好友服務 - 前端 API
  * 工單 0061
+ *
+ * P1 安全修復（雙審補項）：
+ * 移除本地 apiRequest（不帶 Authorization），改用 apiService.apiRequest，
+ * 確保所有 /api/friends/* 呼叫都帶 Authorization: Bearer <Firebase ID token>。
+ * 先前版本：本地 apiRequest 純 fetch，無 token → 後端 verifyAuth → 全 401。
  */
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+import { apiRequest } from './apiService';
 
 /**
- * 發送 API 請求
+ * 帶 Authorization 的 friends API 請求包裝器。
+ * apiService.apiRequest 回傳整個 response body（{ success, data, message }），
+ * 此包裝器額外處理 success: false 的錯誤拋出，並取出 data 層。
+ *
+ * @param {string} url - API 路徑
+ * @param {object} options - fetch options
+ * @returns {Promise<*>} response.data
  */
-async function apiRequest(url, options = {}) {
-  const response = await fetch(`${API_URL}${url}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || '請求失敗');
+async function friendApiRequest(url, options = {}) {
+  const responseBody = await apiRequest(url, options);
+  if (!responseBody.success) {
+    throw new Error(responseBody.message || '請求失敗');
   }
-
-  return data.data;
+  return responseBody.data;
 }
 
 /**
@@ -32,7 +33,7 @@ async function apiRequest(url, options = {}) {
  * @param {string} firebaseUid - 自己的 Firebase UID
  */
 export async function searchPlayers(query, firebaseUid) {
-  return apiRequest(`/api/friends/search?q=${encodeURIComponent(query)}&firebaseUid=${firebaseUid}`);
+  return friendApiRequest(`/api/friends/search?q=${encodeURIComponent(query)}&firebaseUid=${firebaseUid}`);
 }
 
 /**
@@ -40,7 +41,7 @@ export async function searchPlayers(query, firebaseUid) {
  * @param {string} firebaseUid - Firebase UID
  */
 export async function getFriends(firebaseUid) {
-  return apiRequest(`/api/friends?firebaseUid=${firebaseUid}`);
+  return friendApiRequest(`/api/friends?firebaseUid=${firebaseUid}`);
 }
 
 /**
@@ -48,7 +49,7 @@ export async function getFriends(firebaseUid) {
  * @param {string} firebaseUid - Firebase UID
  */
 export async function getFriendRequests(firebaseUid) {
-  return apiRequest(`/api/friends/requests?firebaseUid=${firebaseUid}`);
+  return friendApiRequest(`/api/friends/requests?firebaseUid=${firebaseUid}`);
 }
 
 /**
@@ -56,7 +57,7 @@ export async function getFriendRequests(firebaseUid) {
  * @param {string} firebaseUid - Firebase UID
  */
 export async function getFriendRequestCount(firebaseUid) {
-  const result = await apiRequest(`/api/friends/requests/count?firebaseUid=${firebaseUid}`);
+  const result = await friendApiRequest(`/api/friends/requests/count?firebaseUid=${firebaseUid}`);
   return result.count;
 }
 
@@ -67,7 +68,7 @@ export async function getFriendRequestCount(firebaseUid) {
  * @param {string} message - 附加訊息
  */
 export async function sendFriendRequest(firebaseUid, toUserId, message = '') {
-  return apiRequest('/api/friends/requests', {
+  return friendApiRequest('/api/friends/requests', {
     method: 'POST',
     body: JSON.stringify({ firebaseUid, toUserId, message }),
   });
@@ -80,7 +81,7 @@ export async function sendFriendRequest(firebaseUid, toUserId, message = '') {
  * @param {string} action - 'accept' | 'reject'
  */
 export async function respondToFriendRequest(requestId, firebaseUid, action) {
-  return apiRequest(`/api/friends/requests/${requestId}`, {
+  return friendApiRequest(`/api/friends/requests/${requestId}`, {
     method: 'PUT',
     body: JSON.stringify({ firebaseUid, action }),
   });
@@ -92,7 +93,7 @@ export async function respondToFriendRequest(requestId, firebaseUid, action) {
  * @param {string} firebaseUid - Firebase UID
  */
 export async function removeFriend(friendId, firebaseUid) {
-  return apiRequest(`/api/friends/${friendId}?firebaseUid=${firebaseUid}`, {
+  return friendApiRequest(`/api/friends/${friendId}?firebaseUid=${firebaseUid}`, {
     method: 'DELETE',
   });
 }
@@ -104,7 +105,7 @@ export async function removeFriend(friendId, firebaseUid) {
  * @param {string} roomId - 房間 ID
  */
 export async function sendGameInvitation(firebaseUid, toUserId, roomId) {
-  return apiRequest('/api/friends/invitations', {
+  return friendApiRequest('/api/friends/invitations', {
     method: 'POST',
     body: JSON.stringify({ firebaseUid, toUserId, roomId }),
   });
@@ -115,7 +116,7 @@ export async function sendGameInvitation(firebaseUid, toUserId, roomId) {
  * @param {string} firebaseUid - Firebase UID
  */
 export async function getGameInvitations(firebaseUid) {
-  return apiRequest(`/api/friends/invitations?firebaseUid=${firebaseUid}`);
+  return friendApiRequest(`/api/friends/invitations?firebaseUid=${firebaseUid}`);
 }
 
 /**
@@ -125,7 +126,7 @@ export async function getGameInvitations(firebaseUid) {
  * @param {string} action - 'accept' | 'reject'
  */
 export async function respondToGameInvitation(invitationId, firebaseUid, action) {
-  return apiRequest(`/api/friends/invitations/${invitationId}`, {
+  return friendApiRequest(`/api/friends/invitations/${invitationId}`, {
     method: 'PUT',
     body: JSON.stringify({ firebaseUid, action }),
   });

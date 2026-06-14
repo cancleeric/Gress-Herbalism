@@ -33,8 +33,11 @@ async function getFirebaseIdToken() {
 /**
  * 發送 API 請求
  * P1：自動附上 Firebase ID token（若已登入）
+ *
+ * 此函式為 named export，供 friendService 等服務層重用，
+ * 確保所有後端 API 呼叫統一帶 Authorization header。
  */
-async function apiRequest(url, options = {}) {
+export async function apiRequest(url, options = {}) {
   const idToken = await getFirebaseIdToken();
 
   const headers = {

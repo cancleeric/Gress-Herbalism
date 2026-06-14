@@ -507,6 +507,10 @@ io.on('connection', (socket) => {
   });
 
   // 工單 0176：設定玩家線上狀態
+  // TODO Phase2: socket auth — 目前 setPresence 信任前端傳入的 firebaseUid（HIGH 風險）。
+  // Phase2 改法：socket handshake 帶 Firebase ID token（auth.token），
+  // 在 io.use() middleware 以 verifyAuth 邏輯驗簽，驗通後存入 socket.uid，
+  // setPresence 改從 socket.uid 取 uid，不再接受前端傳入的 firebaseUid。
   socket.on('setPresence', async ({ firebaseUid }) => {
     if (firebaseUid) {
       try {
