@@ -65,3 +65,7 @@ desktop.ini
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+# E2E 測試產物（不入版控）
+tests/e2e/screenshots/
+tests/e2e/videos/
