@@ -5,9 +5,21 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-// 從環境變數讀取設定，若無則使用預設值（開發用）
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rvlmpnovbrksqwtihwqi.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2bG1wbm92YnJrc3F3dGlod3FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMDMxNDUsImV4cCI6MjA4NDc3OTE0NX0.wLuRDB0gaNc2rRyDOZ8ea8aTBzT2jF8f7m3TCCaCcMU';
+/**
+ * 從環境變數讀取必填設定，缺少即 fail-fast。
+ * 真值來源：Hurricane Vault hurricanedigital/dev/supabase-*
+ */
+function requireEnv(key) {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+}
+
+// 從環境變數讀取設定（無 fallback，缺少即啟動失敗）
+const supabaseUrl = requireEnv('SUPABASE_URL');
+const supabaseAnonKey = requireEnv('SUPABASE_ANON_KEY');
 
 // 建立 Supabase 客戶端
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
