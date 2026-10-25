@@ -7,12 +7,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
-// 載入環境變數（如果有 dotenv）
-try {
-  require('dotenv').config();
-} catch (e) {
-  // dotenv 未安裝，使用預設值
-}
+// 在載入任何設定使用者之前，從後端目錄載入本機設定。
+// 已由 Vault／CI 注入的環境變數優先；不提供任何秘密預設值。
+require('./config/loadEnvironment')();
 
 // Supabase 資料庫
 const {
