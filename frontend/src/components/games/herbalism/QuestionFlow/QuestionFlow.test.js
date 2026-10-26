@@ -30,6 +30,58 @@ describe('QuestionFlow Component', () => {
     mockOnCancel.mockClear();
   });
 
+  test('changing card or acting player resets selections, but equivalent prop refresh preserves them', () => {
+    const props = { selectedCard: mockSelectedCard, players: mockPlayers, currentPlayerId: 'p1', onSubmit: mockOnSubmit };
+    const { rerender } = render(<QuestionFlow {...props} />);
+    fireEvent.click(screen.getByText('玩家2'));
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    expect(screen.getByRole('button', { name: /確認問牌/i })).toBeEnabled();
+    rerender(<QuestionFlow {...props} selectedCard={{ ...mockSelectedCard, colors: [...mockSelectedCard.colors] }} players={[...mockPlayers]} />);
+    expect(screen.getByRole('button', { name: /確認問牌/i })).toBeEnabled();
+    rerender(<QuestionFlow {...props} selectedCard={{ id: 'yellow-blue', colors: ['yellow', 'blue'] }} />);
+    expect(screen.getByRole('button', { name: /確認問牌/i })).toBeDisabled();
+    fireEvent.click(screen.getByText('玩家2'));
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    rerender(<QuestionFlow {...props} selectedCard={{ id: 'yellow-blue', colors: ['yellow', 'blue'] }} currentPlayerId="p3" />);
+    expect(screen.getByRole('button', { name: /確認問牌/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  test('removing the selected target disables submit and asks for a new target', () => {
+    const props = { selectedCard: mockSelectedCard, players: mockPlayers, currentPlayerId: 'p1', onSubmit: mockOnSubmit };
+    const { rerender } = render(<QuestionFlow {...props} />);
+    fireEvent.click(screen.getByText('玩家2'));
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    rerender(<QuestionFlow {...props} players={mockPlayers.filter(player => player.id !== 'p2')} />);
+    expect(screen.getByRole('button', { name: /確認問牌/i })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('目標玩家已離開');
+    fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('玩家3'));
+    fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
+    expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({ targetPlayerId: 'p3', questionType: 1 }));
+  });
+
+  test('loading freezes target/type/give-color choices until the request finishes', () => {
+    const props = { selectedCard: mockSelectedCard, players: mockPlayers, currentPlayerId: 'p1',
+      currentPlayerHand: [{ color: 'red' }, { color: 'green' }], onSubmit: mockOnSubmit };
+    const { rerender } = render(<QuestionFlow {...props} />);
+    fireEvent.click(screen.getByText('玩家2'));
+    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
+    fireEvent.click(screen.getByText(/給 紅色 一張/));
+    rerender(<QuestionFlow {...props} isLoading />);
+    expect(screen.getAllByRole('radio').every(input => input.disabled)).toBe(true);
+    expect(screen.getByRole('button', { name: /各一張.*Each Color/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /給 綠色 一張/ })).toBeDisabled();
+    fireEvent.click(screen.getByText('玩家3'));
+    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/給 綠色 一張/));
+    rerender(<QuestionFlow {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
+    expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({ targetPlayerId: 'p2', questionType: 3, giveColor: 'red' }));
+  });
+
   test('renders nothing when selectedCard is null', () => {
     const { container } = render(
       <QuestionFlow

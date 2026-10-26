@@ -15,7 +15,17 @@
  *   - 訪客（匿名 Firebase）也有合法 ID token，同樣可通過此 middleware
  */
 
-const { createRemoteJWKSet, jwtVerify } = require('jose');
+let joseModule;
+async function getJose() {
+  if (!joseModule) {
+    try { joseModule = require('jose'); }
+    catch (error) {
+      if (error.code !== 'ERR_REQUIRE_ESM') throw error;
+      joseModule = await import('jose');
+    }
+  }
+  return joseModule;
+}
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 
@@ -28,8 +38,9 @@ let _jwks = null;
  * 取得（或快取）JWKS 實例
  * 延遲初始化：FIREBASE_PROJECT_ID 必須已設定才能建立 issuer/audience
  */
-function getJWKS() {
+async function getJWKS() {
   if (!_jwks) {
+    const { createRemoteJWKSet } = await getJose();
     _jwks = createRemoteJWKSet(new URL(FIREBASE_JWKS_URL));
   }
   return _jwks;
@@ -60,13 +71,8 @@ async function verifyAuth(req, res, next) {
   const idToken = authHeader.slice(7);
 
   try {
-    const { payload } = await jwtVerify(idToken, getJWKS(), {
-      issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
-      audience: FIREBASE_PROJECT_ID,
-    });
-
-    // Firebase ID token 以 user_id claim 為主，sub 為備用
-    req.uid = payload.user_id || payload.sub;
+    const identity = await verifyFirebaseIdToken(idToken);
+    req.uid = identity.uid;
     next();
   } catch (err) {
     // 統一回 401，不暴露驗簽細節
@@ -74,4 +80,21 @@ async function verifyAuth(req, res, next) {
   }
 }
 
-module.exports = { verifyAuth };
+async function verifyFirebaseIdToken(idToken) {
+  if (!FIREBASE_PROJECT_ID || typeof idToken !== 'string' || !idToken) throw new Error('Authentication unavailable');
+  const { jwtVerify } = await getJose();
+  const { payload } = await jwtVerify(idToken, await getJWKS(), {
+    issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+    audience: FIREBASE_PROJECT_ID,
+    algorithms: ['RS256'],
+    requiredClaims: ['sub', 'exp', 'iat'],
+  });
+  const uid = payload.user_id || payload.sub;
+  if (typeof uid !== 'string' || !uid || uid.length > 128 || !Number.isFinite(payload.exp) || payload.exp * 1000 <= Date.now()) {
+    throw new Error('Invalid identity');
+  }
+  if (payload.user_id && payload.sub && payload.user_id !== payload.sub) throw new Error('Invalid identity');
+  return { uid, expiresAt: payload.exp * 1000 };
+}
+
+module.exports = { verifyAuth, verifyFirebaseIdToken };

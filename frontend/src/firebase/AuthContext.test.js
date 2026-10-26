@@ -5,6 +5,13 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
+import store from '../store/gameStore';
+import evolutionReducer, { evolutionActions } from '../store/evolution/evolutionStore';
+jest.mock('../store/gameStore', () => ({ __esModule: true, default: { dispatch: jest.fn() } }));
+
+// This suite verifies context transitions, not Firebase/network configuration.
+jest.mock('../services/apiService', () => ({ syncPlayer: jest.fn().mockResolvedValue({}) }));
+jest.mock('../services/socketService', () => ({ initSocket: jest.fn(), setPresence: jest.fn() }));
 
 // Mock authService
 const mockOnAuthChange = jest.fn();
@@ -204,4 +211,35 @@ describe('AuthContext', () => {
       expect(mockUnsubscribe).toHaveBeenCalled();
     });
   });
+});
+
+describe('Evolution identity cleanup bridge', () => {
+ let notify;
+ let evolutionState;
+ beforeEach(() => {
+  evolutionState = evolutionReducer(undefined, evolutionActions.bindRoomContext({ uid: 'uid-A', roomId: 'room-A', playerId: 'seat-A' }));
+  evolutionState = evolutionReducer(evolutionState, evolutionActions.setGameState({ phase: 'evolution', players: { 'seat-A': { hand: ['private-A'], creatures: [] } } }));
+  store.dispatch.mockImplementation(action => { evolutionState = evolutionReducer(evolutionState, action); });
+  mockOnAuthChange.mockImplementation(callback => { notify = callback; return () => {}; });
+  mockHandleRedirectResult.mockResolvedValue(null);
+ });
+ afterEach(() => store.dispatch.mockReset());
+ function Observer() {
+  const auth = useAuth();
+  return <div data-testid="identity-private">{auth.user?.uid || 'none'}:{evolutionState.myHand.join(',')}</div>;
+ }
+ test('new UID clears previous private state before publishing next identity', () => {
+  render(<AuthProvider><Observer /></AuthProvider>);
+  act(() => notify({ isLoggedIn: true, user: { uid: 'uid-B', isAnonymous: true } }));
+  expect(screen.getByTestId('identity-private')).toHaveTextContent('uid-B:');
+  expect(screen.getByTestId('identity-private')).not.toHaveTextContent('private-A');
+  expect(evolutionState.ownerUid).toBe('uid-B');
+ });
+ test('logout clears private state; same UID auth/profile updates preserve it', () => {
+  render(<AuthProvider><Observer /></AuthProvider>);
+  act(() => notify({ isLoggedIn: true, user: { uid: 'uid-A', isAnonymous: true } }));
+  expect(evolutionState.myHand).toEqual(['private-A']);
+  act(() => notify({ isLoggedIn: false, user: null }));
+  expect(evolutionState.myHand).toEqual([]); expect(evolutionState.ownerUid).toBeNull();
+ });
 });

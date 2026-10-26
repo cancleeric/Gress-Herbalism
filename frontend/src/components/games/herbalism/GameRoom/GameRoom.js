@@ -34,7 +34,6 @@ import {
   onReconnectFailed,
   startGame as socketStartGame,
   sendGameAction,
-  requestRevealHiddenCards,
   leaveRoom,
   submitColorChoice,
   submitFollowGuessResponse,
@@ -428,6 +427,18 @@ function GameRoom() {
         maxPlayers: newState.maxPlayers
       }));
       setIsLoading(false);
+      // A departure may cancel a pending action without a normal result event.
+      // Always reconcile transient panels with the authoritative server phase.
+      if (newState.gamePhase !== GAME_PHASE_FOLLOW_GUESSING) {
+        setShowFollowGuessPanel(false);
+        setFollowGuessData(null);
+      }
+      if (newState.gamePhase !== GAME_PHASE_PLAYING) {
+        setShowColorChoice(false);
+        setColorChoiceData(null);
+        setWaitingForColorChoice(false);
+        setColorChoiceInfo(null);
+      }
     });
 
     // 監聽錯誤（工單 0150 改善）
@@ -478,7 +489,7 @@ function GameRoom() {
       setColorChoiceInfo({ targetPlayerId, askingPlayerId });
     });
 
-    // 監聽顏色選擇結果
+    // Both normal completion and server cancellation dismiss pending UI only.
     const unsubColorResult = onColorChoiceResult(({ targetPlayerId, chosenColor, cardsTransferred }) => {
       setShowColorChoice(false);
       setColorChoiceData(null);
@@ -672,6 +683,9 @@ function GameRoom() {
     if (gameState.gamePhase === GAME_PHASE_POST_QUESTION && isMyTurn()) {
       setShowPrediction(true);
       setPredictionLoading(false);
+    } else {
+      setShowPrediction(false);
+      setPredictionLoading(false);
     }
   }, [gameState.gamePhase, isMyTurn]);
 
@@ -768,11 +782,9 @@ function GameRoom() {
       const state = localControllerRef.current.getState();
       setHiddenCardsForGuess(state.hiddenCards);
     } else {
-      // 多人模式：請求查看蓋牌
-      const myPlayer = getMyPlayer();
-      if (myPlayer && gameId) {
-        requestRevealHiddenCards(gameId, myPlayer.id);
-      }
+      // Multiplayer guesses must be made without obtaining the answer.
+      // The server reveals cards only after the round is settled.
+      setHiddenCardsForGuess([]);
     }
   };
 

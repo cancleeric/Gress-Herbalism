@@ -1,0 +1,17 @@
+**
+!frontend/
+!frontend/**
+**/node_modules
+**/.env
+**/.env.*
+**/.git
+**/*.log
+**/coverage
+**/__tests__
+**/tests
+**/*.test.js
+**/*.test.cjs
+**/*.spec.js
+**/build
+**/dist
+**/.DS_Store

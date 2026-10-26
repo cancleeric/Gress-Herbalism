@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Leaderboard from './Leaderboard';
 
@@ -121,6 +121,61 @@ describe('Leaderboard 組件', () => {
   });
 
   describe('排序功能', () => {
+    function deferred() {
+      let resolve, reject;
+      const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+      return { promise, resolve, reject };
+    }
+    function player(name) {
+      return { id: name, rank: 1, display_name: name, games_played: 10, games_won: 8, win_rate: 80, total_score: 100 };
+    }
+
+    test('較慢舊排序結果不可覆蓋新排序', async () => {
+      const old = deferred(), latest = deferred();
+      mockGetLeaderboard.mockReset().mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise);
+      render(<MemoryRouter><Leaderboard /></MemoryRouter>);
+      fireEvent.click(screen.getByText('勝率'));
+      await act(async () => latest.resolve({ success: true, data: [player('新排序')] }));
+      await act(async () => old.resolve({ success: true, data: [player('舊排序')] }));
+      expect(screen.getByText('新排序')).toBeInTheDocument();
+      expect(screen.queryByText('舊排序')).not.toBeInTheDocument();
+    });
+
+    test('舊請求完成不可提早關閉新排序的載入狀態', async () => {
+      const old = deferred(), latest = deferred();
+      mockGetLeaderboard.mockReset().mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise);
+      render(<MemoryRouter><Leaderboard /></MemoryRouter>);
+      fireEvent.click(screen.getByText('總得分'));
+      await act(async () => old.resolve({ success: true, data: [] }));
+      expect(screen.getByText('載入中...')).toBeInTheDocument();
+      await act(async () => latest.resolve({ success: true, data: [player('完成')] }));
+      expect(screen.getByText('完成')).toBeInTheDocument();
+    });
+
+    test('舊排序失敗不可污染已成功的新排序', async () => {
+      const old = deferred(), latest = deferred();
+      const log = jest.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        mockGetLeaderboard.mockReset().mockReturnValueOnce(old.promise).mockReturnValueOnce(latest.promise);
+        render(<MemoryRouter><Leaderboard /></MemoryRouter>);
+        fireEvent.click(screen.getByText('勝率'));
+        await act(async () => latest.resolve({ success: true, data: [player('目前排序')] }));
+        await act(async () => old.reject(new Error('obsolete request')));
+        expect(screen.getByText('目前排序')).toBeInTheDocument();
+        expect(screen.queryByText('載入排行榜失敗')).not.toBeInTheDocument();
+      } finally { log.mockRestore(); }
+    });
+
+    test('目前請求回傳失敗應顯示錯誤，切換排序可恢復', async () => {
+      mockGetLeaderboard.mockResolvedValueOnce({ success: false });
+      render(<MemoryRouter><Leaderboard /></MemoryRouter>);
+      await waitFor(() => expect(screen.getByText('載入排行榜失敗')).toBeInTheDocument());
+      mockGetLeaderboard.mockResolvedValue({ success: true, data: [player('恢復')] });
+      fireEvent.click(screen.getByText('勝率'));
+      await waitFor(() => expect(screen.getByText('恢復')).toBeInTheDocument());
+      expect(screen.queryByText('載入排行榜失敗')).not.toBeInTheDocument();
+    });
+
     test('點擊勝率應切換排序', async () => {
       render(<MemoryRouter><Leaderboard /></MemoryRouter>);
       await waitFor(() => expect(screen.getByText('勝率')).toBeInTheDocument());

@@ -14,6 +14,8 @@ import {
 } from './authService';
 import { syncPlayer } from '../services/apiService';
 import { initSocket, setPresence } from '../services/socketService';
+import store from '../store/gameStore';
+import { evolutionActions } from '../store/evolution/evolutionStore';
 
 // 建立 Context
 const AuthContext = createContext(null);
@@ -60,13 +62,16 @@ function RealAuthProvider({ children }) {
   // 處理 redirect 登入結果（從 Google 登入頁面返回時）
   useEffect(() => {
     handleRedirectResult().catch((err) => {
-      console.error('處理 redirect 登入結果失敗:', err);
+      console.error('處理 redirect 登入結果失敗');
     });
   }, []);
 
   // 監聽登入狀態變化
   useEffect(() => {
     const unsubscribe = onAuthChange((state) => {
+      // Clear previous identity's private game data before publishing new auth state.
+      // Same-UID refresh/profile updates deliberately retain the current room.
+      store.dispatch(evolutionActions.setOwnerUid(state.user?.uid || null));
       // 先更新登入狀態 — auth 狀態以 Firebase 為準，
       // 不可被後端同步呼叫阻塞（backend 不可達時 await 會卡死，
       // isLoggedIn 永遠不翻轉，用戶被困在 /login）
@@ -93,7 +98,7 @@ function RealAuthProvider({ children }) {
               setPresence(state.user.uid);
             }
           } catch (err) {
-            console.error('同步玩家資料失敗:', err);
+            console.error('同步玩家資料失敗');
           }
         })();
       }

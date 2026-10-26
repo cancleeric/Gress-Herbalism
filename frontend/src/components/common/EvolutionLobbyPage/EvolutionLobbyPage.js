@@ -35,6 +35,7 @@ import './EvolutionLobbyPage.css';
 function EvolutionLobbyPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const uid = user?.uid || null;
 
   const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || '訪客');
 
@@ -61,9 +62,11 @@ function EvolutionLobbyPage() {
 
   // Socket 連線
   useEffect(() => {
+    let alive = true;
     initSocket();
 
     const unsubConnect = onConnectionChange((connected) => {
+      if (!alive) return;
       setIsConnected(connected);
       if (!connected) {
         setError('與伺服器斷線，請確認後端是否啟動');
@@ -76,34 +79,35 @@ function EvolutionLobbyPage() {
 
     // 監聽房間列表更新
     const unsubRoomList = onEvoRoomListUpdated((roomList) => {
-      console.log('[EvoLobby] 房間列表更新:', roomList);
+      if (!alive) return;
       setRooms(roomList);
     });
 
     // 監聽房間創建成功
     // 工單 0281：傳遞房間資料和創建者標記
     const unsubCreated = onEvoRoomCreated((room) => {
-      console.log('[EvoLobby] 房間創建成功:', room);
+      if (!alive || !uid) return;
       setIsLoading(false);
       setShowCreateModal(false);
       navigate(`/game/evolution/${room.id}`, {
-        state: { room, isCreator: true }
+        state: { room, roomOwnerUid: uid, isCreator: true }
       });
     });
 
     // 監聽加入房間成功
     // 工單 0281：傳遞房間資料
     const unsubJoined = onEvoJoinedRoom(({ roomId, room }) => {
-      console.log('[EvoLobby] 加入房間成功:', roomId);
+      if (!alive || !uid) return;
       setIsLoading(false);
       navigate(`/game/evolution/${roomId}`, {
-        state: { room, isCreator: false }
+        state: { room, roomOwnerUid: uid, isCreator: false }
       });
     });
 
     // 監聽錯誤
     const unsubError = onEvoError(({ message }) => {
-      console.error('[EvoLobby] 錯誤:', message);
+      if (!alive) return;
+      console.error('[EvoLobby] 發生錯誤');
       setError(message);
       setIsLoading(false);
     });
@@ -112,13 +116,14 @@ function EvolutionLobbyPage() {
     evoRequestRoomList();
 
     return () => {
+      alive = false;
       unsubConnect();
       unsubRoomList();
       unsubCreated();
       unsubJoined();
       unsubError();
     };
-  }, [navigate]);
+  }, [navigate, uid]);
 
   /**
    * 驗證遊戲暱稱
@@ -137,17 +142,11 @@ function EvolutionLobbyPage() {
    * 工單 0276：添加調試日誌
    */
   const handleCreateRoom = () => {
-    console.log('[EvoLobby] handleCreateRoom 開始');
-    console.log('[EvoLobby] isConnected:', isConnected);
-    console.log('[EvoLobby] nickname:', nickname);
-    console.log('[EvoLobby] playerCount:', playerCount);
 
     if (!validateNicknameInput()) {
-      console.log('[EvoLobby] 暱稱驗證失敗');
       return;
     }
     if (!isConnected) {
-      console.log('[EvoLobby] 未連線到伺服器');
       setError('尚未連線到伺服器');
       return;
     }
@@ -163,9 +162,7 @@ function EvolutionLobbyPage() {
       photoURL: user?.photoURL || null,
     };
 
-    console.log('[EvoLobby] 準備創建房間，player:', player);
     evoCreateRoom(`${nickname.trim()}的房間`, playerCount, player);
-    console.log('[EvoLobby] evoCreateRoom 已呼叫');
   };
 
   /**

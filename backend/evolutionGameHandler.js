@@ -8,7 +8,6 @@
  */
 
 const gameLogic = require('./logic/evolution/gameLogic');
-const { GAME_PHASES } = require('../shared/constants/evolution');
 
 // ==================== 狀態管理 ====================
 
@@ -17,6 +16,55 @@ const evoRooms = new Map();
 
 // 玩家 Socket 對應 (socketId -> { roomId, playerId })
 const evoPlayerSockets = new Map();
+// Ownership is server-only; never trust caller-provided firebaseUid.
+const seatOwners = new WeakMap();
+const disconnectTimers = new WeakMap();
+const DISCONNECT_GRACE_MS = 30000;
+
+function cancelDisconnect(player) {
+  const timer = disconnectTimers.get(player);
+  if (timer) clearTimeout(timer);
+  disconnectTimers.delete(player);
+}
+
+function ownsSeat(socket, player) {
+  return typeof socket.uid === 'string' && socket.uid.length > 0 &&
+    seatOwners.get(player) === socket.uid;
+}
+
+function rejectRecovery(socket, roomId) {
+  socket.emit('evo:error', { gameId: roomId, message: '無法恢復房間，請重新加入' });
+}
+
+// Resolve authority from the active server mapping, not a requested target id.
+function activeSeat(socket, room, playerId) {
+  const binding = evoPlayerSockets.get(socket.id);
+  if (!room || !binding || binding.roomId !== room.id) return null;
+  const player = room.players.find(p => p.id === binding.playerId);
+  if (!player || player.socketId !== socket.id || player.isDisconnected || !ownsSeat(socket, player)) return null;
+  if (playerId !== player.id && playerId !== player.firebaseUid) return null;
+  return player;
+}
+
+// Explicit room metadata projection prevents accidental full-state broadcasts.
+function publicRoom(room) {
+  return {
+    id: room.id, name: room.name, maxPlayers: room.maxPlayers,
+    hostId: room.hostId, gameType: room.gameType, phase: room.phase,
+    createdAt: room.createdAt, gameState: null,
+    players: room.players.map(p => ({
+      id: p.id, visitorId: p.visitorId, name: p.name, socketId: p.socketId,
+      firebaseUid: p.firebaseUid, isHost: p.isHost, isReady: p.isReady,
+      isDisconnected: Boolean(p.isDisconnected),
+    })),
+  };
+}
+
+// Side events keep their established object/array shape while carrying room identity.
+function roomEvent(roomId, payload) {
+  if (Array.isArray(payload)) return payload.map(event => ({ ...event, gameId: roomId }));
+  return { ...payload, gameId: roomId };
+}
 
 // ==================== 房間操作 ====================
 
@@ -34,6 +82,7 @@ function generateRoomId() {
  * @param {Object} data - { roomName, maxPlayers, player }
  */
 function createRoom(socket, io, data) {
+  if (typeof socket.uid !== 'string' || !socket.uid) return rejectRecovery(socket, data?.roomId);
   const { roomName, maxPlayers, player } = data;
   const roomId = generateRoomId();
 
@@ -50,7 +99,7 @@ function createRoom(socket, io, data) {
       visitorId: player.visitorId || player.id,
       name: player.name,
       socketId: socket.id,
-      firebaseUid: player.firebaseUid || null,
+      firebaseUid: socket.uid,
       isHost: true,
       isReady: false,
     }],
@@ -59,14 +108,14 @@ function createRoom(socket, io, data) {
     createdAt: Date.now(),
   };
 
+  seatOwners.set(roomState.players[0], socket.uid);
   evoRooms.set(roomId, roomState);
   evoPlayerSockets.set(socket.id, { roomId, playerId: player.id });
 
   socket.join(roomId);
-  socket.emit('evo:roomCreated', roomState);
+  socket.emit('evo:roomCreated', publicRoom(roomState));
 
   broadcastRoomList(io);
-  console.log(`[演化論] 創建房間: ${roomId}, 房主: ${player.name}`);
 }
 
 /**
@@ -80,33 +129,27 @@ function joinRoom(socket, io, data) {
   const room = evoRooms.get(roomId);
 
   if (!room) {
-    socket.emit('evo:error', { message: '房間不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '房間不存在' });
     return;
   }
 
   if (room.phase !== 'waiting') {
-    socket.emit('evo:error', { message: '遊戲已開始' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲已開始' });
     return;
   }
 
+  // Existing seats are recovered before capacity checks, including full rooms.
+  // A claimed id or Firebase UID never grants ownership.
+  const existingPlayer = room.players.find(p =>
+    p.id === player.id || seatOwners.get(p) === socket.uid ||
+    (player.firebaseUid && p.firebaseUid === player.firebaseUid));
+  if (existingPlayer) {
+    if (!ownsSeat(socket, existingPlayer)) return rejectRecovery(socket, data?.roomId);
+    return handleReconnect(socket, io, { roomId, playerId: existingPlayer.id });
+  }
+  if (typeof socket.uid !== 'string' || !socket.uid) return rejectRecovery(socket, data?.roomId);
   if (room.players.length >= room.maxPlayers) {
-    socket.emit('evo:error', { message: '房間已滿' });
-    return;
-  }
-
-  // 檢查是否已在房間中（重連）
-  const existingIndex = room.players.findIndex(
-    p => p.id === player.id || p.firebaseUid === player.firebaseUid
-  );
-
-  if (existingIndex !== -1) {
-    // 更新 socketId（重連）
-    room.players[existingIndex].socketId = socket.id;
-    evoPlayerSockets.set(socket.id, { roomId, playerId: room.players[existingIndex].id });
-    socket.join(roomId);
-    socket.emit('evo:joinedRoom', { roomId, room });
-    io.to(roomId).emit('evo:playerJoined', { player: room.players[existingIndex], room });
-    console.log(`[演化論] 玩家重連: ${player.name} -> ${roomId}`);
+    socket.emit('evo:error', { gameId: roomId, message: '房間已滿' });
     return;
   }
 
@@ -115,20 +158,20 @@ function joinRoom(socket, io, data) {
     visitorId: player.visitorId || player.id,
     name: player.name,
     socketId: socket.id,
-    firebaseUid: player.firebaseUid || null,
+    firebaseUid: socket.uid,
     isHost: false,
     isReady: false,
   };
 
+  seatOwners.set(newPlayer, socket.uid);
   room.players.push(newPlayer);
   evoPlayerSockets.set(socket.id, { roomId, playerId: player.id });
 
   socket.join(roomId);
-  socket.emit('evo:joinedRoom', { roomId, room });
-  io.to(roomId).emit('evo:playerJoined', { player: newPlayer, room });
+  socket.emit('evo:joinedRoom', { roomId, room: publicRoom(room) });
+  io.to(roomId).emit('evo:playerJoined', { player: publicRoom(room).players.find(p => p.id === newPlayer.id), room: publicRoom(room) });
 
   broadcastRoomList(io);
-  console.log(`[演化論] 玩家加入: ${player.name} -> ${roomId}`);
 }
 
 /**
@@ -150,6 +193,8 @@ function leaveRoom(socket, io, data) {
   if (playerIndex === -1) return;
 
   const player = room.players[playerIndex];
+  if (!ownsSeat(socket, player) || player.socketId !== socket.id) return rejectRecovery(socket, data?.roomId);
+  cancelDisconnect(player);
   room.players.splice(playerIndex, 1);
   evoPlayerSockets.delete(socket.id);
 
@@ -169,9 +214,8 @@ function leaveRoom(socket, io, data) {
     room.hostId = room.players[0].socketId;
   }
 
-  io.to(roomId).emit('evo:playerLeft', { playerId, room });
+  io.to(roomId).emit('evo:playerLeft', { playerId, room: publicRoom(room) });
   broadcastRoomList(io);
-  console.log(`[演化論] 玩家離開: ${player.name} <- ${roomId}`);
 }
 
 /**
@@ -183,17 +227,17 @@ function leaveRoom(socket, io, data) {
 function setReady(socket, io, data) {
   const { roomId, playerId, isReady } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room) return;
 
-  const player = room.players.find(
-    p => p.id === playerId || p.firebaseUid === playerId
-  );
+  const player = authorizedPlayer;
 
   if (!player) return;
 
   player.isReady = isReady;
-  io.to(roomId).emit('evo:playerReady', { playerId, isReady, room });
+  io.to(roomId).emit('evo:playerReady', { playerId, isReady, room: publicRoom(room) });
 }
 
 /**
@@ -215,25 +259,37 @@ function requestRoomList(socket) {
 function startGame(socket, io, data) {
   const { roomId, playerId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room) {
-    socket.emit('evo:error', { message: '房間不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '房間不存在' });
     return;
   }
 
   // 驗證是否為房主
-  const hostPlayer = room.players.find(
-    p => p.id === playerId || p.firebaseUid === playerId
-  );
+  const hostPlayer = authorizedPlayer;
 
   if (!hostPlayer || !hostPlayer.isHost) {
-    socket.emit('evo:error', { message: '只有房主可以開始遊戲' });
+    socket.emit('evo:error', { gameId: roomId, message: '只有房主可以開始遊戲' });
     return;
   }
 
   // 檢查玩家數量
   if (room.players.length < 2) {
-    socket.emit('evo:error', { message: '至少需要 2 位玩家' });
+    socket.emit('evo:error', { gameId: roomId, message: '至少需要 2 位玩家' });
+    return;
+  }
+
+  // Grace-period seats remain recoverable, but must reconnect before play starts.
+  // Validate every participant before initialization mutates game state/turn order.
+  const allPlayersConnected = room.players.every(player => {
+    const binding = evoPlayerSockets.get(player.socketId);
+    return !player.isDisconnected && binding?.roomId === roomId &&
+      binding.playerId === player.id && Boolean(seatOwners.get(player));
+  });
+  if (!allPlayersConnected) {
+    socket.emit('evo:error', { gameId: roomId, message: '請等待所有玩家重新連線後再開始遊戲' });
     return;
   }
 
@@ -246,7 +302,7 @@ function startGame(socket, io, data) {
   const initResult = gameLogic.initGame(gamePlayers);
 
   if (!initResult.success) {
-    socket.emit('evo:error', { message: initResult.error || '遊戲初始化失敗' });
+    socket.emit('evo:error', { gameId: roomId, message: initResult.error || '遊戲初始化失敗' });
     return;
   }
 
@@ -257,7 +313,12 @@ function startGame(socket, io, data) {
   room.phase = 'playing';
 
   // 廣播遊戲開始
-  io.to(roomId).emit('evo:gameStarted', { room });
+  room.players.forEach(player => {
+    const binding = evoPlayerSockets.get(player.socketId);
+    if (binding?.roomId === roomId && binding.playerId === player.id && !player.isDisconnected) {
+      io.to(player.socketId).emit('evo:gameStarted', getClientGameState(room, player.id));
+    }
+  });
   broadcastGameState(io, roomId);
   broadcastRoomList(io);
 
@@ -270,13 +331,15 @@ function startGame(socket, io, data) {
 function createCreature(socket, io, data) {
   const { roomId, playerId, cardId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -286,10 +349,10 @@ function createCreature(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
-    io.to(roomId).emit('evo:creatureCreated', result.events);
+    io.to(roomId).emit('evo:creatureCreated', roomEvent(roomId, result.events));
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -299,13 +362,15 @@ function createCreature(socket, io, data) {
 function addTrait(socket, io, data) {
   const { roomId, playerId, cardId, creatureId, targetCreatureId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -315,10 +380,10 @@ function addTrait(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
-    io.to(roomId).emit('evo:traitAdded', result.events);
+    io.to(roomId).emit('evo:traitAdded', roomEvent(roomId, result.events));
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -328,13 +393,15 @@ function addTrait(socket, io, data) {
 function passEvolution(socket, io, data) {
   const { roomId, playerId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -343,10 +410,10 @@ function passEvolution(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
-    io.to(roomId).emit('evo:playerPassed', { playerId });
+    io.to(roomId).emit('evo:playerPassed', { gameId: roomId, playerId });
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -356,13 +423,15 @@ function passEvolution(socket, io, data) {
 function feedCreature(socket, io, data) {
   const { roomId, playerId, creatureId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -372,13 +441,13 @@ function feedCreature(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
-    io.to(roomId).emit('evo:creatureFed', result.events);
+    io.to(roomId).emit('evo:creatureFed', roomEvent(roomId, result.events));
     if (result.chainEffects) {
-      io.to(roomId).emit('evo:chainTriggered', result.chainEffects);
+      io.to(roomId).emit('evo:chainTriggered', roomEvent(roomId, result.chainEffects));
     }
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -388,13 +457,15 @@ function feedCreature(socket, io, data) {
 function attack(socket, io, data) {
   const { roomId, playerId, attackerId, defenderId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -408,16 +479,17 @@ function attack(socket, io, data) {
     if (room.gameState.pendingResponse) {
       // 需要防守方回應
       io.to(roomId).emit('evo:attackPending', {
+        gameId: roomId,
         attackerId,
         defenderId,
         options: room.gameState.pendingResponse.options
       });
     } else {
-      io.to(roomId).emit('evo:attackResolved', result.events);
+      io.to(roomId).emit('evo:attackResolved', roomEvent(roomId, result.events));
     }
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -427,13 +499,15 @@ function attack(socket, io, data) {
 function respondAttack(socket, io, data) {
   const { roomId, playerId, response } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -443,10 +517,10 @@ function respondAttack(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
-    io.to(roomId).emit('evo:attackResolved', result.events);
+    io.to(roomId).emit('evo:attackResolved', roomEvent(roomId, result.events));
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -456,13 +530,15 @@ function respondAttack(socket, io, data) {
 function useTrait(socket, io, data) {
   const { roomId, playerId, creatureId, traitType, targetId } = data;
   const room = evoRooms.get(roomId);
+  const authorizedPlayer = activeSeat(socket, room, playerId);
+  if (!authorizedPlayer) return rejectRecovery(socket, data?.roomId);
 
   if (!room || !room.gameState) {
-    socket.emit('evo:error', { message: '遊戲不存在' });
+    socket.emit('evo:error', { gameId: roomId, message: '遊戲不存在' });
     return;
   }
 
-  const player = room.players.find(p => p.id === playerId || p.firebaseUid === playerId);
+  const player = authorizedPlayer;
   const actualPlayerId = player ? player.id : playerId;
 
   const result = gameLogic.processAction(room.gameState, actualPlayerId, {
@@ -472,10 +548,10 @@ function useTrait(socket, io, data) {
 
   if (result.success) {
     room.gameState = result.gameState;
-    io.to(roomId).emit('evo:traitUsed', result.events);
+    io.to(roomId).emit('evo:traitUsed', roomEvent(roomId, result.events));
     broadcastGameState(io, roomId);
   } else {
-    socket.emit('evo:error', { message: result.error });
+    socket.emit('evo:error', { gameId: roomId, message: result.error });
   }
 }
 
@@ -518,6 +594,8 @@ function broadcastGameState(io, roomId) {
 
   // 為每個玩家發送個人化狀態（隱藏其他玩家手牌）
   room.players.forEach(player => {
+    const binding = evoPlayerSockets.get(player.socketId);
+    if (player.isDisconnected || binding?.roomId !== roomId || binding.playerId !== player.id) return;
     const clientState = getClientGameState(room, player.id);
     io.to(player.socketId).emit('evo:gameState', clientState);
   });
@@ -557,6 +635,7 @@ function getClientGameState(room, playerId) {
   }
 
   return {
+    gameId: room.id,
     phase: state.phase,
     round: state.round,
     playerOrder: state.playerOrder,
@@ -593,34 +672,37 @@ function handleDisconnect(socket, io) {
     return;
   }
 
-  console.log(`[演化論] 玩家斷線: ${player.name} in ${roomId}`);
+  // Late disconnects from replaced sockets cannot remove the current seat.
+  if (player.socketId !== socket.id) {
+    evoPlayerSockets.delete(socket.id);
+    return;
+  }
+  if (disconnectTimers.has(player)) return;
+  player.isDisconnected = true;
+  player.disconnectedAt = Date.now();
+  if (room.phase === 'waiting') io.to(roomId).emit('evo:playerConnectionChanged', { room: publicRoom(room) });
+  if (room.phase !== 'waiting') broadcastGameState(io, roomId);
 
-  if (room.phase === 'waiting') {
-    // 等待中直接移除
-    const playerIndex = room.players.findIndex(p => p.id === playerId);
-    if (playerIndex !== -1) {
-      room.players.splice(playerIndex, 1);
-
-      if (room.players.length === 0) {
-        evoRooms.delete(roomId);
-        console.log(`[演化論] 房間已刪除: ${roomId}`);
-      } else if (player.isHost) {
+  const timer = setTimeout(() => {
+    disconnectTimers.delete(player);
+    if (evoRooms.get(roomId) !== room || player.socketId !== socket.id ||
+        !player.isDisconnected || !room.players.includes(player)) return;
+    evoPlayerSockets.delete(socket.id);
+    if (room.phase !== 'waiting') return; // Preserve in-game seat, as before.
+    room.players.splice(room.players.indexOf(player), 1);
+    if (!room.players.length) {
+      evoRooms.delete(roomId);
+    } else {
+      if (player.isHost) {
         room.players[0].isHost = true;
         room.hostId = room.players[0].socketId;
-        io.to(roomId).emit('evo:playerLeft', { playerId, room });
-      } else {
-        io.to(roomId).emit('evo:playerLeft', { playerId, room });
       }
+      io.to(roomId).emit('evo:playerLeft', { playerId, room: publicRoom(room) });
     }
     broadcastRoomList(io);
-  } else {
-    // 遊戲中標記斷線
-    player.isDisconnected = true;
-    player.disconnectedAt = Date.now();
-    broadcastGameState(io, roomId);
-  }
-
-  evoPlayerSockets.delete(socket.id);
+  }, DISCONNECT_GRACE_MS);
+  timer.unref?.();
+  disconnectTimers.set(player, timer);
 }
 
 /**
@@ -629,54 +711,47 @@ function handleDisconnect(socket, io) {
  * @param {Server} io - Socket.io Server 實例
  * @param {Object} data - { roomId, playerId }
  */
-function handleReconnect(socket, io, data) {
+function handleReconnect(socket, io, data = {}) {
   const { roomId, playerId } = data;
 
   if (!roomId || !playerId) {
-    socket.emit('evo:error', { message: '重連參數錯誤' });
+    socket.emit('evo:error', { gameId: roomId, message: '重連參數錯誤' });
     return;
   }
 
   const room = evoRooms.get(roomId);
   if (!room) {
-    socket.emit('evo:error', { message: '房間不存在或已結束' });
+    socket.emit('evo:error', { gameId: roomId, message: '房間不存在或已結束' });
     return;
   }
 
   const player = room.players.find(p => p.id === playerId);
   if (!player) {
-    socket.emit('evo:error', { message: '找不到玩家資料' });
+    socket.emit('evo:error', { gameId: roomId, message: '找不到玩家資料' });
     return;
   }
 
-  console.log(`[演化論] 玩家重連: ${player.name} in ${roomId}`);
+  if (!ownsSeat(socket, player)) return rejectRecovery(socket, data?.roomId);
+  cancelDisconnect(player);
 
   // 更新 socket 資訊
   const oldSocketId = player.socketId;
   player.socketId = socket.id;
+  if (player.isHost) room.hostId = socket.id;
   player.isDisconnected = false;
   player.disconnectedAt = null;
 
   // 更新 socket 映射
   evoPlayerSockets.delete(oldSocketId);
+  if (oldSocketId !== socket.id) io.sockets?.sockets?.get(oldSocketId)?.leave(roomId);
   evoPlayerSockets.set(socket.id, { roomId, playerId });
 
   // 加入 socket 房間
   socket.join(roomId);
 
   // 準備客戶端遊戲狀態（隱藏其他玩家手牌）
-  let clientGameState = null;
-  if (room.gameState) {
-    clientGameState = {
-      ...room.gameState,
-      players: room.gameState.players.map(p => ({
-        ...p,
-        hand: p.id === playerId
-          ? (p.hand || [])
-          : (p.hand || []).map(() => ({ hidden: true })),
-      })),
-    };
-  }
+  const clientGameState = getClientGameState(room, playerId);
+  const recoveredRoom = publicRoom(room);
 
   // 發送重連成功
   socket.emit('evo:reconnected', {
@@ -696,6 +771,9 @@ function handleReconnect(socket, io, data) {
     },
     gameState: clientGameState,
   });
+
+  socket.emit('evo:joinedRoom', { roomId, room: recoveredRoom });
+  if (room.phase === 'waiting') io.to(roomId).emit('evo:playerConnectionChanged', { room: recoveredRoom });
 
   // 通知其他玩家
   socket.to(roomId).emit('evo:playerReconnected', {

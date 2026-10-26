@@ -5,24 +5,18 @@
  * 工單 0274：連接 Socket.io
  */
 
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useCallback, useState, useMemo, useLayoutEffect, useRef } from 'react';
+import { useSelector, useDispatch, useStore } from 'react-redux';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   evolutionActions,
-  selectEvolutionState,
-  selectPhase,
-  selectMyHand,
-  selectMyCreatures,
-  selectFoodPool,
-  selectIsMyTurn,
-  selectPlayers,
-  selectPendingResponse
+  selectEvolutionForContext
 } from '../../../../store/evolution/evolutionStore';
 import { useAuth } from '../../../../firebase/AuthContext';
 import { EvolutionLobby } from '../EvolutionLobby';
 import {
   evoJoinRoom,
+  evoLeaveRoom,
   evoCreateCreature,
   evoAddTrait,
   evoPassEvolution,
@@ -60,6 +54,8 @@ const PHASE_NAMES = {
  */
 function EvolutionRoom() {
   const dispatch = useDispatch();
+  const store = useStore();
+  const instanceAlive = useRef(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { roomId } = useParams();
@@ -67,55 +63,71 @@ function EvolutionRoom() {
 
   // 工單 0280：從 location state 取得房間資料
   const initialRoomData = location.state?.room;
-  const isCreator = location.state?.isCreator;
 
   // 本地狀態
   // 工單 0280：使用 location state 中的房間資料初始化
-  const [room, setRoom] = useState(initialRoomData || null);
-  const [isJoined, setIsJoined] = useState(!!initialRoomData);
-  const [error, setError] = useState(null);
+  const uid = user?.uid || null;
+  const [roomSnapshot, setRoomSnapshot] = useState(() => ({
+    ownerUid: location.state?.roomOwnerUid || null,
+    roomId: initialRoomData?.id || null,
+    room: initialRoomData || null,
+  }));
+  // A seed carries the identity of its acquisition; membership is not provenance.
+  const seedSnapshot = {
+    ownerUid: location.state?.roomOwnerUid || null,
+    roomId: initialRoomData?.id || null,
+    room: initialRoomData || null,
+  };
+  const matchesContext = snapshot => Boolean(uid && snapshot.ownerUid === uid && snapshot.roomId === roomId);
+  const acceptedSnapshot = matchesContext(roomSnapshot) ? roomSnapshot
+    : matchesContext(seedSnapshot) ? seedSnapshot : null;
+  const room = acceptedSnapshot?.room?.players?.some(p => p.firebaseUid === uid)
+    ? acceptedSnapshot.room : null;
+  const isJoined = Boolean(room);
+  const [errorSnapshot, setErrorSnapshot] = useState(null);
+  const error = errorSnapshot?.uid === uid && errorSnapshot?.roomId === roomId
+    ? errorSnapshot.message : null;
   // 工單 0284：生成穩定的玩家 ID
-  const [myPlayerId] = useState(() => `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`);
+  const fallbackSeat = useMemo(() => ({ uid, roomId, id: `player_${Date.now()}_${Math.random().toString(36).substr(2, 6)}` }), [uid, roomId]);
+  const myPlayerId = fallbackSeat.id;
 
   // Redux 狀態
-  const evolutionState = useSelector(selectEvolutionState);
-  const phase = useSelector(selectPhase);
-  const myHand = useSelector(selectMyHand);
-  const myCreatures = useSelector(selectMyCreatures);
-  const foodPool = useSelector(selectFoodPool);
-  const isMyTurn = useSelector(selectIsMyTurn);
-  const players = useSelector(selectPlayers);
-  const pendingResponse = useSelector(selectPendingResponse);
+  const evolutionState = useSelector(state => selectEvolutionForContext(state, uid, roomId));
+  const { phase, myHand, myCreatures, foodPool, isMyTurn, players, pendingResponse } = evolutionState;
+
+  // Guard event callbacks at dispatch time as auth changes can precede React cleanup.
+  const dispatchOwned = useCallback(action => {
+    const current = store.getState().evolution;
+    if (instanceAlive.current && uid && current.ownerUid === uid && current.roomId === roomId) dispatch(action);
+  }, [store, dispatch, uid, roomId]);
 
   // 工單 0284：計算當前玩家的實際 ID（用於遊戲動作）
   const currentPlayerId = useMemo(() => {
     if (!user?.uid) return null;
     const myPlayer = room?.players?.find(p => p.firebaseUid === user.uid);
-    return myPlayer?.id || myPlayerId;
-  }, [user?.uid, room, myPlayerId]);
+    return myPlayer?.id || evolutionState.myPlayerId || myPlayerId;
+  }, [user?.uid, room, myPlayerId, evolutionState.myPlayerId]);
 
-  // 工單 0284：設定玩家 ID，優先使用房間中的實際 player.id
-  useEffect(() => {
-    if (!user?.uid) return;
-    // 如果房間資料可用，使用房間中的實際 player.id
-    const myPlayer = room?.players?.find(p => p.firebaseUid === user.uid);
-    const playerId = myPlayer?.id || myPlayerId;
-    dispatch(evolutionActions.setMyPlayerId(playerId));
-  }, [user, room, myPlayerId, dispatch]);
+  useLayoutEffect(() => {
+    instanceAlive.current = true;
+    setErrorSnapshot(null);
+    if (!uid || !roomId) return undefined;
+    dispatch(evolutionActions.bindRoomContext({ uid, roomId }));
+    return () => {
+      instanceAlive.current = false;
+      dispatch(evolutionActions.clearRoomContext({ uid, roomId }));
+    };
+  }, [dispatch, uid, roomId]);
+
+  useLayoutEffect(() => {
+    if (uid && currentPlayerId) dispatchOwned(evolutionActions.setMyPlayerId(currentPlayerId));
+  }, [uid, currentPlayerId, dispatchOwned]);
 
   // 加入房間
   // 工單 0280, 0284：避免房主重複加入，使用 firebaseUid 識別
   useEffect(() => {
     if (!roomId || !user?.uid || isJoined) return;
 
-    // 工單 0284：使用 firebaseUid 判斷是否已在房間中
-    if (isCreator || (room && room.players?.some(p => p.firebaseUid === user.uid))) {
-      console.log('[EvolutionRoom] 已是房間成員，跳過加入請求');
-      setIsJoined(true);
-      return;
-    }
-
-    console.log('[EvolutionRoom] 嘗試加入房間:', roomId);
     // 工單 0284：發送完整的玩家物件，包含 firebaseUid
     evoJoinRoom(roomId, {
       id: myPlayerId,
@@ -123,98 +135,107 @@ function EvolutionRoom() {
       firebaseUid: user.uid,
       photoURL: user?.photoURL || null
     });
-  }, [roomId, user, isJoined, isCreator, room, myPlayerId]);
+  }, [roomId, user, isJoined, myPlayerId]);
 
   // Socket 事件監聽
   useEffect(() => {
+    let alive = true;
+    let errorTimer = null;
+    const scoped = callback => data => {
+      const current = store.getState().evolution;
+      // Array events retain their wire shape and identify every item individually.
+      const matchesRoom = Array.isArray(data)
+        ? data.length > 0 && data.every(event => event?.gameId === roomId)
+        : (data?.gameId ?? data?.roomId) === roomId;
+      if (!alive || !matchesRoom || current.ownerUid !== uid || current.roomId !== roomId) return;
+      callback(data);
+    };
     // 監聽加入房間成功
-    const unsubJoinedRoom = onEvoJoinedRoom(({ roomId: joinedRoomId, room: joinedRoom }) => {
-      console.log('[EvolutionRoom] 已加入房間:', joinedRoomId);
-      setRoom(joinedRoom);
-      setIsJoined(true);
-    });
+    const unsubJoinedRoom = onEvoJoinedRoom(scoped(({ roomId: joinedRoomId, room: joinedRoom }) => {
+      if (joinedRoomId === roomId && joinedRoom?.players?.some(p => p.firebaseUid === uid)) {
+        setRoomSnapshot({ ownerUid: uid, roomId: joinedRoomId, room: joinedRoom });
+      }
+    }));
 
     // 監聽遊戲開始
-    const unsubGameStarted = onEvoGameStarted((gameState) => {
-      console.log('[EvolutionRoom] 遊戲開始:', gameState);
-      dispatch(evolutionActions.setGameState(gameState));
-    });
+    const unsubGameStarted = onEvoGameStarted(scoped((gameState) => {
+      dispatchOwned(evolutionActions.setOwnedGameState({ uid, roomId, gameState }));
+    }));
 
     // 監聽遊戲狀態更新
-    const unsubGameState = onEvoGameState((gameState) => {
-      console.log('[EvolutionRoom] 遊戲狀態更新:', gameState);
-      dispatch(evolutionActions.setGameState(gameState));
-    });
+    const unsubGameState = onEvoGameState(scoped((gameState) => {
+      dispatchOwned(evolutionActions.setOwnedGameState({ uid, roomId, gameState }));
+    }));
 
     // 監聽生物創建
-    const unsubCreatureCreated = onEvoCreatureCreated((data) => {
-      dispatch(evolutionActions.addLog({
+    const unsubCreatureCreated = onEvoCreatureCreated(scoped((data) => {
+      dispatchOwned(evolutionActions.addLog({
         type: 'creatureCreated',
         ...data
       }));
-    });
+    }));
 
     // 監聽性狀添加
-    const unsubTraitAdded = onEvoTraitAdded((data) => {
-      dispatch(evolutionActions.addLog({
+    const unsubTraitAdded = onEvoTraitAdded(scoped((data) => {
+      dispatchOwned(evolutionActions.addLog({
         type: 'traitAdded',
         ...data
       }));
-    });
+    }));
 
     // 監聽玩家跳過
-    const unsubPlayerPassed = onEvoPlayerPassed((data) => {
-      dispatch(evolutionActions.addLog({
+    const unsubPlayerPassed = onEvoPlayerPassed(scoped((data) => {
+      dispatchOwned(evolutionActions.addLog({
         type: 'playerPassed',
         ...data
       }));
-    });
+    }));
 
     // 監聽生物進食
-    const unsubCreatureFed = onEvoCreatureFed((data) => {
-      dispatch(evolutionActions.addLog({
+    const unsubCreatureFed = onEvoCreatureFed(scoped((data) => {
+      dispatchOwned(evolutionActions.addLog({
         type: 'creatureFed',
         ...data
       }));
-    });
+    }));
 
     // 監聽連鎖效應
-    const unsubChainTriggered = onEvoChainTriggered((chainEffects) => {
-      console.log('[EvolutionRoom] 連鎖效應:', chainEffects);
-    });
+    const unsubChainTriggered = onEvoChainTriggered(scoped((chainEffects) => {
+    }));
 
     // 監聽攻擊待處理
-    const unsubAttackPending = onEvoAttackPending((pendingData) => {
-      console.log('[EvolutionRoom] 攻擊待處理:', pendingData);
-      dispatch(evolutionActions.setPendingResponse(pendingData));
-    });
+    const unsubAttackPending = onEvoAttackPending(scoped((pendingData) => {
+      dispatchOwned(evolutionActions.setPendingResponse(pendingData));
+    }));
 
     // 監聽攻擊結果
-    const unsubAttackResolved = onEvoAttackResolved((data) => {
-      console.log('[EvolutionRoom] 攻擊結果:', data);
-      dispatch(evolutionActions.clearPendingResponse());
-      dispatch(evolutionActions.addLog({
+    const unsubAttackResolved = onEvoAttackResolved(scoped((data) => {
+      dispatchOwned(evolutionActions.clearPendingResponse());
+      dispatchOwned(evolutionActions.addLog({
         type: 'attackResolved',
         ...data
       }));
-    });
+    }));
 
     // 監聽性狀使用
-    const unsubTraitUsed = onEvoTraitUsed((data) => {
-      dispatch(evolutionActions.addLog({
+    const unsubTraitUsed = onEvoTraitUsed(scoped((data) => {
+      dispatchOwned(evolutionActions.addLog({
         type: 'traitUsed',
         ...data
       }));
-    });
+    }));
 
     // 監聽錯誤
-    const unsubError = onEvoError(({ message }) => {
-      console.error('[EvolutionRoom] 錯誤:', message);
-      setError(message);
-      setTimeout(() => setError(null), 3000);
-    });
+    const unsubError = onEvoError(scoped(({ message }) => {
+      console.error('[EvolutionRoom] 發生錯誤');
+      setErrorSnapshot({ uid, roomId, message: typeof message === 'string' ? message : '操作失敗，請稍後再試' });
+      if (errorTimer !== null) clearTimeout(errorTimer);
+      errorTimer = setTimeout(() => { if (alive) setErrorSnapshot(null); }, 3000);
+    }));
 
     return () => {
+      alive = false;
+      if (errorTimer !== null) clearTimeout(errorTimer);
       unsubJoinedRoom();
       unsubGameStarted();
       unsubGameState();
@@ -228,61 +249,55 @@ function EvolutionRoom() {
       unsubTraitUsed();
       unsubError();
     };
-  }, [dispatch]);
+  }, [dispatchOwned, uid, roomId, store]);
 
   // 處理卡牌選擇
   const handleCardSelect = useCallback((card) => {
-    dispatch(evolutionActions.setSelectedCard(card));
-  }, [dispatch]);
+    dispatchOwned(evolutionActions.setSelectedCard(card));
+  }, [dispatchOwned]);
 
   // 處理生物選擇
   const handleCreatureSelect = useCallback((creature) => {
-    dispatch(evolutionActions.setSelectedCreature(creature));
-  }, [dispatch]);
+    dispatchOwned(evolutionActions.setSelectedCreature(creature));
+  }, [dispatchOwned]);
 
   // 工單 0284：所有遊戲動作使用 currentPlayerId 而非 user?.uid
 
   // 處理出牌為生物
   const handlePlayAsCreature = useCallback((cardId) => {
     if (!cardId || !roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 創造生物:', cardId);
     evoCreateCreature(roomId, currentPlayerId, cardId);
-    dispatch(evolutionActions.clearSelections());
-  }, [roomId, currentPlayerId, dispatch]);
+    dispatchOwned(evolutionActions.clearSelections());
+  }, [roomId, currentPlayerId, dispatchOwned]);
 
   // 處理出牌為性狀
   const handlePlayAsTrait = useCallback((cardId, creatureId, linkedCreatureId = null) => {
     if (!cardId || !creatureId || !roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 賦予性狀:', cardId, creatureId, linkedCreatureId);
     evoAddTrait(roomId, currentPlayerId, cardId, creatureId, linkedCreatureId);
-    dispatch(evolutionActions.clearSelections());
-  }, [roomId, currentPlayerId, dispatch]);
+    dispatchOwned(evolutionActions.clearSelections());
+  }, [roomId, currentPlayerId, dispatchOwned]);
 
   // 處理進食
   const handleFeed = useCallback((creatureId) => {
     if (!creatureId || !roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 進食:', creatureId);
     evoFeedCreature(roomId, currentPlayerId, creatureId);
   }, [roomId, currentPlayerId]);
 
   // 處理攻擊
   const handleAttack = useCallback((attackerId, defenderId) => {
     if (!attackerId || !defenderId || !roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 攻擊:', attackerId, defenderId);
     evoAttack(roomId, currentPlayerId, attackerId, defenderId);
   }, [roomId, currentPlayerId]);
 
   // 處理跳過
   const handlePass = useCallback(() => {
     if (!roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 跳過');
     evoPassEvolution(roomId, currentPlayerId);
   }, [roomId, currentPlayerId]);
 
   // 處理防禦回應
   const handleDefenseResponse = useCallback((responseType, traitId = null, targetId = null) => {
     if (!roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 防禦回應:', responseType, traitId, targetId);
     evoRespondAttack(roomId, currentPlayerId, {
       type: responseType,
       traitId,
@@ -293,21 +308,20 @@ function EvolutionRoom() {
   // 處理使用性狀能力
   const handleUseTrait = useCallback((creatureId, traitType, targetId = null) => {
     if (!creatureId || !traitType || !roomId || !currentPlayerId) return;
-    console.log('[EvolutionRoom] 使用性狀:', creatureId, traitType, targetId);
     evoUseTrait(roomId, currentPlayerId, creatureId, traitType, targetId);
   }, [roomId, currentPlayerId]);
 
   // 遊戲開始回調
   const handleGameStart = useCallback((gameState) => {
-    console.log('[EvolutionRoom] 遊戲開始回調:', gameState);
-    dispatch(evolutionActions.setGameState(gameState));
-  }, [dispatch]);
+    dispatchOwned(evolutionActions.setOwnedGameState({ uid, roomId, gameState }));
+  }, [dispatchOwned, uid, roomId]);
 
   // 離開房間回調
   const handleLeaveRoom = useCallback(() => {
-    // 工單 0276：返回演化論大廳
+    if (roomId && currentPlayerId) evoLeaveRoom(roomId, currentPlayerId);
+    dispatch(evolutionActions.clearRoomContext({ uid, roomId }));
     navigate('/lobby/evolution');
-  }, [navigate]);
+  }, [navigate, dispatch, uid, roomId, currentPlayerId]);
 
   // 取得對手列表
   const opponents = Object.values(players || {}).filter(
@@ -320,6 +334,7 @@ function EvolutionRoom() {
       <EvolutionLobby
         roomId={roomId}
         initialRoom={room}
+        initialRoomOwnerUid={acceptedSnapshot?.ownerUid || null}
         onGameStart={handleGameStart}
         onLeave={handleLeaveRoom}
       />

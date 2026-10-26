@@ -134,6 +134,7 @@ npm test -- --coverage --watchAll=false
 - [架構說明](./docs/ARCHITECTURE.md)
 - [API 文檔](./docs/API.md)
 - [部署指南](./docs/DEPLOYMENT.md)
+- [PostgreSQL provider 設定與驗證邊界](./docs/POSTGRESQL_SUPPORT.md)
 
 ## 授權
 

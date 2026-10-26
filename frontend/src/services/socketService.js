@@ -4,6 +4,7 @@
  */
 
 import { io } from 'socket.io-client';
+import { onIdTokenChanged } from 'firebase/auth';
 import config from '../config';
 import { getCurrentRoom, clearCurrentRoom } from '../utils/common/localStorage';
 
@@ -24,17 +25,65 @@ let socket = null;
 let connectionCallbacks = [];
 let heartbeatInterval = null;
 let connectionState = ConnectionState.DISCONNECTED;
+let authenticatedUid = null;
+let unsubscribeAuth = null;
+let handshakeRetryTimer = null;
+let handshakeRetryAttempt = 0;
+let evolutionSession = null;
+let presenceUid = null;
+let internalEvolutionJoins = new WeakSet();
+
+function clearHandshakeRetry() {
+  if (handshakeRetryTimer !== null) clearTimeout(handshakeRetryTimer);
+  handshakeRetryTimer = null;
+}
+
+function clearIdentityRoom() {
+  internalEvolutionJoins = new WeakSet();
+  evolutionSession = null;
+  presenceUid = null;
+  clearCurrentRoom();
+  ['lastRoomId', 'lastPlayerId', 'lastPlayerName'].forEach(key => localStorage.removeItem(key));
+  // Never replay a previous user's buffered actions under a new identity.
+  if (socket) socket.sendBuffer = [];
+}
+
+function restoreRoom() {
+  const saved = getCurrentRoom();
+  const roomId = saved?.roomId || localStorage.getItem('lastRoomId');
+  const playerId = saved?.playerId || localStorage.getItem('lastPlayerId');
+  const playerName = saved?.playerName || localStorage.getItem('lastPlayerName');
+  if (roomId && playerId && playerName) {
+    // Stored values are hints only; the server verifies the room owner UID.
+    socket.emit('reconnect', { roomId, playerId, playerName });
+  }
+}
 
 /**
  * 初始化 Socket 連線
  */
 export function initSocket() {
   if (socket) return socket;
+  // Defer configuration initialization until a real connection is requested.
+  const { auth } = require('../firebase/config');
 
   // 工單 0383：標記為正在連線
   connectionState = ConnectionState.CONNECTING;
 
   socket = io(SOCKET_URL, {
+    autoConnect: false,
+    auth: async (done) => {
+      try {
+        await auth.authStateReady();
+        const user = auth.currentUser;
+        if (!user) return done({ token: '' });
+        const token = await user.getIdToken(false);
+        if (auth.currentUser?.uid !== user.uid) return done({ token: '' });
+        done({ token });
+      } catch {
+        done({ token: '' });
+      }
+    },
     path: SOCKET_PATH,
     transports: ['websocket', 'polling'],
     reconnection: true,
@@ -45,63 +94,96 @@ export function initSocket() {
     pingInterval: 25000,              // 心跳間隔 25 秒
     pingTimeout: 30000,               // 心跳超時 30 秒（與後端一致）
   });
+  const ownedSocket = socket;
 
   socket.on('connect', () => {
+    if (socket !== ownedSocket) return;
+    clearHandshakeRetry();
+    handshakeRetryAttempt = 0;
     console.log('已連線到伺服器');
     connectionState = ConnectionState.CONNECTED;
     connectionCallbacks.forEach(cb => cb(true));
     startHeartbeat();
+    const uid = auth.currentUser?.uid;
+    if (uid && uid === authenticatedUid && presenceUid === uid) {
+      ownedSocket.emit('setPresence', { firebaseUid: uid });
+    }
+    if (uid && uid === authenticatedUid && evolutionSession?.uid === uid) {
+      const { roomId, playerId } = evolutionSession;
+      ownedSocket.emit('evo:reconnect', { roomId, playerId });
+    } else {
+      restoreRoom();
+    }
   });
 
+  const rememberEvolutionSession = data => {
+    if (socket !== ownedSocket) return;
+    const uid = auth.currentUser?.uid;
+    if (!uid || uid !== authenticatedUid || !data?.roomId || !Array.isArray(data.room?.players)) return;
+    const player = data.room.players.find(candidate => candidate?.firebaseUid === uid);
+    if (player?.id) {
+      const leaving = evolutionSession?.uid === uid && evolutionSession.roomId === data.roomId && evolutionSession.leaving;
+      evolutionSession = { uid, roomId: data.roomId, playerId: player.id };
+      if (leaving) {
+        internalEvolutionJoins.add(data);
+        // The replacement socket now owns the seat; an earlier buffered leave would not.
+        ownedSocket.emit('evo:leaveRoom', { roomId: data.roomId, playerId: player.id });
+        evolutionSession = null;
+      }
+    }
+  };
+  ownedSocket.on('evo:roomCreated', room => rememberEvolutionSession({ roomId: room?.id, room }));
+  ownedSocket.on('evo:joinedRoom', rememberEvolutionSession);
+
   socket.on('disconnect', (reason) => {
+    if (socket !== ownedSocket) return;
     console.log('與伺服器斷線，原因:', reason);
     connectionState = ConnectionState.DISCONNECTED;
     connectionCallbacks.forEach(cb => cb(false));
     stopHeartbeat();
 
     // 如果是伺服器斷開，嘗試重連
-    if (reason === 'io server disconnect') {
+    if (reason === 'io server disconnect' && auth.currentUser) {
       socket.connect();
     }
   });
 
   socket.on('connect_error', (error) => {
-    console.error('連線錯誤:', error.message);
-    // 連線錯誤時會自動重試
+    console.error('連線錯誤');
+    // Middleware denials stop Socket.IO's own retries (active === false).
+    // Transport errors with active === true remain the manager's responsibility.
+    const uid = auth.currentUser?.uid;
+    if (socket !== ownedSocket || ownedSocket.active !== false || !uid ||
+        uid !== authenticatedUid || handshakeRetryTimer !== null) return;
+    const delay = Math.min(1000 * (2 ** Math.min(handshakeRetryAttempt++, 3)), 5000);
+    handshakeRetryTimer = setTimeout(() => {
+      handshakeRetryTimer = null;
+      if (socket === ownedSocket && !ownedSocket.connected && ownedSocket.active === false &&
+          authenticatedUid === uid && auth.currentUser?.uid === uid) ownedSocket.connect();
+    }, delay);
   });
 
   // 工單 0106, 0184：Socket.io 自動重連時觸發遊戲重連邏輯
-  socket.on('reconnect', (attemptNumber) => {
-    console.log(`[Socket] 自動重連成功 (第 ${attemptNumber} 次嘗試)`);
-
-    // 工單 0184：統一使用 getCurrentRoom() 讀取房間資訊
-    const savedRoom = getCurrentRoom();
-    // 也嘗試舊的 key（向後相容）
-    const legacyRoomId = localStorage.getItem('lastRoomId');
-    const legacyPlayerId = localStorage.getItem('lastPlayerId');
-    const legacyPlayerName = localStorage.getItem('lastPlayerName');
-
-    const roomId = savedRoom?.roomId || legacyRoomId;
-    const playerId = savedRoom?.playerId || legacyPlayerId;
-    const playerName = savedRoom?.playerName || legacyPlayerName;
-
-    if (roomId && playerId && playerName) {
-      console.log(`[Socket] 自動觸發遊戲重連: 房間 ${roomId}`);
-      socket.emit('reconnect', {
-        roomId,
-        playerId,
-        playerName
-      });
-    }
-  });
-
-  socket.on('reconnect_attempt', (attemptNumber) => {
+  socket.io.on('reconnect_attempt', (attemptNumber) => {
     console.log('嘗試重新連線，第', attemptNumber, '次');
   });
 
   // 接收伺服器心跳回應
   socket.on('pong', () => {
     // 心跳正常
+  });
+
+  unsubscribeAuth = onIdTokenChanged(auth, (user) => {
+    if (socket !== ownedSocket) return;
+    clearHandshakeRetry();
+    handshakeRetryAttempt = 0;
+    const nextUid = user?.uid || null;
+    if (authenticatedUid && authenticatedUid !== nextUid) clearIdentityRoom();
+    authenticatedUid = nextUid;
+    // Re-handshake on token refresh as well as identity changes. Anonymous
+    // Firebase users follow exactly the same verification path.
+    socket.disconnect();
+    if (user) socket.connect();
   });
 
   return socket;
@@ -171,7 +253,7 @@ function safeOn(eventName, callback) {
     s.on(eventName, callback);
     return () => s.off(eventName, callback);
   } catch (error) {
-    console.warn(`[socketService] 無法監聽事件 ${eventName}:`, error.message);
+    console.warn(`[socketService] 無法監聽事件 ${eventName}`);
     return () => {};
   }
 }
@@ -440,9 +522,11 @@ export function onGuessResultDismissed(callback) {
  */
 export function setPresence(firebaseUid) {
   const s = getSocket();
-  if (s && firebaseUid) {
-    s.emit('setPresence', { firebaseUid });
-  }
+  const { auth } = require('../firebase/config');
+  if (!firebaseUid || auth.currentUser?.uid !== firebaseUid || auth.currentUser.isAnonymous) return;
+  presenceUid = firebaseUid;
+  // Disconnected emits would also be replayed by Socket.IO's send buffer.
+  if (s?.connected) s.emit('setPresence', { firebaseUid });
 }
 
 // ==================== 預測相關（工單 0071）====================
@@ -499,6 +583,17 @@ export function emitPlayerRefreshing(gameId, playerId) {
  * 斷開連線
  */
 export function disconnect() {
+  clearHandshakeRetry();
+  handshakeRetryAttempt = 0;
+  if (unsubscribeAuth) {
+    unsubscribeAuth();
+    unsubscribeAuth = null;
+  }
+  stopHeartbeat();
+  authenticatedUid = null;
+  internalEvolutionJoins = new WeakSet();
+  evolutionSession = null;
+  presenceUid = null;
   if (socket) {
     socket.disconnect();
     socket = null;
@@ -517,7 +612,6 @@ export function evoCreateRoom(roomName, maxPlayers, player) {
   const s = getSocket();
   console.log('[socketService] evoCreateRoom - socket:', s ? 'exists' : 'null');
   console.log('[socketService] evoCreateRoom - connected:', s?.connected);
-  console.log('[socketService] evoCreateRoom - params:', { roomName, maxPlayers, player });
   s.emit('evo:createRoom', { roomName, maxPlayers, player });
   console.log('[socketService] evoCreateRoom - emit 完成');
 }
@@ -539,6 +633,11 @@ export function evoJoinRoom(roomId, player) {
  */
 export function evoLeaveRoom(roomId, playerId) {
   const s = getSocket();
+  if (!s.connected) {
+    if (evolutionSession?.roomId === roomId) evolutionSession.leaving = true;
+    return;
+  }
+  if (evolutionSession?.roomId === roomId) evolutionSession = null;
   s.emit('evo:leaveRoom', { roomId, playerId });
 }
 
@@ -665,7 +764,10 @@ export function onEvoRoomCreated(callback) {
  * 監聽加入房間成功
  */
 export function onEvoJoinedRoom(callback) {
-  return safeOn('evo:joinedRoom', callback);
+  return safeOn('evo:joinedRoom', data => {
+    // An internal restore-and-leave acknowledgement must not navigate back in.
+    if (!internalEvolutionJoins.has(data)) callback(data);
+  });
 }
 
 /**
@@ -680,6 +782,11 @@ export function onEvoPlayerJoined(callback) {
  */
 export function onEvoPlayerLeft(callback) {
   return safeOn('evo:playerLeft', callback);
+}
+
+/** Waiting-room metadata only; state/private hands use their existing events. */
+export function onEvoPlayerConnectionChanged(callback) {
+  return safeOn('evo:playerConnectionChanged', callback);
 }
 
 /**

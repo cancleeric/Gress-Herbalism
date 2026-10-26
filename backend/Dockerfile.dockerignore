@@ -1,0 +1,22 @@
+# This backend image accepts only backend and shared source from the repo root.
+**
+!backend/
+!backend/**
+!shared/
+!shared/**
+
+# Never replace installed Linux dependencies with a developer's local tree.
+**/node_modules
+**/.env
+**/.env.*
+**/.git
+**/*.log
+**/coverage
+**/__tests__
+**/tests
+**/*.test.js
+**/*.test.cjs
+**/*.spec.js
+**/dist
+**/build
+**/.DS_Store

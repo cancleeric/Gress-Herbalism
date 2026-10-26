@@ -1,30 +1,15 @@
 /**
- * Supabase 客戶端
- *
- * 使用服務角色金鑰連接 Supabase
+ * 服務層資料客戶端（舊匯出名稱保留相容，亦支援 PostgreSQL）
  */
 
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-
-// 檢查環境變數
-let supabase = null;
-
-if (supabaseUrl && supabaseServiceKey) {
-  supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-} else {
+const { createDataClient } = require('../db/provider');
+const supabase = createDataClient({ serviceRole: true, optional: true });
+if (!supabase) {
   console.warn('[Supabase] 環境變數未設定，資料庫功能將被停用');
 }
 
 /**
- * 檢查 Supabase 是否可用
+ * 檢查目前所選 provider 是否已配置（不是 live DB 健康檢查）
  * @returns {boolean}
  */
 function isSupabaseEnabled() {
@@ -32,8 +17,8 @@ function isSupabaseEnabled() {
 }
 
 /**
- * 取得 Supabase 客戶端
- * @returns {import('@supabase/supabase-js').SupabaseClient | null}
+ * 取得目前所選資料客戶端；舊函式名稱保留相容。
+ * @returns {object|null}
  */
 function getSupabase() {
   return supabase;

@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Login from './Login';
 
@@ -94,6 +94,45 @@ describe('Login - 工單 0059', () => {
         </MemoryRouter>
       );
       expect(screen.getByText(/找出神秘藥方.*桌遊/)).toBeInTheDocument();
+    });
+
+    test('三個導覽連結都有可聚焦的實際說明，不再提供無動作註冊按鈕', () => {
+      render(<MemoryRouter><Login /></MemoryRouter>);
+      const navigation = screen.getByRole('navigation', { name: '遊戲介紹導覽' });
+      for (const name of ['規則書', '卡牌', '關於']) {
+        const link = within(navigation).getByRole('link', { name });
+        const target = document.querySelector(link.getAttribute('href'));
+        expect(target).toHaveAttribute('tabindex', '-1');
+        expect(target).toHaveAccessibleName();
+        expect(target.textContent.length).toBeGreaterThan(20);
+        fireEvent.click(link);
+        expect(document.activeElement).toBe(target);
+      }
+      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(screen.getByRole('region', { name: '卡牌介紹' })).toHaveTextContent('紅色：2 張');
+      expect(screen.getByRole('region', { name: '卡牌介紹' })).toHaveTextContent('藍色：5 張');
+      expect(screen.queryByRole('button', { name: '創建帳號' })).not.toBeInTheDocument();
+      expect(screen.getByText('選擇 Google 帳號登入，或以訪客身份開始遊戲。')).toBeInTheDocument();
+    });
+
+    test('演化論 deep link 使用自己的入門說明與人數，不顯示本草牌組', () => {
+      mockLocationState = { from: { pathname: '/lobby/evolution' } };
+      render(<MemoryRouter><Login /></MemoryRouter>);
+      expect(screen.getByText('2-4 人物種演化策略卡牌')).toBeInTheDocument();
+      expect(screen.getByText('2-4 位玩家')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: '卡牌介紹' })).toHaveTextContent('84 張雙面卡');
+      expect(screen.getByRole('region', { name: '規則書・入門重點' })).toHaveTextContent('食物供給');
+      expect(screen.queryByText('紅色：2 張')).not.toBeInTheDocument();
+    });
+
+    test('閱讀說明後登入仍回原遊戲，不改成首頁', async () => {
+      mockLocationState = { from: { pathname: '/lobby/evolution' } };
+      mockLoginAsGuest.mockResolvedValue({ success: true });
+      render(<MemoryRouter><Login /></MemoryRouter>);
+      fireEvent.click(screen.getByRole('link', { name: '規則書' }));
+      expect(document.activeElement).toBe(screen.getByRole('region', { name: '規則書・入門重點' }));
+      fireEvent.click(screen.getByRole('button', { name: /訪客登入/ }));
+      await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/lobby/evolution', { replace: true }));
     });
   });
 
