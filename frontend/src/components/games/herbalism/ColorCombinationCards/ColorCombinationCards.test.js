@@ -92,8 +92,23 @@ describe('ColorCard Component', () => {
     render(<ColorCard card={mockCard} selected={true} disabled={false} />);
     const card = screen.getByRole('button');
 
-    expect(card).toHaveAttribute('aria-selected', 'true');
+    expect(card).toHaveAttribute('aria-pressed', 'true');
+    expect(card).not.toHaveAttribute('aria-selected');
     expect(card).toHaveAttribute('aria-disabled', 'false');
+  });
+
+  test('toggle state updates without changing click or disabled keyboard behavior', () => {
+    const onClick = jest.fn();
+    const { rerender } = render(<ColorCard card={mockCard} selected={false} onClick={onClick} />);
+    expect(screen.getByRole('button', { pressed: false })).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+    expect(onClick).toHaveBeenCalledWith(mockCard);
+    rerender(<ColorCard card={mockCard} selected disabled onClick={onClick} />);
+    const card = screen.getByRole('button', { pressed: true });
+    expect(card).toHaveAttribute('tabindex', '-1');
+    fireEvent.keyDown(card, { key: 'Enter' });
+    fireEvent.keyDown(card, { key: ' ' });
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 });
 

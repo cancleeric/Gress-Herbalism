@@ -10,6 +10,8 @@ import { createSlice } from '@reduxjs/toolkit';
  * 初始狀態
  */
 const initialState = {
+  ownerUid: null,
+  roomId: null,
   // 遊戲基本資訊
   gameId: null,
   phase: 'waiting',
@@ -51,20 +53,14 @@ const initialState = {
   scores: null
 };
 
-/**
- * 演化論遊戲 Slice
- */
-const evolutionSlice = createSlice({
-  name: 'evolution',
-  initialState,
-  reducers: {
-    // ========== 遊戲狀態更新 ==========
+function projectPrivatePlayer(state) {
+  const own = state.myPlayerId ? state.players?.[state.myPlayerId] : null;
+  state.myHand = Array.isArray(own?.hand) ? own.hand : [];
+  state.myCreatures = Array.isArray(own?.creatures) ? own.creatures : [];
+  state.isMyTurn = Boolean(state.myPlayerId && state.currentPlayerId === state.myPlayerId);
+}
 
-    /**
-     * 設定完整遊戲狀態
-     */
-    setGameState: (state, action) => {
-      const gs = action.payload;
+function applyGameState(state, gs) {
       state.gameId = gs.gameId || state.gameId;
       state.phase = gs.phase;
       state.round = gs.round;
@@ -76,15 +72,53 @@ const evolutionSlice = createSlice({
       state.diceResult = gs.diceResult || [];
       state.pendingResponse = gs.pendingResponse;
 
-      // 更新自己的資訊
-      if (state.myPlayerId && gs.players[state.myPlayerId]) {
-        const myData = gs.players[state.myPlayerId];
-        state.myHand = Array.isArray(myData.hand) ? myData.hand : [];
-        state.myCreatures = myData.creatures || [];
-      }
+      projectPrivatePlayer(state);
 
       // 更新是否輪到自己
       state.isMyTurn = gs.currentPlayerId === state.myPlayerId;
+}
+
+/**
+ * 演化論遊戲 Slice
+ */
+const evolutionSlice = createSlice({
+  name: 'evolution',
+  initialState,
+  reducers: {
+    setOwnerUid: (state, action) => {
+      const uid = action.payload || null;
+      if (state.ownerUid !== uid) return { ...initialState, ownerUid: uid };
+    },
+    bindRoomContext: (state, action) => {
+      const { uid, roomId, playerId } = action.payload;
+      if (!uid || !roomId) return;
+      if (state.ownerUid !== uid || state.roomId !== roomId) {
+        return { ...initialState, ownerUid: uid, roomId, myPlayerId: playerId || null };
+      }
+      if (playerId && state.myPlayerId !== playerId) {
+        state.myPlayerId = playerId;
+        projectPrivatePlayer(state);
+      }
+    },
+    clearRoomContext: (state, action) => {
+      const { uid, roomId } = action.payload;
+      if (state.ownerUid === uid && state.roomId === roomId) {
+        return { ...initialState, ownerUid: state.ownerUid };
+      }
+    },
+    setOwnedGameState: (state, action) => {
+      const { uid, roomId, gameState } = action.payload;
+      if (uid && state.ownerUid === uid && state.roomId === roomId && gameState?.gameId === roomId) {
+        applyGameState(state, gameState);
+      }
+    },
+    // ========== 遊戲狀態更新 ==========
+
+    /**
+     * 設定完整遊戲狀態
+     */
+    setGameState: (state, action) => {
+      applyGameState(state, action.payload);
     },
 
     /**
@@ -92,6 +126,7 @@ const evolutionSlice = createSlice({
      */
     setMyPlayerId: (state, action) => {
       state.myPlayerId = action.payload;
+      projectPrivatePlayer(state);
     },
 
     /**
@@ -344,3 +379,8 @@ export const selectPendingResponse = (state) => state.evolution.pendingResponse;
 export const selectActionLog = (state) => state.evolution.actionLog;
 export const selectGameResult = (state) => state.evolution.gameResult;
 export const selectScores = (state) => state.evolution.scores;
+
+// Render-safe snapshot: stale room/account data is never visible before effects run.
+export const selectEvolutionForContext = (state, uid, roomId) =>
+  uid && state.evolution.ownerUid === uid && state.evolution.roomId === roomId
+    ? state.evolution : initialState;

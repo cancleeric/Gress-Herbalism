@@ -24,12 +24,15 @@ const {
 } = require('./db/supabase');
 
 // P1 安全修復：Firebase ID token 驗簽 middleware
-const { verifyAuth } = require('./middleware/verifyAuth');
+const { verifyAuth, verifyFirebaseIdToken } = require('./middleware/verifyAuth');
+const { publicGameState, installSocketSecurity } = require('./security/socketSecurity');
 
 // 工單 0061 - 好友服務
 const friendService = require('./services/friendService');
 const invitationService = require('./services/invitationService');
 const presenceService = require('./services/presenceService');
+const { createPresenceLifecycle } = require('./security/presenceLifecycle');
+const presenceLifecycle = createPresenceLifecycle({ getPlayerId: getPlayerIdByFirebaseUid, presenceService });
 
 // 工單 0261 - 演化論遊戲房間管理（舊模組，保留但不使用）
 // const evolutionRoomManager = require('./services/evolutionRoomManager');
@@ -85,14 +88,17 @@ app.get('/api/health', (req, res) => {
 // P1：掛上 verifyAuth，使用 token 驗證後的 req.uid，不信任前端傳入的 firebaseUid
 app.post('/api/players/sync', verifyAuth, async (req, res) => {
   try {
-    const { displayName, email, avatarUrl } = req.body;
+    const { displayName } = req.body;
     // req.uid 由 verifyAuth 從 Firebase ID token 中提取，不可被前端偽造
     const uid = req.uid;
 
     const player = await getOrCreatePlayer(displayName || '玩家', uid);
+    if (!player) {
+      return res.status(503).json({ success: false, message: '玩家同步暫時無法完成，請稍後重試' });
+    }
     res.json({ success: true, data: player });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: '玩家同步失敗，請稍後重試' });
   }
 });
 
@@ -233,7 +239,7 @@ app.post('/api/friends/requests', verifyAuth, async (req, res) => {
     } else if (err.message.includes('foreign key') || err.message.includes('violates foreign key')) {
       userMessage = '找不到該玩家';
     }
-    console.error('[好友請求] 錯誤:', err.message);
+    console.error('[好友請求] 處理失敗');
     res.status(400).json({ success: false, message: userMessage });
   }
 });
@@ -376,6 +382,10 @@ const WAITING_PHASE_DISCONNECT_TIMEOUT = 30000; // 30 秒（等待階段）
 const refreshingPlayers = new Set();
 const REFRESH_GRACE_PERIOD = 30000; // 30 秒重整寬限期
 
+installSocketSecurity(io, verifyFirebaseIdToken, {
+  gameRooms, playerSockets, pendingColorChoices, postQuestionStates, followGuessStates, guessResultConfirmations,
+});
+
 /**
  * 產生唯一遊戲 ID
  */
@@ -401,7 +411,7 @@ function findSocketByPlayerId(gameId, playerId) {
       return socket;
     }
     // socketId 無效，記錄警告
-    console.warn(`[Socket] 玩家 ${player.name} (${playerId}) 的 socketId ${player.socketId} 無效或已斷線`);
+    console.warn(`[Socket] 玩家 [玩家] (${playerId}) 的 socketId ${player.socketId} 無效或已斷線`);
   }
 
   // Fallback: 從 playerSockets Map 反查
@@ -411,13 +421,13 @@ function findSocketByPlayerId(gameId, playerId) {
       if (socket && socket.connected) {
         // 自動修復 player.socketId
         player.socketId = socketId;
-        console.log(`[Socket] 自動修復玩家 ${player.name} 的 socketId: ${socketId}`);
+        console.log(`[Socket] 自動修復玩家 [玩家] 的 socketId: ${socketId}`);
         return socket;
       }
     }
   }
 
-  console.warn(`[Socket] 找不到玩家 ${player.name} (${playerId}) 的有效 socket`);
+  console.warn(`[Socket] 找不到玩家 [玩家] (${playerId}) 的有效 socket`);
   return null;
 }
 
@@ -435,7 +445,7 @@ function validateSocketConnections(gameId) {
     if (player.socketId && !player.isDisconnected) {
       const socket = io.sockets.sockets.get(player.socketId);
       if (!socket || !socket.connected) {
-        console.warn(`[心跳] 玩家 ${player.name} 的 socket ${player.socketId} 已失效`);
+        console.warn(`[心跳] 玩家 [玩家] 的 socket ${player.socketId} 已失效`);
         player.socketId = null;
         hasInvalidSocket = true;
       }
@@ -482,7 +492,14 @@ function broadcastGameState(gameId) {
   const gameState = gameRooms.get(gameId);
   // 工單 0148：確保房間存在且有玩家時才廣播
   if (gameState && gameState.players && gameState.players.length > 0) {
-    io.to(gameId).emit('gameState', gameState);
+    for (const [socketId, binding] of playerSockets.entries()) {
+      if (binding.gameId !== gameId) continue;
+      const recipient = io.sockets.sockets.get(socketId);
+      const player = gameState.players.find(p => p.id === binding.playerId);
+      if (recipient && player && player.socketId === socketId && player.ownerUid === recipient.uid) {
+        recipient.emit('gameState', publicGameState(gameState, player.id));
+      }
+    }
   }
 }
 
@@ -504,22 +521,12 @@ io.on('connection', (socket) => {
   });
 
   // 工單 0176：設定玩家線上狀態
-  // TODO Phase2: socket auth — 目前 setPresence 信任前端傳入的 firebaseUid（HIGH 風險）。
-  // Phase2 改法：socket handshake 帶 Firebase ID token（auth.token），
-  // 在 io.use() middleware 以 verifyAuth 邏輯驗簽，驗通後存入 socket.uid，
-  // setPresence 改從 socket.uid 取 uid，不再接受前端傳入的 firebaseUid。
-  socket.on('setPresence', async ({ firebaseUid }) => {
-    if (firebaseUid) {
-      try {
-        const playerId = await getPlayerIdByFirebaseUid(firebaseUid);
-        if (playerId) {
-          await presenceService.setOnline(playerId);
-          socket.firebasePlayerId = playerId;  // 保存以便斷線時使用
-          console.log(`[線上狀態] 玩家 ${playerId} 已上線`);
-        }
-      } catch (err) {
-        console.error('[線上狀態] setPresence 錯誤:', err.message);
-      }
+  // Packet guard replaces the untrusted UID with the verified Firebase identity.
+  socket.on('setPresence', async () => {
+    try {
+      await presenceLifecycle.online(socket);
+    } catch (_) {
+      console.error('[線上狀態] 無法更新連線狀態');
     }
   });
 
@@ -560,18 +567,16 @@ io.on('connection', (socket) => {
     playerSockets.set(socket.id, { gameId, playerId: player.id });
 
     socket.join(gameId);
-    socket.emit('roomCreated', { gameId, gameState: roomState });
+    socket.emit('roomCreated', { gameId, gameState: publicGameState(roomState, player.id) });
 
     // 工單 0176：加入房間後設為遊戲中
-    if (socket.firebasePlayerId) {
-      presenceService.setInGame(socket.firebasePlayerId, gameId).catch(err => {
-        console.error('[線上狀態] setInGame 錯誤:', err.message);
-      });
-    }
+    presenceLifecycle.inGame(socket, gameId).catch(() => {
+      console.error('[線上狀態] 無法更新遊戲狀態');
+    });
 
     broadcastRoomList();
     // 工單 0109：房間操作日誌
-    console.log(`[房間] 創建: ${gameId}, 房主: ${player.name} (${player.id}), socketId: ${socket.id}`);
+    console.log(`[房間] 創建: ${gameId}, 房主: [玩家] (${player.id}), socketId: ${socket.id}`);
   });
 
   // 加入房間
@@ -620,19 +625,17 @@ io.on('connection', (socket) => {
     playerSockets.set(socket.id, { gameId, playerId: player.id });
 
     socket.join(gameId);
-    socket.emit('joinedRoom', { gameId, gameState });
+    socket.emit('joinedRoom', { gameId, gameState: publicGameState(gameState, player.id) });
 
     // 工單 0176：加入房間後設為遊戲中
-    if (socket.firebasePlayerId) {
-      presenceService.setInGame(socket.firebasePlayerId, gameId).catch(err => {
-        console.error('[線上狀態] setInGame 錯誤:', err.message);
-      });
-    }
+    presenceLifecycle.inGame(socket, gameId).catch(() => {
+      console.error('[線上狀態] 無法更新遊戲狀態');
+    });
 
     broadcastGameState(gameId);
     broadcastRoomList();
     // 工單 0109：房間操作日誌
-    console.log(`[房間] 加入: ${gameId}, 玩家: ${player.name} (${player.id}), socketId: ${socket.id}`);
+    console.log(`[房間] 加入: ${gameId}, 玩家: [玩家] (${player.id}), socketId: ${socket.id}`);
   });
 
   // 開始遊戲
@@ -809,7 +812,7 @@ io.on('connection', (socket) => {
 
           // 如果是局結束，廣播結果（包含預測結算）
           if (result.isCorrect !== undefined) {
-            io.to(gameId).emit('guessResult', {
+            const resultPayload = {
               isCorrect: result.isCorrect,
               scoreChanges: result.scoreChanges,
               hiddenCards: result.hiddenCards,
@@ -817,15 +820,17 @@ io.on('connection', (socket) => {
               followingPlayers: [],
               predictionResults: result.predictionResults || [],
               continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
-            });
+            };
+            io.to(gameId).emit('guessResult', resultPayload);
 
             // 工單 0207：初始化全員確認追蹤
-            const allPlayerIds = gameState.players.map(p => p.id);
+            const allPlayerIds = gameState.players.filter(p => p.ownerUid).map(p => p.id);
             guessResultConfirmations.set(gameId, {
               requiredPlayers: allPlayerIds,
               confirmedPlayers: [],
               isCorrect: result.isCorrect,
-              continueGame: result.continueGame
+              continueGame: result.continueGame,
+              resultPayload
             });
           }
         }
@@ -981,118 +986,12 @@ io.on('connection', (socket) => {
 
   // 處理跟猜回應
   socket.on('followGuessResponse', ({ gameId, playerId, isFollowing }) => {
-    const gameState = gameRooms.get(gameId);
-    const followState = followGuessStates.get(gameId);
-
-    if (!gameState) {
-      socket.emit('error', { message: '遊戲不存在' });
-      return;
-    }
-
-    if (!followState) {
-      socket.emit('error', { message: '沒有進行中的跟猜' });
-      return;
-    }
-
-    // 驗證是否是當前應該決定的玩家
-    if (followState.currentDeciderId !== playerId) {
-      socket.emit('error', { message: '還沒輪到你決定' });
-      return;
-    }
-
-    // 記錄決定
-    followState.decisions[playerId] = isFollowing ? 'follow' : 'pass';
-    if (isFollowing) {
-      followState.followingPlayers.push(playerId);
-    } else {
-      followState.declinedPlayers.push(playerId);
-    }
-
-    // 移到下一個決定者
-    followState.currentDeciderIndex++;
-    const hasMoreDeciders = followState.currentDeciderIndex < followState.decisionOrder.length;
-    followState.currentDeciderId = hasMoreDeciders
-      ? followState.decisionOrder[followState.currentDeciderIndex]
-      : null;
-
-    // 廣播決定結果
-    io.to(gameId).emit('followGuessUpdate', {
-      playerId,
-      isFollowing,
-      currentDeciderId: followState.currentDeciderId,
-      decisions: followState.decisions,
-      followingPlayers: followState.followingPlayers,
-      declinedPlayers: followState.declinedPlayers
-    });
-
-    // 檢查是否所有人都已決定
-    if (!hasMoreDeciders) {
-      // 所有人都決定了，驗證結果
-      const result = validateGuessResult(
-        gameState,
-        followState.guessingPlayerId,
-        followState.guessedColors,
-        followState.followingPlayers
-      );
-
-      // 清除跟猜狀態
-      followGuessStates.delete(gameId);
-
-      // 更新遊戲狀態
-      Object.assign(gameState, result.gameState);
-
-      // 廣播猜牌結果（包含預測結算）
-      console.log('[guessResult] 發送結果:', JSON.stringify({
-        isCorrect: result.isCorrect,
-        scoreChanges: result.scoreChanges,
-        predictionResults: result.predictionResults
-      }));
-      io.to(gameId).emit('guessResult', {
-        isCorrect: result.isCorrect,
-        scoreChanges: result.scoreChanges,
-        hiddenCards: result.hiddenCards,
-        guessingPlayerId: followState.guessingPlayerId,
-        followingPlayers: followState.followingPlayers,
-        predictionResults: result.predictionResults || [],
-        continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
-      });
-
-      // 工單 0207：初始化全員確認追蹤
-      const allPlayerIds = gameState.players.map(p => p.id);
-      guessResultConfirmations.set(gameId, {
-        requiredPlayers: allPlayerIds,
-        confirmedPlayers: [],
-        isCorrect: result.isCorrect,
-        continueGame: result.continueGame
-      });
-
-      // 廣播更新後的遊戲狀態
-      broadcastGameState(gameId);
-
-      if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
-        broadcastRoomList();
-      }
-    }
+    handleFollowGuessResponse(gameId, playerId, isFollowing);
   });
 
   // 查看蓋牌
-  socket.on('revealHiddenCards', ({ gameId, playerId }) => {
-    const gameState = gameRooms.get(gameId);
-
-    if (!gameState) {
-      socket.emit('error', { message: '遊戲不存在' });
-      return;
-    }
-
-    const playerIndex = gameState.players.findIndex(p => p.id === playerId);
-    if (playerIndex === gameState.currentPlayerIndex) {
-      socket.emit('hiddenCardsRevealed', {
-        cards: gameState.hiddenCards.map(card => ({
-          id: card.id,
-          color: card.color
-        }))
-      });
-    }
+  socket.on('revealHiddenCards', () => {
+    socket.emit('error', { message: '答案只在結算時公布' });
   });
 
   // 開始下一局
@@ -1139,23 +1038,7 @@ io.on('connection', (socket) => {
     // 通知該玩家關閉面板
     socket.emit('guessResultDismissed');
 
-    // 檢查是否全員已確認
-    if (confirmation.confirmedPlayers.length >= confirmation.requiredPlayers.length) {
-      console.log(`[確認] 全員已確認猜牌結果，gameId: ${gameId}`);
-      guessResultConfirmations.delete(gameId);
-
-      const gameState = gameRooms.get(gameId);
-      if (!gameState) return;
-
-      // 根據結果決定後續行為
-      if (confirmation.isCorrect || !confirmation.continueGame) {
-        // 猜對 或 猜錯+全員退出 → 進入下一局
-        if (gameState.gamePhase === 'roundEnd') {
-          startNextRoundLogic(gameId);
-        }
-      }
-      // 猜錯+遊戲繼續 → 不需做什麼，遊戲已在 playing 階段
-    }
+    completeGuessConfirmation(gameId);
   });
 
   // 離開房間
@@ -1163,11 +1046,9 @@ io.on('connection', (socket) => {
     handlePlayerLeave(socket, gameId, playerId);
 
     // 工單 0176：離開房間後恢復為上線
-    if (socket.firebasePlayerId) {
-      presenceService.setOnline(socket.firebasePlayerId).catch(err => {
-        console.error('[線上狀態] setOnline 錯誤:', err.message);
-      });
-    }
+    presenceLifecycle.inGame(socket, null).catch(() => {
+      console.error('[線上狀態] 無法更新遊戲狀態');
+    });
   });
 
   // 工單 0118：玩家正在重整頁面
@@ -1193,14 +1074,11 @@ io.on('connection', (socket) => {
     // 工單 0313-0316：演化論遊戲斷線處理
     evolutionHandler.handleDisconnect(socket, io);
 
-    // 工單 0176：斷線時設為離線
-    if (socket.firebasePlayerId) {
-      try {
-        await presenceService.setOffline(socket.firebasePlayerId);
-        console.log(`[線上狀態] 玩家 ${socket.firebasePlayerId} 已離線`);
-      } catch (err) {
-        console.error('[線上狀態] setOffline 錯誤:', err.message);
-      }
+    // Serialize against replacement connections and retain other active tabs.
+    try {
+      await presenceLifecycle.disconnect(socket);
+    } catch (_) {
+      console.error('[線上狀態] 無法更新離線狀態');
     }
 
     // 工單 0109：連線日誌增強
@@ -1237,6 +1115,164 @@ io.on('connection', (socket) => {
   // ==================== 工單 0313-0316 結束 ====================
 });
 
+function handleFollowGuessResponse(gameId, playerId, isFollowing) {
+  const gameState = gameRooms.get(gameId);
+  const followState = followGuessStates.get(gameId);
+  if (!gameState || !followState || followState.currentDeciderId !== playerId) return;
+    // 記錄決定
+    followState.decisions[playerId] = isFollowing ? 'follow' : 'pass';
+    if (isFollowing) {
+      followState.followingPlayers.push(playerId);
+    } else {
+      followState.declinedPlayers.push(playerId);
+    }
+
+    // 移到下一個決定者
+    followState.currentDeciderIndex++;
+    while (followState.currentDeciderIndex < followState.decisionOrder.length) {
+      const nextId = followState.decisionOrder[followState.currentDeciderIndex];
+      if (gameState.players.some(p => p.id === nextId && p.ownerUid)) break;
+      followState.decisions[nextId] = 'pass';
+      if (!followState.declinedPlayers.includes(nextId)) followState.declinedPlayers.push(nextId);
+      followState.currentDeciderIndex++;
+    }
+    const hasMoreDeciders = followState.currentDeciderIndex < followState.decisionOrder.length;
+    followState.currentDeciderId = hasMoreDeciders
+      ? followState.decisionOrder[followState.currentDeciderIndex]
+      : null;
+
+    // 廣播決定結果
+    io.to(gameId).emit('followGuessUpdate', {
+      playerId,
+      isFollowing,
+      currentDeciderId: followState.currentDeciderId,
+      decisions: followState.decisions,
+      followingPlayers: followState.followingPlayers,
+      declinedPlayers: followState.declinedPlayers
+    });
+
+    // 檢查是否所有人都已決定
+    if (!hasMoreDeciders) {
+      // 所有人都決定了，驗證結果
+      const result = validateGuessResult(
+        gameState,
+        followState.guessingPlayerId,
+        followState.guessedColors,
+        followState.followingPlayers
+      );
+
+      // 清除跟猜狀態
+      followGuessStates.delete(gameId);
+
+      // 更新遊戲狀態
+      Object.assign(gameState, result.gameState);
+
+      // 廣播猜牌結果（包含預測結算）
+      console.log('[guessResult] 發送結算結果');
+      const resultPayload = {
+        isCorrect: result.isCorrect,
+        scoreChanges: result.scoreChanges,
+        hiddenCards: result.hiddenCards,
+        guessingPlayerId: followState.guessingPlayerId,
+        followingPlayers: followState.followingPlayers,
+        predictionResults: result.predictionResults || [],
+        continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
+      };
+      io.to(gameId).emit('guessResult', resultPayload);
+
+      // 工單 0207：初始化全員確認追蹤
+      const allPlayerIds = gameState.players.filter(p => p.ownerUid).map(p => p.id);
+      guessResultConfirmations.set(gameId, {
+        requiredPlayers: allPlayerIds,
+        confirmedPlayers: [],
+        isCorrect: result.isCorrect,
+        continueGame: result.continueGame,
+        resultPayload
+      });
+
+      // 廣播更新後的遊戲狀態
+      broadcastGameState(gameId);
+
+      if (result.gameState.gamePhase === 'finished' || result.gameState.gamePhase === 'roundEnd') {
+        broadcastRoomList();
+      }
+    }
+}
+
+function completeGuessConfirmation(gameId) {
+  const confirmation = guessResultConfirmations.get(gameId);
+  if (!confirmation || !confirmation.requiredPlayers.every(id => confirmation.confirmedPlayers.includes(id))) return;
+  guessResultConfirmations.delete(gameId);
+  const state = gameRooms.get(gameId);
+  if (state?.gamePhase === 'roundEnd' && (confirmation.isCorrect || !confirmation.continueGame)) {
+    startNextRoundLogic(gameId);
+  }
+}
+
+function reconcilePlayerDeparture(gameId, playerId) {
+  const state = gameRooms.get(gameId);
+  if (!state) return;
+  const seated = state.players.filter(player => player.ownerUid);
+  const cancelledChoice = pendingColorChoices.get(gameId);
+  if (cancelledChoice && (cancelledChoice.askingPlayerId === playerId || cancelledChoice.targetPlayerId === playerId)) {
+    io.to(gameId).emit('colorChoiceResult', {
+      cancelled: true,
+      askingPlayerId: cancelledChoice.askingPlayerId,
+      targetPlayerId: cancelledChoice.targetPlayerId,
+      cardsTransferred: 0
+    });
+  }
+  if (!seated.some(player => player.isHost)) {
+    state.players.forEach(player => { player.isHost = false; });
+    if (seated[0]) seated[0].isHost = true;
+  }
+  if (seated.length === 0 || (state.gamePhase !== 'roundEnd' && !seated.some(player => player.isActive))) {
+    state.gamePhase = 'finished';
+    state.players.forEach(player => { player.isCurrentTurn = false; });
+    pendingColorChoices.delete(gameId); postQuestionStates.delete(gameId);
+    followGuessStates.delete(gameId); guessResultConfirmations.delete(gameId);
+    return;
+  }
+  const pending = pendingColorChoices.get(gameId);
+  if (pending && (pending.askingPlayerId === playerId || pending.targetPlayerId === playerId)) {
+    pendingColorChoices.delete(gameId);
+    const asker = seated.find(player => player.id === pending.askingPlayerId && player.isActive);
+    if (asker && pending.askingPlayerId !== playerId) {
+      state.gamePhase = 'postQuestion';
+      postQuestionStates.set(gameId, { playerId: asker.id });
+      findSocketByPlayerId(gameId, asker.id)?.emit('postQuestionPhase', {
+        playerId: asker.id, message: '被問玩家已離開，本次問牌取消；請結束回合。'
+      });
+    } else {
+      postQuestionStates.delete(gameId);
+      state.gamePhase = 'playing';
+    }
+  }
+  if (postQuestionStates.get(gameId)?.playerId === playerId) {
+    postQuestionStates.delete(gameId);
+    state.gamePhase = 'playing';
+  }
+  const follow = followGuessStates.get(gameId);
+  if (follow) {
+    follow.followingPlayers = follow.followingPlayers.filter(id => id !== playerId);
+    if (follow.guessingPlayerId === playerId) {
+      followGuessStates.delete(gameId);
+      state.gamePhase = 'playing';
+    } else if (follow.currentDeciderId === playerId) {
+      handleFollowGuessResponse(gameId, playerId, false);
+    }
+  }
+  const confirmation = guessResultConfirmations.get(gameId);
+  if (confirmation) {
+    confirmation.requiredPlayers = confirmation.requiredPlayers.filter(id => id !== playerId);
+    confirmation.confirmedPlayers = confirmation.confirmedPlayers.filter(id => id !== playerId);
+    completeGuessConfirmation(gameId);
+  }
+  if (state.gamePhase === 'playing' && !state.players[state.currentPlayerIndex]?.isActive) {
+    moveToNextPlayer(state);
+  }
+}
+
 function handlePlayerLeave(socket, gameId, playerId) {
   // 工單 0109：房間操作日誌
   console.log(`[房間] 離開: ${gameId}, 玩家: ${playerId}`);
@@ -1271,6 +1307,10 @@ function handlePlayerLeave(socket, gameId, playerId) {
   } else {
     // 遊戲中，標記為不活躍
     gameState.players[playerIndex].isActive = false;
+    // Explicit departure releases the seat; retain firebaseUid for game records.
+    delete gameState.players[playerIndex].ownerUid;
+    gameState.players[playerIndex].socketId = null;
+    reconcilePlayerDeparture(gameId, playerId);
   }
 
   // 工單 0148：通知房間內剩餘玩家有人離開
@@ -1300,6 +1340,7 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
   }
 
   const player = gameState.players[playerIndex];
+  if (player.socketId !== socket.id) { playerSockets.delete(socket.id); return; }
   const isWaitingPhase = gameState.gamePhase === 'waiting';
   const refreshKey = `${gameId}:${playerId}`;
   const isRefreshing = refreshingPlayers.has(refreshKey);
@@ -1320,7 +1361,7 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
   player.isDisconnected = true;
   player.disconnectedAt = Date.now();
   const stateLabel = isRefreshing ? '重整中' : (isWaitingPhase ? '等待階段' : '遊戲中');
-  console.log(`[${stateLabel}] 玩家 ${player.name} 斷線，保留位置 ${timeout_duration / 1000} 秒等待重連`);
+  console.log(`[${stateLabel}] 玩家 [玩家] 斷線，保留位置 ${timeout_duration / 1000} 秒等待重連`);
 
   socket.leave(gameId);
   playerSockets.delete(socket.id);
@@ -1361,7 +1402,7 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
             // 如果移除的是房主，轉移房主
             if (currentPlayer.isHost && currentState.players.length > 0) {
               currentState.players[0].isHost = true;
-              console.log(`房主轉移給 ${currentState.players[0].name}`);
+              console.log(`房主轉移給 [玩家]`);
             }
             broadcastGameState(gameId);
             broadcastRoomList();
@@ -1372,6 +1413,10 @@ function handlePlayerDisconnect(socket, gameId, playerId) {
           console.log(`[遊戲中] 玩家 ${playerId} ${reason}，標記為不活躍`);
           currentState.players[currentPlayerIndex].isActive = false;
           currentState.players[currentPlayerIndex].isDisconnected = false;
+          // Grace period has ended: release ownership, not historical DB identity.
+          delete currentState.players[currentPlayerIndex].ownerUid;
+          currentState.players[currentPlayerIndex].socketId = null;
+          reconcilePlayerDeparture(gameId, playerId);
           broadcastGameState(gameId);
         }
       }
@@ -1423,21 +1468,55 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
 
   // 工單 0104：更新 player.socketId
   const oldSocketId = player.socketId;
+  if (oldSocketId && oldSocketId !== socket.id) {
+    playerSockets.delete(oldSocketId);
+    const oldSocket = io.sockets.sockets.get(oldSocketId);
+    if (oldSocket) {
+      oldSocket.leave(roomId);
+      oldSocket.firebasePlayerId = null;
+    }
+  }
   player.socketId = socket.id;
-  console.log(`[重連] 玩家 ${player.name} socketId 更新: ${oldSocketId} → ${socket.id}`);
+  console.log(`[重連] 玩家 [玩家] socketId 更新: ${oldSocketId} → ${socket.id}`);
 
   // 更新 socket 對應
   playerSockets.set(socket.id, { gameId: roomId, playerId });
   socket.join(roomId);
 
-  console.log(`玩家 ${player.name} 重連成功`);
+  console.log(`玩家 [玩家] 重連成功`);
 
   // 發送重連成功事件
   socket.emit('reconnected', {
     gameId: roomId,
     playerId: playerId,
-    gameState: gameState
+    gameState: publicGameState(gameState, playerId)
   });
+
+  const confirmation = guessResultConfirmations.get(roomId);
+  if (confirmation?.resultPayload && confirmation.requiredPlayers.includes(playerId) &&
+      !confirmation.confirmedPlayers.includes(playerId)) {
+    socket.emit('guessResult', confirmation.resultPayload);
+  }
+
+  // Restore an interrupted type-2 question without exposing the target's colors.
+  const pendingChoice = pendingColorChoices.get(roomId);
+  if (pendingChoice && gameState.gamePhase === 'playing' &&
+      gameState.players[gameState.currentPlayerIndex]?.id === pendingChoice.askingPlayerId) {
+    if (pendingChoice.targetPlayerId === playerId) {
+      socket.emit('colorChoiceRequired', {
+        askingPlayerId: pendingChoice.askingPlayerId,
+        colors: pendingChoice.colors,
+        availableColors: pendingChoice.availableColors,
+        message: pendingChoice.availableColors.length === 0
+          ? '你沒有這兩種顏色的牌' : '請選擇要給哪種顏色的全部牌'
+      });
+    } else {
+      socket.emit('waitingForColorChoice', {
+        targetPlayerId: pendingChoice.targetPlayerId,
+        askingPlayerId: pendingChoice.askingPlayerId
+      });
+    }
+  }
 
   // 工單 0093：如果玩家在預測階段，重新發送 postQuestionPhase 事件
   const postQuestionState = postQuestionStates.get(roomId);
@@ -1446,7 +1525,7 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
       playerId: playerId,
       message: '問牌完成！你可以選擇預測蓋牌顏色，然後按結束回合。'
     });
-    console.log(`[重連] 恢復玩家 ${player.name} 的預測階段`);
+    console.log(`[重連] 恢復玩家 [玩家] 的預測階段`);
   }
 
   // 工單 0197：如果遊戲在跟猜階段，重新發送 followGuessStarted 事件
@@ -1459,7 +1538,7 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
       currentDeciderId: followState.currentDeciderId,
       decisions: followState.decisions
     });
-    console.log(`[重連] 恢復玩家 ${player.name} 的跟猜階段`);
+    console.log(`[重連] 恢復玩家 [玩家] 的跟猜階段`);
   }
 
   // 廣播狀態更新
@@ -1874,7 +1953,7 @@ function settlePredictions(gameState, scoreChanges) {
 
   console.log(`[預測結算] 開始結算，當前回合: ${currentRound}`);
   console.log(`[預測結算] 蓋牌顏色: ${hiddenColors.join(', ')}`);
-  console.log(`[預測結算] 所有預測: ${JSON.stringify(predictions)}`);
+  console.log('[預測結算] 已取得預測資料');
 
   // 只結算當局尚未結算的預測（工單 0092：防重複結算）
   const roundPredictions = predictions.filter(
@@ -1895,7 +1974,7 @@ function settlePredictions(gameState, scoreChanges) {
     const newScore = Math.max(0, currentScore + change);
     const actualChange = newScore - currentScore;
 
-    console.log(`[預測結算] 玩家: ${pred.playerName}, 預測: ${pred.color}, 正確: ${isPredictionCorrect}`);
+    console.log(`[預測結算] 玩家: [玩家], 預測: ${pred.color}, 正確: ${isPredictionCorrect}`);
     console.log(`[預測結算] 分數: ${currentScore} + (${change}) = ${newScore}, 實際變化: ${actualChange}`);
 
     // 更新分數
@@ -1918,7 +1997,7 @@ function settlePredictions(gameState, scoreChanges) {
     });
   }
 
-  console.log(`[預測結算] 結算完成，結果: ${JSON.stringify(results)}`);
+  console.log('[預測結算] 結算完成');
   return results;
 }
 
@@ -1981,7 +2060,7 @@ async function saveGameToDatabase(gameState, winnerPlayer) {
       console.log(`遊戲記錄已保存: ${gameState.gameId}`);
     }
   } catch (err) {
-    console.error('保存遊戲記錄失敗:', err.message);
+    console.error('保存遊戲記錄失敗');
   }
 }
 
@@ -2006,9 +2085,14 @@ function startNextRoundLogic(gameId) {
 
   if (gameState.gamePhase !== 'roundEnd') return;
 
-  // 計算下一局的起始玩家（上一局最後行動者的下一位）
+  // Retain historical participants, but deal and rotate only through owned seats.
+  const seatedPlayers = gameState.players.filter(player => player.ownerUid);
+  if (seatedPlayers.length === 0) { gameState.gamePhase = 'finished'; return; }
   const lastActionPlayer = gameState.currentPlayerIndex;
   let nextStartPlayer = (lastActionPlayer + 1) % gameState.players.length;
+  while (!gameState.players[nextStartPlayer].ownerUid) {
+    nextStartPlayer = (nextStartPlayer + 1) % gameState.players.length;
+  }
 
   // 準備下一局
   gameState.currentRound += 1;
@@ -2016,13 +2100,13 @@ function startNextRoundLogic(gameId) {
   // 重新洗牌和發牌
   const deck = createDeck();
   const shuffledDeck = shuffleDeck(deck);
-  const { hiddenCards, playerHands } = dealCards(shuffledDeck, gameState.players.length);
+  const { hiddenCards, playerHands } = dealCards(shuffledDeck, seatedPlayers.length);
 
   // 更新玩家狀態
   gameState.players = gameState.players.map((player, index) => ({
     ...player,
-    hand: playerHands[index],
-    isActive: true,
+    hand: player.ownerUid ? playerHands[seatedPlayers.findIndex(p => p.id === player.id)] : [],
+    isActive: !!player.ownerUid,
     isCurrentTurn: index === nextStartPlayer
   }));
 

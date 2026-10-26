@@ -166,6 +166,41 @@ describe('GameRoom - 工作單 0023', () => {
     getCurrentRoom.mockReturnValue(null);
   });
 
+  describe('authoritative multiplayer cancellation', () => {
+    const state = {
+      ...initialState,
+      gameId: 'test_room', gamePhase: 'playing', currentPlayerIndex: 0, currentPlayerId: 'p1',
+      players: ['p1', 'p2', 'p3'].map(id => ({ id, name: id, isActive: true, hand: [] })),
+    };
+
+    test('finished authoritative phase removes a pending prediction even while still the current player', () => {
+      const {container}=renderWithProviders(<GameRoom />, {preloadedState:{...state,gamePhase:'postQuestion'}});
+      act(()=>socketCallbacks.postQuestionPhase({playerId:'p1',message:'問牌完成！'}));
+      expect(container.querySelector('.prediction-modal')).toBeInTheDocument();
+      act(()=>socketCallbacks.gameState({...state,gamePhase:'finished',winner:state.players[0]}));
+      expect(container.querySelector('.prediction-modal')).not.toBeInTheDocument();
+    });
+
+    test('server cancellation clears the private choice and waiting overlays', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+      act(() => socketCallbacks.waitingForColorChoice({ askingPlayerId: 'p1', targetPlayerId: 'p2' }));
+      expect(container.querySelector('.waiting-overlay')).toBeInTheDocument();
+      act(() => socketCallbacks.colorChoiceResult({ cancelled: true, cardsTransferred: 0 }));
+      expect(container.querySelector('.waiting-overlay')).not.toBeInTheDocument();
+    });
+
+    test('leaving follow-guess phase dismisses its stale modal without revealing cards', () => {
+      const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
+      act(() => socketCallbacks.followGuessStarted({
+        guessingPlayerId: 'p1', guessedColors: ['red', 'blue'], decisionOrder: ['p2', 'p3'], currentDeciderId: 'p2',
+      }));
+      expect(container.querySelector('.fg-modal')).toBeInTheDocument();
+      act(() => socketCallbacks.gameState({ ...state, gamePhase: 'playing', currentPlayerIndex: 1 }));
+      expect(container.querySelector('.fg-modal')).not.toBeInTheDocument();
+      expect(socketService.requestRevealHiddenCards).not.toHaveBeenCalled();
+    });
+  });
+
   describe('渲染', () => {
     test('等待階段應顯示品牌名稱（工單 0123）', () => {
       renderWithProviders(<GameRoom />);

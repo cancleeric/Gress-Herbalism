@@ -1,28 +1,10 @@
 /**
- * Supabase 資料庫連線設定
+ * 共用資料存取入口（檔名／supabase 匯出名稱保留供既有呼叫端相容）
  * 工單 0055, 0060
  */
 
-const { createClient } = require('@supabase/supabase-js');
-
-/**
- * 從環境變數讀取必填設定，缺少即 fail-fast。
- * 真值來源：Hurricane Vault hurricanedigital/dev/supabase-*
- */
-function requireEnv(key) {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
-}
-
-// 從環境變數讀取設定（無 fallback，缺少即啟動失敗）
-const supabaseUrl = requireEnv('SUPABASE_URL');
-const supabaseAnonKey = requireEnv('SUPABASE_ANON_KEY');
-
-// 建立 Supabase 客戶端
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const { createDataClient } = require('./provider');
+const supabase = createDataClient();
 
 /**
  * 測試資料庫連線
@@ -30,16 +12,15 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 async function testConnection() {
   try {
-    const { data, error } = await supabase.from('players').select('count', { count: 'exact', head: true });
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 表示表不存在，這是預期的（尚未建立表）
-      console.error('Supabase 連線測試失敗:', error.message);
+    const { error } = await supabase.from('players').select('id').limit(1);
+    if (error) {
+      console.error('資料庫連線測試失敗:', error.message);
       return false;
     }
-    console.log('Supabase 連線成功');
+    console.log('資料庫連線成功');
     return true;
   } catch (err) {
-    console.error('Supabase 連線錯誤:', err.message);
+    console.error('資料庫連線錯誤:', err.message);
     return false;
   }
 }

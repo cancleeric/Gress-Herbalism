@@ -25,6 +25,7 @@ const COLOR_NAMES = {
   green: '綠色',
   blue: '藍色'
 };
+const EMPTY_COLORS = Object.freeze([]);
 
 /**
  * 問牌流程組件
@@ -39,7 +40,15 @@ const COLOR_NAMES = {
  * @param {boolean} props.isLoading - 是否載入中
  * @returns {JSX.Element|null} 問牌流程組件
  */
-function QuestionFlow({
+function QuestionFlow(props) {
+  const { selectedCard, currentPlayerId } = props;
+  if (!selectedCard) return null;
+  // Reset before rendering a different action context, not in a later effect.
+  const contextKey = JSON.stringify([currentPlayerId, selectedCard.id, selectedCard.colors]);
+  return <QuestionFlowForm key={contextKey} {...props} />;
+}
+
+function QuestionFlowForm({
   selectedCard,
   players = [],
   currentPlayerId,
@@ -58,9 +67,10 @@ function QuestionFlow({
   const otherPlayers = players.filter(
     p => p.id !== currentPlayerId
   );
+  const targetAvailable = otherPlayers.some(player => player.id === selectedPlayerId);
 
   // 選擇的顏色
-  const colors = selectedCard?.colors || [];
+  const colors = selectedCard?.colors || EMPTY_COLORS;
 
   /**
    * 檢查要牌方是否擁有選定顏色的牌
@@ -100,6 +110,7 @@ function QuestionFlow({
    * 處理選擇目標玩家
    */
   const handleSelectPlayer = (playerId) => {
+    if (isLoading) return;
     setSelectedPlayerId(playerId);
     setError('');
   };
@@ -108,6 +119,7 @@ function QuestionFlow({
    * 處理選擇問牌類型
    */
   const handleSelectType = (type) => {
+    if (isLoading) return;
     // 如果是類型3，檢查是否有牌
     if (type === QUESTION_TYPE_GIVE_ONE_GET_ALL) {
       const ownedColors = getOwnedColorsFromSelection();
@@ -125,6 +137,7 @@ function QuestionFlow({
    * 處理選擇給牌顏色（類型3）
    */
   const handleSelectGiveColor = (color) => {
+    if (isLoading) return;
     setSelectedGiveColor(color);
     setError('');
   };
@@ -133,6 +146,7 @@ function QuestionFlow({
    * 處理確認提交
    */
   const handleSubmit = () => {
+    if (!canSubmit()) return;
     const effectiveGiveColor = getEffectiveGiveColor();
     const questionData = {
       colors: colors,
@@ -162,11 +176,11 @@ function QuestionFlow({
    * 檢查是否可以提交
    */
   const canSubmit = () => {
-    if (!selectedPlayerId || !selectedType) return false;
+    if (isLoading || !targetAvailable || ![
+      QUESTION_TYPE_ONE_EACH, QUESTION_TYPE_ALL_ONE_COLOR, QUESTION_TYPE_GIVE_ONE_GET_ALL
+    ].includes(selectedType)) return false;
     if (selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL) {
-      const ownedColors = getOwnedColorsFromSelection();
-      if (ownedColors.length === 2 && !selectedGiveColor) return false;
-      if (ownedColors.length === 0) return false;
+      return getOwnedColorsFromSelection().includes(getEffectiveGiveColor());
     }
     return true;
   };
@@ -219,7 +233,7 @@ function QuestionFlow({
     }
   };
 
-  if (!selectedCard) return null;
+  const validationError = error || (selectedPlayerId && !targetAvailable ? '目標玩家已離開，請重新選擇' : '');
 
   return (
     <div className="question-flow-overlay">
@@ -274,6 +288,7 @@ function QuestionFlow({
                     >
                       <input
                         type="radio"
+                        disabled={isLoading}
                         name="target_player"
                         checked={selectedPlayerId === player.id}
                         onChange={() => handleSelectPlayer(player.id)}
@@ -297,6 +312,7 @@ function QuestionFlow({
                 <button
                   type="button"
                   className={`qf-type-option ${selectedType === QUESTION_TYPE_ONE_EACH ? 'selected' : ''}`}
+                  disabled={isLoading}
                   onClick={() => handleSelectType(QUESTION_TYPE_ONE_EACH)}
                 >
                   <div className="qf-type-header">
@@ -311,6 +327,7 @@ function QuestionFlow({
                 <button
                   type="button"
                   className={`qf-type-option ${selectedType === QUESTION_TYPE_ALL_ONE_COLOR ? 'selected' : ''}`}
+                  disabled={isLoading}
                   onClick={() => handleSelectType(QUESTION_TYPE_ALL_ONE_COLOR)}
                 >
                   <div className="qf-type-header">
@@ -325,6 +342,7 @@ function QuestionFlow({
                 <button
                   type="button"
                   className={`qf-type-option ${selectedType === QUESTION_TYPE_GIVE_ONE_GET_ALL ? 'selected' : ''}`}
+                  disabled={isLoading}
                   onClick={() => handleSelectType(QUESTION_TYPE_GIVE_ONE_GET_ALL)}
                 >
                   <div className="qf-type-header">
@@ -346,6 +364,7 @@ function QuestionFlow({
                       <button
                         key={color}
                         type="button"
+                        disabled={isLoading}
                         className={`qf-give-color-btn ${color} ${selectedGiveColor === color ? 'selected' : ''}`}
                         onClick={() => handleSelectGiveColor(color)}
                       >
@@ -394,9 +413,9 @@ function QuestionFlow({
           </div>
 
           {/* 錯誤訊息 */}
-          {error && (
+          {validationError && (
             <div className="qf-error" role="alert">
-              {error}
+              {validationError}
             </div>
           )}
         </main>

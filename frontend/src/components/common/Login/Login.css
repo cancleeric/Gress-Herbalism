@@ -82,6 +82,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
   padding: 16px 40px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -107,9 +109,10 @@
 }
 
 .nav-links {
-  display: none;
+  display: flex;
   align-items: center;
-  gap: 36px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .nav-links a {
@@ -124,10 +127,58 @@
   color: #2E7D32;
 }
 
+.nav-links a:focus-visible {
+  outline: 2px solid #2E7D32;
+  outline-offset: 4px;
+}
+
 @media (min-width: 768px) {
   .nav-links {
-    display: flex;
+    gap: 36px;
   }
+}
+
+.login-signup-help {
+  color: #476247;
+  line-height: 1.7;
+  font-size: 14px;
+  margin: 20px 0 0;
+  text-align: center;
+}
+
+.login-guide {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.login-guide section {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(46, 125, 50, 0.15);
+  border-radius: 12px;
+  color: #344D35;
+  line-height: 1.8;
+}
+
+.login-guide h2, .login-section-title {
+  color: #2E7D32;
+  font-size: 20px;
+}
+
+.login-guide section, #login-about {
+  scroll-margin-top: 20px;
+}
+
+.login-guide section:focus, #login-about:focus {
+  outline: 2px solid #2E7D32;
+  outline-offset: 4px;
+}
+
+.login-guide ol, .login-card-counts {
+  padding-left: 24px;
 }
 
 /* ==================== 主內容區 ==================== */

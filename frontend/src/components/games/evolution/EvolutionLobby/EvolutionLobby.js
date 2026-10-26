@@ -15,6 +15,9 @@ import {
   onEvoPlayerJoined,
   onEvoPlayerLeft,
   onEvoPlayerReady,
+  onEvoPlayerConnectionChanged,
+  getSocket,
+  onConnectionChange,
   onEvoGameStarted,
   onEvoError
 } from '../../../../services/socketService';
@@ -27,95 +30,86 @@ import './EvolutionLobby.css';
  * @param {Object} props.initialRoom - 初始房間資料
  * @param {Function} props.onGameStart - 遊戲開始回調
  */
-function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
-  const navigate = useNavigate();
+function EvolutionLobby(props) {
   const { user } = useAuth();
-  const [room, setRoom] = useState(initialRoom);
-  const [isReady, setIsReady] = useState(false);
+  // Remount only at an identity/route boundary, never on same-UID token refresh.
+  return <EvolutionLobbySession key={JSON.stringify([user?.uid || null, props.roomId])} {...props} user={user} />;
+}
+
+function EvolutionLobbySession({ roomId, initialRoom, initialRoomOwnerUid, onGameStart, user }) {
+  const navigate = useNavigate();
+  const validInitialRoom = user?.uid && initialRoomOwnerUid === user.uid && initialRoom?.id === roomId && initialRoom.players?.some(p => p.firebaseUid === user?.uid)
+    ? initialRoom : null;
+  const [room, setRoom] = useState(validInitialRoom);
+  const [connected, setConnected] = useState(() => Boolean(getSocket()?.connected));
   const [error, setError] = useState(null);
 
   // 工單 0279：同步 initialRoom prop 變化
   useEffect(() => {
-    if (initialRoom) {
-      console.log('[EvolutionLobby] initialRoom 更新:', initialRoom.players?.map(p => p.name));
-      setRoom(initialRoom);
-    }
-  }, [initialRoom]);
+    if (validInitialRoom) setRoom(validInitialRoom);
+  }, [validInitialRoom]);
 
   // 工單 0283：使用 firebaseUid 查找當前玩家
   const currentPlayer = room?.players?.find(p => p.firebaseUid === user?.uid);
   const isHost = currentPlayer?.isHost;
+  const isReady = Boolean(currentPlayer?.isReady);
+  const allPlayersConnected = connected && room?.players?.every(p => !p.isDisconnected);
 
   // 檢查是否所有玩家都準備
   const allPlayersReady = room?.players?.length >= 2 &&
     room?.players?.every(p => p.isReady || p.isHost);
 
-  // Socket 事件監聽
+  // Socket metadata belongs to this route and this listener lifetime only.
   useEffect(() => {
-    // 監聽玩家加入
-    const unsubPlayerJoined = onEvoPlayerJoined(({ player, room: updatedRoom }) => {
-      console.log('[EvolutionLobby] 玩家加入:', player.name);
-      setRoom(updatedRoom);
-    });
-
-    // 監聽玩家離開
-    // 工單 0282：增強日誌
-    const unsubPlayerLeft = onEvoPlayerLeft(({ playerId, room: updatedRoom }) => {
-      console.log('[EvolutionLobby] 收到 playerLeft 事件');
-      console.log('[EvolutionLobby] 離開的 playerId:', playerId);
-      console.log('[EvolutionLobby] 更新後的玩家:', updatedRoom?.players?.map(p => p.name));
-      setRoom(updatedRoom);
-    });
-
-    // 監聽準備狀態變更
-    // 工單 0283：使用 player.id 而非 Firebase UID 比對
-    const unsubPlayerReady = onEvoPlayerReady(({ playerId, isReady: ready, room: updatedRoom }) => {
-      console.log('[EvolutionLobby] 玩家準備狀態:', playerId, ready);
-      setRoom(updatedRoom);
-      // 查找當前玩家並比對
-      const myPlayer = updatedRoom?.players?.find(p => p.firebaseUid === user?.uid);
-      if (playerId === myPlayer?.id) {
-        setIsReady(ready);
+    let alive = true;
+    let errorTimer = null;
+    const updateRoom = ({ room: updatedRoom }) => {
+      if (alive && updatedRoom?.id === roomId) {
+        const ownedRoom = user?.uid && updatedRoom.players?.some(p => p.firebaseUid === user.uid);
+        setRoom(ownedRoom ? updatedRoom : null);
       }
+    };
+    const unsubPlayerJoined = onEvoPlayerJoined(updateRoom);
+    const unsubPlayerLeft = onEvoPlayerLeft(updateRoom);
+    const unsubPlayerReady = onEvoPlayerReady(updateRoom);
+    const unsubPlayerConnection = onEvoPlayerConnectionChanged(updateRoom);
+    const unsubConnection = onConnectionChange(value => { if (alive) setConnected(value); });
+    const unsubGameStarted = onEvoGameStarted(gameState => {
+      if (alive && gameState?.gameId === roomId && onGameStart) onGameStart(gameState);
     });
-
-    // 監聽遊戲開始
-    const unsubGameStarted = onEvoGameStarted((gameState) => {
-      console.log('[EvolutionLobby] 遊戲開始');
-      if (onGameStart) {
-        onGameStart(gameState);
-      }
+    const unsubError = onEvoError(({ gameId, message }) => {
+      if (!alive || gameId !== roomId) return;
+      console.error('[EvolutionLobby] 發生錯誤');
+      setError(typeof message === 'string' ? message : '操作失敗，請稍後再試');
+      if (errorTimer !== null) clearTimeout(errorTimer);
+      errorTimer = setTimeout(() => { if (alive) setError(null); }, 3000);
     });
-
-    // 監聽錯誤
-    const unsubError = onEvoError(({ message }) => {
-      console.error('[EvolutionLobby] 錯誤:', message);
-      setError(message);
-      setTimeout(() => setError(null), 3000);
-    });
-
     return () => {
+      alive = false;
+      if (errorTimer !== null) clearTimeout(errorTimer);
       unsubPlayerJoined();
       unsubPlayerLeft();
       unsubPlayerReady();
+      unsubPlayerConnection();
+      unsubConnection();
       unsubGameStarted();
       unsubError();
     };
-  }, [user?.uid, onGameStart]);
+  }, [user?.uid, onGameStart, roomId]);
 
   // 切換準備狀態
   // 工單 0283：使用 currentPlayer.id 而非 Firebase UID
   const handleToggleReady = useCallback(() => {
-    if (!roomId || !currentPlayer?.id) return;
+    if (!roomId || !currentPlayer?.id || !connected || currentPlayer.isDisconnected) return;
     evoSetReady(roomId, currentPlayer.id, !isReady);
-  }, [roomId, currentPlayer?.id, isReady]);
+  }, [roomId, currentPlayer?.id, currentPlayer?.isDisconnected, isReady, connected]);
 
   // 開始遊戲
   // 工單 0283：使用 currentPlayer.id 而非 Firebase UID
   const handleStartGame = useCallback(() => {
-    if (!roomId || !currentPlayer?.id) return;
+    if (!roomId || !currentPlayer?.id || !isHost || !allPlayersReady || !allPlayersConnected) return;
     evoStartGame(roomId, currentPlayer.id);
-  }, [roomId, currentPlayer?.id]);
+  }, [roomId, currentPlayer?.id, isHost, allPlayersReady, allPlayersConnected]);
 
   // 離開房間
   // 工單 0283：使用 currentPlayer.id 而非 Firebase UID
@@ -164,7 +158,7 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
               <span className="player-name">{player.name}</span>
               {player.isHost && <span className="host-badge">房主</span>}
               <span className={`ready-status ${player.isReady ? 'ready' : ''}`}>
-                {player.isHost ? '(房主)' : player.isReady ? '已準備' : '未準備'}
+                {player.isDisconnected ? '重新連線中' : player.isHost ? '(房主)' : player.isReady ? '已準備' : '未準備'}
               </span>
             </div>
           ))}
@@ -191,6 +185,7 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
           <button
             className={`ready-btn ${isReady ? 'cancel' : ''}`}
             onClick={handleToggleReady}
+            disabled={!connected || Boolean(currentPlayer?.isDisconnected)}
           >
             {isReady ? '取消準備' : '準備'}
           </button>
@@ -200,13 +195,15 @@ function EvolutionLobby({ roomId, initialRoom, onGameStart }) {
           <button
             className="start-btn"
             onClick={handleStartGame}
-            disabled={!allPlayersReady || (room.players?.length || 0) < 2}
+            disabled={!allPlayersReady || !allPlayersConnected}
           >
             {(room.players?.length || 0) < 2
               ? '需要至少 2 位玩家'
-              : !allPlayersReady
-                ? '等待玩家準備'
-                : '開始遊戲'}
+              : !allPlayersConnected
+                ? '等待玩家重新連線'
+                : !allPlayersReady
+                  ? '等待玩家準備'
+                  : '開始遊戲'}
           </button>
         )}
 

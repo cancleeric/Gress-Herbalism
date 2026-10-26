@@ -59,7 +59,7 @@ function ColorCard({
       onClick={handleClick}
       role="button"
       tabIndex={disabled ? -1 : 0}
-      aria-selected={selected}
+      aria-pressed={selected}
       aria-disabled={disabled}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

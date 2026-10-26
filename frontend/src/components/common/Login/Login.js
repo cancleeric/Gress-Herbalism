@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../firebase';
 import { loginWithLids, isLidsEnabled } from '../../../lids/lidsService';
+import LoginGuide from './LoginGuide';
 import './Login.css';
 
 /**
@@ -35,8 +36,8 @@ function Login() {
   // 統一大廳下：依進入的遊戲切換招牌（本草 vs 演化論），兩款共用同一 app/登入但品牌分流
   const isEvolution = from.includes('evolution');
   const brand = isEvolution
-    ? { navTitle: 'Evolution', title: '演化論 Evolution', subtitle: '2-5 人物種演化策略卡牌', tagline: '"運用特徵卡牌讓你的物種存活並壯大，模擬物種演化的桌遊。"' }
-    : { navTitle: 'Herbalism', title: '本草 Herbalism', subtitle: '3-4人線上推理桌遊', tagline: '"在古老的本草知識中，找出神秘藥方。融合推理、策略與智慧的桌遊。"' };
+    ? { navTitle: 'Evolution', title: '演化論 Evolution', subtitle: '2-4 人物種演化策略卡牌', players: '2-4 位玩家', duration: '30-60 分鐘', strategy: '生存策略', tagline: '"運用特徵卡牌讓你的物種存活並壯大，模擬物種演化的桌遊。"' }
+    : { navTitle: 'Herbalism', title: '本草 Herbalism', subtitle: '3-4人線上推理桌遊', players: '3-4 位玩家', duration: '20-30 分鐘', strategy: '邏輯推理', tagline: '"在古老的本草知識中，找出神秘藥方。融合推理、策略與智慧的桌遊。"' };
 
   // 已登入用戶直接訪問 /login 時跳走（演化論 deep link 修正）
   useEffect(() => {
@@ -44,6 +45,16 @@ function Login() {
       navigate(from, { replace: true });
     }
   }, [isLoading, isLoggedIn, navigate, from]);
+
+  // Keep ProtectedRoute's from state intact while moving within this page.
+  const handleGuideNavigation = (event) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const target = document.getElementById(event.currentTarget.hash.slice(1));
+    if (!target) return;
+    event.preventDefault();
+    target.focus();
+    target.scrollIntoView?.({ block: 'start' });
+  };
 
   const handleGoogleLogin = async () => {
     setIsProcessing(true);
@@ -116,10 +127,10 @@ function Login() {
             </svg>
             <span className="nav-title">{brand.navTitle}</span>
           </div>
-          <nav className="nav-links">
-            <a href="#">規則書</a>
-            <a href="#">卡牌</a>
-            <a href="#">關於</a>
+          <nav className="nav-links" aria-label="遊戲介紹導覽">
+            <a href="#login-rules" onClick={handleGuideNavigation}>規則書</a>
+            <a href="#login-cards" onClick={handleGuideNavigation}>卡牌</a>
+            <a href="#login-about" onClick={handleGuideNavigation}>關於</a>
           </nav>
         </header>
 
@@ -194,31 +205,31 @@ function Login() {
               <span>新朋友？</span>
             </div>
 
-            <button className="btn-link">
-              創建帳號
-            </button>
+            <p className="login-signup-help">選擇 Google 帳號登入，或以訪客身份開始遊戲。</p>
           </div>
 
           {/* Game Introduction */}
-          <div className="game-intro">
+          <section id="login-about" className="game-intro" tabIndex={-1} aria-labelledby="login-about-title">
+            <h2 id="login-about-title" className="login-section-title">關於{brand.title}</h2>
             <p className="intro-quote">
               {brand.tagline}
             </p>
             <div className="intro-features">
               <div className="feature">
                 <span className="feature-icon">👥</span>
-                <span>3-4 位玩家</span>
+                <span>{brand.players}</span>
               </div>
               <div className="feature">
                 <span className="feature-icon">⏱️</span>
-                <span>20-30 分鐘</span>
+                <span>{brand.duration}</span>
               </div>
               <div className="feature">
                 <span className="feature-icon">🧠</span>
-                <span>邏輯推理</span>
+                <span>{brand.strategy}</span>
               </div>
             </div>
-          </div>
+          </section>
+          <LoginGuide isEvolution={isEvolution} />
         </main>
 
         <footer className="login-footer">

@@ -8,12 +8,16 @@ const createMockSocket = () => ({
   off: jest.fn(),
   emit: jest.fn(),
   disconnect: jest.fn(),
+  connect: jest.fn(),
+  io: { on: jest.fn() },
   connected: true,
 });
 
 let mockSocketInstance = createMockSocket();
 let mockGetCurrentRoom = jest.fn();
 let mockClearCurrentRoom = jest.fn();
+let mockAuth;
+let mockAuthChanged;
 
 // Mock socket.io-client
 jest.mock('socket.io-client', () => ({
@@ -57,6 +61,14 @@ describe('socketService', () => {
       getCurrentRoom: mockGetCurrentRoom,
       clearCurrentRoom: mockClearCurrentRoom,
     }));
+    mockAuth = { currentUser: null, authStateReady: jest.fn().mockResolvedValue() };
+    jest.doMock('../firebase/config', () => ({ auth: mockAuth }));
+    jest.doMock('firebase/auth', () => ({
+      onIdTokenChanged: jest.fn((_auth, callback) => {
+        mockAuthChanged = callback;
+        return jest.fn();
+      }),
+    }));
 
     localStorage.clear();
 
@@ -84,6 +96,219 @@ describe('socketService', () => {
     test('應返回 socket 實例', () => {
       const socket = socketService.getSocket();
       expect(socket).toBeDefined();
+    });
+  });
+
+  describe('verified Firebase socket identity', () => {
+    const options = () => require('socket.io-client').io.mock.calls[0][1];
+
+    test('retries inactive handshake failures once with backoff, resets on success, and cancels at logout', () => {
+      jest.useFakeTimers();
+      try {
+        socketService.initSocket();
+        const user = {uid:'guest',getIdToken:jest.fn().mockResolvedValue('token')};
+        mockAuth.currentUser=user; mockAuthChanged(user);
+        mockSocketInstance.connected=false; mockSocketInstance.active=false;
+        mockSocketInstance.connect.mockClear();
+        const error = mockSocketInstance.on.mock.calls.find(([event])=>event==='connect_error')[1];
+        const connected = mockSocketInstance.on.mock.calls.find(([event])=>event==='connect')[1];
+        error(new Error('temporary')); error(new Error('temporary'));
+        jest.advanceTimersByTime(999); expect(mockSocketInstance.connect).not.toHaveBeenCalled();
+        jest.advanceTimersByTime(1); expect(mockSocketInstance.connect).toHaveBeenCalledTimes(1);
+        error(new Error('temporary')); jest.advanceTimersByTime(1999);
+        expect(mockSocketInstance.connect).toHaveBeenCalledTimes(1);
+        jest.advanceTimersByTime(1); expect(mockSocketInstance.connect).toHaveBeenCalledTimes(2);
+        connected();
+        error(new Error('temporary')); jest.advanceTimersByTime(1000);
+        expect(mockSocketInstance.connect).toHaveBeenCalledTimes(3);
+        error(new Error('temporary'));
+        mockAuth.currentUser=null; mockAuthChanged(null);
+        jest.advanceTimersByTime(10000); expect(mockSocketInstance.connect).toHaveBeenCalledTimes(3);
+      } finally {socketService.disconnect(); jest.useRealTimers();}
+    });
+
+    test('does not duplicate manager reconnection and cancels manual retry on disposal or UID switch', () => {
+      jest.useFakeTimers();
+      try {
+        socketService.initSocket();
+        mockAuth.currentUser={uid:'old'}; mockAuthChanged(mockAuth.currentUser);
+        mockSocketInstance.connected=false; mockSocketInstance.active=true;
+        const error=mockSocketInstance.on.mock.calls.find(([event])=>event==='connect_error')[1];
+        mockSocketInstance.connect.mockClear(); error(new Error('transport'));
+        jest.advanceTimersByTime(10000); expect(mockSocketInstance.connect).not.toHaveBeenCalled();
+        mockSocketInstance.active=false; error(new Error('handshake'));
+        mockAuth.currentUser={uid:'new'}; mockAuthChanged(mockAuth.currentUser);
+        mockSocketInstance.connect.mockClear(); jest.advanceTimersByTime(10000);
+        expect(mockSocketInstance.connect).not.toHaveBeenCalled();
+        error(new Error('handshake')); socketService.disconnect();
+        jest.advanceTimersByTime(10000); expect(mockSocketInstance.connect).not.toHaveBeenCalled();
+      } finally {socketService.disconnect(); jest.useRealTimers();}
+    });
+
+    test('waits for Firebase and sends the anonymous ID token, not the UID', async () => {
+      socketService.initSocket();
+      expect(options().autoConnect).toBe(false);
+      const user = { uid: 'guest-a', isAnonymous: true, getIdToken: jest.fn().mockResolvedValue('signed-id-token') };
+      mockAuth.currentUser = user;
+      mockAuthChanged(user);
+      expect(mockSocketInstance.connect).toHaveBeenCalled();
+      const done = jest.fn();
+      await options().auth(done);
+      expect(mockAuth.authStateReady).toHaveBeenCalled();
+      expect(done).toHaveBeenCalledWith({ token: 'signed-id-token' });
+      expect(localStorage.getItem('token')).toBeNull();
+    });
+
+    test('fails closed for missing user or failed token acquisition', async () => {
+      socketService.initSocket();
+      const done = jest.fn();
+      await options().auth(done);
+      expect(done).toHaveBeenLastCalledWith({ token: '' });
+      mockAuth.currentUser = { uid: 'guest', getIdToken: jest.fn().mockRejectedValue(new Error('denied')) };
+      await options().auth(done);
+      expect(done).toHaveBeenLastCalledWith({ token: '' });
+    });
+
+    test('rejects a token acquired during an identity switch', async () => {
+      socketService.initSocket();
+      mockAuth.currentUser = {
+        uid: 'old', getIdToken: jest.fn(async () => {
+          mockAuth.currentUser = { uid: 'new' };
+          return 'old-token';
+        }),
+      };
+      const done = jest.fn();
+      await options().auth(done);
+      expect(done).toHaveBeenCalledWith({ token: '' });
+    });
+
+    test('logout or identity switch clears saved room and queued actions', () => {
+      socketService.initSocket();
+      mockAuthChanged({ uid: 'old' });
+      localStorage.setItem('lastRoomId', 'private-room');
+      mockSocketInstance.sendBuffer = [{ type: 'gameAction' }];
+      mockAuthChanged(null);
+      expect(mockClearCurrentRoom).toHaveBeenCalled();
+      expect(localStorage.getItem('lastRoomId')).toBeNull();
+      expect(mockSocketInstance.sendBuffer).toEqual([]);
+      expect(mockSocketInstance.disconnect).toHaveBeenCalled();
+    });
+
+    test('each successful transport connection restores the saved room', () => {
+      socketService.initSocket();
+      mockGetCurrentRoom.mockReturnValue({ roomId: 'room', playerId: 'player', playerName: 'guest' });
+      const connected = mockSocketInstance.on.mock.calls.find(([name]) => name === 'connect')[1];
+      connected();
+      connected();
+      expect(mockSocketInstance.emit.mock.calls.filter(([name]) => name === 'reconnect')).toHaveLength(2);
+      socketService.disconnect();
+    });
+  });
+
+  describe('重新驗證後的房間與presence恢復', () => {
+    const handler = name => mockSocketInstance.on.mock.calls.find(([event]) => event === name)[1];
+    const user = { uid: 'owner', isAnonymous: false };
+    const room = { roomId: 'evo-room', room: { players: [{ id: 'seat', firebaseUid: 'owner', socketId: 'socket-a' }] } };
+    beforeEach(() => {
+      jest.useFakeTimers();
+      mockSocketInstance.id = 'socket-a';
+      mockAuth.currentUser = user;
+      socketService.initSocket();
+      mockAuthChanged(user);
+    });
+    afterEach(() => { socketService.disconnect(); jest.useRealTimers(); });
+
+    test.each(['evo:roomCreated', 'evo:joinedRoom'])('%s 的同UID席位在token更新後恢復', event => {
+      handler(event)(event === 'evo:roomCreated' ? { ...room.room, id: room.roomId } : room);
+      mockSocketInstance.emit.mockClear();
+      mockAuthChanged(user);
+      handler('connect')();
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('evo:reconnect', { roomId: 'evo-room', playerId: 'seat' });
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('reconnect', expect.anything());
+    });
+
+    test('已啟用presence在重新驗證連線後重送', () => {
+      socketService.setPresence('owner');
+      mockSocketInstance.emit.mockClear();
+      mockAuthChanged(user);
+      handler('connect')();
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('setPresence', { firebaseUid: 'owner' });
+      expect(localStorage.getItem('token')).toBeNull();
+    });
+
+    test('換UID不重送前帳號房間或presence，過期呼叫亦忽略', () => {
+      handler('evo:joinedRoom')(room);
+      socketService.setPresence('owner');
+      mockAuth.currentUser = { uid: 'other' };
+      mockAuthChanged(mockAuth.currentUser);
+      mockSocketInstance.emit.mockClear();
+      socketService.setPresence('owner');
+      handler('connect')();
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('setPresence', expect.anything());
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('evo:reconnect', expect.anything());
+    });
+
+    test('離開房間不會在下次connect重新加入', () => {
+      handler('evo:joinedRoom')(room);
+      socketService.evoLeaveRoom('evo-room', 'seat');
+      mockSocketInstance.emit.mockClear();
+      handler('connect')();
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('evo:reconnect', expect.anything());
+    });
+
+    test('離線離房先恢復綁定後離開，不重播失去所有權的leave', () => {
+      handler('evo:joinedRoom')(room);
+      mockSocketInstance.connected = false;
+      mockSocketInstance.emit.mockClear();
+      socketService.evoLeaveRoom('evo-room', 'seat');
+      expect(mockSocketInstance.emit).not.toHaveBeenCalled();
+      mockSocketInstance.connected = true;
+      handler('connect')();
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('evo:reconnect', { roomId: 'evo-room', playerId: 'seat' });
+      handler('evo:joinedRoom')(room);
+      expect(mockSocketInstance.emit).toHaveBeenCalledWith('evo:leaveRoom', { roomId: 'evo-room', playerId: 'seat' });
+      mockSocketInstance.emit.mockClear();
+      handler('connect')();
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('evo:reconnect', expect.anything());
+    });
+
+    test('離線離房的內部確認不通知大廳重新導向，正常加入仍通知', () => {
+      const navigate = jest.fn();
+      socketService.onEvoJoinedRoom(data => navigate(`/evolution/room/${data.roomId}`));
+      const deliver = data => mockSocketInstance.on.mock.calls.filter(([event]) => event === 'evo:joinedRoom').forEach(([, fn]) => fn(data));
+      deliver(room); navigate.mockClear();
+      mockSocketInstance.connected = false; socketService.evoLeaveRoom('evo-room', 'seat');
+      mockSocketInstance.connected = true; handler('connect')();
+      deliver({ ...room });
+      expect(navigate).not.toHaveBeenCalled();
+      deliver({ roomId: 'new-room', room: room.room });
+      expect(navigate).toHaveBeenCalledWith('/evolution/room/new-room');
+    });
+
+    test('離線presence只在connect時送一次，不預先放入buffer', () => {
+      mockSocketInstance.connected = false;
+      mockSocketInstance.emit.mockClear();
+      socketService.setPresence('owner');
+      expect(mockSocketInstance.emit).not.toHaveBeenCalled();
+      mockSocketInstance.connected = true;
+      handler('connect')();
+      expect(mockSocketInstance.emit.mock.calls.filter(([name]) => name === 'setPresence')).toHaveLength(1);
+    });
+
+    test('dispose後舊connect與auth回呼不能恢復狀態', () => {
+      handler('evo:joinedRoom')(room); socketService.setPresence('owner');
+      const connected = handler('connect'), authChanged = mockAuthChanged;
+      socketService.disconnect(); mockSocketInstance.emit.mockClear(); mockSocketInstance.connect.mockClear();
+      expect(() => { connected(); authChanged(user); }).not.toThrow();
+      expect(mockSocketInstance.emit).not.toHaveBeenCalled();
+      expect(mockSocketInstance.connect).not.toHaveBeenCalled();
+    });
+
+    test('不恢復其他帳號的席位', () => {
+      handler('evo:joinedRoom')({ ...room, room: { players: [{ id: 'victim', firebaseUid: 'other' }] } });
+      mockSocketInstance.emit.mockClear();
+      handler('connect')();
+      expect(mockSocketInstance.emit).not.toHaveBeenCalledWith('evo:reconnect', expect.anything());
     });
   });
 
@@ -467,7 +692,7 @@ describe('socketService', () => {
       socketService.initSocket();
 
       // 找到 reconnect handler 並觸發
-      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'reconnect');
+      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'connect');
       const reconnectHandler = reconnectCall[1];
       reconnectHandler(1);
 
@@ -484,7 +709,7 @@ describe('socketService', () => {
 
       socketService.initSocket();
 
-      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'reconnect');
+      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'connect');
       const reconnectHandler = reconnectCall[1];
       reconnectHandler(1);
 
@@ -499,7 +724,7 @@ describe('socketService', () => {
 
       socketService.initSocket();
 
-      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'reconnect');
+      const reconnectCall = mockSocketInstance.on.mock.calls.find(call => call[0] === 'connect');
       const reconnectHandler = reconnectCall[1];
       reconnectHandler(1);
 

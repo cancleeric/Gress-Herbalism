@@ -17,25 +17,32 @@ function Leaderboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadLeaderboard();
-  }, [sortBy]);
-
-  const loadLeaderboard = async () => {
+    let current = true;
     setLoading(true);
     setError('');
+    setLeaderboard([]);
 
-    try {
-      const result = await getLeaderboard(sortBy, 20);
-      if (result.success) {
-        setLeaderboard(result.data);
+    const loadLeaderboard = async () => {
+      try {
+        const result = await getLeaderboard(sortBy, 20);
+        if (!current) return;
+        if (result?.success && Array.isArray(result.data)) {
+          setLeaderboard(result.data);
+        } else {
+          setError('載入排行榜失敗');
+        }
+      } catch (err) {
+        if (!current) return;
+        setError('載入排行榜失敗');
+        console.error('載入排行榜失敗:', err);
+      } finally {
+        if (current) setLoading(false);
       }
-    } catch (err) {
-      setError('載入排行榜失敗');
-      console.error('載入排行榜失敗:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadLeaderboard();
+    return () => { current = false; };
+  }, [sortBy]);
 
   const handleBack = () => {
     // 返回上一頁（可能是本草大廳或演化論大廳）
@@ -101,7 +108,7 @@ function Leaderboard() {
               </button>
             </div>
 
-            {error && <div className="leaderboard-error">{error}</div>}
+            {error && <div className="leaderboard-error" role="alert">{error}</div>}
 
             {/* 排行榜列表 */}
             {loading ? (

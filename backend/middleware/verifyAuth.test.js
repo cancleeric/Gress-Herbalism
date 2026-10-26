@@ -126,7 +126,7 @@ describe('verifyAuth（FIREBASE_PROJECT_ID 已設定）', () => {
   test('⑤合法 token（user_id claim）→ 放行且 req.uid = payload.user_id', async () => {
     const jose = require('jose');
     jose.jwtVerify.mockResolvedValue({
-      payload: { user_id: 'firebase-uid-abc', sub: 'sub-fallback' },
+      payload: { user_id: 'firebase-uid-abc', sub: 'firebase-uid-abc', exp: Math.floor(Date.now()/1000)+3600, iat: Math.floor(Date.now()/1000) },
     });
 
     const { req, res, next } = makeReqResNext('Bearer valid.token.here');
@@ -141,7 +141,7 @@ describe('verifyAuth（FIREBASE_PROJECT_ID 已設定）', () => {
   test('⑤合法 token（僅 sub，無 user_id）→ 放行且 req.uid = payload.sub', async () => {
     const jose = require('jose');
     jose.jwtVerify.mockResolvedValue({
-      payload: { sub: 'sub-only-uid' },
+      payload: { sub: 'sub-only-uid', exp: Math.floor(Date.now()/1000)+3600, iat: Math.floor(Date.now()/1000) },
     });
 
     const { req, res, next } = makeReqResNext('Bearer valid.token.sub');
@@ -152,10 +152,23 @@ describe('verifyAuth（FIREBASE_PROJECT_ID 已設定）', () => {
     expect(req.uid).toBe('sub-only-uid');
   });
 
+  test.each([
+    { sub: 'uid', exp: Math.floor(Date.now()/1000)-1 },
+    { sub: '', exp: Math.floor(Date.now()/1000)+3600 },
+    { sub: 'uid-a', user_id: 'uid-b', exp: Math.floor(Date.now()/1000)+3600 },
+    { sub: 'uid' },
+  ])('拒絕缺失/過期期限或不一致身分 %#', async (payload) => {
+    require('jose').jwtVerify.mockResolvedValue({ payload });
+    const { req, res, next } = makeReqResNext('Bearer invalid.claims');
+    await verifyAuth(req, res, next);
+    expect(res.getStatus()).toBe(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   test('⑤jwtVerify 以正確的 issuer 和 audience 呼叫', async () => {
     const jose = require('jose');
     jose.jwtVerify.mockResolvedValue({
-      payload: { user_id: 'uid-check' },
+      payload: { user_id: 'uid-check', sub: 'uid-check', exp: Math.floor(Date.now()/1000)+3600, iat: Math.floor(Date.now()/1000) },
     });
 
     const { req, res, next } = makeReqResNext('Bearer some.valid.token');

@@ -10,53 +10,72 @@ import { useAuth } from '../../../firebase';
 import { getPlayerStats, getPlayerHistory } from '../../../services/apiService';
 import './Profile.css';
 
+const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+// Numeric strings remain compatible with decimal values returned by the API.
+const isDisplayNumber = value => value == null || Number.isFinite(value)
+  || (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value)));
+const validStats = value => isRecord(value)
+  && ['games_played', 'games_won', 'win_rate', 'total_score', 'highest_score'].every(key => isDisplayNumber(value[key]));
+const validHistory = value => Array.isArray(value) && value.every(record => isRecord(record)
+  && (record.is_winner == null || typeof record.is_winner === 'boolean')
+  && isDisplayNumber(record.final_score)
+  && typeof record.created_at === 'string' && Number.isFinite(Date.parse(record.created_at))
+  && (record.game_history == null || (isRecord(record.game_history)
+    && isDisplayNumber(record.game_history.player_count) && isDisplayNumber(record.game_history.rounds_played))));
+const responseMessage = (result, fallback) => typeof result?.message === 'string' && result.message.trim()
+  ? result.message : fallback;
+
 function Profile() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [reload, setReload] = useState(0);
+  const [snapshot, setSnapshot] = useState({ uid: null, request: 0, stats: null, history: [], loading: true, error: '' });
 
   // 工單 0175：阻止匿名玩家存取 Profile
-  const isAnonymous = user?.isAnonymous;
+  const uid = user?.uid || null;
+  const isAnonymous = Boolean(user?.isAnonymous);
+
+  // Reject stale ownership in render, before passive effects can clear old data.
+  const currentSnapshot = uid && !isAnonymous && snapshot.uid === uid && snapshot.request === reload;
+  const { stats, history, loading, error } = currentSnapshot
+    ? snapshot
+    : { stats: null, history: [], loading: Boolean(uid && !isAnonymous), error: '' };
 
   useEffect(() => {
-    if (user?.uid && !isAnonymous) {
-      loadData();
-    } else if (isAnonymous) {
-      setLoading(false);
+    const empty = { uid, request: reload, stats: null, history: [], loading: false, error: '' };
+    if (!uid || isAnonymous) {
+      setSnapshot(empty);
+      return;
     }
-  }, [user]);
-
-  const loadData = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const [statsResult, historyResult] = await Promise.all([
-        getPlayerStats(user.uid),
-        getPlayerHistory(user.uid),
-      ]);
-
-      if (statsResult.success) {
-        setStats(statsResult.data);
-      } else {
-        setError(statsResult.message || '載入統計資料失敗');
+    let current = true;
+    setSnapshot({ ...empty, loading: true });
+    const loadData = async () => {
+      try {
+        const [statsResult, historyResult] = await Promise.all([
+          getPlayerStats(uid),
+          getPlayerHistory(uid),
+        ]);
+        if (!current) return;
+        const hasStats = statsResult?.success && validStats(statsResult.data);
+        const hasHistory = historyResult?.success && validHistory(historyResult.data);
+        setSnapshot({
+          ...empty,
+          stats: hasStats ? statsResult.data : null,
+          history: hasHistory ? historyResult.data : [],
+          error: !hasStats ? responseMessage(statsResult, '載入統計資料失敗')
+            : !hasHistory ? responseMessage(historyResult, '載入歷史資料失敗') : '',
+        });
+      } catch (_) {
+        if (!current) return;
+        setSnapshot({ ...empty, error: '載入資料失敗，請稍後再試' });
+        // Do not log raw errors that may include account/request information.
+        console.error('載入資料失敗');
       }
+    };
 
-      if (historyResult.success) {
-        setHistory(historyResult.data);
-      } else {
-        setError(prev => prev || (historyResult.message || '載入歷史資料失敗'));
-      }
-    } catch (err) {
-      setError('載入資料失敗，請稍後再試');
-      console.error('載入資料失敗:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadData();
+    return () => { current = false; };
+  }, [uid, isAnonymous, reload]);
 
   const handleLogout = async () => {
     await logout();
@@ -67,6 +86,17 @@ function Profile() {
     // 返回上一頁（可能是本草大廳或演化論大廳）
     navigate(-1);
   };
+
+  if (!uid) {
+    return (
+      <div className="profile-page">
+        <div className="profile-card">
+          <p>請先登入以查看個人資料</p>
+          <button type="button" onClick={() => navigate('/login')}>前往登入</button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -179,9 +209,9 @@ function Profile() {
 
             {/* 工單 0175：錯誤訊息改善 */}
             {error && (
-              <div className="profile-error">
+              <div className="profile-error" role="alert">
                 {error}
-                <button className="retry-btn" onClick={loadData}>重新載入</button>
+                <button className="retry-btn" onClick={() => setReload(value => value + 1)}>重新載入</button>
               </div>
             )}
 
