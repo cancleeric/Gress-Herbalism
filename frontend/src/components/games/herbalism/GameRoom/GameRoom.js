@@ -52,8 +52,8 @@ import {
   GAME_PHASE_PLAYING,
   GAME_PHASE_FINISHED,
   GAME_PHASE_FOLLOW_GUESSING,
-  GAME_PHASE_ROUND_END,
-  GAME_PHASE_POST_QUESTION
+  GAME_PHASE_POST_QUESTION,
+  GAME_PHASE_ROUND_END
 } from '../../../../shared/constants';
 import GameBoard from '../GameBoard/GameBoard';
 import PlayerHand from '../PlayerHand/PlayerHand';
@@ -124,6 +124,7 @@ function GameRoom() {
 
   // 本地遊戲控制器（單人模式專用）
   const localControllerRef = useRef(null);
+  const aiTurnEpochRef = useRef(0);
 
   // AI 玩家管理（本地模式專用）
   const {
@@ -139,9 +140,28 @@ function GameRoom() {
   } = useAIPlayers({
     aiConfig: isLocalMode ? aiConfig : null,
     gameState,
-    onAIAction: useCallback((action, aiInstance) => {
-      if (localControllerRef.current) {
-        localControllerRef.current.handleAction(action);
+    onAIAction: useCallback(async (action, _aiInstance, turnToken) => {
+      const controller = localControllerRef.current;
+      if (!controller) return;
+
+      // The result panel can open while a delayed AI decision is already in
+      // flight; its cleanup cannot cancel that promise. A stale token must not
+      // mutate the next round or consume its first turn.
+      if (turnToken !== undefined && turnToken !== aiTurnEpochRef.current) return;
+      if (controller.getState().gamePhase !== GAME_PHASE_PLAYING) return;
+
+      await controller.handleAction(action);
+
+      // A question leaves the local controller in POST_QUESTION; only the
+      // human UI has a manual end-turn control. AI turns must advance
+      // deterministically or the game stays on the AI player forever.
+      // Only advance when the question actually mutated the phase: an invalid
+      // target early-returns without changing state and must not burn the turn.
+      if (
+        action?.type === 'question' &&
+        controller.getState().gamePhase === GAME_PHASE_POST_QUESTION
+      ) {
+        controller.endTurn({ playerId: action.playerId, prediction: null });
       }
     }, [])
   });
@@ -294,6 +314,9 @@ function GameRoom() {
             declinedPlayers: event.declinedPlayers
           }));
         } else if (event.type === 'guessResult') {
+          // Invalidate any delayed AI decision before the result panel is
+          // shown; its promise cannot be cancelled by the effect cleanup alone.
+          aiTurnEpochRef.current += 1;
           setShowFollowGuessPanel(false);
           setGuessResultData({
             isCorrect: event.isCorrect,
@@ -339,15 +362,21 @@ function GameRoom() {
 
     // 檢查遊戲階段
     if (gameState.gamePhase !== GAME_PHASE_PLAYING) return;
+    if (showRoundEnd) return;
 
     // 延遲執行 AI 決策（避免立即執行）
+    const turnToken = aiTurnEpochRef.current + 1;
+    aiTurnEpochRef.current = turnToken;
     const timerId = setTimeout(() => {
       console.log('[GameRoom] 觸發 AI 回合:', currentPlayer.name);
-      handleAITurn(currentPlayer);
+      handleAITurn(currentPlayer, turnToken);
     }, 500);
 
-    return () => clearTimeout(timerId);
-  }, [isLocalMode, gameState.currentPlayerIndex, gameState.gamePhase, getCurrentPlayer, isAIPlayer, handleAITurn]);
+    return () => {
+      clearTimeout(timerId);
+      aiTurnEpochRef.current += 1;
+    };
+  }, [isLocalMode, gameState.currentPlayerIndex, gameState.gamePhase, showRoundEnd, getCurrentPlayer, isAIPlayer, handleAITurn]);
 
   /**
    * 自動處理 AI 跟猜決策（本地模式）
@@ -926,10 +955,14 @@ function GameRoom() {
     if (!myPlayer) return;
 
     if (isLocalMode) {
-      // 本地模式直接關閉並開始下一局
+      const continueGame = guessResultData?.continueGame === true;
       setShowRoundEnd(false);
       setGuessResultData(null);
-      if (localControllerRef.current) {
+
+      // A wrong guess that leaves active players already switched the local
+      // controller to PLAYING/next player (LocalGameController.resolveGuess).
+      // Starting another round here discards that turn and double-advances.
+      if (!continueGame && localControllerRef.current) {
         localControllerRef.current.startNextRound();
       }
     } else if (gameId) {
