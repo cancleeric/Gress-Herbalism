@@ -7,7 +7,38 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createAIPlayer } from '../../ai';
-import { PLAYER_TYPE } from '../../shared/constants';
+import { PLAYER_TYPE, QUESTION_TYPE_GIVE_ONE_GET_ALL } from '../../shared/constants';
+
+/**
+ * Normalize a DecisionMaker action for the local controller boundary.
+ *
+ * DecisionMaker intentionally returns only target/action data; the local
+ * controller requires the acting player id. AI guess decisions also use
+ * ``colors`` while ``LocalGameController.handleGuess`` consumes
+ * ``guessedColors``. Keep both mappings at this single boundary.
+ */
+export function normalizeAIAction(action, playerId) {
+  if (!action || typeof action !== 'object') return action;
+
+  const normalized = { ...action, playerId };
+
+  if (normalized.type === 'guess' && !normalized.guessedColors) {
+    normalized.guessedColors = action.colors;
+  }
+
+  // Type 3 requires both a give and a get color. DecisionMaker only emits the
+  // two-color selection; mirror the human mapping so the AI turn is not a
+  // silent no-op that still consumes the turn.
+  if (normalized.type === 'question' &&
+      normalized.questionType === QUESTION_TYPE_GIVE_ONE_GET_ALL) {
+    if (!normalized.giveColor) normalized.giveColor = action.colors?.[0];
+    if (!normalized.getColor) normalized.getColor = action.colors?.[1];
+  }
+
+  return normalized;
+}
+
+
 
 /**
  * AI 玩家管理 Hook
@@ -96,7 +127,7 @@ function useAIPlayers({ aiConfig, gameState, onAIAction }) {
   /**
    * 處理 AI 回合
    */
-  const handleAITurn = useCallback(async (player) => {
+  const handleAITurn = useCallback(async (player, turnToken) => {
     if (!player || !isAIPlayer(player)) return;
 
     const aiInstance = getAIInstance(player.id);
@@ -116,9 +147,17 @@ function useAIPlayers({ aiConfig, gameState, onAIAction }) {
 
       console.log(`[AI] ${aiInstance.name} 決定執行:`, action);
 
+      // 本地控制器需要動作發起者；DecisionMaker 的動作只帶目標/內容，
+      // 在呼叫邊界補上實際 AI 身分，避免 AI 回合被當成無主動作丟棄。
+      const normalizedAction = normalizeAIAction(action, aiInstance.id);
+
       // 回調通知父組件執行動作
       if (onAIAction) {
-        onAIAction(action, aiInstance);
+        if (turnToken === undefined) {
+          await onAIAction(normalizedAction, aiInstance);
+        } else {
+          await onAIAction(normalizedAction, aiInstance, turnToken);
+        }
       }
     } catch (error) {
       console.error(`[AI] ${aiInstance.name} 決策失敗:`, error);

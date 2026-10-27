@@ -221,6 +221,113 @@ describe('useAIPlayers', () => {
       expect(result.current.currentAIId).toBeNull();
     });
 
+
+    test('應該為 AI 問牌補上實際 playerId', async () => {
+      const aiConfig = { aiCount: 1, difficulties: ['medium'] };
+      const onAIAction = jest.fn();
+
+      const { result } = renderHook(() =>
+        useAIPlayers({
+          aiConfig,
+          gameState: mockGameState,
+          onAIAction
+        })
+      );
+
+      const aiInstance = result.current.getAIInstance('ai-1');
+      aiInstance.takeTurn.mockResolvedValue({
+        type: 'question',
+        targetPlayerId: 'ai-2',
+        colors: ['red', 'blue'],
+        questionType: 2
+      });
+
+      await act(async () => {
+        await result.current.handleAITurn({ id: 'ai-1', isAI: true });
+      });
+
+      await waitFor(() => expect(onAIAction).toHaveBeenCalled());
+      expect(onAIAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'question',
+          playerId: 'ai-1',
+          targetPlayerId: 'ai-2'
+        }),
+        aiInstance
+      );
+    });
+
+    test('應該把 AI guess 的 colors 正規化為 guessedColors 並補 playerId', async () => {
+      const aiConfig = { aiCount: 1, difficulties: ['medium'] };
+      const onAIAction = jest.fn();
+
+      const { result } = renderHook(() =>
+        useAIPlayers({
+          aiConfig,
+          gameState: mockGameState,
+          onAIAction
+        })
+      );
+
+      const aiInstance = result.current.getAIInstance('ai-1');
+      aiInstance.takeTurn.mockResolvedValue({
+        type: 'guess',
+        colors: ['red', 'yellow']
+      });
+
+      await act(async () => {
+        await result.current.handleAITurn({ id: 'ai-1', isAI: true });
+      });
+
+      await waitFor(() => expect(onAIAction).toHaveBeenCalled());
+      expect(onAIAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'guess',
+          playerId: 'ai-1',
+          guessedColors: ['red', 'yellow']
+        }),
+        aiInstance
+      );
+    });
+
+
+    test('應該為 AI 類型 3 問牌補上 giveColor/getColor', async () => {
+      const aiConfig = { aiCount: 1, difficulties: ['medium'] };
+      const onAIAction = jest.fn();
+
+      const { result } = renderHook(() =>
+        useAIPlayers({
+          aiConfig,
+          gameState: mockGameState,
+          onAIAction
+        })
+      );
+
+      const aiInstance = result.current.getAIInstance('ai-1');
+      aiInstance.takeTurn.mockResolvedValue({
+        type: 'question',
+        targetPlayerId: 'ai-2',
+        colors: ['red', 'blue'],
+        questionType: 3
+      });
+
+      await act(async () => {
+        await result.current.handleAITurn({ id: 'ai-1', isAI: true });
+      });
+
+      await waitFor(() => expect(onAIAction).toHaveBeenCalled());
+      expect(onAIAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'question',
+          playerId: 'ai-1',
+          questionType: 3,
+          giveColor: 'red',
+          getColor: 'blue'
+        }),
+        aiInstance
+      );
+    });
+
     test('非 AI 玩家不應該執行', async () => {
       const aiConfig = { aiCount: 1, difficulties: ['medium'] };
       const onAIAction = jest.fn();

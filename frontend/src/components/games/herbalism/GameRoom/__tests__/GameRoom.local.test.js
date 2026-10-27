@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, act, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { createStore, combineReducers } from 'redux';
@@ -13,9 +13,13 @@ import GameRoom from '../GameRoom';
 import { gameReducer, initialState } from '../../../../../store/gameStore';
 
 // Mock useAIPlayers
+let capturedOnAIAction;
+let capturedController;
+
 jest.mock('../../../../../hooks/herbalism/useAIPlayers', () => ({
   __esModule: true,
-  default: () => ({
+  default: (options) => ({
+    __capture: (capturedOnAIAction = options.onAIAction),
     aiPlayers: [
       {
         id: 'ai-1',
@@ -57,6 +61,7 @@ const mockGetCurrentPlayer = jest.fn().mockReturnValue(null);
 jest.mock('../../../../../controllers/herbalism/LocalGameController', () => {
   return class MockLocalGameController {
     constructor() {
+      capturedController = this;
       this.startGame = mockStartGame;
       this.handleAction = jest.fn();
       this.handleFollowGuessResponse = jest.fn();
@@ -116,6 +121,21 @@ jest.mock('../../../../../utils/common/localStorage', () => ({
 }));
 
 describe('GameRoom 本地模式', () => {
+  beforeEach(() => {
+    capturedOnAIAction = undefined;
+    capturedController = undefined;
+    mockGetState.mockReturnValue({
+      gameId: 'local-test',
+      players: [],
+      currentPlayerIndex: 0,
+      gamePhase: 'playing',
+      winner: null,
+      hiddenCards: [],
+      gameHistory: [],
+      maxPlayers: 2
+    });
+  });
+
   test('應該在本地模式下初始化', () => {
     const testRootReducer = combineReducers({ herbalism: gameReducer });
     const store = createStore(testRootReducer, { herbalism: initialState });
@@ -145,5 +165,75 @@ describe('GameRoom 本地模式', () => {
 
     // 基本檢查：組件是否渲染
     expect(container.querySelector('.game-room')).toBeInTheDocument();
+  });
+
+  test('AI 問牌後應自動結束回合，不讓本地遊戲停在 AI', async () => {
+    const testRootReducer = combineReducers({ herbalism: gameReducer });
+    const store = createStore(testRootReducer, { herbalism: initialState });
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter
+          initialEntries={[
+            {
+              pathname: '/game/local-123',
+              state: {
+                aiConfig: { aiCount: 1, difficulties: ['easy'] },
+                playerName: '測試玩家'
+              }
+            }
+          ]}
+        >
+          <Routes>
+            <Route path="/game/:gameId" element={<GameRoom />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+
+    await waitFor(() => expect(capturedOnAIAction).toBeDefined());
+    capturedController.handleAction.mockImplementation(() => {
+      mockGetState.mockReturnValue({ ...mockGetState(), gamePhase: 'postQuestion' });
+    });
+    await act(async () => {
+      await capturedOnAIAction({
+        type: 'question',
+        playerId: 'ai-1',
+        targetPlayerId: 'human-1',
+        colors: ['red', 'blue'],
+        questionType: 1
+      });
+    });
+
+    expect(capturedController.handleAction).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'question', playerId: 'ai-1' })
+    );
+    expect(capturedController.endTurn).toHaveBeenCalledWith({
+      playerId: 'ai-1',
+      prediction: null
+    });
+    expect(capturedController.handleAction.mock.invocationCallOrder[0])
+      .toBeLessThan(capturedController.endTurn.mock.invocationCallOrder[0]);
+  });
+
+  test('AI 猜牌不應呼叫 endTurn（跟猜流程自行推進）', async () => {
+    const testRootReducer = combineReducers({ herbalism: gameReducer });
+    const store = createStore(testRootReducer, { herbalism: initialState });
+
+    render(
+      <Provider store={store}>
+        <MemoryRouter initialEntries={[{ pathname: '/game/local-123', state: { aiConfig: { aiCount: 1, difficulties: ['easy'] }, playerName: '測試玩家' } }]}>
+          <Routes><Route path="/game/:gameId" element={<GameRoom />} /></Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+
+    await waitFor(() => expect(capturedOnAIAction).toBeDefined());
+    await act(async () => {
+      await capturedOnAIAction({ type: 'guess', playerId: 'ai-1', guessedColors: ['red', 'blue'] });
+    });
+
+    expect(capturedController.handleAction).toHaveBeenCalled();
+    expect(capturedController.endTurn).not.toHaveBeenCalled();
   });
 });
