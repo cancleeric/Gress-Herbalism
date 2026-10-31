@@ -291,7 +291,10 @@ describe('LocalGameController', () => {
       const state = controller.getState();
       const guessingPlayer = state.players[0];
 
-      // 故意猜錯
+      // Use nonzero scores to catch accidental -1 on the guesser.
+      guessingPlayer.score = 2;
+      state.players.find(p=>p.id==='ai-1').score = 2;
+      controller.gameState.hiddenCards = [{color:'red'},{color:'blue'}];
       const wrongColors = ['red', 'red'];
 
       await controller.handleAction({
@@ -318,8 +321,8 @@ describe('LocalGameController', () => {
 
       expect(finalGuesser.isActive).toBe(false);
       expect(finalFollower.isActive).toBe(false);
-      expect(finalGuesser.score).toBe(0); // -1 但最低 0
-      expect(finalFollower.score).toBe(0);
+      expect(finalGuesser.score).toBe(2); // incorrect answer does not lose points
+      expect(finalFollower.score).toBe(1);
     });
   });
 

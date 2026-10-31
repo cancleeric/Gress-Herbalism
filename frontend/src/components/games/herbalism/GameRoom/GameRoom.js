@@ -11,6 +11,7 @@ import HerbArt from './HerbArt';
 import { herbForCard, HERB_GROUPS } from './herbSpecies';
 import Tabletop3D from './Tabletop3D';
 import LocalQuestionTransfer from './LocalQuestionTransfer';
+import PublicTransferFlight from './PublicTransferFlight';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -182,6 +183,9 @@ function GameRoom() {
 
   // 本地狀態
   const [localQuestionRequest, setLocalQuestionRequest] = useState(null);
+  const [publicTransfer, setPublicTransfer] = useState(null);
+  const playerIdentityRef = useRef(gameState.currentPlayerId);
+  playerIdentityRef.current = gameState.currentPlayerId;
   const [consolePanel, setConsolePanel] = useState(null);
   const [threeReady, setThreeReady] = useState(false);
   const consolePanelRef = useRef(null);
@@ -559,13 +563,15 @@ function GameRoom() {
     });
 
     // 監聽等待顏色選擇（其他玩家，不包含顏色資訊避免洩漏）
-    const unsubWaiting = onWaitingForColorChoice(({ targetPlayerId, askingPlayerId }) => {
-      setWaitingForColorChoice(true);
+    const unsubWaiting = onWaitingForColorChoice(({ targetPlayerId, askingPlayerId, transferFlight }) => {
+      if (transferFlight && transferFlight.from !== playerIdentityRef.current) setPublicTransfer(transferFlight);
+      setWaitingForColorChoice(!transferFlight && targetPlayerId !== playerIdentityRef.current);
       setColorChoiceInfo({ targetPlayerId, askingPlayerId });
     });
 
     // Both normal completion and server cancellation dismiss pending UI only.
     const unsubColorResult = onColorChoiceResult(({ targetPlayerId, chosenColor, cardsTransferred }) => {
+      setLocalQuestionRequest(null);
       setShowColorChoice(false);
       setColorChoiceData(null);
       setWaitingForColorChoice(false);
@@ -630,6 +636,7 @@ function GameRoom() {
 
     // 監聽給牌通知（工單 0072）
     const unsubCardGive = onCardGiveNotification((notification) => {
+      if (notification.isTransferProposal) { setLocalQuestionRequest(notification); return; }
       setCardGiveNotification(notification);
     });
 
@@ -1657,7 +1664,14 @@ function GameRoom() {
           </TreasureGuessDialog>
         )}
 
-        {localQuestionRequest && <LocalQuestionTransfer request={localQuestionRequest} onComplete={async chosenColor => {
+        {publicTransfer && publicTransfer.from !== myPlayer?.id && <PublicTransferFlight transfer={publicTransfer} onComplete={() => setPublicTransfer(null)} />}
+        {localQuestionRequest && <LocalQuestionTransfer key={localQuestionRequest.requestId || 'local'} request={localQuestionRequest}
+          onStart={chosenColor => { if (!isLocalMode) submitColorChoice(gameId, chosenColor || 'none', {requestId: localQuestionRequest.requestId, stage:'start'}); }}
+          onComplete={async chosenColor => {
+          if (!isLocalMode) {
+            submitColorChoice(gameId, chosenColor || 'none', {requestId: localQuestionRequest.requestId, stage:'complete'});
+            return; // Wait for the authoritative completion/cancellation to dismiss.
+          }
           const controller = localControllerRef.current;
           if (!controller) return;
           const committed = await controller.confirmLocalQuestion(chosenColor);
@@ -1679,7 +1693,7 @@ function GameRoom() {
         )}
 
         {/* 等待問牌玩家結束回合 */}
-        {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && !localQuestionRequest && (
+        {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && !localQuestionRequest && !publicTransfer && (
           <div className="waiting-overlay">
             <div className="waiting-message">
               <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>
@@ -1760,7 +1774,7 @@ function GameRoom() {
         )}
 
         {/* 等待顏色選擇提示 */}
-        {waitingForColorChoice && colorChoiceInfo && (
+        {waitingForColorChoice && colorChoiceInfo && colorChoiceInfo.targetPlayerId !== myPlayer?.id && !publicTransfer && (
           <div className="waiting-overlay">
             <div className="waiting-message">
               <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>
@@ -2311,7 +2325,7 @@ function GameRoom() {
       )}
 
       {/* 等待問牌玩家結束回合 */}
-      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && !localQuestionRequest && (
+      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && !localQuestionRequest && !publicTransfer && (
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>
@@ -2402,7 +2416,7 @@ function GameRoom() {
       )}
 
       {/* 等待顏色選擇提示 */}
-      {waitingForColorChoice && colorChoiceInfo && (
+      {waitingForColorChoice && colorChoiceInfo && colorChoiceInfo.targetPlayerId !== myPlayer?.id && !publicTransfer && (
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {gameState.players.find(p => p.id === colorChoiceInfo.targetPlayerId)?.name || '對方'} 選擇要給哪種顏色...</p>

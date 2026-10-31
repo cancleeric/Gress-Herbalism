@@ -92,9 +92,10 @@ function authorizePacket(socket, packet, context) {
   }
   if (event === 'colorChoiceSubmit') {
     const pending = pendingColorChoices.get(data.gameId);
+    if (pending?.action && (data.requestId !== pending.requestId || !['start','complete'].includes(data.stage))) throw new Error('無效的交牌請求');
     if (!pending || state.gamePhase !== 'playing' ||
       state.players[state.currentPlayerIndex]?.id !== pending.askingPlayerId || pending.targetPlayerId !== player.id ||
-      !(pending.availableColors.includes(data.chosenColor) || (data.chosenColor === 'none' && pending.availableColors.length === 0))) throw new Error('不是有效的選色回應');
+      (!pending.action && !(pending.availableColors.includes(data.chosenColor) || (data.chosenColor === 'none' && pending.availableColors.length === 0)))) throw new Error('不是有效的選色回應');
   }
   if (event === 'endTurn' && (postQuestionStates.get(data.gameId)?.playerId !== player.id ||
     state.gamePhase !== 'postQuestion' || (data.prediction && !COLORS.has(data.prediction)))) throw new Error('不是有效的結束回合');

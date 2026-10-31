@@ -4,6 +4,7 @@
 
 const express = require('express');
 const http = require('http');
+const { randomUUID } = require('crypto');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
@@ -762,6 +763,23 @@ io.on('connection', (socket) => {
     } else if (action.type === 'guess') {
       replayRecorder?.capture(gameState, 'guessMade', { playerId: action.playerId, guessedColors: action.guessedColors });
     }
+    if (action.type === 'question') {
+      const preview = processGameAction(structuredClone(gameState), action);
+      if (!preview.success) { socket.emit('error', {message: preview.message}); return; }
+      const target = gameState.players.find(p => p.id === action.targetPlayerId);
+      const pending = {
+        requestId: randomUUID(), action: {type:'question', playerId:action.playerId,
+          targetPlayerId:action.targetPlayerId, questionType:action.questionType,
+          colors:[...action.colors], giveColor:action.giveColor, getColor:action.getColor}, stage: 'confirm',
+        askingPlayerId: action.playerId, targetPlayerId: action.targetPlayerId,
+        colors: action.colors, availableColors: action.colors.filter(c => target.hand.some(card => card.color === c)),
+        hands: JSON.stringify(gameState.players.map(p => [p.id, p.hand])),
+      };
+      pendingColorChoices.set(gameId, pending);
+      sendQuestionProposal(gameId, pending);
+      emitReplayEvent(gameId, 'waitingForColorChoice', {targetPlayerId: pending.targetPlayerId, askingPlayerId: pending.askingPlayerId});
+      return; // Only a private recipient confirmation + animation completion can commit.
+    }
     const result = processGameAction(gameState, action);
     console.log(`[gameAction] 處理結果:`, {
       success: result.success,
@@ -916,7 +934,7 @@ io.on('connection', (socket) => {
   });
 
   // 處理被要牌玩家的顏色選擇
-  socket.on('colorChoiceSubmit', ({ gameId, chosenColor }) => {
+  socket.on('colorChoiceSubmit', ({ gameId, chosenColor, requestId, stage }) => {
     const gameState = gameRooms.get(gameId);
     const pendingChoice = pendingColorChoices.get(gameId);
 
@@ -930,16 +948,49 @@ io.on('connection', (socket) => {
       return;
     }
 
+    if (pendingChoice.action) {
+      if (requestId !== pendingChoice.requestId ||
+          gameState.players[gameState.currentPlayerIndex]?.id !== pendingChoice.askingPlayerId ||
+          JSON.stringify(gameState.players.map(p => [p.id, p.hand])) !== pendingChoice.hands) {
+        pendingColorChoices.delete(gameId);
+        emitReplayEvent(gameId,'colorChoiceResult',{cancelled:true,cardsTransferred:0});
+        broadcastGameState(gameId);
+        socket.emit('error', {message:'問牌狀態已變更，已取消交牌'}); return;
+      }
+      if (stage === 'start' && pendingChoice.stage === 'confirm') {
+        const needsChoice = pendingChoice.action.questionType === 2;
+        const validChoice = pendingChoice.availableColors.length ? pendingChoice.availableColors.includes(chosenColor) : chosenColor === 'none';
+        if (needsChoice && !validChoice) { socket.emit('error', {message:'請選擇有牌的顏色'}); return; }
+        pendingChoice.chosenColor = chosenColor;
+        pendingChoice.stage = 'animating';
+        const target = gameState.players.find(p => p.id === pendingChoice.targetPlayerId);
+        const action = pendingChoice.action;
+        const count = action.questionType === 1 ? action.colors.filter(c => target.hand.some(card=>card.color===c)).length
+          : target.hand.filter(card=>card.color === (action.questionType === 2 ? chosenColor : action.getColor)).length;
+        emitReplayEvent(gameId, 'waitingForColorChoice', {
+          askingPlayerId: action.playerId, targetPlayerId: action.targetPlayerId,
+          transferFlight: {requestId, from: action.targetPlayerId, to: action.playerId, count,
+            incoming: action.questionType === 3 ? 1 : 0}
+        });
+        return;
+      }
+      if (stage !== 'complete' || pendingChoice.stage !== 'animating') {
+        socket.emit('error', {message:'請先確認交牌'}); return;
+      }
+      chosenColor = pendingChoice.chosenColor;
+    }
+
     // 驗證選擇的顏色是否有效
     // 'none' 是有效選擇當 availableColors 為空時（被問玩家兩種顏色都沒有）
     const isNoneChoice = chosenColor === 'none' && pendingChoice.availableColors.length === 0;
-    if (!isNoneChoice && !pendingChoice.colors.includes(chosenColor)) {
+    if (!pendingChoice.action && !isNoneChoice && !pendingChoice.colors.includes(chosenColor)) {
       socket.emit('error', { message: '無效的顏色選擇' });
       return;
     }
 
     // 處理顏色選擇
-    const result = processColorChoice(
+    const result = pendingChoice.action && pendingChoice.action.questionType !== 2
+      ? processQuestionAction(gameState, pendingChoice.action) : processColorChoice(
       gameState,
       pendingChoice.askingPlayerId,
       pendingChoice.targetPlayerId,
@@ -948,13 +999,17 @@ io.on('connection', (socket) => {
     );
 
     if (result.success) {
-      // 清除等待狀態
+      // Consume before emitting; duplicate or stale completions cannot commit twice.
       pendingColorChoices.delete(gameId);
+      if (pendingChoice.action) {
+        result.cardGiveNotification = null; // Proposal and animation already shown, not a second post-hoc confirmation.
+        replayRecorder?.capture(gameState, 'questionResolved', {playerId: pendingChoice.askingPlayerId,
+          targetPlayerId: pendingChoice.targetPlayerId, count: result.cardsTransferred || 0});
+      }
 
       // 廣播選擇結果
       emitReplayEvent(gameId, 'colorChoiceResult', {
         targetPlayerId: pendingChoice.targetPlayerId,
-        chosenColor: chosenColor,
         cardsTransferred: result.cardsTransferred
       });
 
@@ -996,6 +1051,11 @@ io.on('connection', (socket) => {
       // 廣播更新後的遊戲狀態
       broadcastGameState(gameId);
     } else {
+      if (pendingChoice.action) {
+        pendingColorChoices.delete(gameId);
+        emitReplayEvent(gameId,'colorChoiceResult',{cancelled:true,cardsTransferred:0});
+        broadcastGameState(gameId);
+      }
       socket.emit('error', { message: result.message });
     }
   });
@@ -1291,7 +1351,7 @@ function reconcilePlayerDeparture(gameId, playerId) {
   if (!state) return;
   const seated = state.players.filter(player => player.ownerUid);
   const cancelledChoice = pendingColorChoices.get(gameId);
-  if (cancelledChoice && (cancelledChoice.askingPlayerId === playerId || cancelledChoice.targetPlayerId === playerId)) {
+  if (cancelledChoice && (cancelledChoice.askingPlayerId === playerId || cancelledChoice.targetPlayerId === playerId || seated.filter(p=>p.isActive).length <= 1)) {
     emitReplayEvent(gameId, 'colorChoiceResult', {
       cancelled: true,
       askingPlayerId: cancelledChoice.askingPlayerId,
@@ -1311,10 +1371,10 @@ function reconcilePlayerDeparture(gameId, playerId) {
     return;
   }
   const pending = pendingColorChoices.get(gameId);
-  if (pending && (pending.askingPlayerId === playerId || pending.targetPlayerId === playerId)) {
+  if (pending && (pending.askingPlayerId === playerId || pending.targetPlayerId === playerId || seated.filter(p=>p.isActive).length <= 1)) {
     pendingColorChoices.delete(gameId);
     const asker = seated.find(player => player.id === pending.askingPlayerId && player.isActive);
-    if (asker && pending.askingPlayerId !== playerId) {
+    if (asker && pending.askingPlayerId !== playerId && seated.filter(p=>p.isActive).length > 1) {
       state.gamePhase = 'postQuestion';
       postQuestionStates.set(gameId, { playerId: asker.id });
       findSocketByPlayerId(gameId, asker.id)?.emit('postQuestionPhase', {
@@ -1579,7 +1639,11 @@ function handlePlayerReconnect(socket, roomId, playerId, playerName) {
   const pendingChoice = pendingColorChoices.get(roomId);
   if (pendingChoice && gameState.gamePhase === 'playing' &&
       gameState.players[gameState.currentPlayerIndex]?.id === pendingChoice.askingPlayerId) {
-    if (pendingChoice.targetPlayerId === playerId) {
+    if (pendingChoice.targetPlayerId === playerId && pendingChoice.action) {
+      pendingChoice.stage = 'confirm';
+      pendingChoice.requestId = randomUUID();
+      sendQuestionProposal(roomId, pendingChoice);
+    } else if (pendingChoice.targetPlayerId === playerId) {
       socket.emit('colorChoiceRequired', {
         askingPlayerId: pendingChoice.askingPlayerId,
         colors: pendingChoice.colors,
@@ -1681,6 +1745,18 @@ function dealCards(deck, playerCount) {
   return { hiddenCards, playerHands };
 }
 
+// Only the recipient receives colors and its own private hand snapshot.
+function sendQuestionProposal(gameId, pending) {
+  const state = gameRooms.get(gameId);
+  const target = state?.players.find(p=>p.id === pending.targetPlayerId);
+  const asker = state?.players.find(p=>p.id === pending.askingPlayerId);
+  if (!target || !asker) return;
+  findSocketByPlayerId(gameId, target.id)?.emit('cardGiveNotification', {
+    ...pending.action, isTransferProposal: true, requestId: pending.requestId, fromPlayer: asker.name, hand: structuredClone(target.hand),
+    incomingColor: pending.action.questionType === 3 ? pending.action.giveColor : null,
+  });
+}
+
 // ==================== 遊戲動作處理 ====================
 
 function processGameAction(gameState, action) {
@@ -1772,9 +1848,7 @@ function processQuestionAction(gameState, action) {
   });
 
   // 檢查玩家是否出局（手牌為空）
-  if (player.hand.length === 0) {
-    player.isActive = false;
-  }
+  // Empty hands do not consume cure / guessing eligibility.
 
   // 工單 0072：建立給牌通知資料
   let cardGiveNotification = null;
@@ -1814,6 +1888,7 @@ function processQuestionAction(gameState, action) {
     success: true,
     gameState,
     enterPostQuestionPhase: true,
+    cardsTransferred: cardsToGive.length || cardsToReceive.length,
     currentPlayerId: playerId,
     // 工單 0072
     cardGiveNotification,
@@ -1860,9 +1935,7 @@ function processColorChoice(gameState, askingPlayerId, targetPlayerId, chosenCol
   });
 
   // 檢查玩家是否出局（手牌為空）
-  if (askingPlayer.hand.length === 0) {
-    askingPlayer.isActive = false;
-  }
+  // Empty hands remain eligible to act.
 
   // 工單 0072：建立給牌通知資料
   const cardCounts = {};

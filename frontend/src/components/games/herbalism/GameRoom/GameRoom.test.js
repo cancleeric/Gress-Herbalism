@@ -220,6 +220,25 @@ describe('GameRoom - 工作單 0023', () => {
       expect(opener).toHaveFocus();
       expect(socketService.sendGameAction).not.toHaveBeenCalled();
     });
+    test('network recipient confirms without a waiting overlay; only the final animation commits', () => {
+      const {container}=renderWithProviders(<GameRoom />, {preloadedState:consoleState});
+      const req={isTransferProposal:true,requestId:'r1',playerId:'p2',targetPlayerId:'p1',fromPlayer:'p2',questionType:1,colors:['red','blue'],hand:[{id:'r',color:'red'},{id:'b',color:'blue'}]};
+      act(()=>socketCallbacks.cardGiveNotification(req));
+      act(()=>socketCallbacks.waitingForColorChoice({askingPlayerId:'p2',targetPlayerId:'p1'}));
+      expect(container.querySelector('.waiting-overlay')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button',{name:'確認交牌'}));
+      expect(socketService.submitColorChoice).toHaveBeenCalledTimes(1);
+      expect(socketService.submitColorChoice).toHaveBeenLastCalledWith('test_room','none',{requestId:'r1',stage:'start'});
+      const cards=container.querySelectorAll('.local-transfer-flying-card');
+      fireEvent.animationEnd(cards[0]);
+      expect(socketService.submitColorChoice).toHaveBeenCalledTimes(1);
+      fireEvent.animationEnd(cards[1]);fireEvent.animationEnd(cards[1]);
+      expect(socketService.submitColorChoice).toHaveBeenCalledTimes(2);
+      expect(socketService.submitColorChoice).toHaveBeenLastCalledWith('test_room','none',{requestId:'r1',stage:'complete'});
+      act(()=>socketCallbacks.colorChoiceResult({cardsTransferred:2}));
+      expect(container.querySelector('.local-transfer-stage')).not.toBeInTheDocument();
+    });
+
     test('rules can be opened and closed while all four seats and gameplay actions remain mounted', () => {
       renderWithProviders(<GameRoom />, {preloadedState: consoleState});
       fireEvent.click(screen.getByRole('button', {name: '開啟遊戲規則'}));

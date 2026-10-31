@@ -440,9 +440,9 @@ export function leaveRoom(gameId, playerId) {
 /**
  * 提交顏色選擇（被要牌玩家選擇給哪種顏色）
  */
-export function submitColorChoice(gameId, chosenColor) {
+export function submitColorChoice(gameId, chosenColor, transfer = {}) {
   const s = getSocket();
-  s.emit('colorChoiceSubmit', { gameId, chosenColor });
+  s.emit('colorChoiceSubmit', { gameId, chosenColor, ...transfer });
 }
 
 // ==================== 跟猜相關 ====================

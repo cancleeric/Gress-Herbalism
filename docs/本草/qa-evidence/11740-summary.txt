@@ -1,0 +1,30 @@
+# 11740 evidence summary
+Commands: frontend CI=true npm test -- --watchAll=false --runInBand --silent --runTestsByPath (LocalGameController, GameRoom, GameRoom.local, LocalQuestionTransfer)
+Backend: node --test backend/security/socketLoopback.test.cjs backend/security/socketSecurity.test.cjs
+Live: node scripts/qa-question-transfer.cjs (local18323 only)
+Build: npm run build
+
+## herbalism-11740-front.log
+PASS src/components/games/herbalism/GameRoom/__tests__/GameRoom.local.test.js (12.523 s)
+PASS src/components/games/herbalism/GameRoom/GameRoom.test.js (8.615 s)
+PASS src/components/games/herbalism/GameRoom/LocalQuestionTransfer.test.js
+PASS src/controllers/herbalism/__tests__/LocalGameController.test.js
+Test Suites: 4 passed, 4 total
+Tests:       103 passed, 103 total
+Time:        29.105 s
+## herbalism-11740-network.log
+ℹ tests 36
+ℹ pass 36
+ℹ fail 0
+## herbalism-11740-live-final.log
+PASS real Firebase auth 3 players type 1: unchanged before confirm/during flight, completion once, private projections, next turn
+PASS real Firebase auth 3 players type 2: unchanged before confirm/during flight, completion once, private projections, next turn, recipient reconnect
+PASS real Firebase auth 3 players type 3: unchanged before confirm/during flight, completion once, private projections, next turn
+PASS real Firebase auth 4 players type 1: unchanged before confirm/during flight, completion once, private projections, next turn
+PASS real Firebase auth 4 players type 2: unchanged before confirm/during flight, completion once, private projections, next turn, recipient reconnect
+PASS real Firebase auth 4 players type 3: unchanged before confirm/during flight, completion once, private projections, next turn
+## herbalism-11740-build.log
+Compiled with warnings.
+The build folder is ready to be deployed.
+
+Final build: PASS (existing lint warnings)

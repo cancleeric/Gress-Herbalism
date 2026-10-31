@@ -25,7 +25,7 @@ function flightPosition(request, card, incoming) {
   return {'--flight-x':`${from.x}px`, '--flight-y':`${from.y}px`, '--flight-dx':`${to.x-from.x}px`, '--flight-dy':`${to.y-from.y}px`};
 }
 
-export default function LocalQuestionTransfer({request, onComplete}) {
+export default function LocalQuestionTransfer({request, onComplete, onStart}) {
   const available = request.colors.filter(color => request.hand.some(card => card.color === color));
   const [choice, setChoice] = useState(available.length === 1 ? available[0] : null);
   const [flights, setFlights] = useState(null);
@@ -44,6 +44,7 @@ export default function LocalQuestionTransfer({request, onComplete}) {
     if (confirming.current || (needChoice && !choice)) return;
     confirming.current = true;
     setBusy(true);
+    onStart?.(choice);
     const outgoing = cards.map(card => ({...card, incoming:false}));
     const incoming = request.questionType === 3 && request.incomingColor ? [{id:'incoming', color:request.incomingColor, incoming:true}] : [];
     const moves = [...outgoing, ...incoming].map((card, i) => ({...card, style:{...flightPosition(request, card, card.incoming), '--flight-delay':`${i * 100}ms`}}));

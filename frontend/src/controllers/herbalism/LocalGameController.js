@@ -507,10 +507,9 @@ class LocalGameController {
         }
       });
     } else {
-      // 猜錯：猜牌者和跟猜者退出當局，-1 分（最低 0 分）
+      // 猜錯：猜牌者不扣分；跟猜者 -1 分（最低 0 分），都失去本局主動資格
       guessingPlayer.isActive = false;
-      guessingPlayer.score = Math.max(0, guessingPlayer.score - 1);
-      scoreChanges[guessingPlayerId] = -1;
+      scoreChanges[guessingPlayerId] = 0;
 
       followingPlayers.forEach(playerId => {
         const player = this.gameState.players.find(p => p.id === playerId);

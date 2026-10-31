@@ -339,3 +339,16 @@ test('departed seat, missing target and self remain invalid question targets', (
     assert.throws(()=>allow('gameAction',{gameId:'room',action},f));
   }
 });
+
+for(const type of [1,2])test(`empty hands do not consume eligibility after type ${type} question`,async()=>{
+ const f=await departureGame();
+ f.state.players[0].hand=[];
+ f.state.players[1].hand=[];
+ f.sockets.a.dispatch('gameAction',{gameId:f.gameId,action:{type:'question',playerId:'a',targetPlayerId:'b',questionType:type,colors:['red','blue']}});
+ const proposal=f.sockets.b.sent.filter(e=>e.event==='cardGiveNotification').at(-1).payload;
+ f.sockets.b.dispatch('colorChoiceSubmit',{gameId:f.gameId,requestId:proposal.requestId,stage:'start',chosenColor:'none'});
+ f.sockets.b.dispatch('colorChoiceSubmit',{gameId:f.gameId,requestId:proposal.requestId,stage:'complete',chosenColor:'none'});
+ assert.equal(f.state.players[0].isActive,true);
+ assert.equal(f.state.players[1].isActive,true);
+ assert.equal(f.state.gamePhase,'postQuestion');
+});
