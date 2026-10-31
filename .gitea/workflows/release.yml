@@ -1,0 +1,137 @@
+name: Herbalism Release CD
+# release push / manual dispatch -> build immutable images, no-traffic deploy,
+# health check, then switch both Cloud Run services. No DB migration here.
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+
+concurrency:
+  group: herbalism-production
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: squid-com-hurricanesoft
+  REGION: asia-east1
+  API_SERVICE: herbalism-api-production
+  WEB_SERVICE: herbalism-web-production
+  REGISTRY: asia-east1-docker.pkg.dev/squid-com-hurricanesoft/herbalism
+
+jobs:
+  deploy:
+    runs-on: hpay-ci
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact release commit
+        uses: http://localhost:3030/actions/checkout@v4
+        with:
+          fetch-depth: 0
+          github-server-url: http://localhost:3030
+
+      - name: Resolve release identity
+        run: |
+          set -euo pipefail
+          SHA=$(git rev-parse HEAD)
+          SHORT=$(printf '%s' "$SHA" | cut -c1-12)
+          echo "SHA=$SHA" >> "$GITHUB_ENV"
+          echo "SHORT=$SHORT" >> "$GITHUB_ENV"
+          echo "API_IMAGE=$REGISTRY/api:release-$SHORT" >> "$GITHUB_ENV"
+          echo "WEB_IMAGE=$REGISTRY/web:release-$SHORT" >> "$GITHUB_ENV"
+          echo "release=$SHA"
+
+      - name: Build immutable API image
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 -t "$API_IMAGE" backend
+
+      - name: Build immutable web image
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 -t "$WEB_IMAGE" frontend
+
+      - name: Push immutable images
+        run: |
+          set -euo pipefail
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker push "$API_IMAGE"
+          docker push "$WEB_IMAGE"
+          gcloud artifacts docker images describe "$API_IMAGE" --project="$PROJECT_ID" >/dev/null
+          gcloud artifacts docker images describe "$WEB_IMAGE" --project="$PROJECT_ID" >/dev/null
+
+      - name: Record previous revisions
+        run: |
+          set -euo pipefail
+          PREV_API=$(gcloud run services describe "$API_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format='value(status.latestReadyRevisionName)')
+          PREV_WEB=$(gcloud run services describe "$WEB_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format='value(status.latestReadyRevisionName)')
+          test -n "$PREV_API" && test -n "$PREV_WEB"
+          echo "PREV_API=$PREV_API" >> "$GITHUB_ENV"
+          echo "PREV_WEB=$PREV_WEB" >> "$GITHUB_ENV"
+
+      - name: Deploy candidate revisions without traffic
+        run: |
+          set -euo pipefail
+          gcloud run deploy "$API_SERVICE" --image="$API_IMAGE" --region="$REGION" --project="$PROJECT_ID" \
+            --no-traffic --tag="rc-$SHORT-api" --quiet
+          gcloud run deploy "$WEB_SERVICE" --image="$WEB_IMAGE" --region="$REGION" --project="$PROJECT_ID" \
+            --no-traffic --tag="rc-$SHORT-web" --quiet
+          CAND_API=$(gcloud run services describe "$API_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format='value(status.latestCreatedRevisionName)')
+          CAND_WEB=$(gcloud run services describe "$WEB_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format='value(status.latestCreatedRevisionName)')
+          test -n "$CAND_API" && test -n "$CAND_WEB"
+          echo "CAND_API=$CAND_API" >> "$GITHUB_ENV"
+          echo "CAND_WEB=$CAND_WEB" >> "$GITHUB_ENV"
+
+      - name: Verify candidate health
+        run: |
+          set -euo pipefail
+          API_URL=$(gcloud run services describe "$API_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format=json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(t["url"] for t in d["status"]["traffic"] if t.get("tag")=="rc-'"$SHORT"'-api"))')
+          WEB_URL=$(gcloud run services describe "$WEB_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format=json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(t["url"] for t in d["status"]["traffic"] if t.get("tag")=="rc-'"$SHORT"'-web"))')
+          echo "API_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "WEB_URL=$WEB_URL" >> "$GITHUB_ENV"
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 10 "$API_URL/api/health" -o /tmp/herb-api-health.json && \
+               curl -fsS --max-time 10 "$WEB_URL/" -o /tmp/herb-web-health.html; then
+              break
+            fi
+            test "$i" != 12 || { echo 'FATAL: candidate health failed'; exit 1; }
+            sleep 5
+          done
+          cat /tmp/herb-api-health.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/herb-api-health.json'))
+          assert d.get('status')=='ok', d
+          assert d.get('persistence') is True, d
+          print('candidate api health ok')
+          PY
+
+      - name: Switch production traffic
+        run: |
+          set -euo pipefail
+          gcloud run services update-traffic "$API_SERVICE" --region="$REGION" --project="$PROJECT_ID" --to-revisions="$CAND_API=100" --quiet
+          gcloud run services update-traffic "$WEB_SERVICE" --region="$REGION" --project="$PROJECT_ID" --to-revisions="$CAND_WEB=100" --quiet
+
+      - name: Verify production health
+        run: |
+          set -euo pipefail
+          API_PUBLIC=$(gcloud run services describe "$API_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')
+          WEB_PUBLIC=$(gcloud run services describe "$WEB_SERVICE" --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 10 "$API_PUBLIC/api/health" -o /tmp/herb-api-live.json && \
+               curl -fsS --max-time 10 "$WEB_PUBLIC/" -o /tmp/herb-web-live.html; then break; fi
+            test "$i" != 12 || { echo 'FATAL: production health failed'; exit 1; }
+            sleep 5
+          done
+          cat /tmp/herb-api-live.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/herb-api-live.json'))
+          assert d.get('status')=='ok' and d.get('persistence') is True, d
+          print('production health ok')
+          PY
+
+      - name: Roll back traffic on failure
+        if: failure()
+        run: |
+          set +e
+          if [ -n "${PREV_API:-}" ]; then gcloud run services update-traffic "$API_SERVICE" --region="$REGION" --project="$PROJECT_ID" --to-revisions="$PREV_API=100" --quiet || true; fi
+          if [ -n "${PREV_WEB:-}" ]; then gcloud run services update-traffic "$WEB_SERVICE" --region="$REGION" --project="$PROJECT_ID" --to-revisions="$PREV_WEB=100" --quiet || true; fi
