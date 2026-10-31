@@ -1,0 +1,69 @@
+/* A quiet botanical tray, separate from the completed question transaction. */
+.app.apothecary .game-room .modal-content.prediction-modal {
+  width: min(640px, calc(100% - 24px));
+  min-width: 0;
+  max-height: calc(var(--console-height, 100dvh) - 24px);
+  overflow: hidden;
+  padding: 0;
+  background: linear-gradient(145deg,#1c372e,#0a201a);
+  border: 1px solid #bca06a;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 5px #c9ae7110,0 24px 70px #0009;
+}
+.app.apothecary .game-room.playing-stage .prediction-card {
+  min-width: 0;
+  padding: clamp(16px,3vw,28px);
+  border: 0;
+  background: transparent;
+  color: #eee2c6;
+}
+.prediction-heading { text-align: left; }
+.prediction-eyebrow { color:#cdb780; font-size:12px; letter-spacing:.15em; }
+.app.apothecary .game-room.playing-stage .prediction-card h3 { color:#f1e4c3; font-size:clamp(22px,4vw,30px); margin:6px 0; font-weight:500; }
+.app.apothecary .game-room.playing-stage .prediction-prompt { color:#bac9bb; margin:0 0 18px; font-size:14px; line-height:1.5; }
+.app.apothecary .game-room.playing-stage .prediction-colors { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0; }
+.prediction-choice {
+  min-width:0;
+  padding:7px;
+  border:1px solid #b49a6259;
+  border-radius:9px;
+  background:linear-gradient(150deg,#32443880,#10271f);
+  color:#eadab2;
+  cursor:pointer;
+  box-shadow:inset 0 1px #eed7a221,0 4px 10px #0003;
+  transition:border-color .15s,background .15s;
+}
+.prediction-art { display:block; aspect-ratio:3 / 4; padding:5px; background:#f3eddb; border:1px solid #bba36d; border-radius:5px; overflow:hidden; }
+.app.apothecary .game-room.playing-stage .prediction-choice .herb-specimen { display:block; width:100%; height:100%; object-fit:contain; object-position:center; border:0; border-radius:0; }
+.prediction-color-name { display:flex; align-items:center; justify-content:center; gap:6px; min-height:34px; font-size:16px; white-space:nowrap; }
+.prediction-color-name i { font-style:normal; color:var(--herb-glow); font-size:12px; }
+.prediction-color-name b { width:12px; color:#f0d28d; font-size:12px; }
+.prediction-choice:hover:not(:disabled),.prediction-choice.selected { border-color:#e2c78b; background:#3d5038; }
+.prediction-choice.selected { box-shadow:inset 0 0 0 1px #d4b979,0 4px 10px #0004; }
+.prediction-choice:focus-visible { outline:2px solid #f0d28d; outline-offset:3px; }
+.prediction-choice:disabled { opacity:.5; cursor:wait; }
+.app.apothecary .game-room.playing-stage .prediction-hint { color:#d5c493; margin:12px 0 5px; font-size:13px; min-height:20px; }
+.app.apothecary .game-room.playing-stage .prediction-rules { color:#aab9aa; font-size:12px; margin:0 0 16px; }
+.app.apothecary .game-room.playing-stage .prediction-card .end-turn-btn { width:100%; min-height:46px; font-size:16px; }
+@media(max-width:420px) {
+  .app.apothecary .game-room.playing-stage .prediction-colors { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .prediction-art { aspect-ratio: 1; max-height:110px; }
+  .prediction-color-name { min-height:28px; font-size:14px; }
+  .app.apothecary .game-room.playing-stage .prediction-prompt { margin-bottom:12px; font-size:12px; }
+}
+@media(max-width:420px) and (max-height:650px) {
+  .prediction-art { max-height:82px; }
+  .app.apothecary .game-room.playing-stage .prediction-card { padding:14px; }
+  .app.apothecary .game-room.playing-stage .prediction-hint { margin-top:8px; }
+  .app.apothecary .game-room.playing-stage .prediction-rules { margin-bottom:10px; }
+}
+@media(max-height:440px) and (min-width:421px) {
+  .app.apothecary .game-room.playing-stage .prediction-card { padding:12px 18px; }
+  .prediction-heading { position:relative; }
+  .app.apothecary .game-room.playing-stage .prediction-card h3 { font-size:20px; margin:2px 0; }
+  .app.apothecary .game-room.playing-stage .prediction-prompt { font-size:12px; margin-bottom:8px; }
+  .prediction-art { aspect-ratio:auto; height:72px; }
+  .prediction-color-name { min-height:26px; font-size:13px; }
+  .app.apothecary .game-room.playing-stage .prediction-hint { margin:6px 0 0; }
+  .app.apothecary .game-room.playing-stage .prediction-rules { margin:0 0 6px; }
+}

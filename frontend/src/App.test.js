@@ -31,7 +31,7 @@ jest.mock('./components/common', () => ({
   Leaderboard: function MockLeaderboard() { return <div>Leaderboard</div>; },
   Friends: function MockFriends() { return <div>Friends</div>; },
   Login: function MockLogin() { return <div>Login</div>; },
-  ConnectionStatus: function MockConnectionStatus() { return null; },
+  ConnectionStatus: function MockConnectionStatus() { return <div role="status">多人連線狀態</div>; },
   GameSelection: function MockGameSelection() { return <div>GameSelection</div>; },
   EvolutionLobbyPage: function MockEvolutionLobbyPage() { return <div>EvolutionLobbyPage</div>; },
 }));
@@ -41,6 +41,9 @@ jest.mock('./components/games/herbalism', () => ({
 jest.mock('./components/games/evolution', () => ({
   EvolutionRoom: function MockEvolutionRoom() { return <div>EvolutionRoom</div>; },
 }));
+jest.mock('./components/common/MatchHistory', () => function MockMatchHistory() {
+  return <main className="match-history">History console</main>;
+});
 
 // basename="/herbalism" 需要 JSDOM URL 在 /herbalism/ 下，路由才能 match
 beforeEach(() => {
@@ -48,6 +51,26 @@ beforeEach(() => {
 });
 afterEach(() => {
   window.history.pushState({}, '', '/');
+});
+
+describe('單屏遊戲的網路提示', () => {
+  test.each(['/history', '/history/example-match'])('歷史路由 %s 使用同一單屏容器', path => {
+    window.history.pushState({}, '', `/herbalism${path}`);
+    const { container } = render(<App />);
+    expect(container.querySelector('.app')).toHaveClass('app--console', 'app--history');
+    expect(screen.getByText('History console')).toBeInTheDocument();
+  });
+  test('單人 AI 牌局不被無關的多人斷線提示打斷', () => {
+    window.history.pushState({}, '', '/herbalism/game/local-game?mode=single&aiCount=2&difficulties=medium,medium');
+    render(<App />);
+    expect(screen.getByText('HerbalismGameRoom')).toBeInTheDocument();
+    expect(screen.queryByText('多人連線狀態')).not.toBeInTheDocument();
+  });
+  test('線上牌局仍保留真實多人連線提示', () => {
+    window.history.pushState({}, '', '/herbalism/game/online-room');
+    render(<App />);
+    expect(screen.getByText('多人連線狀態')).toBeInTheDocument();
+  });
 });
 
 describe('App - 工作單 0013', () => {

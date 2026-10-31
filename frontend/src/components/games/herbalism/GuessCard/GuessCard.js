@@ -11,6 +11,8 @@ import PropTypes from 'prop-types';
 import { ALL_COLORS } from '../../../../shared/constants';
 import { processGuessAction } from '../../../../services/gameService';
 import { updateGameState } from '../../../../store/gameStore';
+import HerbArt from '../GameRoom/HerbArt';
+import { HERB_GROUPS } from '../GameRoom/herbSpecies';
 import './GuessCard.css';
 
 /**
@@ -65,14 +67,18 @@ function GuessColorSelector({ selectedColors, onColorSelect, disabled = false })
         {ALL_COLORS.map((color) => (
           <button
             key={color}
+            style={{"--herb-glow":HERB_GROUPS[color].glow,"--herb-ink":HERB_GROUPS[color].ink}}
             type="button"
-            className={`guess-color-btn ${isMaxSelected ? 'disabled' : ''}`}
+            className={`guess-color-btn group-${color} ${selectedColors.includes(color) ? 'selected' : ''} ${isMaxSelected ? 'disabled' : ''}`}
+            aria-pressed={selectedColors.includes(color)}
             onClick={() => handleColorClick(color)}
             disabled={disabled || isMaxSelected}
             aria-label={`選擇 ${COLOR_NAMES[color]}`}
           >
-            <div className={`guess-color-square color-${color}`}></div>
+            <div className={`guess-herb-art color-${color}`}><HerbArt color={color} /></div>
+            <small className="guess-herb-name">{HERB_GROUPS[color].symbol} {HERB_GROUPS[color].name}</small>
             <span className="guess-color-label">{COLOR_NAMES[color]}</span>
+            {selectedColors.includes(color) && <span className="color-choice-count">✓ {selectedColors.filter(c=>c===color).length}</span>}
           </button>
         ))}
       </div>
@@ -88,6 +94,7 @@ function GuessColorSelector({ selectedColors, onColorSelect, disabled = false })
               <div
                 key={index}
                 className={`guess-color-chip color-${color}`}
+                style={{"--herb-glow":HERB_GROUPS[color].glow}}
               >
                 <span className="chip-text">{COLOR_NAMES[color]}</span>
                 <button

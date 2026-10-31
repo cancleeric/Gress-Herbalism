@@ -60,6 +60,7 @@ class LocalGameController {
 
     // 跟猜狀態
     this.followGuessState = null;
+    this.pendingLocalQuestion = null;
 
     // 綁定方法
     this.startGame = this.startGame.bind(this);
@@ -141,6 +142,7 @@ class LocalGameController {
 
     // 重置跟猜狀態
     this.followGuessState = null;
+    this.pendingLocalQuestion = null;
 
     // 增加局數
     this.gameState.round++;
@@ -201,7 +203,7 @@ class LocalGameController {
    *
    * @param {Object} action - 問牌動作
    */
-  async handleQuestion(action) {
+  async handleQuestion(action, confirmed = false) {
     const { playerId, targetPlayerId, colors, questionType, giveColor, getColor } = action;
 
     const askingPlayer = this.gameState.players.find(p => p.id === playerId);
@@ -211,8 +213,23 @@ class LocalGameController {
       console.error('[LocalGameController] 找不到玩家');
       return;
     }
+    if (this.pendingLocalQuestion) return;
+    if (!confirmed && askingPlayer.isAI && !targetPlayer.isAI) {
+      this.pendingLocalQuestion = { ...action };
+      this.gameState.gamePhase = GAME_PHASE_POST_QUESTION;
+      this.broadcastEvent({ type: 'localQuestionRequested',
+        request: { ...action, fromPlayer: askingPlayer.name,
+          incomingColor: questionType === QUESTION_TYPE_GIVE_ONE_GET_ALL && askingPlayer.hand.some(card => card.color === giveColor) ? giveColor : null,
+          hand: targetPlayer.hand.map(card => ({ ...card })) } });
+      this.emitStateChange();
+      return;
+    }
 
     console.log(`[LocalGameController] ${askingPlayer.name} 向 ${targetPlayer.name} 問牌 (類型 ${questionType})`);
+    const beforeAsking = askingPlayer.hand.length;
+    const beforeTarget = targetPlayer.hand.length;
+    this.broadcastEvent({ type: 'questionAsked', playerId, targetPlayerId,
+      colors, questionType, giveColor, getColor });
 
     let cardsToTransfer = [];
 
@@ -233,7 +250,8 @@ class LocalGameController {
       );
 
       if (availableColors.length > 0) {
-        const chosenColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+        const chosenColor = availableColors.includes(action.chosenColor) ? action.chosenColor
+          : availableColors[Math.floor(Math.random() * availableColors.length)];
         cardsToTransfer = targetPlayer.hand.filter(c => c.color === chosenColor);
       }
     } else if (questionType === QUESTION_TYPE_GIVE_ONE_GET_ALL) {
@@ -260,6 +278,17 @@ class LocalGameController {
     }
 
     // 廣播卡牌轉移事件
+    const colorName = color => ({ red: '紅', yellow: '黃', green: '綠', blue: '藍' }[color] || color);
+    const method = questionType === QUESTION_TYPE_GIVE_ONE_GET_ALL
+      ? `給一張${colorName(giveColor)}，要全部${colorName(getColor)}`
+      : questionType === QUESTION_TYPE_ALL_ONE_COLOR
+        ? `${colors.map(colorName).join('／')}其中一色全部`
+        : `${colors.map(colorName).join('／')}各一張`;
+    this.gameState.gameHistory = [...this.gameState.gameHistory, {
+      type: 'question', playerId, playerName: askingPlayer.name,
+      action: `向${targetPlayer.name}問牌：${method}；收到${cardsToTransfer.length}張。手牌：${askingPlayer.name} ${beforeAsking}→${askingPlayer.hand.length}張，${targetPlayer.name} ${beforeTarget}→${targetPlayer.hand.length}張`,
+      timestamp: Date.now(),
+    }].slice(-300);
     this.broadcastEvent({
       type: 'CARD_TRANSFER',
       from: targetPlayerId,
@@ -275,6 +304,20 @@ class LocalGameController {
     console.log(`[LocalGameController] 轉移了 ${cardsToTransfer.length} 張牌`);
   }
 
+  async confirmLocalQuestion(chosenColor) {
+    const action = this.pendingLocalQuestion;
+    if (!action) return false;
+    if (action.questionType === QUESTION_TYPE_ALL_ONE_COLOR) {
+      const target = this.gameState.players.find(player => player.id === action.targetPlayerId);
+      const available = action.colors.filter(color => target.hand.some(card => card.color === color));
+      if (available.length > 1 && !available.includes(chosenColor)) return false;
+      chosenColor = available.length === 1 ? available[0] : chosenColor;
+    }
+    this.pendingLocalQuestion = null;
+    await this.handleQuestion({ ...action, chosenColor }, true);
+    return true;
+  }
+
   /**
    * 結束回合
    *
@@ -283,6 +326,7 @@ class LocalGameController {
    * @param {Object} options.prediction - 預測（可選）
    */
   endTurn({ playerId, prediction }) {
+    if (this.pendingLocalQuestion) return;
     console.log('[LocalGameController] 結束回合:', playerId);
 
     // 廣播回合結束事件
@@ -334,6 +378,7 @@ class LocalGameController {
     }
 
     console.log(`[LocalGameController] ${guessingPlayer.name} 猜牌: [${guessedColors.join(', ')}]`);
+    this.broadcastEvent({ type: 'guessMade', playerId, guessedColors });
 
     // 驗證猜牌
     const result = validateGuess(guessedColors, this.gameState.hiddenCards);
@@ -393,6 +438,7 @@ class LocalGameController {
     console.log(`[LocalGameController] ${playerId} 決定: ${isFollowing ? '跟猜' : '不跟'}`);
 
     // 記錄決定
+    this.broadcastEvent({ type: 'followDecision', playerId, isFollowing });
     this.followGuessState.decisions[playerId] = isFollowing ? 'follow' : 'pass';
 
     if (isFollowing) {

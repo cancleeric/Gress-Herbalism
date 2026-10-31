@@ -1,0 +1,100 @@
+.herb-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 35%, #263c37, #101c1c 70%);
+  color: #f4e8cd;
+  padding: max(16px, env(safe-area-inset-top)) 16px
+    max(16px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.herb-viewer header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.herb-viewer h2 {
+  color: #f4e8cd;
+  margin: 4px 0;
+  font-size: 25px;
+  letter-spacing: 0.16em;
+}
+.herb-viewer small {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #c8b58e;
+}
+.herb-viewer button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #938267;
+  border-radius: 8px;
+  background: #213731;
+  color: #f4e8cd;
+  cursor: pointer;
+  font-size: 14px;
+}
+.herb-viewer button:focus-visible {
+  outline: 3px solid #f3cf84;
+  outline-offset: 2px;
+}
+.herb-viewer-stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.herb-viewer-canvas {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+.herb-viewer-canvas canvas {
+  display: block;
+}
+.herb-viewer-stage > img {
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+.herb-viewer footer {
+  text-align: center;
+  flex: none;
+}
+.herb-viewer footer p {
+  color: #cbbd9f;
+  font-size: 12px;
+  margin: 8px;
+}
+.herb-viewer nav {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.herb-viewer nav button {
+  padding: 8px;
+  font-size: 13px;
+}
+.herb-viewer button[aria-pressed="true"] {
+  background: #b69b64;
+  color: #152b25;
+  border-color: #eddaaa;
+}
+.herb-viewer-compare {
+  margin-top: 10px;
+  min-width: 180px;
+}
+@media (min-width: 700px) {
+  .herb-viewer {
+    padding: 24px max(24px, calc((100vw - 850px) / 2));
+  }
+  .herb-viewer h2 {
+    color: #f4e8cd;
+    font-size: 30px;
+  }
+}

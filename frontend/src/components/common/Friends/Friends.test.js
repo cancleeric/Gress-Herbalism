@@ -76,6 +76,29 @@ describe('Friends 組件', () => {
   });
 
   describe('好友清單', () => {
+    test('讀取失敗不冒充空清單，重試成功才顯示空狀態', async () => {
+      mockGetFriends.mockRejectedValueOnce(new Error('unavailable'));
+      render(<MemoryRouter><Friends /></MemoryRouter>);
+      expect(await screen.findByRole('alert')).toHaveTextContent('好友資料暫時無法讀取');
+      expect(screen.queryByText('還沒有好友')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: '重新載入' }));
+      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+      expect(await screen.findByText('還沒有好友')).toBeInTheDocument();
+    });
+
+    test('輸入但尚未搜尋或搜尋失敗時不宣稱找不到玩家', async () => {
+      mockSearchPlayers.mockRejectedValueOnce(new Error('unavailable'));
+      const warn = jest.spyOn(console, 'error').mockImplementation(() => {});
+      render(<MemoryRouter><Friends /></MemoryRouter>);
+      fireEvent.click(screen.getByText('搜尋'));
+      fireEvent.change(screen.getByPlaceholderText('輸入玩家暱稱搜尋...'), { target: { value: '子安' } });
+      expect(screen.queryByText('找不到符合的玩家')).not.toBeInTheDocument();
+      fireEvent.click(screen.getAllByRole('button', { name: '搜尋' })[1]);
+      expect(await screen.findByRole('alert')).toHaveTextContent('搜尋失敗');
+      expect(screen.queryByText('找不到符合的玩家')).not.toBeInTheDocument();
+      warn.mockRestore();
+    });
+
     test('無好友時顯示空狀態', async () => {
       mockGetFriends.mockResolvedValue([]);
       render(<MemoryRouter><Friends /></MemoryRouter>);

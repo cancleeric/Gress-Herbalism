@@ -19,6 +19,7 @@
 
 /* 5. 應用程式特定樣式 */
 @import './App.css';
+@import './player-panels.css';
 
 /*
  * 舊版卡牌顏色類別（向後兼容）

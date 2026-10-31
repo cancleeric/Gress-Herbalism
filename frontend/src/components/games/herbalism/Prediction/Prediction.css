@@ -183,3 +183,12 @@
 .prediction-results .score-change.negative {
   color: #dc3545;
 }
+
+.playing-stage .prediction-card {background:#142b24;border:1px solid #a38a52;color:#eddfbb;min-width:0;}
+.playing-stage .prediction-card h3,.playing-stage .prediction-prompt {color:#eddfbb;}
+.playing-stage .prediction-colors {flex-wrap:nowrap;gap:8px;}
+.playing-stage .prediction-colors .btn-color {flex:1;min-width:0;padding:4px;background:#0c1d18;border-color:#617254;display:flex;flex-direction:column;align-items:center;}
+.prediction-colors .herb-specimen {width:100%;height:100px;object-fit:cover;}
+.prediction-colors small {font-size:11px;color:#e7d6ab;}
+.playing-stage .prediction-colors .btn-color.selected {border-color:#f2d078;transform:translateY(-4px);}
+.playing-stage .prediction-rules {color:#acb9aa;}

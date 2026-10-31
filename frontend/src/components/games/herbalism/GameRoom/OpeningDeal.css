@@ -1,0 +1,17 @@
+.opening-deal-stage {position:absolute;inset:0;pointer-events:none;z-index:8;}
+.opening-deal-card {position:absolute;width:30px;height:42px;margin:-21px 0 0 -15px;box-sizing:border-box;border:2px solid #cfb47c;border-radius:4px;background:repeating-linear-gradient(45deg,#1b3a2c,#1b3a2c 3px,#234333 3px,#234333 5px);box-shadow:0 4px 12px #0008;display:grid;place-items:center;animation:opening-deal-to-seat 1100ms cubic-bezier(.3,0,.2,1) both;}
+.opening-deal-card i {font:16px 'Songti TC',serif;font-style:normal;color:#e7ce93;border:1px solid #bb9e67;padding:2px;}
+.opening-sealed-card {animation-name:opening-seal-in-chest;}
+@keyframes opening-seal-in-chest {
+  0% {opacity:0;transform:translate(0,0) scale(1) rotate(-8deg);}
+  8% {opacity:1;}
+  75% {opacity:1;transform:translate(var(--deal-dx),var(--deal-dy)) scale(.85) rotate(-18deg);}
+  100% {opacity:0;transform:translate(var(--deal-dx),var(--deal-dy)) scale(.08) rotate(-18deg);}
+}
+@keyframes opening-deal-to-seat {
+  0% {opacity:0;transform:translate(0,0) scale(1) rotate(-8deg);}
+  8% {opacity:1;}
+  70%,90% {opacity:1;transform:translate(var(--deal-dx),var(--deal-dy)) scale(.85) rotate(0deg);}
+  100% {opacity:0;transform:translate(var(--deal-dx),var(--deal-dy)) scale(.3) rotate(0deg);}
+}
+@media(prefers-reduced-motion:reduce){.opening-deal-stage{display:none;}}

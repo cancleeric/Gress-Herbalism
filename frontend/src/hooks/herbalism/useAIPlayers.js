@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createAIPlayer } from '../../ai';
-import { PLAYER_TYPE, QUESTION_TYPE_GIVE_ONE_GET_ALL } from '../../shared/constants';
+import { PLAYER_TYPE, QUESTION_TYPE_GIVE_ONE_GET_ALL, getAIPlayerName } from '../../shared/constants';
 
 /**
  * Normalize a DecisionMaker action for the local controller boundary.
@@ -88,7 +88,7 @@ function useAIPlayers({ aiConfig, gameState, onAIAction }) {
       const difficulty = difficulties[i] || 'medium';
       const aiPlayer = createAIPlayer(
         `ai-${i + 1}`,
-        null, // 使用預設名稱
+        getAIPlayerName(i, difficulty),
         difficulty
       );
 

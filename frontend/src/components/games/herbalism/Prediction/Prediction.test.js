@@ -20,19 +20,19 @@ describe('Prediction Component', () => {
   test('renders prediction card with all color buttons', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={false} />);
 
-    expect(screen.getByText('問牌完成！')).toBeInTheDocument();
-    expect(screen.getByText('是否要預測蓋牌中有哪個顏色？')).toBeInTheDocument();
-    expect(screen.getByText('紅色')).toBeInTheDocument();
+    expect(screen.getByText('預測中央蓋牌')).toBeInTheDocument();
+    expect(screen.getByText('不是交牌選擇。選一色預測，或直接略過。')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '紅色' })).toBeInTheDocument();
     expect(screen.getByText('黃色')).toBeInTheDocument();
     expect(screen.getByText('綠色')).toBeInTheDocument();
     expect(screen.getByText('藍色')).toBeInTheDocument();
-    expect(screen.getByText('結束回合')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /結束回合/ })).toBeInTheDocument();
   });
 
   test('selecting a color updates the selected state', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={false} />);
 
-    const redButton = screen.getByText('紅色');
+    const redButton = screen.getByRole('button', { name: '紅色' });
     fireEvent.click(redButton);
 
     expect(screen.getByText('已選擇：紅色 ✓')).toBeInTheDocument();
@@ -41,18 +41,18 @@ describe('Prediction Component', () => {
   test('clicking same color again deselects it', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={false} />);
 
-    const redButton = screen.getByText('紅色');
+    const redButton = screen.getByRole('button', { name: '紅色' });
     fireEvent.click(redButton);
     expect(screen.getByText('已選擇：紅色 ✓')).toBeInTheDocument();
 
     fireEvent.click(redButton);
-    expect(screen.getByText('（點擊選擇，可不選）')).toBeInTheDocument();
+    expect(screen.getByText('不選顏色也能結束回合')).toBeInTheDocument();
   });
 
   test('clicking different color changes selection', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={false} />);
 
-    const redButton = screen.getByText('紅色');
+    const redButton = screen.getByRole('button', { name: '紅色' });
     const blueButton = screen.getByText('藍色');
 
     fireEvent.click(redButton);
@@ -65,8 +65,8 @@ describe('Prediction Component', () => {
   test('end turn button calls onEndTurn with selected color', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={false} />);
 
-    const redButton = screen.getByText('紅色');
-    const endTurnButton = screen.getByText('結束回合');
+    const redButton = screen.getByRole('button', { name: '紅色' });
+    const endTurnButton = screen.getByRole('button', { name: /結束回合/ });
 
     fireEvent.click(redButton);
     fireEvent.click(endTurnButton);
@@ -77,7 +77,7 @@ describe('Prediction Component', () => {
   test('end turn button calls onEndTurn with null when no color selected', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={false} />);
 
-    const endTurnButton = screen.getByText('結束回合');
+    const endTurnButton = screen.getByRole('button', { name: /結束回合/ });
     fireEvent.click(endTurnButton);
 
     expect(mockOnEndTurn).toHaveBeenCalledWith(null);
@@ -86,7 +86,7 @@ describe('Prediction Component', () => {
   test('buttons are disabled when loading', () => {
     render(<Prediction onEndTurn={mockOnEndTurn} isLoading={true} />);
 
-    const redButton = screen.getByText('紅色');
+    const redButton = screen.getByRole('button', { name: '紅色' });
     const endTurnButton = screen.getByText('處理中...');
 
     expect(redButton).toBeDisabled();

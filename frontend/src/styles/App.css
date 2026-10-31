@@ -34,68 +34,44 @@
   transition: opacity var(--transition-normal);
 }
 
-/* ==================== 遊戲大廳樣式 ==================== */
-.lobby {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  animation: fadeIn var(--transition-slow) ease-out;
-}
+/* Page layouts belong to their components; avoid late-loaded global overrides. */
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Reserve real multiplayer alerts inside the console viewport, never above controls. */
+.app--console {
+  --console-alert-height: 0px;
+  position: fixed;
+  left: var(--console-left, 0px);
+  top: var(--console-top, 0px);
+  width: var(--console-width, 100%);
+  height: var(--console-height, 100dvh);
+  min-width: 0;
+  min-height: 0;
+  contain: layout size;
+  overflow: hidden;
 }
-
-.lobby h1 {
-  font-size: var(--font-size-3xl);
-  margin-bottom: var(--spacing-lg);
-  color: var(--color-accent);
-  text-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
-  animation: titleGlow 3s ease-in-out infinite;
+.app--console:has(> .connection-status) { --console-alert-height: 44px; }
+.app--console > .connection-status {
+  height: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  box-sizing: border-box;
 }
-
-@keyframes titleGlow {
-  0%, 100% {
-    text-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 50px rgba(233, 69, 96, 0.5), 0 0 100px rgba(233, 69, 96, 0.2);
-  }
+.app--console > :is(.lobby, .game-selection, .login-page, .profile-page, .friends-page, .leaderboard-page, .evolution-room, .match-history) {
+  margin-top: var(--console-alert-height);
+  height: calc(var(--console-height, 100dvh) - var(--console-alert-height));
 }
-
-.lobby p {
-  font-size: var(--font-size-lg);
-  color: var(--color-text-secondary);
+.app--console > .game-room:is(.playing-stage, .waiting-stage) {
+  top: var(--console-alert-height);
+  height: calc(var(--console-height, 100dvh) - var(--console-alert-height));
 }
-
-/* ==================== 遊戲房間樣式 ==================== */
-.game-room {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: var(--spacing-lg);
-  animation: fadeIn var(--transition-slow) ease-out;
+.app--history { overflow: hidden; }
+.app--console > .lobby .modal-overlay,
+.app--console > .evolution-room :is(.pending-response-modal, .game-result-modal),
+.app--console > .game-room :is(.gr-reconnecting-overlay, .game-not-exist-overlay) {
+  top: var(--console-alert-height);
 }
-
-.game-room h1 {
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--spacing-md);
-  text-align: center;
-}
-
-.game-room p {
-  text-align: center;
-  color: var(--color-text-secondary);
+.app--console > .lobby :is(.modal, .create-room-modal) {
+  max-height: calc(var(--console-height, 100dvh) - var(--console-alert-height) - 32px);
 }
 
 /* ==================== 錯誤邊界樣式 ==================== */
@@ -244,31 +220,7 @@
 }
 
 /* ==================== 響應式優化 ==================== */
-@media (max-width: 768px) {
-  .lobby h1 {
-    font-size: var(--font-size-2xl);
-  }
-
-  .game-room {
-    padding: var(--spacing-md);
-  }
-}
-
 @media (max-width: 480px) {
-  .lobby {
-    padding: var(--spacing-md);
-  }
-
-  .lobby h1 {
-    font-size: var(--font-size-xl);
-  }
-
-  .error-boundary {
-    padding: var(--spacing-md);
-  }
-
-  .error-boundary button {
-    width: 100%;
-    padding: var(--spacing-md);
-  }
+  .error-boundary { padding: var(--spacing-md); }
+  .error-boundary button { width: 100%; padding: var(--spacing-md); }
 }

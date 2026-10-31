@@ -1,1313 +1,804 @@
-/**
- * 遊戲大廳樣式
- * 重新設計：側邊欄佈局（基於 Google Stitch 設計 - 提示詞 2）
- */
-
-/* ==================== Google Fonts ==================== */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-
-/* Material Symbols */
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-/* ==================== CSS Variables ==================== */
-:root {
-  --primary: #2f7f34;
-  --primary-dark: #1a4a1d;
-  --accent-gold: #C5A059;
-  --bg-main: #F5F1E6;
-  --bg-light: #FFF8E1;
-  --text-dark: #131613;
-  --text-muted: #6b806c;
-  --sidebar-width: 80px;
-}
-
-/* ==================== 頁面容器 ==================== */
+/* Game-console main menu: fixed screen, independently scrolling room pane. */
 .lobby {
-  min-height: 100vh;
-  background-color: var(--bg-main);
-  display: flex;
-  font-family: 'Be Vietnam Pro', sans-serif;
-  color: var(--text-dark);
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr) 44px;
+  background: #f4f1e8;
+  color: #213b32;
+  font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
 }
-
-/* ==================== 側邊欄 ==================== */
-.lobby-sidebar {
-  width: var(--sidebar-width);
-  min-height: 100vh;
-  background-color: var(--primary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 0;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 100;
+.lobby * {
+  box-sizing: border-box;
 }
-
-.sidebar-logo {
-  width: 48px;
-  height: 48px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
+.lobby button,
+.lobby input,
+.lobby select {
+  font: inherit;
 }
-
-.sidebar-logo .material-symbols-outlined {
-  font-size: 28px;
-  color: var(--accent-gold);
-}
-
-.sidebar-title {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent-gold);
-  margin: 0 0 32px;
-  writing-mode: horizontal-tb;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.sidebar-nav-item {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.7);
+.lobby button {
   cursor: pointer;
-  transition: all 0.2s;
-  background: none;
-  border: none;
 }
-
-.sidebar-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.sidebar-nav-item.active {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: var(--accent-gold);
-}
-
-.sidebar-nav-item .material-symbols-outlined {
-  font-size: 24px;
-}
-
-.sidebar-decoration {
-  margin-top: auto;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.sidebar-decoration .material-symbols-outlined {
-  font-size: 32px;
-}
-
-/* ==================== 主內容區容器 ==================== */
-.lobby-main {
-  flex: 1;
-  margin-left: var(--sidebar-width);
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* ==================== 頂部用戶欄 ==================== */
-.lobby-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 32px;
-  background-color: var(--bg-light);
-  border-bottom: 1px solid rgba(47, 127, 52, 0.1);
-}
-
-.lobby-user-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.lobby-user-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-dark);
-  margin: 0;
-}
-
-.lobby-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--primary);
-  border: 2px solid var(--accent-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.lobby-avatar-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid var(--accent-gold);
-  object-fit: cover;
-}
-
-.connection-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.connection-status::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.connection-status.connected::before {
-  background-color: #22c55e;
-}
-
-.connection-status.disconnected::before {
-  background-color: #ef4444;
-}
-
-.connection-status.connected {
-  color: #22c55e;
-}
-
-.connection-status.disconnected {
-  color: #ef4444;
-}
-
-/* ==================== 主內容區 ==================== */
-.lobby-content {
-  flex: 1;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ==================== 創建房間按鈕 ==================== */
-.create-room-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  padding: 16px 24px;
-  background-color: transparent;
-  border: 2px solid var(--accent-gold);
-  border-radius: 8px;
-  color: var(--text-dark);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 24px;
-}
-
-.create-room-btn:hover:not(:disabled) {
-  background-color: rgba(197, 160, 89, 0.1);
-  border-color: var(--accent-gold);
-}
-
-.create-room-btn:disabled {
-  opacity: 0.5;
+.lobby button:disabled {
   cursor: not-allowed;
+  opacity: 0.45;
 }
-
-.create-room-btn .material-symbols-outlined {
-  color: var(--accent-gold);
-  font-size: 24px;
+.lobby button:focus-visible,
+.lobby input:focus-visible,
+.lobby select:focus-visible {
+  outline: 3px solid #aa8548;
+  outline-offset: 2px;
 }
-
-/* ==================== 加入房間區域 ==================== */
-.join-room-section {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 32px;
-  width: 100%;
-}
-
-.join-room-input {
-  flex: 1;
-  padding: 12px 16px;
-  font-size: 14px;
-  border: 2px solid rgba(47, 127, 52, 0.2);
-  border-radius: 8px;
-  background-color: var(--bg-light);
-  color: var(--text-dark);
-  transition: border-color 0.2s;
-}
-
-.join-room-input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.join-room-input::placeholder {
-  color: var(--text-muted);
-}
-
-.join-room-btn {
+.lobby .herb-lobby-topbar {
+  min-height: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 20px;
+  padding: 8px 24px;
+  border-bottom: 1px solid #cdd4c3;
+  background: #e8ecdf;
+}
+.lobby .herb-lobby-brand {
+  display: flex;
   gap: 8px;
-  padding: 12px 24px;
-  background-color: var(--primary);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #163e35;
+  text-align: left;
+  flex-shrink: 0;
+}
+.herb-lobby-brand > span:first-child {
+  font-size: 28px;
+}
+.herb-lobby-brand > span:last-child {
+  font:
+    700 22px/1.1 "Noto Serif TC",
+    Georgia,
+    serif;
+}
+.herb-lobby-brand small {
+  font: 10px/1.8 system-ui;
+  display: block;
+  letter-spacing: 2px;
+}
+.lobby .herb-lobby-topbar nav {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.lobby .herb-lobby-topbar nav button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: #526a59;
+  font-size: 12px;
+}
+.lobby .lobby-user-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  max-width: 160px;
+  min-width: 0;
+}
+.lobby .lobby-user-area > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.join-room-btn:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
-.join-room-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ==================== 遊戲暱稱輸入 ==================== */
-.nickname-section {
-  margin-bottom: 24px;
-  width: 100%;
-}
-
-.nickname-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-dark);
-  margin-bottom: 8px;
-}
-
-.nickname-input {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 14px;
-  border: 2px solid rgba(47, 127, 52, 0.2);
-  border-radius: 8px;
-  background-color: var(--bg-light);
-  color: var(--text-dark);
-  transition: border-color 0.2s;
-}
-
-.nickname-input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.nickname-input::placeholder {
-  color: var(--text-muted);
-}
-
-.welcome-message {
-  font-size: 12px;
-  color: var(--primary);
-  margin-top: 4px;
-}
-
-/* ==================== 房間表格 ==================== */
-.room-table-container {
-  flex: 1;
-  background-color: var(--bg-light);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(47, 127, 52, 0.1);
-}
-
-.room-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.room-table thead {
-  background-color: rgba(47, 127, 52, 0.05);
-}
-
-.room-table th {
-  padding: 16px 20px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid rgba(47, 127, 52, 0.1);
-}
-
-.room-table td {
-  padding: 16px 20px;
-  font-size: 14px;
-  color: var(--text-dark);
-  border-bottom: 1px solid rgba(47, 127, 52, 0.05);
-}
-
-.room-table tbody tr {
-  transition: background-color 0.2s;
-}
-
-.room-table tbody tr:hover {
-  background-color: rgba(47, 127, 52, 0.03);
-}
-
-.room-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.room-name {
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.room-name .private-icon {
-  color: var(--accent-gold);
-  font-size: 16px;
-}
-
-.room-id {
-  color: var(--text-muted);
-  font-family: monospace;
-  font-size: 13px;
-}
-
-.room-players {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.room-players-count {
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.room-players-count.full {
-  color: var(--text-muted);
-}
-
-.room-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.room-status.waiting {
-  background-color: rgba(47, 127, 52, 0.1);
-  color: var(--primary);
-}
-
-.room-status.waiting::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background-color: var(--primary);
+.lobby .lobby-avatar {
+  height: 30px;
+  width: 30px;
+  flex-shrink: 0;
   border-radius: 50%;
-  animation: pulse 2s infinite;
+  display: grid;
+  place-items: center;
+  background: #cdd9c5;
+  color: #31543f;
 }
-
-.room-status.in-game {
-  background-color: rgba(107, 128, 108, 0.1);
-  color: var(--text-muted);
-}
-
-.room-status.full {
-  background-color: rgba(107, 128, 108, 0.1);
-  color: var(--text-muted);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.room-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background-color: var(--primary);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.room-action-btn:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
-.room-action-btn:disabled {
-  background-color: var(--text-muted);
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.room-action-btn .material-symbols-outlined {
-  font-size: 16px;
-}
-
-/* ==================== 無房間提示 ==================== */
-.no-rooms {
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.no-rooms .material-symbols-outlined {
-  font-size: 48px;
-  color: rgba(47, 127, 52, 0.2);
-  margin-bottom: 16px;
-  display: block;
-}
-
-/* ==================== 錯誤訊息 ==================== */
-.error-message {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: #b91c1c;
-  font-size: 14px;
-  margin-bottom: 24px;
+.lobby .herb-lobby-content {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px 30px;
+  max-width: 1280px;
   width: 100%;
+  margin: 0 auto;
 }
-
-/* ==================== 頁尾 ==================== */
-.lobby-footer {
-  padding: 16px 32px;
-  border-top: 1px solid rgba(47, 127, 52, 0.1);
-  background-color: var(--bg-light);
+.herb-lobby-intro {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.lobby-footer-left {
-  display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 16px;
 }
-
-.lobby-footer-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.lobby .herb-lobby-intro h1 {
+  font:
+    600 24px/1.4 "Noto Serif TC",
+    Georgia,
+    serif;
+  margin: 0;
+  text-shadow: none;
+  animation: none;
+  color: #163e35;
 }
-
-.online-indicator {
-  width: 8px;
-  height: 8px;
-  background-color: #22c55e;
-  border-radius: 50%;
-}
-
-/* ==================== Modal 樣式 ==================== */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 16px;
-}
-
-.modal {
-  background-color: white;
-  border-radius: 12px;
-  padding: 32px;
-  max-width: 480px;
-  width: 100%;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  animation: modalIn 0.3s ease-out;
-}
-
-@keyframes modalIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.modal h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin: 0 0 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal h3 .material-symbols-outlined {
-  color: var(--primary);
-}
-
-.modal > p {
-  color: var(--text-muted);
-  margin: 0 0 24px;
-  font-size: 14px;
-}
-
-/* ==================== 表單樣式 ==================== */
-.input-group {
-  margin-bottom: 16px;
-}
-
-.input-group label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-dark);
-  margin-bottom: 6px;
-}
-
-.input-group input,
-.input-group select {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 14px;
-  border: 2px solid rgba(47, 127, 52, 0.2);
-  border-radius: 8px;
-  background-color: white;
-  color: var(--text-dark);
-  transition: border-color 0.2s;
-}
-
-.input-group input:focus,
-.input-group select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.input-group input::placeholder {
-  color: var(--text-muted);
-}
-
-.input-group input:disabled,
-.input-group select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.input-hint {
+.herb-lobby-intro > span {
   font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 4px;
+  color: #788571;
 }
-
-/* Checkbox */
-.checkbox-group {
-  margin-bottom: 16px;
+.herb-lobby-layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 20px;
 }
-
-.checkbox-label {
+.herb-practice,
+.herb-online {
+  min-height: 0;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--text-dark);
+  flex-direction: column;
+  border: 1px solid #c8d2bd;
+  border-radius: 5px;
+  padding: 24px;
+  gap: 16px;
+  background: #faf9f3;
 }
-
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
-  cursor: pointer;
+.herb-practice {
+  background: #e5ebdd;
+  justify-content: center;
 }
-
-/* ==================== Modal Actions ==================== */
-.modal-actions {
-  display: flex;
+.herb-online {
   gap: 12px;
-  justify-content: flex-end;
-  margin-top: 24px;
 }
-
-.modal-error {
-  color: #b91c1c;
-  font-size: 12px;
-  margin-top: 8px;
-}
-
-/* ==================== 按鈕樣式 ==================== */
-.btn {
+.herb-practice-heading {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.lobby .herb-practice-heading h2 {
+  font:
+    600 21px/1.4 "Noto Serif TC",
+    Georgia,
+    serif;
+  margin: 0;
+  color: #163e35;
+}
+.herb-mode-tag {
+  font-size: 11px;
+  color: #63805d;
+}
+.lobby .nickname-section {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  padding: 0 24px;
-  height: 40px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
-.btn-secondary {
-  background-color: transparent;
-  border: 2px solid rgba(47, 127, 52, 0.2);
-  color: var(--text-dark);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  border-color: var(--primary);
-}
-
-/* ==================== 重連中樣式 ==================== */
-.reconnecting-modal {
-  text-align: center;
-}
-
-.reconnecting-modal p {
-  margin-top: 16px;
-  font-size: 16px;
-  color: var(--text-muted);
-}
-
-.reconnecting-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(47, 127, 52, 0.2);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  margin: 0 auto;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ==================== 響應式設計 ==================== */
-@media (max-width: 768px) {
-  :root {
-    --sidebar-width: 60px;
-  }
-
-  .lobby-sidebar {
-    width: var(--sidebar-width);
-    padding: 16px 0;
-  }
-
-  .sidebar-logo {
-    width: 40px;
-    height: 40px;
-  }
-
-  .sidebar-logo .material-symbols-outlined {
-    font-size: 24px;
-  }
-
-  .sidebar-title {
-    font-size: 12px;
-    margin-bottom: 24px;
-  }
-
-  .sidebar-nav-item {
-    width: 40px;
-    height: 40px;
-  }
-
-  .sidebar-nav-item .material-symbols-outlined {
-    font-size: 20px;
-  }
-
-  .lobby-content {
-    padding: 24px 16px;
-  }
-
-  .lobby-header {
-    padding: 12px 16px;
-  }
-
-  .join-room-section {
-    flex-direction: column;
-  }
-
-  .room-table th,
-  .room-table td {
-    padding: 12px;
-  }
-
-  .room-table th:nth-child(2),
-  .room-table td:nth-child(2) {
-    display: none;
-  }
-}
-
-@media (max-width: 480px) {
-  .lobby-sidebar {
-    display: none;
-  }
-
-  .lobby-main {
-    margin-left: 0;
-  }
-
-  /* Mobile bottom nav */
-  .mobile-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--primary);
-    padding: 8px 0;
-    justify-content: space-around;
-    z-index: 100;
-  }
-
-  .mobile-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-  }
-
-  .mobile-nav-item.active {
-    color: var(--accent-gold);
-  }
-
-  .mobile-nav-item .material-symbols-outlined {
-    font-size: 24px;
-  }
-
-  .lobby-content {
-    padding-bottom: 80px;
-  }
-
-  .lobby-footer {
-    display: none;
-  }
-
-  .room-table th:nth-child(3),
-  .room-table td:nth-child(3) {
-    display: none;
-  }
-}
-
-/* Desktop: hide mobile nav */
-@media (min-width: 481px) {
-  .mobile-nav {
-    display: none;
-  }
-}
-
-/* ==================== 創建房間 Modal（工單 0128）==================== */
-.create-room-modal {
-  position: relative;
-  max-width: 400px;
-  width: 100%;
-  background-color: #f5f1e6;
-  border: 1px solid var(--accent-gold);
-  border-radius: 12px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
-  padding: 0;
-  animation: modalIn 0.3s ease-out;
-}
-
-/* 裝飾圖示 */
-.create-room-modal .crm-decor-top {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  font-size: 48px;
-  color: var(--primary);
-  opacity: 0.1;
-  pointer-events: none;
-}
-
-.create-room-modal .crm-decor-bottom {
-  position: absolute;
-  bottom: 80px;
-  left: 16px;
-  font-size: 64px;
-  color: var(--primary);
-  opacity: 0.05;
-  pointer-events: none;
-}
-
-/* 頂部區域 */
-.crm-header {
-  padding: 32px 24px 16px;
-  text-align: center;
-}
-
-.crm-header-icon {
-  font-size: 48px;
-  color: var(--primary);
-  margin-bottom: 12px;
-}
-
-.crm-title {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 24px;
-  font-weight: 700;
-  color: #131613;
-  margin: 0 0 4px;
-}
-
-.crm-subtitle {
-  font-size: 14px;
-  color: var(--text-muted);
   margin: 0;
 }
-
-/* 表單區域 */
-.crm-form {
-  padding: 16px 24px;
+.lobby .nickname-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #34513e;
 }
-
-.crm-input-group {
-  margin-bottom: 20px;
+.nickname-label small {
+  font-size: 10px;
+  color: #77866e;
 }
-
-.crm-input-group label {
-  display: block;
-  font-size: 16px;
-  font-weight: 500;
-  color: #131613;
-  margin-bottom: 8px;
-}
-
-.crm-select {
+.lobby .nickname-input,
+.lobby .join-room-input {
+  min-height: 44px;
   width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  font-size: 14px;
-  border: 1px solid rgba(187, 156, 99, 0.3);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.5);
-  color: #131613;
-  cursor: pointer;
-  transition: all 0.2s;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b806c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 20px;
+  padding: 10px 12px;
+  border: 1px solid #b9c8ac;
+  border-radius: 3px;
+  background: #fffef7;
+  color: #213b32;
 }
-
-.crm-select:focus {
-  outline: none;
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 1px var(--accent-gold);
+.nickname-section > small {
+  font-size: 10px;
+  color: #7b8971;
 }
-
-.crm-select:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Checkbox 樣式 */
-.crm-checkbox-row {
+.lobby .single-player-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  margin-bottom: 16px;
-}
-
-.crm-checkbox-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.crm-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(187, 156, 99, 0.5);
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
-  accent-color: var(--primary);
-}
-
-.crm-checkbox:checked {
-  background-color: var(--primary);
-  border-color: var(--primary);
-}
-
-.crm-checkbox-label {
-  font-size: 16px;
-  color: #131613;
-  cursor: pointer;
-}
-
-.crm-checkbox-icon {
-  font-size: 20px;
-  color: rgba(187, 156, 99, 0.4);
-}
-
-/* 密碼輸入框 */
-.crm-password-group {
-  margin-bottom: 16px;
-}
-
-.crm-password-wrapper {
-  position: relative;
-}
-
-.crm-password-input {
-  width: 100%;
-  height: 48px;
-  padding: 0 48px 0 16px;
-  font-size: 14px;
-  border: 1px solid rgba(187, 156, 99, 0.3);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.5);
-  color: #131613;
-  transition: all 0.2s;
-}
-
-.crm-password-input:focus {
-  outline: none;
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 1px var(--accent-gold);
-}
-
-.crm-password-input::placeholder {
-  color: rgba(107, 128, 108, 0.6);
-}
-
-.crm-password-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.crm-password-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  color: rgba(107, 128, 108, 0.4);
-  pointer-events: none;
-}
-
-/* 按鈕區域 */
-.crm-actions {
-  display: flex;
-  gap: 12px;
-  padding: 24px;
-}
-
-.crm-btn {
-  flex: 1;
-  height: 48px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.crm-btn-cancel {
-  background-color: #e5e7eb;
-  color: #374151;
-}
-
-.crm-btn-cancel:hover:not(:disabled) {
-  background-color: #d1d5db;
-}
-
-.crm-btn-confirm {
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(47, 127, 52, 0.2);
-}
-
-.crm-btn-confirm:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
-.crm-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.crm-btn .material-symbols-outlined {
-  font-size: 18px;
-}
-
-/* 錯誤訊息 */
-.crm-error {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: #b91c1c;
-  font-size: 14px;
-  margin-top: 8px;
-}
-
-/* 底部金色橫條 */
-.crm-bottom-accent {
-  height: 6px;
-  width: 100%;
-  background-color: var(--accent-gold);
-}
-
-/* ==================== 工單 202601260048：單人模式樣式 ==================== */
-
-.single-player-section {
-  margin-top: 24px;
-  margin-bottom: 20px;
-  width: 100%;
-}
-
-.single-player-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-gold) 100%);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(47, 127, 52, 0.3);
-}
-
-.single-player-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(47, 127, 52, 0.4);
-}
-
-.single-player-btn .material-symbols-outlined {
-  font-size: 24px;
-}
-
-.ai-modal {
-  max-width: 600px;
-  padding: 32px;
-}
-
-.ai-modal h3 {
-  font-size: 24px;
-  margin-bottom: 8px;
-  color: var(--color-text);
-}
-
-.modal-description {
-  color: #666;
-  margin-bottom: 24px;
-  font-size: 14px;
-}
-
-/* ==================== 工單 0276：返回遊戲選擇按鈕 ==================== */
-.back-to-selection-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  min-height: 54px;
   width: 100%;
   padding: 12px 20px;
-  margin-bottom: 24px;
-  background-color: transparent;
-  border: 1px solid var(--primary);
-  border-radius: 8px;
-  color: var(--primary);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  background: #163e35;
+  color: #fffdf4;
+  border: 1px solid #163e35;
+  border-radius: 3px;
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
-
-.back-to-selection-btn:hover {
-  background-color: rgba(47, 127, 52, 0.1);
+.single-player-btn > span {
+  font-size: 24px;
 }
-
-.back-to-selection-btn .material-symbols-outlined {
-  font-size: 18px;
+.lobby .herb-practice-foot {
+  font-size: 11px;
+  color: #73836c;
+  margin: 0;
+  line-height: 1.5;
 }
-
-/* ==================== 工單 0260：遊戲選擇器（保留樣式供參考）==================== */
-.game-selector {
-  display: none; /* 工單 0276：隱藏，改用獨立頁面 */
-  gap: 12px;
-  margin-bottom: 24px;
-  width: 100%;
-}
-
-.game-btn {
-  flex: 1;
+.herb-network {
   display: flex;
-  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+  white-space: nowrap;
+  color: #91723c;
+}
+.herb-network:before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.herb-network.is-online {
+  color: #3c7b4d;
+}
+.lobby .herb-network-note {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8b744b;
+  margin: 0;
+  flex-shrink: 0;
+}
+.lobby .create-room-btn {
+  min-height: 44px;
+  border: 1px solid #849d7c;
+  background: transparent;
+  color: #163e35;
+  border-radius: 3px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.herb-room-label {
+  font-size: 11px;
+  color: #6b7c62;
+  margin: 0;
+}
+.lobby .join-room-section {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.lobby .join-room-input {
+  min-width: 0;
+  font-size: 12px;
+}
+.lobby .join-room-btn,
+.lobby .room-action-btn {
+  min-height: 44px;
+  border: 1px solid #bbc9af;
+  background: #e4eadb;
+  color: #163e35;
+  padding: 8px 16px;
+  border-radius: 3px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.herb-room-list-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  border-bottom: 1px solid #d3dbc9;
+  padding-bottom: 8px;
+}
+.herb-room-list-heading h3 {
+  font-size: 12px;
+  margin: 0;
+  color: #36513c;
+}
+.herb-room-list-heading > span {
+  font-size: 10px;
+  color: #849079;
+}
+.lobby .room-table-container {
+  min-height: 0;
+  overflow: auto;
+  flex: 1;
+  overscroll-behavior: contain;
+}
+.lobby .no-rooms {
+  display: grid;
+  place-content: center;
+  text-align: center;
+  min-height: 80px;
+  height: 100%;
+  gap: 6px;
+  color: #89957f;
+}
+.no-rooms > span {
+  font-size: 24px;
+}
+.no-rooms strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+.lobby .no-rooms p {
+  font-size: 10px;
+  margin: 0;
+  color: #89957f;
+}
+.lobby .room-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+.lobby .room-table th {
+  position: sticky;
+  top: 0;
+  background: #f8f8ef;
+  font-size: 10px;
+  color: #77876b;
+}
+.lobby .room-table th,
+.lobby .room-table td {
+  padding: 8px 5px;
+  border-bottom: 1px solid #e1e6d7;
+}
+.lobby .room-table td small {
+  display: block;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+  color: #8a9680;
+}
+.lobby .room-status {
+  display: inline-block;
+  padding: 4px 6px;
+  border-radius: 3px;
+  background: #e5eddc;
+  color: #56754a;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.lobby .room-status.full {
+  background: #eee7d9;
+  color: #8c7443;
+}
+.lobby .herb-lobby-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 0;
+  padding: 0 24px;
+  border-top: 1px solid #cdd4c3;
+  background: #e8ecdf;
+  color: #75846b;
+  font-size: 10px;
+  gap: 12px;
+}
+.herb-lobby-footer > div {
+  display: flex;
+  gap: 12px;
+}
+.lobby .herb-lobby-footer button {
+  min-height: 44px;
+  padding: 8px;
+  background: transparent;
+  border: 0;
+  color: #3e5b44;
+  font-size: 11px;
+}
+.lobby .error-message {
+  border-left: 2px solid #a56845;
+  padding: 8px 10px;
+  background: #f8eee1;
+  font-size: 11px;
+  color: #925c39;
+  line-height: 1.5;
+  margin: 0;
+}
+/* Screen-local panels: controls remain on screen while settings can scroll. */
+.lobby .modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 20px 16px;
-  background-color: var(--bg-light);
-  border: 2px solid rgba(47, 127, 52, 0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 16px;
+  background: #102e28a6;
+  backdrop-filter: blur(4px);
 }
-
-.game-btn:hover {
-  border-color: var(--primary);
-  background-color: rgba(47, 127, 52, 0.05);
+.lobby .modal,
+.lobby .create-room-modal {
+  width: min(100%, 540px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #f9f7ef;
+  border: 1px solid #bfccb1;
+  border-radius: 5px;
+  padding: 24px;
+  color: #213b32;
+  box-shadow: 0 20px 80px #102d282a;
 }
-
-.game-btn.active {
-  border-color: var(--primary);
-  background-color: rgba(47, 127, 52, 0.1);
-  box-shadow: 0 0 0 2px rgba(47, 127, 52, 0.2);
+.lobby .modal h3,
+.lobby .crm-title {
+  font:
+    600 22px/1.4 "Noto Serif TC",
+    Georgia,
+    serif;
+  margin: 0 0 10px;
+  color: #163e35;
 }
-
-.game-icon {
-  font-size: 32px;
-  line-height: 1;
+.lobby .modal p,
+.lobby .crm-subtitle {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #6b7c62;
 }
-
-.game-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-dark);
+.lobby .modal label,
+.lobby .crm-form label {
+  display: block;
+  font-size: 12px;
+  margin: 10px 0 6px;
 }
-
-.game-btn.active .game-name {
-  color: var(--primary);
+.lobby .modal select,
+.lobby .crm-select,
+.lobby .crm-password-input,
+.lobby .password-modal input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #bdcbb3;
+  border-radius: 3px;
+  background: #fffdf5;
+  color: #213b32;
 }
-
-/* 遊戲類型標籤 */
-.game-type-badge {
-  display: inline-flex;
+.lobby .modal-actions,
+.lobby .crm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  position: sticky;
+  bottom: -24px;
+  background: #f9f7ef;
+  padding: 12px 0 0;
+}
+.lobby .btn,
+.lobby .crm-btn {
+  min-height: 44px;
+  border: 1px solid #aebfa3;
+  border-radius: 3px;
+  padding: 10px 18px;
+  font-size: 13px;
+}
+.lobby .btn-primary,
+.lobby .crm-btn-confirm {
+  background: #163e35;
+  color: #fffdf4;
+}
+.lobby .btn-secondary,
+.lobby .crm-btn-cancel {
+  background: transparent;
+  color: #163e35;
+}
+.lobby .crm-checkbox-left {
+  display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 4px;
-  background-color: rgba(47, 127, 52, 0.1);
-  color: var(--primary);
 }
-
-.game-type-badge.evolution {
-  background-color: rgba(197, 160, 89, 0.15);
-  color: var(--accent-gold);
+.lobby .crm-checkbox-left input {
+  height: 18px;
+  width: 18px;
 }
-
-@media (max-width: 480px) {
-  .game-selector {
+.lobby .crm-error,
+.lobby .modal-error {
+  color: #99452e;
+  font-size: 12px;
+}
+.lobby .crm-decor-top,
+.lobby .crm-decor-bottom {
+  display: none;
+}
+.herb-help-dialog > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.lobby .herb-help-dialog h2 {
+  font:
+    600 22px/1.4 "Noto Serif TC",
+    Georgia,
+    serif;
+  margin: 0;
+  color: #163e35;
+}
+.lobby .herb-help-dialog header button {
+  min-height: 44px;
+  background: #e7ecdf;
+  border: 1px solid #bac9af;
+  color: #31533d;
+  padding: 8px 12px;
+  border-radius: 3px;
+}
+.herb-help-dialog ol {
+  padding-left: 22px;
+}
+.herb-help-dialog li {
+  padding: 10px 0;
+}
+.herb-help-dialog strong {
+  font-size: 14px;
+}
+.lobby .herb-lobby-topbar button:hover:not(:disabled),
+.lobby .herb-lobby-footer button:hover:not(:disabled),
+.lobby .herb-help-dialog button:hover:not(:disabled) {
+  background: #dce6d1;
+  color: #163e35;
+}
+.lobby .single-player-btn:hover:not(:disabled),
+.lobby .btn-primary:hover:not(:disabled),
+.lobby .crm-btn-confirm:hover:not(:disabled) {
+  background: #245347;
+  color: #fffdf4;
+}
+.lobby .create-room-btn:hover:not(:disabled),
+.lobby .join-room-btn:hover:not(:disabled),
+.lobby .room-action-btn:hover:not(:disabled),
+.lobby .btn-secondary:hover:not(:disabled),
+.lobby .crm-btn-cancel:hover:not(:disabled) {
+  background: #dce6d1;
+  color: #163e35;
+}
+@media (max-width: 600px) and (min-height: 501px) {
+  .lobby {
+    grid-template-rows: 56px minmax(0, 1fr) 44px;
+  }
+  .lobby .herb-lobby-content {
+    padding: 12px;
+    gap: 10px;
+  }
+  .herb-lobby-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 250px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .herb-practice,
+  .herb-online {
+    padding: 14px;
+    gap: 9px;
+  }
+  .lobby .herb-practice-foot {
+    font-size: 10px;
+  }
+  .lobby .nickname-section {
+    gap: 5px;
+  }
+  .lobby .herb-lobby-intro h1 {
+    font-size: 19px;
+  }
+  .herb-lobby-intro > span {
+    font-size: 10px;
+  }
+  .lobby .single-player-btn {
+    min-height: 48px;
+  }
+  .herb-mode-tag {
+    font-size: 10px;
+  }
+}
+@media (max-width: 760px) {
+  .lobby .herb-lobby-topbar {
+    padding: 6px 12px;
     gap: 8px;
   }
-
-  .game-btn {
-    padding: 16px 12px;
+  .lobby .herb-lobby-topbar nav {
+    gap: 0;
   }
-
-  .game-icon {
-    font-size: 28px;
+  .lobby .herb-lobby-topbar nav button {
+    font-size: 10px;
+    padding: 8px;
   }
-
-  .game-name {
-    font-size: 12px;
+  .herb-lobby-brand > span:last-child {
+    font-size: 18px;
   }
+  .herb-lobby-brand small {
+    font-size: 8px;
+  }
+  .lobby .lobby-avatar {
+    display: none;
+  }
+  .lobby .lobby-user-area {
+    max-width: 50px;
+    font-size: 10px;
+  }
+  .lobby .herb-lobby-footer {
+    padding: 0 12px;
+    font-size: 9px;
+  }
+  .herb-lobby-footer > div {
+    gap: 4px;
+  }
+}
+@media (max-height: 500px) {
+  .lobby {
+    grid-template-rows: 48px minmax(0, 1fr) 36px;
+  }
+  .lobby .herb-lobby-topbar {
+    padding: 2px 16px;
+  }
+  .lobby .herb-lobby-content {
+    padding: 8px 16px;
+    gap: 6px;
+    grid-template-rows: 24px minmax(0, 1fr);
+  }
+  .lobby .herb-lobby-intro h1 {
+    font-size: 17px;
+  }
+  .herb-lobby-intro > span {
+    font-size: 10px;
+  }
+  .herb-lobby-layout {
+    gap: 12px;
+  }
+  .herb-practice,
+  .herb-online {
+    padding: 12px;
+    gap: 6px;
+  }
+  .lobby .herb-practice-heading h2 {
+    font-size: 16px;
+  }
+  .lobby .herb-practice-foot,
+  .lobby .nickname-section > small,
+  .lobby .herb-network-note {
+    display: none;
+  }
+  .lobby .nickname-section {
+    gap: 5px;
+  }
+  .lobby .single-player-btn {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .lobby .herb-lobby-footer button {
+    min-height: 36px;
+  }
+  .herb-room-list-heading {
+    padding-bottom: 4px;
+  }
+  .lobby .no-rooms {
+    min-height: 40px;
+  }
+  .no-rooms > span {
+    display: none;
+  }
+  .lobby .modal,
+  .lobby .create-room-modal {
+    padding: 16px;
+  }
+  .lobby .modal-actions,
+  .lobby .crm-actions {
+    bottom: -16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lobby * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* AI setup is a bounded screen, not a scrolling document. */
+.lobby .modal.ai-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(100%, 580px);
+  height: min(570px, calc(100dvh - 24px));
+  max-height: calc(100dvh - 24px);
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  background: #f9f7ef;
+}
+.lobby .ai-modal .ai-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #d1dbc5;
+  background: #e8edde;
+  border-radius: 5px 5px 0 0;
+}
+.lobby .ai-modal-header h3 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+.lobby .ai-modal-header .modal-description {
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0;
+  color: #74866a;
+}
+.lobby .ai-modal-close {
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 1px solid #bdcdb1;
+  border-radius: 3px;
+  background: transparent;
+  color: #46643d;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.lobby .ai-modal .ai-modal-body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px 20px;
+}
+.lobby .ai-modal .modal-actions {
+  position: static;
+  bottom: auto;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid #d1dbc5;
+  background: #e8edde;
+  border-radius: 0 0 5px 5px;
+  min-height: 68px;
+}
+.lobby .ai-modal .modal-actions .btn {
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 16px;
+  white-space: nowrap;
+}
+.lobby .ai-modal .ai-modal-error {
+  font-size: 12px;
+  color: #99452e;
+  margin: 8px 0 0;
+  background: #f8e8dc;
+  padding: 8px;
+  border-left: 2px solid #b7764f;
+}
+.lobby .ai-modal-close:hover:not(:disabled) {
+  background: #dbe5cf;
+  color: #163e35;
+}
+@media (max-height: 500px) {
+  .lobby .modal.ai-modal {
+    width: min(100%, 680px);
+  }
+  .lobby .ai-modal .ai-modal-header {
+    padding: 8px 16px;
+  }
+  .lobby .ai-modal-header h3 {
+    font-size: 17px;
+  }
+  .lobby .ai-modal .ai-modal-body {
+    padding: 10px 16px;
+  }
+  .lobby .ai-modal .modal-actions {
+    padding: 8px 16px;
+    min-height: 60px;
+  }
+}
+
+.lobby .ai-modal .ai-player-selector .ai-count-label {
+  margin: 0 0 8px;
+}
+.lobby .ai-modal .ai-player-selector .ai-name {
+  margin: 0;
 }

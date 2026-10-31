@@ -1,0 +1,184 @@
+.card-energy-layer {
+  position: absolute;
+  inset: 74px 0 139px;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+  contain: layout paint;
+}
+.card-energy-layer svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.card-energy-aura {
+  stroke-width: 0.25;
+  opacity: 0.45;
+  filter: drop-shadow(0 0 3px var(--glow));
+  animation: herb-aura-breathe 3.8s ease-in-out infinite;
+  animation-delay: var(--phase);
+}
+.card-energy-trace {
+  stroke-width: 0.22;
+  stroke-dasharray: 12 88;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 2px var(--glow));
+  animation: herb-edge-travel 6s linear infinite;
+  animation-delay: var(--phase);
+}
+.card-energy.chosen .card-energy-aura {
+  stroke-width: 0.6;
+  opacity: 1;
+  filter: drop-shadow(0 0 5px var(--glow));
+  animation: herb-selected-breathe 1.8s ease-in-out infinite;
+}
+.card-energy.chosen .card-energy-trace {
+  stroke-width: 0.35;
+  stroke-dasharray: 24 76;
+  animation-duration: 2.5s;
+  opacity: 1;
+}
+.card-energy.inactive .card-energy-aura {
+  opacity: 0.14;
+  animation: none;
+  filter: none;
+}
+.card-energy.inactive .card-energy-trace {
+  display: none;
+}
+.tabletop-motes {
+  position: absolute;
+  inset: 0;
+}
+.tabletop-motes i {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--glow);
+  box-shadow: 0 0 7px 2px var(--glow);
+  opacity: 0;
+  animation: herb-mote-drift 9s linear infinite;
+  animation-delay: var(--delay);
+}
+.card-tap-burst {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+.card-tap-burst i,
+.card-tap-burst b {
+  position: absolute;
+  left: -20px;
+  top: -20px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--glow);
+  border-right-color: var(--glow-b);
+  border-bottom-color: var(--glow-b);
+  border-radius: 50%;
+  box-shadow: 0 0 16px var(--glow);
+  animation: herb-touch-ring 0.65s ease-out forwards;
+}
+.card-tap-burst b {
+  animation-delay: 0.1s;
+}
+.card-tap-burst em {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: #fff0c5;
+  box-shadow: 0 0 25px 12px var(--glow);
+  animation: herb-touch-core 0.45s ease-out forwards;
+}
+.card-energy-layer * {
+  animation-play-state: var(--fx-play, running) !important;
+}
+@keyframes herb-aura-breathe {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+@keyframes herb-selected-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+    stroke-width: 0.8;
+  }
+}
+@keyframes herb-edge-travel {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+@keyframes herb-mote-drift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 12px) scale(0.5);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  80% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -42px) scale(1);
+  }
+}
+@keyframes herb-touch-ring {
+  from {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+@keyframes herb-touch-core {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: rotate(120deg) scale(0.1);
+  }
+}
+@media (max-width: 600px) {
+  .card-energy-layer {
+    inset: 64px 0 142px;
+  }
+}
+@media (max-width: 380px) {
+  .card-energy-layer {
+    inset: 64px 0 140px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-energy-layer * {
+    animation: none !important;
+  }
+  .card-energy-trace,
+  .tabletop-motes,
+  .card-tap-burst {
+    display: none;
+  }
+  .card-energy.chosen .card-energy-aura {
+    opacity: 1;
+    stroke-width: 0.7;
+  }
+}

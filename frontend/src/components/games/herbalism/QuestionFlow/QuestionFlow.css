@@ -647,3 +647,33 @@
     display: none;
   }
 }
+
+/* Phone-first inquiry sheet: choices first, persistent confirmation, no decorative long form. */
+@media(max-width:600px){
+ .question-flow-header {padding:12px;gap:8px;}
+ .qf-title {font-size:20px;}.qf-title-sub,.qf-color-chips-label {display:none;}
+ .question-flow-body {padding:12px;}
+ .qf-steps-grid {display:flex;flex-direction:column;gap:14px;}
+ .qf-step-header {margin-bottom:8px;gap:6px;}
+ .qf-step-title {font-size:14px;}.qf-step-number {width:24px;height:24px;font-size:12px;}
+ .qf-player-options {display:flex;flex-wrap:wrap;gap:8px;}
+ .qf-player-option {flex:1;padding:8px;min-height:44px;}
+ .qf-type-option {padding:9px 10px;min-height:48px;}
+ .qf-type-name {font-size:14px;}.qf-type-desc {font-size:12px;}
+ .qf-confirm-card {padding:10px;}.qf-confirm-content {gap:4px;}
+ .qf-confirm-label,.qf-confirm-icon,.qf-confirm-footer,.qf-confirm-action-desc {display:none;}
+ .qf-confirm-value,.qf-confirm-action {font-size:14px;margin:0;}
+ .question-flow-footer {display:flex;flex-direction:row;gap:8px;padding:10px;}
+ .question-flow-footer .qf-btn {min-width:0;min-height:48px;flex:1;padding:8px;}
+}
+
+@media(max-width:600px){
+ .qf-step {gap:8px;}
+ .qf-player-options {flex-direction:row;}
+ .qf-player-option {flex:1 1 0;width:auto;gap:8px;}
+ .qf-confirm-card .qf-confirm-icon {display:none;}
+ .qf-confirm-card .qf-confirm-content {padding:0;}
+ .qf-type-options {gap:6px;}
+ .qf-confirm-card {min-height:0;}
+ .question-flow-modal {max-height:calc(100dvh - 100px);}
+}

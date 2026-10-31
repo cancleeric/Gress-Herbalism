@@ -1,0 +1,89 @@
+/* Player screens: persistent navigation; only data panes may scroll. */
+.app :is(.profile-page, .friends-page, .leaderboard-page) {
+  min-height: 0;
+  height: calc(100dvh - var(--console-alert-height, 0px));
+  background: #f4f1e8;
+  color: #213b32;
+}
+.app :is(.profile-page, .friends-page, .leaderboard-page)::before,
+.app :is(.profile-page, .friends-page, .leaderboard-page) .bg-decoration { display: none; }
+.app :is(.profile-layout, .friends-layout, .leaderboard-layout) {
+  height: 100%; min-height: 0; display: grid;
+  grid-template-rows: 60px minmax(0, 1fr) auto;
+}
+.app :is(.profile-nav, .friends-nav, .leaderboard-nav) {
+  padding: 8px 24px; min-height: 0; background: #e8ecdf;
+  border-bottom: 1px solid #cad4c3;
+}
+.app :is(.profile-nav, .friends-nav, .leaderboard-nav) .back-btn {
+  min-height: 44px; color: #163e35;
+}
+.app :is(.profile-main, .friends-main, .leaderboard-main) {
+  min-height: 0; padding: 16px 24px; gap: 12px; overflow: auto;
+  overscroll-behavior: contain; justify-content: flex-start;
+}
+.app :is(.profile-card, .friends-card, .leaderboard-card) {
+  flex-shrink: 0; width: 100%; max-width: 1000px; padding: 20px;
+  border: 1px solid #ced6c6; border-radius: 8px; background: #fffdf8;
+  backdrop-filter: none; box-shadow: none; margin: 0;
+}
+.app :is(.profile-footer, .friends-footer, .leaderboard-footer) { padding: 8px 16px; }
+.app :is(.profile-footer, .friends-footer, .leaderboard-footer) p { margin: 0; font-size: 10px; color: #617160; }
+.app .profile-header { flex-direction: row; gap: 16px; text-align: left; margin-bottom: 16px; }
+.app .profile-header .avatar-container { margin: 0; }
+.app .profile-header :is(.avatar, .avatar-placeholder) { width: 56px; height: 56px; font-size: 24px; }
+.app .profile-page .stats-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.app .profile-page .stat-card { padding: 12px 6px; }
+.app .profile-page .stat-value { font-size: 23px; }
+.app .profile-page .history-section { margin-top: 20px; }
+.app :is(.friends-page, .leaderboard-page) :is(.friends-title, .leaderboard-title) { margin-bottom: 12px; font-size: 23px; }
+.app :is(.friends-page, .leaderboard-page) :is(.friends-tabs, .sort-tabs) { margin-bottom: 12px; flex-wrap: wrap; }
+.app :is(.profile-page, .friends-page, .leaderboard-page) button { min-height: 44px; }
+.app .leaderboard-table-wrapper { overflow: auto; }
+.app .leaderboard-page .leaderboard-table th { position: sticky; top: 0; background: #e8ecdf; }
+.app .friends-page :is(.friend-item, .request-item, .player-item) { min-width: 0; flex-wrap: wrap; gap: 8px; }
+.app .friends-page :is(.friend-info, .request-info, .player-info) { min-width: 0; overflow-wrap: anywhere; }
+.app :is(.profile-page, .friends-page, .leaderboard-page) :focus-visible { outline: 3px solid #aa8548; outline-offset: 3px; }
+
+/* Login controls remain on the main screen. Reference material is an overlay. */
+.app .login-page { min-height: 0; height: calc(100dvh - var(--console-alert-height, 0px)); display: block; }
+.app .login-page .login-layout { height: 100%; min-height: 0; display: grid; grid-template-rows: 64px minmax(0, 1fr) 32px; }
+.app .login-page .login-main { min-height: 0; padding: 20px 32px; gap: 24px; grid-template-columns: 1fr 1fr; }
+.app .login-page .login-card { grid-column: auto; grid-row: auto; padding: 24px; max-height: 100%; overflow-y: auto; }
+.app .login-page .login-card::before { font-size: 21px; margin-bottom: 16px; }
+.app .login-page .branding { align-self: center; }
+.app .login-page .login-footer { padding: 6px 12px; }
+.app .login-page .login-reference-panel[hidden] { display: none; }
+.app .login-page .login-reference-panel:not([hidden]) {
+  position: fixed; inset: var(--console-alert-height, 0px) 0 0; z-index: 1100;
+  display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 20px;
+  background: #f4f1e8; color: #213b32;
+}
+.login-reference-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid #ced6c6; }
+.login-reference-header button { min-height: 44px; background: #163e35; color: #fffdf8; }
+.login-reference-body { min-height: 0; overflow-y: auto; padding: 20px 0; overscroll-behavior: contain; }
+.app .login-page .login-reference-panel .game-intro { max-width: 900px; margin: 0 auto 24px; }
+.app .login-page .login-reference-panel .login-guide { max-width: 900px; margin: 0 auto; }
+@media (max-width: 600px) and (min-height: 501px) {
+  .app .login-page .login-main { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); padding: 16px; gap: 12px; align-content: stretch; }
+  .app .login-page .branding::before { display: none; }
+  .app .login-page .brand-title { font-size: 30px; margin-bottom: 8px; }
+  .app .login-page .brand-subtitle { font-size: 14px; }
+  .app .login-page .login-card { align-self: center; }
+  .app :is(.profile-main, .friends-main, .leaderboard-main) { padding: 12px; }
+  .app :is(.profile-card, .friends-card, .leaderboard-card) { padding: 16px; }
+  .app .profile-page .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-height: 500px) {
+  .app .login-page .login-layout { grid-template-rows: 48px minmax(0, 1fr) 24px; }
+  .app .login-page .login-nav { padding: 2px 16px; }
+  .app .login-page .login-main { display: grid; grid-template-columns: 1fr 1fr; padding: 8px 20px; gap: 16px; }
+  .app .login-page .brand-title { font-size: 29px; }
+  .app .login-page .branding::before, .app .login-page .login-card::before, .app .login-page .divider { display: none; }
+  .app .login-page .login-card { padding: 14px; }
+  .app .login-page .login-buttons { gap: 8px; }
+  .app .login-page .btn { height: 44px; min-height: 44px; }
+  .app .login-page .login-signup-help { margin-top: 8px; font-size: 11px; }
+  .app :is(.profile-layout, .friends-layout, .leaderboard-layout) { grid-template-rows: 48px minmax(0, 1fr) auto; }
+  .app :is(.profile-nav, .friends-nav, .leaderboard-nav) { padding: 2px 16px; }
+}

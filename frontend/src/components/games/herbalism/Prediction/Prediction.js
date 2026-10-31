@@ -7,6 +7,8 @@
 
 import React, { useState } from 'react';
 import { ALL_COLORS } from '../../../../shared/constants';
+import HerbArt from '../GameRoom/HerbArt';
+import { HERB_GROUPS } from '../GameRoom/herbSpecies';
 import './Prediction.css';
 
 /**
@@ -52,26 +54,33 @@ function Prediction({ onEndTurn, isLoading }) {
 
   return (
     <div className="prediction-card">
-      <h3>問牌完成！</h3>
-      <p className="prediction-prompt">是否要預測蓋牌中有哪個顏色？</p>
+      <header className="prediction-heading">
+        <span className="prediction-eyebrow">問牌已完成 · 可選步驟</span>
+        <h3>預測中央蓋牌</h3>
+        <p className="prediction-prompt">不是交牌選擇。選一色預測，或直接略過。</p>
+      </header>
 
       <div className="prediction-colors">
         {ALL_COLORS.map(color => (
           <button
             key={color}
-            className={`btn btn-color color-${color} ${selectedColor === color ? 'selected' : ''}`}
+            style={{"--herb-glow":HERB_GROUPS[color].glow,"--herb-ink":HERB_GROUPS[color].ink}}
+            aria-label={COLOR_NAMES[color]}
+            aria-pressed={selectedColor === color}
+            className={`prediction-choice color-${color} ${selectedColor === color ? 'selected' : ''}`}
             onClick={() => handleColorSelect(color)}
             disabled={isLoading}
           >
-            {COLOR_NAMES[color]}
+            <span className="prediction-art"><HerbArt color={color} /></span>
+            <span className="prediction-color-name"><i aria-hidden="true">{HERB_GROUPS[color].symbol}</i>{COLOR_NAMES[color]}<b aria-hidden="true">{selectedColor === color ? '✓' : ''}</b></span>
           </button>
         ))}
       </div>
 
-      <p className="prediction-hint">
+      <p className="prediction-hint" role="status">
         {selectedColor
           ? `已選擇：${COLOR_NAMES[selectedColor]} ✓`
-          : '（點擊選擇，可不選）'}
+          : '不選顏色也能結束回合'}
       </p>
 
       <p className="prediction-rules">
@@ -83,7 +92,7 @@ function Prediction({ onEndTurn, isLoading }) {
         onClick={handleEndTurn}
         disabled={isLoading}
       >
-        {isLoading ? '處理中...' : '結束回合'}
+        {isLoading ? '處理中...' : selectedColor ? '確認預測並結束回合' : '略過預測，結束回合'}
       </button>
     </div>
   );

@@ -27,7 +27,7 @@ describe('AIPlayer', () => {
       const ai = new AIPlayer('ai-1', null);
 
       // getAIPlayerName(0) returns 'AI  1' when no difficulty specified
-      expect(ai.name).toContain('AI');
+      expect(ai.name).toBe('阿哲');
     });
 
     test('should fallback to medium difficulty for invalid difficulty', () => {
