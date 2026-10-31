@@ -5,7 +5,7 @@ const { spawnSync } = require('node:child_process');
 const firebase = ['API_KEY', 'AUTH_DOMAIN', 'PROJECT_ID', 'STORAGE_BUCKET', 'MESSAGING_SENDER_ID', 'APP_ID']
   .map(key => `REACT_APP_FIREBASE_${key}`);
 const required = [...firebase, 'REACT_APP_API_URL', 'REACT_APP_SOCKET_URL', 'REACT_APP_SOCKET_PATH'];
-const allowed = new Set([...required, 'REACT_APP_E2E', 'REACT_APP_LIDS_ENABLED',
+const allowed = new Set([...required, 'REACT_APP_E2E', 'REACT_APP_VERSION', 'REACT_APP_LIDS_ENABLED',
   'REACT_APP_LIDS_ISSUER', 'REACT_APP_LIDS_CLIENT_ID', 'REACT_APP_LIDS_REDIRECT_URI']);
 
 function validate(values) {

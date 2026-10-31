@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.284] - 2026-10-31
+
+### Added
+- Persistent replay storage for multiplayer games (`/api/matches`, own-view replay), gated by `PERSISTENT_REPLAY=1`
+- Shared 3D tabletop for live game and replay (`Tabletop3D`, `TabletopHeader`)
+- Mobile-first layouts (320x568 / 360x740 / 740x360) and camera fit
+- Herb species art, apothecary visual system, deal-to-seat animation
+- AI practice replay (per-tab memory) and match history view
+
+### Changed
+- Game room and question flow reworked around the shared tabletop
+- `/api/health` reports persistence and replay storage mode
+- `SOCKET_PATH` is configurable; build pipeline accepts `REACT_APP_VERSION`
+
+### Tests
+- backend 50 suites / 1390 tests; frontend 116 suites / 2565 tests
+
 ## [1.0.275] - 2026-02-07
 
 ### Phase 2 Complete (Work Orders 0317-0375)
