@@ -34,14 +34,14 @@ describe('QuestionFlow Component', () => {
     const props = { selectedCard: mockSelectedCard, players: mockPlayers, currentPlayerId: 'p1', onSubmit: mockOnSubmit };
     const { rerender } = render(<QuestionFlow {...props} />);
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     expect(screen.getByRole('button', { name: /確認問牌/i })).toBeEnabled();
     rerender(<QuestionFlow {...props} selectedCard={{ ...mockSelectedCard, colors: [...mockSelectedCard.colors] }} players={[...mockPlayers]} />);
     expect(screen.getByRole('button', { name: /確認問牌/i })).toBeEnabled();
     rerender(<QuestionFlow {...props} selectedCard={{ id: 'yellow-blue', colors: ['yellow', 'blue'] }} />);
     expect(screen.getByRole('button', { name: /確認問牌/i })).toBeDisabled();
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     rerender(<QuestionFlow {...props} selectedCard={{ id: 'yellow-blue', colors: ['yellow', 'blue'] }} currentPlayerId="p3" />);
     expect(screen.getByRole('button', { name: /確認問牌/i })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
@@ -52,7 +52,7 @@ describe('QuestionFlow Component', () => {
     const props = { selectedCard: mockSelectedCard, players: mockPlayers, currentPlayerId: 'p1', onSubmit: mockOnSubmit };
     const { rerender } = render(<QuestionFlow {...props} />);
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     rerender(<QuestionFlow {...props} players={mockPlayers.filter(player => player.id !== 'p2')} />);
     expect(screen.getByRole('button', { name: /確認問牌/i })).toBeDisabled();
     expect(screen.getByRole('alert')).toHaveTextContent('目標玩家已離開');
@@ -68,14 +68,14 @@ describe('QuestionFlow Component', () => {
       currentPlayerHand: [{ color: 'red' }, { color: 'green' }], onSubmit: mockOnSubmit };
     const { rerender } = render(<QuestionFlow {...props} />);
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
+    fireEvent.click(screen.getByText(/給一張要全部/));
     fireEvent.click(screen.getByText(/給 紅色 一張/));
     rerender(<QuestionFlow {...props} isLoading />);
     expect(screen.getAllByRole('radio').every(input => input.disabled)).toBe(true);
-    expect(screen.getByRole('button', { name: /各一張.*Each Color/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /各一張/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: /給 綠色 一張/ })).toBeDisabled();
     fireEvent.click(screen.getByText('玩家3'));
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     fireEvent.click(screen.getByText(/給 綠色 一張/));
     rerender(<QuestionFlow {...props} />);
     fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
@@ -156,9 +156,9 @@ describe('QuestionFlow Component', () => {
       />
     );
 
-    expect(screen.getByText(/各一張.*Each Color/)).toBeInTheDocument();
-    expect(screen.getByText(/其中一種全部.*All of One/)).toBeInTheDocument();
-    expect(screen.getByText(/給一張要全部.*Give.*Take/)).toBeInTheDocument();
+    expect(screen.getByText(/各一張/)).toBeInTheDocument();
+    expect(screen.getByText(/其中一種全部/)).toBeInTheDocument();
+    expect(screen.getByText(/給一張要全部/)).toBeInTheDocument();
   });
 
   test('enables confirm button only when all selections made', () => {
@@ -181,7 +181,7 @@ describe('QuestionFlow Component', () => {
     expect(confirmButton).toBeDisabled();
 
     // 選擇問牌方式
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     expect(confirmButton).not.toBeDisabled();
   });
 
@@ -197,7 +197,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
 
     expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -241,7 +241,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
+    fireEvent.click(screen.getByText(/給一張要全部/));
 
     expect(screen.getByText('選擇要給出的顏色：')).toBeInTheDocument();
   });
@@ -263,7 +263,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
+    fireEvent.click(screen.getByText(/給一張要全部/));
 
     // 不應顯示顏色選擇區
     expect(screen.queryByText('選擇要給出的顏色：')).not.toBeInTheDocument();
@@ -288,7 +288,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
+    fireEvent.click(screen.getByText(/給一張要全部/));
 
     expect(screen.getByRole('alert')).toHaveTextContent('你沒有這兩種顏色的牌');
   });
@@ -311,7 +311,7 @@ describe('QuestionFlow Component', () => {
     );
 
     fireEvent.click(screen.getByText('玩家2'));
-    fireEvent.click(screen.getByText(/給一張要全部.*Give.*Take/));
+    fireEvent.click(screen.getByText(/給一張要全部/));
     // 選擇給紅色
     fireEvent.click(screen.getByText(/給 紅色 一張/));
     fireEvent.click(screen.getByRole('button', { name: /確認問牌/i }));
@@ -393,14 +393,14 @@ describe('QuestionFlow Component', () => {
     );
 
     // 初始狀態顯示 —
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.getByText('先選擇一位對手')).toBeInTheDocument();
 
     // 選擇玩家後顯示玩家名稱（會出現在兩個位置：選項和確認卡片）
     fireEvent.click(screen.getByText('玩家2'));
     expect(screen.getAllByText('玩家2').length).toBe(2);
 
     // 選擇類型後顯示行動
-    fireEvent.click(screen.getByText(/各一張.*Each Color/));
+    fireEvent.click(screen.getByText(/各一張/));
     expect(screen.getByText(/向目標索取.*紅色.*和.*綠色.*各一張/)).toBeInTheDocument();
   });
 });

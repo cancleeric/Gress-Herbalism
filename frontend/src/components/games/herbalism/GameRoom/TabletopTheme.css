@@ -1,0 +1,335 @@
+/* Tabletop scene: a continuous felt surface with physical cards, not dashboard tiles. */
+.playing-stage {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    #386555 0%,
+    #183e34 65%,
+    #102a25 100%
+  );
+  color: #f4e8ca;
+}
+.playing-stage .playing-main {
+  max-width: 1440px;
+  position: relative;
+}
+.playing-stage .playing-center-column {
+  grid-template-columns: minmax(100px, 0.65fr) minmax(0, 2fr);
+  gap: 3vw;
+  padding: 12px 3vw;
+  border-radius: 48%;
+  background: radial-gradient(ellipse, #ffffff06, transparent 72%);
+}
+.playing-stage .playing-hidden-area {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.playing-stage .playing-hidden-title,
+.playing-stage .playing-inquiry-title {
+  color: #d6c8a3;
+  text-shadow: 0 2px 3px #0007;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+.playing-stage .playing-hidden-cards {
+  gap: 0;
+  justify-content: center;
+}
+.playing-stage .playing-hidden-card {
+  height: min(65%, 195px);
+  box-shadow:
+    3px 4px 0 #c4b591,
+    5px 7px 0 #18342c,
+    8px 18px 20px #0007;
+  transform: rotate(-12deg);
+}
+.playing-stage .playing-hidden-card + .playing-hidden-card {
+  margin-left: -40px;
+  transform: rotate(9deg) translateY(10px);
+}
+.playing-stage .playing-inquiry-area {
+  align-self: center;
+  height: 100%;
+  max-height: 560px;
+}
+.playing-stage .playing-inquiry-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: clamp(10px, 2vh, 24px) clamp(10px, 2vw, 28px);
+}
+.playing-stage .playing-inquiry-card {
+  flex: 0 1 27%;
+  max-width: 190px;
+  height: min(43%, 230px);
+  min-height: 80px;
+  border: 5px solid #eee1bf;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at 50% 38%, #fffdf2, #e5d6b0);
+  box-shadow:
+    1px 3px 0 #ac9870,
+    4px 10px 14px #0006;
+  gap: 0;
+  padding: 6px;
+  transform: rotate(-3deg);
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s;
+  overflow: hidden;
+}
+.playing-stage .playing-inquiry-card:nth-child(2n) {
+  transform: rotate(3deg);
+}
+.playing-stage
+  .playing-inquiry-card:hover:not(:disabled):not(.disabled-by-self),
+.playing-stage .playing-inquiry-card:focus-visible {
+  transform: translateY(-9px) rotate(0);
+  background: #fff5d8;
+  border-color: #e9c76b;
+  box-shadow: 0 14px 20px #0008;
+}
+.table-combination-swatches {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+}
+.table-herb-pair {
+  display: block;
+  width: 59%;
+  height: 100%;
+  min-height: 0;
+}
+.table-herb-pair + .table-herb-pair {
+  margin-left: -18%;
+  transform: translateY(5%) rotate(13deg);
+}
+.herb-specimen {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  filter: drop-shadow(1px 3px 1px #17302522);
+}
+.table-combination-name {
+  flex-shrink: 0;
+  font:
+    600 14px/1.5 Georgia,
+    serif;
+  color: #453a26;
+  letter-spacing: 0.25em;
+  border-top: 1px solid #bca87370;
+  width: 80%;
+}
+.playing-stage .playing-footer {
+  background: linear-gradient(0deg, #091f1ce8, #133a3077);
+  border-top: none;
+}
+.playing-stage .playing-hand-card {
+  background: #efe2bf !important;
+  border: 3px solid #d8c59a;
+  max-width: 102px;
+  flex-basis: 102px;
+  box-shadow:
+    2px 4px 0 #ac9870,
+    3px 9px 16px #0007;
+  transform: rotate(-6deg) translateY(4px);
+}
+.playing-stage .playing-hand-card:nth-child(2n) {
+  transform: rotate(4deg);
+}
+.playing-stage .playing-hand-card-inner {
+  color: #344435 !important;
+  border-color: #ab9460;
+}
+.playing-hand-card .herb-specimen {
+  position: absolute;
+  inset: 10% 0 7%;
+  width: 100%;
+  height: 83%;
+}
+.table-card-color,
+.table-card-label {
+  position: relative;
+  z-index: 1;
+  background: #f4e7c9d9;
+  border-radius: 3px;
+  padding: 2px;
+}
+.playing-stage .playing-player-card {
+  background: #102e28bb;
+  color: #f0e4c6;
+  border: 1px solid #bba47060;
+  border-radius: 32px;
+  box-shadow: 0 4px 9px #0004;
+}
+.playing-stage .playing-player-card.active {
+  background: #345648;
+  border-color: #e7c26b;
+}
+.playing-stage .playing-player-info h4,
+.playing-stage .playing-player-info p {
+  color: #f0e4c6;
+}
+@media (max-width: 600px) {
+  .playing-stage .playing-center-column {
+    padding: 4px;
+    gap: 10px;
+    grid-template-columns: minmax(64px, 0.45fr) minmax(0, 2fr);
+  }
+  .playing-stage .playing-inquiry-card {
+    border-width: 2px;
+    border-radius: 5px;
+    padding: 2px;
+    flex-basis: 28%;
+  }
+  .playing-stage .playing-inquiry-grid {
+    gap: 12px 8px;
+  }
+  .table-combination-name {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .playing-stage .playing-hidden-card + .playing-hidden-card {
+    margin-left: -28px;
+  }
+}
+
+.game-room.playing-stage {
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    #386555 0%,
+    #183e34 64%,
+    #102a25 100%
+  );
+  color: #f4e8ca;
+}
+.playing-stage .playing-player-card.is-current-turn {
+  background: #345648;
+  border-color: #e7c26b;
+  box-shadow: 0 0 14px #d9b95b30;
+}
+.playing-stage .playing-inquiry-grid {
+  flex-wrap: nowrap;
+  gap: 12px;
+  align-items: center;
+  align-content: center;
+  perspective: 1000px;
+}
+.playing-stage .playing-inquiry-card {
+  flex: 1 1 0;
+  max-width: 170px;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  min-height: 0;
+  transform: rotate(-8deg) translateY(20px);
+}
+.playing-stage .playing-inquiry-card:nth-child(2) {
+  transform: rotate(-5deg) translateY(2px);
+}
+.playing-stage .playing-inquiry-card:nth-child(3) {
+  transform: rotate(-2deg) translateY(-8px);
+}
+.playing-stage .playing-inquiry-card:nth-child(4) {
+  transform: rotate(2deg) translateY(-8px);
+}
+.playing-stage .playing-inquiry-card:nth-child(5) {
+  transform: rotate(5deg) translateY(2px);
+}
+.playing-stage .playing-inquiry-card:nth-child(6) {
+  transform: rotate(8deg) translateY(20px);
+}
+.playing-stage .playing-hand-label h4,
+.playing-stage .playing-hand-count span {
+  color: #ecdfbd;
+}
+@media (max-width: 850px) {
+  .playing-stage .playing-inquiry-grid {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .playing-stage .playing-inquiry-card {
+    flex: 0 1 28%;
+    height: 39%;
+    aspect-ratio: 2 / 3;
+    max-width: 125px;
+  }
+  .playing-stage .playing-inquiry-card:nth-child(n) {
+    transform: rotate(-3deg);
+  }
+  .playing-stage .playing-inquiry-card:nth-child(2n) {
+    transform: rotate(3deg);
+  }
+}
+
+.playing-stage .playing-player-card.is-current-turn .playing-player-info h4 {
+  color: #fff0c9;
+}
+.playing-stage .playing-header {
+  background: #102b25;
+  border-bottom-color: #a68b4c60;
+  color: #f4e8ca;
+}
+.playing-stage .playing-brand-text,
+.playing-stage .playing-status,
+.playing-stage .console-hud-button,
+.playing-stage .playing-leave-btn {
+  color: #f4e8ca;
+}
+.playing-stage .playing-inquiry-card .table-combination-name {
+  color: #453a26;
+}
+
+.game-room.playing-stage .guess-card .guess-card-footer {
+  background: #0f231d;
+}
+@media (max-width: 600px) {
+  .game-room.playing-stage .guess-card {
+    height: auto;
+  }
+  .game-room.playing-stage .guess-card .guess-card-body {
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+  .game-room.playing-stage .guess-card .guess-card-footer {
+    padding: 12px;
+    flex-direction: row;
+  }
+}
+
+.game-room.playing-stage :is(.gr-modal, .fg-modal) {
+  background: #142b24;
+  color: #eddfbb;
+  border-color: #a38a52;
+  height: auto;
+  max-height: calc(100dvh - 100px);
+}
+.game-room.playing-stage .gr-modal .console-result-body {
+  flex: 0 1 auto;
+}
+.game-room.playing-stage
+  :is(
+    .gr-player-name,
+    .gr-rank-name,
+    .gr-rank-score,
+    .gr-section-title,
+    .fg-title,
+    .fg-prompt-title,
+    .fg-player-name
+  ) {
+  color: #eddfbb;
+}
+.game-room.playing-stage :is(.gr-score-item, .gr-ranking-item) {
+  background: #1c382e;
+  border-color: #53634c;
+}
+.game-room.playing-stage :is(.gr-actions, .fg-action-area) {
+  background: #0e231c;
+  border-top-color: #526247;
+}
+.game-room.playing-stage .guess-color-btn {
+  flex-direction: column;
+}

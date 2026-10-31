@@ -1,11 +1,15 @@
 /**
  * 登入頁面樣式
  * 工單 0059
- * 重新設計：中國風草藥主題（基於 Google Stitch 設計）
+ * 本草研究所：植物圖鑑與桌遊的編輯式入口
  */
 
 /* ==================== 頁面容器 ==================== */
 .login-page {
+  --herb-paper: #f4f1e8;
+  --herb-ink: #213b32;
+  --herb-pine: #163e35;
+  --herb-brass: #aa8548;
   min-height: 100vh;
   background-color: #FFF8E1;
   position: relative;
@@ -13,6 +17,53 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Local scope keeps the entry design independent of the game table. */
+.app .login-page { background: var(--herb-paper); color: var(--herb-ink); }
+.login-page::before { background: none; }
+.login-page .bg-decoration { display: none; }
+.login-page .login-layout { max-width: 1240px; animation: none; }
+.login-page .login-nav { padding: 24px 36px; border-bottom: 1px solid #d9ddcf; }
+.login-page .nav-brand { color: var(--herb-pine); }
+.login-page .nav-title { letter-spacing: .16em; font-size: 18px; }
+.login-page .nav-links a { color: #52685b; min-height: 44px; display: inline-flex; align-items: center; }
+.login-page .login-main { display: grid; grid-template-columns: 1.1fr .9fr; gap: 36px 72px; align-content: center; align-items: center; padding: 72px 48px 48px; }
+.login-page .branding { text-align: left; margin: 0; }
+.login-page .branding::before { content: 'THE BOTANICAL DEDUCTION CLUB'; display: block; font-size: 11px; font-weight: 700; letter-spacing: .18em; color: #75603f; margin-bottom: 24px; }
+.login-page .brand-title { color: var(--herb-pine); font-family: 'Noto Serif TC', 'Songti TC', serif; font-size: clamp(32px, 4.4vw, 58px); line-height: 1.3; letter-spacing: .02em; margin-bottom: 20px; }
+.login-page .brand-subtitle-wrapper { border: 0; padding: 0; }
+.login-page .brand-subtitle { color: #52685b; letter-spacing: .08em; font-size: 17px; }
+.login-page .login-card { grid-column: 2; grid-row: 1 / 3; max-width: none; padding: 40px 32px; background: #fffef9; border: 1px solid #d9ddcf; border-top: 3px solid var(--herb-brass); border-radius: 16px; box-shadow: 0 16px 40px #183c3010; backdrop-filter: none; }
+.login-page .login-card::before { content: '入席，開始你的推理'; display: block; color: var(--herb-pine); font-size: 24px; font-family: 'Noto Serif TC', 'Songti TC', serif; font-weight: 700; margin-bottom: 28px; }
+.login-page .login-buttons { gap: 12px; }
+.login-page .btn { border-radius: 10px; min-height: 52px; font-size: 15px; }
+.login-page .btn-google { border-color: #d9ddcf; color: var(--herb-ink); }
+.login-page .btn-guest { background: var(--herb-pine); border: 1px solid var(--herb-pine); color: #fffef9; letter-spacing: .04em; }
+.login-page .btn-guest:hover:not(:disabled) { background: #24594a; }
+.login-page .login-signup-help { color: #52685b; font-size: 13px; text-align: left; }
+.login-page .divider span { color: #667565; }
+.login-page .game-intro { margin: 0; text-align: left; max-width: none; }
+.login-page .login-section-title { color: var(--herb-pine); font-size: 17px; margin-bottom: 12px; }
+.login-page .intro-quote { font-style: normal; font-family: inherit; font-size: 15px; color: #52685b; letter-spacing: 0; }
+.login-page .intro-features { justify-content: flex-start; gap: 16px; margin-top: 20px; }
+.login-page .feature { color: #52685b; font-size: 12px; }
+.login-page .login-guide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: none; margin-top: 32px; border-top: 1px solid #d9ddcf; padding-top: 32px; }
+.login-page .login-guide section { background: transparent; border: 0; padding: 0; border-radius: 0; }
+.login-page .login-guide h2 { color: var(--herb-pine); font-size: 18px; margin-bottom: 12px; }
+.login-page .login-guide ol { list-style: decimal; }
+.login-page .login-footer { padding: 24px; border-top: 1px solid #d9ddcf; }
+.login-page .login-footer p { color: #667565; letter-spacing: .08em; line-height: 1.8; }
+.login-page button:focus-visible, .login-page a:focus-visible { outline: 3px solid var(--herb-brass); outline-offset: 4px; }
+@media (max-width: 760px) {
+  .login-page .login-nav { padding: 16px 20px; }
+  .login-page .login-main { display: flex; padding: 36px 20px; gap: 28px; align-items: stretch; }
+  .login-page .branding::before { font-size: 10px; letter-spacing: .12em; margin-bottom: 16px; }
+  .login-page .brand-title { font-size: 34px; }
+  .login-page .brand-subtitle { font-size: 15px; }
+  .login-page .login-card { padding: 28px 24px; }
+  .login-page .login-guide { grid-template-columns: 1fr; margin-top: 0; gap: 28px; }
+  .login-page .intro-features { gap: 12px; }
 }
 
 /* 水彩背景效果 */
@@ -252,7 +303,7 @@
 }
 
 /* ==================== 按鈕樣式 ==================== */
-.btn {
+.login-page .btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -267,7 +318,7 @@
   border: none;
 }
 
-.btn:disabled {
+.login-page .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -318,7 +369,7 @@
   color: #b91c1c;
 }
 
-.error-message {
+.login-page .error-message {
   text-align: center;
   font-size: 14px;
   margin: 0;
@@ -352,22 +403,22 @@
 }
 
 /* ==================== 分隔線 ==================== */
-.divider {
+.login-page .divider {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-top: 32px;
 }
 
-.divider::before,
-.divider::after {
+.login-page .divider::before,
+.login-page .divider::after {
   content: '';
   flex: 1;
   height: 1px;
   background: rgba(46, 125, 50, 0.1);
 }
 
-.divider span {
+.login-page .divider span {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;

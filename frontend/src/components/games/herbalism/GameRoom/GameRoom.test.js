@@ -201,6 +201,64 @@ describe('GameRoom - 工作單 0023', () => {
     });
   });
 
+  describe('console auxiliary panels', () => {
+    const consoleState = {
+      ...initialState, gameId: 'test_room', gamePhase: 'playing', currentPlayerId: 'p1', currentPlayerIndex: 0,
+      players: ['p1', 'p2', 'p3', 'p4'].map(id => ({ id, name: id, isActive: true, hand: [{color: 'red'}, {color: 'blue'}] })),
+      gameHistory: [{playerId: 'p1', playerName: 'p1', action: '問了紅黃牌'}],
+    };
+    test('history opens within the game, focuses close, Escape restores opener, and does not emit a game action', () => {
+      renderWithProviders(<GameRoom />, {preloadedState: consoleState});
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      const opener = screen.getByRole('button', {name: '開啟遊戲紀錄'});
+      opener.focus(); fireEvent.click(opener);
+      const panel = screen.getByRole('dialog', {name: '遊戲紀錄'});
+      expect(within(panel).getByText('問了紅黃牌')).toBeVisible();
+      expect(screen.getByRole('button', {name: '關閉面板'})).toHaveFocus();
+      fireEvent.keyDown(document, {key: 'Escape'});
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(opener).toHaveFocus();
+      expect(socketService.sendGameAction).not.toHaveBeenCalled();
+    });
+    test('rules can be opened and closed while all four seats and gameplay actions remain mounted', () => {
+      renderWithProviders(<GameRoom />, {preloadedState: consoleState});
+      fireEvent.click(screen.getByRole('button', {name: '開啟遊戲規則'}));
+      const panel = screen.getByRole('dialog', {name: '遊戲規則'});
+      expect(within(panel).getByText('當下任務')).toBeVisible();
+      expect(screen.getAllByRole('button', {name: /^問牌：/})).toHaveLength(6);
+      expect(screen.getByRole('button', {name: /猜牌/})).toBeEnabled();
+      fireEvent.click(screen.getByRole('button', {name: '關閉面板'}));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    test('same-color hand cards remain distinct botanical species', () => {
+      const hand = [{id:'red-1',color:'red'}, {id:'red-2',color:'red'}, {id:'blue-4',color:'blue'}];
+      const state = {...consoleState, players: consoleState.players.map((player,index) => index ? player : {...player,hand})};
+      renderWithProviders(<GameRoom />, {preloadedState:state});
+      expect(screen.getByRole('img', {name:'紅組 緋羽草'})).toBeVisible();
+      expect(screen.getByRole('img', {name:'紅組 朱珊枝'})).toBeVisible();
+      expect(screen.getByRole('img', {name:'藍組 滄扇蘚'})).toBeVisible();
+      expect(screen.queryByRole('img', {name:/綠組/})).not.toBeInTheDocument();
+    });
+    test('round settlement keeps confirm outside its independent detail pane and sends the existing confirmation', () => {
+      const {container} = renderWithProviders(<GameRoom />, {preloadedState: consoleState});
+      act(() => socketCallbacks.guessResult({isCorrect: true, guessingPlayerId: 'p1', followingPlayers: ['p2', 'p3'], scoreChanges: {p1: 3, p2: 1, p3: 1, p4: 0}, hiddenCards: [{color: 'red'}, {color: 'blue'}]}));
+      const detail = container.querySelector('.console-result-body');
+      expect(detail).toHaveTextContent('分數變化');
+      expect(detail).toHaveTextContent('目前分數');
+      const confirm = screen.getByRole('button', {name: /確定/});
+      expect(detail.contains(confirm)).toBe(false);
+      fireEvent.click(confirm);
+      expect(socketService.confirmGuessResult).toHaveBeenCalledWith('test_room', 'p1');
+    });
+    test('panel Tab and Shift+Tab wrap focus inside the panel', () => {
+      renderWithProviders(<GameRoom />, {preloadedState: consoleState});
+      fireEvent.click(screen.getByRole('button', {name: '開啟遊戲規則'}));
+      const close = screen.getByRole('button', {name: '關閉面板'});
+      fireEvent.keyDown(document, {key: 'Tab'}); expect(close).toHaveFocus();
+      fireEvent.keyDown(document, {key: 'Tab', shiftKey: true}); expect(close).toHaveFocus();
+    });
+  });
+
   describe('渲染', () => {
     test('等待階段應顯示品牌名稱（工單 0123）', () => {
       renderWithProviders(<GameRoom />);
@@ -218,7 +276,7 @@ describe('GameRoom - 工作單 0023', () => {
         ]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('Herbalism 本草')).toBeInTheDocument();
+      expect(screen.getByText('HERBALISM')).toBeInTheDocument();
     });
 
     test('應顯示房間ID', () => {
@@ -308,7 +366,7 @@ describe('GameRoom - 工作單 0023', () => {
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
       // 檢查 header 中的遊戲階段
-      expect(screen.getAllByText('遊戲進行中').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/本草/).length).toBeGreaterThan(0);
     });
 
     test('結束階段應顯示遊戲結束', () => {
@@ -319,7 +377,7 @@ describe('GameRoom - 工作單 0023', () => {
         players: [{ id: 'p1', name: '玩家1', isActive: true }]
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
-      expect(screen.getByText('遊戲結束')).toBeInTheDocument();
+      expect(screen.getByText(/獲勝/)).toBeInTheDocument();
     });
   });
 
@@ -564,7 +622,7 @@ describe('GameRoom - 工作單 0023', () => {
       fireEvent.click(screen.getByText('猜牌'));
 
       // 應該顯示 Modal overlay
-      expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: '寶盒猜牌' })).toBeInTheDocument();
     });
 
     test('點擊取消應關閉問牌流程 Modal（工單 0124）', () => {
@@ -657,9 +715,11 @@ describe('GameRoom - 工作單 0023', () => {
       expect(container.querySelector('.playing-footer')).toBeInTheDocument();
     });
 
-    test('遊戲進行中應包含 playing-left-column 類別（工單 0124）', () => {
-      const { container } = renderWithProviders(<GameRoom />, { preloadedState: playingState });
-      expect(container.querySelector('.playing-left-column')).toBeInTheDocument();
+    test('遊戲進行中可從 HUD 開啟規則與紀錄，不依賴左欄', () => {
+      renderWithProviders(<GameRoom />, { preloadedState: playingState });
+      expect(screen.getByRole('button', {name: '開啟遊戲規則'})).toBeEnabled();
+      expect(screen.getByRole('button', {name: '開啟遊戲紀錄'})).toBeEnabled();
+      expect(screen.getByRole('status')).toHaveTextContent(/輪到|選擇問牌/);
     });
 
     test('遊戲進行中應包含 playing-right-column 類別（工單 0124）', () => {
@@ -692,7 +752,7 @@ describe('GameRoom - 工作單 0023', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
       // 工單 0124：跟猜階段使用相同的 playing-stage UI
       expect(container.querySelector('.playing-stage')).toBeInTheDocument();
-      expect(screen.getByText('遊戲進行中')).toBeInTheDocument();
+      expect(screen.getAllByText(/本草/).length).toBeGreaterThan(0);
     });
   });
 
@@ -710,7 +770,7 @@ describe('GameRoom - 工作單 0023', () => {
       const { container } = renderWithProviders(<GameRoom />, { preloadedState: state });
       // 工單 0124：局結束階段使用相同的 playing-stage UI
       expect(container.querySelector('.playing-stage')).toBeInTheDocument();
-      expect(screen.getByText('遊戲進行中')).toBeInTheDocument();
+      expect(screen.getAllByText(/本草/).length).toBeGreaterThan(0);
     });
   });
 
@@ -831,7 +891,7 @@ describe('GameRoom - 工作單 0023', () => {
       }
 
       // 應該顯示 GuessCard modal
-      expect(document.querySelector('.modal-overlay')).toBeInTheDocument();
+      expect(screen.getByRole('dialog', {name:'寶盒猜牌'})).toBeInTheDocument();
     });
 
     test('應處理顏色選擇請求事件', async () => {
@@ -997,8 +1057,8 @@ describe('GameRoom - 工作單 0023', () => {
 
       // 預測選項應該顯示（檢查 Prediction 組件的標題）
       await waitFor(() => {
-        expect(screen.getByText('問牌完成！')).toBeInTheDocument();
-        expect(screen.getByText('結束回合')).toBeInTheDocument();
+        expect(screen.getByText(/決定預測或結束回合/)).toBeInTheDocument();
+        expect(screen.getByRole('button', {name:'略過預測，結束回合'})).toBeInTheDocument();
       });
     });
 

@@ -1,0 +1,66 @@
+.qf-stage-nav { display:none; }
+/* One decision per screen, including short landscape phones. */
+@media(max-width:900px),(max-height:600px) {
+  .app.apothecary .game-room .qf-inquiry {
+    width:min(620px,calc(100% - 16px));
+    height:min(620px,calc(var(--console-height,100dvh) - 16px));
+    max-height:calc(var(--console-height,100dvh) - 16px);
+    display:grid;
+    grid-template-rows:auto auto minmax(0,1fr) auto;
+    overflow:hidden;
+  }
+  .app.apothecary .game-room .qf-inquiry .question-flow-header { padding:12px 16px; min-height:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-eyebrow { display:none; }
+  .app.apothecary .game-room .qf-inquiry .qf-title { font-size:24px; margin:0 0 4px; }
+  .app.apothecary .game-room .qf-inquiry .qf-inquiry-art { height:58px; width:58px; object-fit:contain; transform:none; }
+  .app.apothecary .game-room .qf-inquiry .qf-color-chips { margin:0; gap:10px; font-size:13px; }
+  .qf-stage-nav { display:flex; gap:6px; padding:0 16px 10px; }
+  .qf-stage-nav button { flex:1; border:1px solid #a78c5550; background:#10291f; color:#b9c3ae; min-height:34px; border-radius:5px; font-size:13px; }
+  .qf-stage-nav button[aria-current=step] { color:#f0dcaa; border-color:#d0b574; background:#344834; }
+  .qf-stage-nav button:disabled { opacity:.4; }
+  .app.apothecary .game-room .qf-inquiry .question-flow-body { padding:10px 16px; overflow:hidden; min-height:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-steps-grid { display:block; height:100%; }
+  .qf-inquiry .qf-step { display:none; }
+  .qf-inquiry[data-stage="1"] [data-step="1"],.qf-inquiry[data-stage="2"] [data-step="2"],.qf-inquiry[data-stage="3"] [data-step="3"] { display:flex; flex-direction:column; height:100%; min-height:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-step-header { margin:0 0 10px; }
+  .app.apothecary .game-room .qf-inquiry .qf-step-title { font-size:16px; }
+  .app.apothecary .game-room .qf-inquiry .qf-step-number { display:none; }
+  .app.apothecary .game-room .qf-inquiry .qf-player-options { display:grid; gap:8px; grid-template-columns:1fr; }
+  .app.apothecary .game-room .qf-inquiry .qf-player-option { min-height:58px; padding:10px 14px; }
+  .app.apothecary .game-room .qf-inquiry .qf-type-options { display:grid; grid-template-columns:1fr; gap:8px; min-height:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-type-option { display:grid; grid-template-columns:90px 1fr; align-items:center; min-height:66px; padding:6px 10px; gap:0 8px; text-align:left; }
+  .app.apothecary .game-room .qf-inquiry .qf-action-diagram { grid-row:1 / 3; height:50px; margin:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-type-name { font-size:15px; margin:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-type-desc { font-size:12px; margin:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-give-color-section { padding:0; margin:0 0 12px; border:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-give-color-options { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .app.apothecary .game-room .qf-inquiry .qf-give-color-btn { min-height:64px; padding:6px; background:#1c3729; border:1px solid #bba064; color:#e9d9b2; font-size:13px; }
+  .app.apothecary .game-room .qf-inquiry .qf-order-preview { min-height:0; padding:14px; }
+  .app.apothecary .game-room .qf-inquiry .qf-order-route { margin-bottom:6px; }
+  .app.apothecary .game-room .qf-inquiry .qf-order-description { font-size:16px; line-height:1.5; }
+  .app.apothecary .game-room .qf-inquiry .qf-order-caption { font-size:12px; }
+  .app.apothecary .game-room .qf-inquiry .question-flow-footer { padding:10px 16px; gap:8px; }
+  .app.apothecary .game-room .qf-inquiry .question-flow-footer button { min-height:44px; padding:8px 18px; font-size:15px; }
+  .qf-inquiry:not([data-stage="3"]) .qf-btn-primary { display:none; }
+}
+@media(max-height:440px) {
+  .app.apothecary .game-room .qf-inquiry .question-flow-header { padding:6px 14px; }
+  .app.apothecary .game-room .qf-inquiry .qf-title { font-size:19px; }
+  .app.apothecary .game-room .qf-inquiry .qf-inquiry-art { width:40px; height:40px; }
+  .qf-stage-nav { padding-bottom:4px; }
+  .qf-stage-nav button { min-height:28px; }
+  .app.apothecary .game-room .qf-inquiry .question-flow-body { padding:6px 14px; }
+  .app.apothecary .game-room .qf-inquiry .qf-type-options,.app.apothecary .game-room .qf-inquiry .qf-player-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .app.apothecary .game-room .qf-inquiry .qf-type-option { display:flex; flex-direction:column; justify-content:center; min-height:90px; text-align:center; padding:4px; }
+  .app.apothecary .game-room .qf-inquiry .qf-action-diagram { height:36px; }
+  .app.apothecary .game-room .qf-inquiry .qf-type-desc { display:none; }
+  .app.apothecary .game-room .qf-inquiry .qf-player-option { min-height:64px; padding:6px; }
+  .app.apothecary .game-room .qf-inquiry [data-step="3"] { display:none; }
+  .app.apothecary .game-room .qf-inquiry[data-stage="3"] [data-step="3"] { display:grid; grid-template-columns:1fr 1fr; gap:8px; align-content:start; }
+  .app.apothecary .game-room .qf-inquiry [data-step="3"] .qf-step-header { display:none; }
+  .app.apothecary .game-room .qf-inquiry .qf-give-color-section { margin:0; }
+  .app.apothecary .game-room .qf-inquiry .qf-order-preview { padding:8px; }
+  .app.apothecary .game-room .qf-inquiry .qf-order-route { display:none; }
+  .app.apothecary .game-room .qf-inquiry .qf-give-color-label { margin:0 0 4px; font-size:12px; }
+  .app.apothecary .game-room .qf-inquiry .question-flow-footer { padding:6px 14px; }
+}

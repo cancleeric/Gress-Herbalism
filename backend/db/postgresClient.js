@@ -33,7 +33,7 @@ function postgresOptions(env = process.env) {
   if (!['disable', 'verify-full'].includes(sslMode)) {
     throw new Error('PG_SSL_MODE must be disable or verify-full');
   }
-  const schema = env.PG_SCHEMA || 'public';
+  const schema = env.PG_SCHEMA || 'herbalism';
   if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Invalid PG_SCHEMA');
   const max = Number(env.PG_POOL_MAX || 10);
   if (!Number.isInteger(max) || max < 1 || max > 30) throw new Error('PG_POOL_MAX must be 1–30');

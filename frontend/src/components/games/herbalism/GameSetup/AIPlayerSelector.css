@@ -1,262 +1,220 @@
-/**
- * AI 玩家選擇器樣式
- */
-
+/* Compact game setup; inherited by a screen-local header/body/footer panel. */
 .ai-player-selector {
-  background: #ffffff;
-  border: 2px solid #4a7c59;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 600px;
-  margin: 0 auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #213b32;
+  box-shadow: none;
+  animation: none;
 }
-
-.ai-selector-title {
-  margin: 0 0 24px;
-  font-size: 1.5rem;
-  color: #2c5f3e;
-  text-align: center;
-  border-bottom: 2px solid #4a7c59;
-  padding-bottom: 12px;
+.ai-player-selector .ai-selector-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
-
-/* AI 數量選擇區 */
-.ai-count-section {
-  margin-bottom: 24px;
+.ai-player-selector .ai-count-section,
+.ai-player-selector .ai-difficulty-section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
-
-.ai-count-label {
+.ai-player-selector .ai-count-label,
+.ai-player-selector .difficulty-section-title {
   display: block;
-  font-size: 1.1rem;
+  font-size: 12px;
   font-weight: 600;
-  color: #2c5f3e;
-  margin-bottom: 8px;
+  color: #35543e;
+  margin: 0 0 8px;
+  text-align: left;
 }
-
-.ai-count-select {
+.ai-player-selector .ai-count-select,
+.ai-player-selector .difficulty-select {
+  min-height: 44px;
   width: 100%;
-  padding: 12px 16px;
-  font-size: 1rem;
-  border: 2px solid #4a7c59;
-  border-radius: 8px;
-  background: #ffffff;
+  padding: 9px 12px;
+  border: 1px solid #b8c8ab;
+  border-radius: 4px;
+  background: #fffef8;
+  color: #213b32;
+  font: inherit;
+  font-size: 13px;
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.3s ease;
 }
-
-.ai-count-select:hover {
-  border-color: #5d9b6e;
-  background: #f0f7f3;
+.ai-player-selector .ai-count-hint {
+  margin: 6px 0 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #7c8a73;
+  font-style: normal;
 }
-
-.ai-count-select:focus {
-  outline: none;
-  border-color: #5d9b6e;
-  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.2);
+.ai-player-selector .ai-difficulty-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(100px, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  min-height: 44px;
+  transition: none;
 }
-
-.ai-count-hint {
-  margin: 8px 0 0;
-  font-size: 0.9rem;
-  color: #666;
-  font-style: italic;
+.ai-player-selector .ai-difficulty-row:last-child {
+  margin: 0;
 }
-
-/* AI 難度設定區 */
-.ai-difficulty-section {
-  margin-bottom: 24px;
-  padding: 16px;
-  background: #f8faf9;
-  border-radius: 8px;
+.ai-player-selector .ai-difficulty-row:hover {
+  background: transparent;
 }
-
-.difficulty-section-title {
-  margin: 0 0 16px;
-  font-size: 1.1rem;
-  color: #2c5f3e;
+.ai-player-selector .ai-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  text-align: left;
+  font-size: 13px;
   font-weight: 600;
+  color: #35543e;
+  min-width: 0;
 }
-
-.ai-difficulty-row {
+.ai-seat-number {
+  height: 28px;
+  width: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c7d2bb;
+  background: #e8eedf;
+  border-radius: 50%;
+  color: #67805b;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.ai-player-selector .difficulty-info {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid #d3dcc8;
+  border-radius: 0;
+}
+.ai-player-selector .difficulty-info-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-  padding: 12px;
-  background: #ffffff;
-  border: 1px solid #d0e3d7;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.ai-difficulty-row:hover {
-  background: #f0f7f3;
-  border-color: #4a7c59;
-}
-
-.ai-difficulty-row:last-child {
-  margin-bottom: 0;
-}
-
-.ai-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #2c5f3e;
-  min-width: 80px;
-}
-
-.difficulty-select {
-  padding: 8px 12px;
-  font-size: 0.95rem;
-  border: 1px solid #4a7c59;
-  border-radius: 6px;
-  background: #ffffff;
+  min-height: 44px;
+  width: 100%;
+  padding: 8px 0;
+  background: transparent;
+  border: 0;
+  color: #617852;
+  font-size: 12px;
+  text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 120px;
 }
-
-.difficulty-select:hover {
-  border-color: #5d9b6e;
-  background: #f0f7f3;
+.ai-player-selector .difficulty-info-toggle:hover:not(:disabled) {
+  background: #e8eedf;
+  color: #35543e;
 }
-
-.difficulty-select:focus {
-  outline: none;
-  border-color: #5d9b6e;
-  box-shadow: 0 0 0 2px rgba(74, 124, 89, 0.2);
+.difficulty-info-toggle > span {
+  font-size: 18px;
 }
-
-/* 難度說明區 */
-.difficulty-info {
-  margin-bottom: 20px;
-  padding: 16px;
-  background: #f0f7f3;
-  border-radius: 8px;
-  border: 1px solid #d0e3d7;
-}
-
-.info-title {
-  margin: 0 0 12px;
-  font-size: 1rem;
-  color: #2c5f3e;
-  font-weight: 600;
-}
-
-.difficulty-descriptions {
+.ai-player-selector .difficulty-descriptions {
   margin: 0;
-  padding: 0;
+  padding: 0 0 8px;
 }
-
-.difficulty-item {
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  background: #ffffff;
-  border-radius: 6px;
-  border-left: 4px solid #4a7c59;
+.ai-player-selector .difficulty-descriptions[hidden] {
+  display: none;
 }
-
-.difficulty-item:last-child {
-  margin-bottom: 0;
-}
-
-.difficulty-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin: 0 0 4px;
-  display: block;
-}
-
-.difficulty-name.difficulty-easy {
-  color: #5d9b6e;
-}
-
-.difficulty-name.difficulty-medium {
-  color: #f59e0b;
-}
-
-.difficulty-name.difficulty-hard {
-  color: #dc2626;
-}
-
-.difficulty-description {
+.ai-player-selector .difficulty-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   margin: 0;
-  font-size: 0.9rem;
-  color: #666;
-  line-height: 1.4;
+  padding: 7px 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
-
-/* 設定摘要 */
-.config-summary {
+.ai-player-selector .difficulty-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #557449;
+  white-space: nowrap;
+  margin: 0;
+}
+.ai-player-selector .difficulty-description {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #6b7c60;
+  margin: 0;
+}
+.ai-player-selector .config-summary {
+  padding: 8px 10px;
+  background: #e7eddc;
+  border: 1px solid #d2ddc2;
+  border-radius: 4px;
   text-align: center;
-  padding: 16px;
-  background: #e8f4ed;
-  border-radius: 8px;
-  border: 2px dashed #4a7c59;
-}
-
-.summary-text {
   margin: 0;
-  font-size: 1rem;
-  color: #2c5f3e;
 }
-
-.summary-text strong {
-  color: #1e4d2b;
-  font-weight: 700;
+.ai-player-selector .summary-text {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #5d7550;
 }
-
-/* 響應式設計 */
-@media (max-width: 768px) {
-  .ai-player-selector {
-    padding: 16px;
-    max-width: 100%;
-  }
-
-  .ai-selector-title {
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-  }
-
-  .ai-difficulty-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .ai-name {
-    text-align: center;
-  }
-
-  .difficulty-select {
-    width: 100%;
-  }
-
-  .difficulty-item {
-    padding: 8px 10px;
-  }
+.ai-player-selector .summary-text strong {
+  color: #31543c;
 }
-
-/* 無障礙設計 */
-.difficulty-select:focus-visible,
-.ai-count-select:focus-visible {
-  outline: 3px solid #5d9b6e;
+.ai-player-selector .difficulty-select:focus-visible,
+.ai-player-selector .ai-count-select:focus-visible,
+.ai-player-selector .difficulty-info-toggle:focus-visible {
+  outline: 3px solid #aa8548;
   outline-offset: 2px;
 }
-
-/* 動畫效果 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+@media (max-height: 500px) and (min-width: 600px) {
+  .ai-player-selector {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 10px 20px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .ai-player-selector .ai-count-section {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .ai-player-selector .ai-difficulty-section {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+  .ai-player-selector .difficulty-info {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .ai-player-selector .config-summary {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .ai-player-selector .ai-count-hint {
+    display: none;
+  }
+  .ai-player-selector .ai-difficulty-row {
+    gap: 6px;
   }
 }
-
-.ai-player-selector {
-  animation: fadeIn 0.3s ease-out;
+@media (prefers-reduced-motion: reduce) {
+  .ai-player-selector * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

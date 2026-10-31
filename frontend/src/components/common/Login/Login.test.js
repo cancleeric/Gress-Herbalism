@@ -100,12 +100,13 @@ describe('Login - 工單 0059', () => {
       render(<MemoryRouter><Login /></MemoryRouter>);
       const navigation = screen.getByRole('navigation', { name: '遊戲介紹導覽' });
       for (const name of ['規則書', '卡牌', '關於']) {
+        if (screen.queryByRole('dialog')) fireEvent.click(screen.getByRole('button', { name: '關閉說明' }));
         const link = within(navigation).getByRole('link', { name });
         const target = document.querySelector(link.getAttribute('href'));
         expect(target).toHaveAttribute('tabindex', '-1');
-        expect(target).toHaveAccessibleName();
         expect(target.textContent.length).toBeGreaterThan(20);
         fireEvent.click(link);
+        expect(target).toHaveAccessibleName();
         expect(document.activeElement).toBe(target);
       }
       expect(mockNavigate).not.toHaveBeenCalled();
@@ -119,6 +120,7 @@ describe('Login - 工單 0059', () => {
       mockLocationState = { from: { pathname: '/lobby/evolution' } };
       render(<MemoryRouter><Login /></MemoryRouter>);
       expect(screen.getByText('2-4 人物種演化策略卡牌')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('link', { name: '規則書' }));
       expect(screen.getByText('2-4 位玩家')).toBeInTheDocument();
       expect(screen.getByRole('region', { name: '卡牌介紹' })).toHaveTextContent('84 張雙面卡');
       expect(screen.getByRole('region', { name: '規則書・入門重點' })).toHaveTextContent('食物供給');
@@ -131,12 +133,23 @@ describe('Login - 工單 0059', () => {
       render(<MemoryRouter><Login /></MemoryRouter>);
       fireEvent.click(screen.getByRole('link', { name: '規則書' }));
       expect(document.activeElement).toBe(screen.getByRole('region', { name: '規則書・入門重點' }));
+      fireEvent.click(screen.getByRole('button', { name: '關閉說明' }));
       fireEvent.click(screen.getByRole('button', { name: /訪客登入/ }));
       await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/lobby/evolution', { replace: true }));
     });
   });
 
   describe('Google 登入', () => {
+    test('遊戲說明是可關閉面板，Escape 返回原入口且不觸發登入', () => {
+      render(<MemoryRouter><Login /></MemoryRouter>);
+      const trigger = screen.getByRole('link', { name: '規則書' });
+      fireEvent.click(trigger);
+      expect(screen.getByRole('dialog', { name: '遊戲說明' })).toBeVisible();
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('dialog', { name: '遊戲說明' })).not.toBeInTheDocument();
+      expect(document.activeElement).toBe(trigger);
+      expect(mockLoginAsGuest).not.toHaveBeenCalled();
+    });
     test('點擊 Google 登入按鈕應呼叫 loginWithGoogle', async () => {
       mockLoginWithGoogle.mockResolvedValue({ success: true });
 

@@ -27,24 +27,31 @@ function Friends() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [friendsError, setFriendsError] = useState(false);
+  const [requestsError, setRequestsError] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const loadFriends = useCallback(async () => {
     if (!user?.uid) return;
+    setFriendsError(false);
     try {
       const data = await getFriends(user.uid);
       setFriends(data);
     } catch (err) {
-      console.error('載入好友失敗:', err);
+      setFriends([]);
+      setFriendsError(true);
     }
   }, [user?.uid]);
 
   const loadRequests = useCallback(async () => {
     if (!user?.uid) return;
+    setRequestsError(false);
     try {
       const data = await getFriendRequests(user.uid);
       setRequests(data);
     } catch (err) {
-      console.error('載入請求失敗:', err);
+      setRequests([]);
+      setRequestsError(true);
     }
   }, [user?.uid]);
 
@@ -61,10 +68,13 @@ function Friends() {
 
     setLoading(true);
     setError('');
+    setSearched(false);
+    setSearchResults([]);
 
     try {
       const results = await searchPlayers(searchQuery, user.uid);
       setSearchResults(results);
+      setSearched(true);
     } catch (err) {
       setError('搜尋失敗');
       console.error('搜尋失敗:', err);
@@ -182,10 +192,16 @@ function Friends() {
               </button>
             </div>
 
-            {error && <div className="friends-error">{error}</div>}
+            {activeTab === 'search' && error && <div className="friends-error" role="alert">{error}</div>}
+            {((activeTab === 'friends' && friendsError) || (activeTab === 'requests' && requestsError)) && (
+              <div className="friends-error" role="alert">
+                <p>好友資料暫時無法讀取；目前無法確認好友或請求數量。</p>
+                <button type="button" onClick={activeTab === 'friends' ? loadFriends : loadRequests}>重新載入</button>
+              </div>
+            )}
 
             {/* 好友列表 */}
-            {activeTab === 'friends' && (
+            {activeTab === 'friends' && !friendsError && (
               <div className="friends-list">
                 {friends.length === 0 ? (
                   <div className="empty-state">
@@ -226,7 +242,7 @@ function Friends() {
             )}
 
             {/* 好友請求 */}
-            {activeTab === 'requests' && (
+            {activeTab === 'requests' && !requestsError && (
               <div className="requests-list">
                 {requests.length === 0 ? (
                   <div className="empty-state">
@@ -279,7 +295,7 @@ function Friends() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => { setSearchQuery(e.target.value); setSearched(false); setSearchResults([]); setError(''); }}
                     placeholder="輸入玩家暱稱搜尋..."
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
@@ -293,7 +309,7 @@ function Friends() {
                 </div>
 
                 <div className="search-results">
-                  {searchResults.length === 0 && searchQuery.length >= 2 && !loading && (
+                  {searched && !error && searchResults.length === 0 && !loading && (
                     <div className="empty-state">
                       <p>找不到符合的玩家</p>
                     </div>

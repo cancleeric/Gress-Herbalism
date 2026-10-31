@@ -167,14 +167,14 @@ describe('單人模式 E2E 測試', () => {
       render(<AIPlayerSelector onConfigChange={onConfigChange} />);
 
       // 驗證預設 AI 數量選擇器
-      const aiCountSelect = screen.getByLabelText(/AI 玩家數量/i);
-      expect(aiCountSelect).toHaveValue('2');
+      const aiCountSelect = screen.getByRole('button', {name:/3 人局/});
+      expect(aiCountSelect).toHaveAttribute('aria-pressed', 'true');
 
       // 驗證預設難度設定（使用 AI 名稱）
-      const difficulty1 = screen.getByLabelText(/小草.*難度/i);
-      const difficulty2 = screen.getByLabelText(/小花.*難度/i);
-      expect(difficulty1).toHaveValue(AI_DIFFICULTY.MEDIUM);
-      expect(difficulty2).toHaveValue(AI_DIFFICULTY.MEDIUM);
+      const difficulty1 = screen.getByLabelText(/阿哲.*難度/i);
+      const difficulty2 = screen.getByLabelText(/佳蓉.*難度/i);
+      expect(within(difficulty1).getByRole('button', {name:/中等/})).toHaveAttribute('aria-pressed','true');
+      expect(within(difficulty2).getByRole('button', {name:/中等/})).toHaveAttribute('aria-pressed','true');
 
       // 驗證 onConfigChange 被調用
       expect(onConfigChange).toHaveBeenCalledWith({
@@ -188,18 +188,18 @@ describe('單人模式 E2E 測試', () => {
 
       render(<AIPlayerSelector onConfigChange={onConfigChange} />);
 
-      const aiCountSelect = screen.getByLabelText(/AI 玩家數量/i);
+      const aiCountSelect = screen.getByRole('button', {name:/3 人局/});
 
       // 變更 AI 數量為 3
-      fireEvent.change(aiCountSelect, { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', {name:/4 人局/}));
 
       // 驗證選擇器更新
-      expect(aiCountSelect).toHaveValue('3');
+      expect(screen.getByRole('button', {name:/4 人局/})).toHaveAttribute('aria-pressed', 'true');
 
       // 驗證難度選擇器數量增加（使用 AI 名稱）
-      expect(screen.getByLabelText(/小草.*難度/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/小花.*難度/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/小樹.*難度/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/阿哲.*難度/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/佳蓉.*難度/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/柏宇.*難度/i)).toBeInTheDocument();
 
       // 驗證 onConfigChange 被調用，新增的 AI 使用預設難度
       expect(onConfigChange).toHaveBeenCalledWith({
@@ -218,14 +218,14 @@ describe('單人模式 E2E 測試', () => {
       render(<AIPlayerSelector onConfigChange={onConfigChange} />);
 
       // 使用 AI 名稱選擇難度選擇器
-      const difficulty1 = screen.getByLabelText(/小草.*難度/i);
-      const difficulty2 = screen.getByLabelText(/小花.*難度/i);
+      const difficulty1 = screen.getByLabelText(/阿哲.*難度/i);
+      const difficulty2 = screen.getByLabelText(/佳蓉.*難度/i);
 
       // 設定第一個 AI 為簡單
-      fireEvent.change(difficulty1, { target: { value: AI_DIFFICULTY.EASY } });
+      fireEvent.click(within(difficulty1).getByRole('button', {name:/簡單/}));
 
       // 設定第二個 AI 為困難
-      fireEvent.change(difficulty2, { target: { value: AI_DIFFICULTY.HARD } });
+      fireEvent.click(within(difficulty2).getByRole('button', {name:/困難/}));
 
       // 驗證 onConfigChange 被調用
       expect(onConfigChange).toHaveBeenCalledWith({
@@ -240,9 +240,9 @@ describe('單人模式 E2E 測試', () => {
       render(<AIPlayerSelector onConfigChange={onConfigChange} />);
 
       // 驗證顯示 AI 名稱
-      const elements = screen.getAllByText(/小草/i);
+      const elements = screen.getAllByText(/阿哲/i);
       expect(elements.length).toBeGreaterThan(0);
-      expect(screen.getByText(/小花/i)).toBeInTheDocument();
+      expect(screen.getByText(/佳蓉/i)).toBeInTheDocument();
     });
 
     test('應顯示難度說明', () => {

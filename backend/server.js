@@ -63,6 +63,55 @@ app.use(cors({
 // JSON 解析
 app.use(express.json());
 
+// Realtime rooms do not require account history storage. This opt-in mode is
+// explicit and reports persistent APIs as unavailable, not empty/successful.
+const realtimeOnly = process.env.REALTIME_ONLY === '1';
+let replayStore = null, replayRecorder = null;
+if (process.env.MEMORY_REPLAY === '1') {
+  if (!realtimeOnly || process.env.NODE_ENV === 'production' || process.env.PERSISTENT_REPLAY === '1') {
+    throw new Error('Memory replay requires explicit local realtime-only mode and cannot replace persistent storage');
+  }
+  replayStore = require('./services/memoryReplayStore').createMemoryReplayStore();
+}
+if (process.env.PERSISTENT_REPLAY === '1') {
+  if (realtimeOnly || require('./db/provider').getProvider() !== 'postgres') {
+    throw new Error('Persistent replay requires reviewed PostgreSQL storage, not realtime-only mode');
+  }
+  const options = require('./db/postgresClient').postgresOptions();
+  if (options.schema !== 'herbalism') throw new Error('Replay requires explicit PG_SCHEMA=herbalism and reviewed initialization');
+  replayStore = require('./services/replayStore').createReplayStore(require('knex')(options.knex));
+}
+if (replayStore) {
+  replayRecorder = require('./services/replayRecorder').createReplayRecorder(replayStore,
+    gameId => io.to(gameId).emit('error', { message: '對局存檔失敗，本場紀錄可能不完整' }));
+}
+app.get('/api/matches', verifyAuth, async (req, res) => {
+  if (!replayStore) return res.status(503).json({ message: '對戰歷史尚未啟用' });
+  try { res.set('Cache-Control', 'no-store').json({ data: await replayStore.history(req.uid),
+    storage: replayStore.storage || { mode: 'postgres', persistent: true } }); }
+  catch (_) { res.status(503).json({ message: '暫時無法讀取對戰歷史' }); }
+});
+app.get('/api/matches/:matchId/replay', verifyAuth, async (req, res) => {
+  if (!replayStore) return res.status(503).json({ message: '遊戲重放尚未啟用' });
+  const after = Number(req.query.after || 0);
+  if (!/^[0-9a-f-]{36}$/i.test(req.params.matchId) || !Number.isSafeInteger(after) || after < 0)
+    return res.status(400).json({ message: '查詢無效' });
+  try {
+    const data = await replayStore.replay(req.uid, req.params.matchId, after);
+    if (!data) return res.status(404).json({ message: '找不到對局' });
+    res.set('Cache-Control', 'no-store').json({ data,
+      storage: replayStore.storage || { mode: 'postgres', persistent: true } });
+  } catch (_) { res.status(503).json({ message: '暫時無法讀取重放' }); }
+});
+
+app.use('/api', (req, res, next) => {
+  if (realtimeOnly && req.path !== '/health') {
+    return res.status(503).json({ success: false, code: 'PERSISTENCE_UNAVAILABLE',
+      message: '目前提供即時對局；戰績、排行與好友存檔尚未啟用' });
+  }
+  next();
+});
+
 // ==================== API 路由 ====================
 
 // 取得排行榜
@@ -79,7 +128,9 @@ app.get('/api/leaderboard', async (req, res) => {
 
 // 健康檢查
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', persistence: !realtimeOnly,
+    replayStorage: replayStore?.storage?.mode || (replayStore ? 'postgres' : 'off'),
+    roomStorage: 'memory', timestamp: new Date().toISOString() });
 });
 
 // ==================== 工單 0060 API ====================
@@ -341,6 +392,7 @@ app.put('/api/friends/invitations/:invitationId', verifyAuth, async (req, res) =
 });
 
 const io = new Server(server, {
+  path: process.env.SOCKET_PATH || '/socket.io',
   cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
@@ -488,8 +540,15 @@ function broadcastRoomList() {
 /**
  * 廣播遊戲狀態給房間內所有玩家
  */
+function emitReplayEvent(gameId, type, payload = {}) {
+  const state = gameRooms.get(gameId);
+  if (state) replayRecorder?.capture(state, type, payload);
+  io.to(gameId).emit(type, payload);
+}
+
 function broadcastGameState(gameId) {
   const gameState = gameRooms.get(gameId);
+  if (gameState) replayRecorder?.capture(gameState);
   // 工單 0148：確保房間存在且有玩家時才廣播
   if (gameState && gameState.players && gameState.players.length > 0) {
     for (const [socketId, binding] of playerSockets.entries()) {
@@ -674,6 +733,7 @@ io.on('connection', (socket) => {
     gameState.gamePhase = 'playing';
     gameState.currentRound = 1;
     gameState.scores = scores;
+    replayRecorder?.start(gameState);
 
     broadcastGameState(gameId);
     broadcastRoomList();
@@ -691,6 +751,17 @@ io.on('connection', (socket) => {
     }
 
     // 處理問牌或猜牌
+    // Record the accepted intent before mutation; keep private question colors
+    // inside entitled viewer snapshots, never in the shared event payload.
+    if (action.type === 'question') {
+      replayRecorder?.capture(gameState, 'questionAsked', {
+        playerId: action.playerId, targetPlayerId: action.targetPlayerId, questionType: action.questionType,
+      }, { audience: [action.playerId, action.targetPlayerId], payload: {
+        colors: action.colors, giveColor: action.giveColor, getColor: action.getColor,
+      } });
+    } else if (action.type === 'guess') {
+      replayRecorder?.capture(gameState, 'guessMade', { playerId: action.playerId, guessedColors: action.guessedColors });
+    }
     const result = processGameAction(gameState, action);
     console.log(`[gameAction] 處理結果:`, {
       success: result.success,
@@ -700,6 +771,10 @@ io.on('connection', (socket) => {
     });
 
     if (result.success) {
+      if (action.type === 'question' && !result.requireColorChoice) {
+        replayRecorder?.capture(gameState, 'questionResolved', { playerId: action.playerId,
+          targetPlayerId: action.targetPlayerId, count: result.cardGiveNotification?.totalCount || 0 });
+      }
       // 檢查是否需要等待被要牌玩家選擇顏色
       if (result.requireColorChoice) {
         // 儲存等待狀態
@@ -724,7 +799,7 @@ io.on('connection', (socket) => {
         }
 
         // 通知其他玩家正在等待選擇（不包含 availableColors，避免洩漏）
-        io.to(gameId).emit('waitingForColorChoice', {
+        emitReplayEvent(gameId, 'waitingForColorChoice', {
           targetPlayerId: result.targetPlayerId,
           askingPlayerId: result.askingPlayerId
           // 注意：不傳 colors 和 availableColors，避免洩漏資訊
@@ -759,7 +834,7 @@ io.on('connection', (socket) => {
         });
 
         // 廣播進入跟猜階段
-        io.to(gameId).emit('followGuessStarted', {
+        emitReplayEvent(gameId, 'followGuessStarted', {
           guessingPlayerId: result.guessingPlayerId,
           guessedColors: result.guessedColors,
           decisionOrder: decisionOrder,
@@ -821,7 +896,7 @@ io.on('connection', (socket) => {
               predictionResults: result.predictionResults || [],
               continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
             };
-            io.to(gameId).emit('guessResult', resultPayload);
+            emitReplayEvent(gameId, 'guessResult', resultPayload);
 
             // 工單 0207：初始化全員確認追蹤
             const allPlayerIds = gameState.players.filter(p => p.ownerUid).map(p => p.id);
@@ -877,7 +952,7 @@ io.on('connection', (socket) => {
       pendingColorChoices.delete(gameId);
 
       // 廣播選擇結果
-      io.to(gameId).emit('colorChoiceResult', {
+      emitReplayEvent(gameId, 'colorChoiceResult', {
         targetPlayerId: pendingChoice.targetPlayerId,
         chosenColor: chosenColor,
         cardsTransferred: result.cardsTransferred
@@ -971,7 +1046,7 @@ io.on('connection', (socket) => {
     postQuestionStates.delete(gameId);
 
     // 廣播回合結束
-    io.to(gameId).emit('turnEnded', {
+    emitReplayEvent(gameId, 'turnEnded', {
       playerId: playerId,
       prediction: prediction,
       playerName: player?.name || '未知玩家'
@@ -986,6 +1061,8 @@ io.on('connection', (socket) => {
 
   // 處理跟猜回應
   socket.on('followGuessResponse', ({ gameId, playerId, isFollowing }) => {
+    const state = gameRooms.get(gameId);
+    if (state) replayRecorder?.capture(state, 'followDecision', { playerId, isFollowing });
     handleFollowGuessResponse(gameId, playerId, isFollowing);
   });
 
@@ -1142,7 +1219,7 @@ function handleFollowGuessResponse(gameId, playerId, isFollowing) {
       : null;
 
     // 廣播決定結果
-    io.to(gameId).emit('followGuessUpdate', {
+    emitReplayEvent(gameId, 'followGuessUpdate', {
       playerId,
       isFollowing,
       currentDeciderId: followState.currentDeciderId,
@@ -1178,7 +1255,7 @@ function handleFollowGuessResponse(gameId, playerId, isFollowing) {
         predictionResults: result.predictionResults || [],
         continueGame: result.continueGame  // 工單 0149：猜錯但遊戲繼續
       };
-      io.to(gameId).emit('guessResult', resultPayload);
+      emitReplayEvent(gameId, 'guessResult', resultPayload);
 
       // 工單 0207：初始化全員確認追蹤
       const allPlayerIds = gameState.players.filter(p => p.ownerUid).map(p => p.id);
@@ -1215,7 +1292,7 @@ function reconcilePlayerDeparture(gameId, playerId) {
   const seated = state.players.filter(player => player.ownerUid);
   const cancelledChoice = pendingColorChoices.get(gameId);
   if (cancelledChoice && (cancelledChoice.askingPlayerId === playerId || cancelledChoice.targetPlayerId === playerId)) {
-    io.to(gameId).emit('colorChoiceResult', {
+    emitReplayEvent(gameId, 'colorChoiceResult', {
       cancelled: true,
       askingPlayerId: cancelledChoice.askingPlayerId,
       targetPlayerId: cancelledChoice.targetPlayerId,
@@ -1314,7 +1391,7 @@ function handlePlayerLeave(socket, gameId, playerId) {
   }
 
   // 工單 0148：通知房間內剩餘玩家有人離開
-  io.to(gameId).emit('playerLeft', { playerId, playerName });
+  emitReplayEvent(gameId, 'playerLeft', { playerId, playerName });
 
   broadcastGameState(gameId);
   broadcastRoomList();
@@ -2005,6 +2082,7 @@ function settlePredictions(gameState, scoreChanges) {
  * 保存遊戲記錄到資料庫
  */
 async function saveGameToDatabase(gameState, winnerPlayer) {
+  if (realtimeOnly || replayRecorder) return; // Replay completion owns the atomic results write.
   try {
     // 工單 0174：查詢每位玩家的 Supabase player_id
     const playerIdMap = {};
@@ -2118,7 +2196,7 @@ function startNextRoundLogic(gameId) {
   gameState.winner = null;
 
   // 廣播下一局開始
-  io.to(gameId).emit('roundStarted', {
+  emitReplayEvent(gameId, 'roundStarted', {
     round: gameState.currentRound,
     startPlayerIndex: nextStartPlayer
   });

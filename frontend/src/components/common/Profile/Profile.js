@@ -101,7 +101,10 @@ function Profile() {
   if (loading) {
     return (
       <div className="profile-page">
-        <div className="profile-loading">載入中...</div>
+        <div className="profile-layout">
+          <header className="profile-nav"><button className="back-btn" onClick={handleBack}>← 返回大廳</button></header>
+          <main className="profile-main"><div className="profile-loading" role="status">載入中...</div></main>
+        </div>
       </div>
     );
   }

@@ -89,10 +89,51 @@ describe('Lobby - 頁面渲染', () => {
     socketService.joinRoom.mockImplementation(() => {});
   });
 
+  test.each(['Escape', '關閉按鈕'])('玩法面板 %s 關閉並把焦點送回玩法入口', async (method) => {
+    renderWithProviders(<Lobby />);
+    const trigger = screen.getByRole('button', { name: /玩法/ });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('dialog', { name: '本草玩法' })).toBeInTheDocument();
+    const close = screen.getByRole('button', { name: '關閉玩法' });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(close).toHaveFocus();
+    if (method === 'Escape') fireEvent.keyDown(window, { key: 'Escape' });
+    else fireEvent.click(close);
+    expect(screen.queryByRole('dialog', { name: '本草玩法' })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  test('AI 設定可改為三位對手並從面板開始正確對局', () => {
+    renderWithProviders(<Lobby />);
+    fireEvent.change(screen.getByLabelText('遊戲暱稱'), { target: { value: '測試玩家' } });
+    fireEvent.click(screen.getByRole('button', { name: /與 AI 練習/ }));
+    expect(screen.getByRole('dialog', { name: '單人模式設定' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /3 人局/ })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: /4 人局/ }));
+    expect(screen.getAllByRole('group', { name: /難度/ })).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: '柏宇：困難' }));
+    fireEvent.click(screen.getByRole('button', { name: '開始遊戲' }));
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('aiCount=3'), expect.objectContaining({ state: expect.objectContaining({ aiConfig: { aiCount: 3, difficulties: ['medium', 'medium', 'hard'] } }) }));
+  });
+
+  test('AI 設定 Esc 取消並回到練習入口，空暱稱不開面板', () => {
+    renderWithProviders(<Lobby />);
+    const trigger = screen.getByRole('button', { name: /與 AI 練習/ });
+    fireEvent.click(trigger);
+    expect(screen.queryByRole('dialog', { name: '單人模式設定' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('遊戲暱稱')).toHaveFocus();
+    fireEvent.change(screen.getByLabelText('遊戲暱稱'), { target: { value: '測試玩家' } });
+    fireEvent.click(trigger);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: '單人模式設定' })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
   test('應顯示側邊欄標題「本草」', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '本草', level: 1 })).toBeInTheDocument();
     });
   });
 
@@ -507,7 +548,7 @@ describe('Lobby - 房間列表功能', () => {
   test('顯示房間列表', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '本草', level: 1 })).toBeInTheDocument();
     });
 
     // 模擬收到房間列表
@@ -527,7 +568,7 @@ describe('Lobby - 房間列表功能', () => {
   test('點擊房間表格加入按鈕應加入該房間', async () => {
     renderWithProviders(<Lobby />);
     await waitFor(() => {
-      expect(screen.getByText('本草')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: '本草', level: 1 })).toBeInTheDocument();
     });
 
     // 先輸入玩家名稱

@@ -69,3 +69,8 @@ ui-debug.log
 # E2E 測試產物（不入版控）
 tests/e2e/screenshots/
 tests/e2e/videos/
+
+# Local runtime / tool caches (not part of the app)
+.eye-cache/
+frontend/.runtime-three/
+reports/herbalism-*/

@@ -350,12 +350,12 @@ export function isValidAIDifficulty(difficulty) {
  * @returns {string} AI 玩家名稱
  */
 export function getAIPlayerName(index, difficulty) {
-  const difficultyNames = {
-    [AI_DIFFICULTY.EASY]: '初學者',
-    [AI_DIFFICULTY.MEDIUM]: '中級',
-    [AI_DIFFICULTY.HARD]: '專家'
+  const names = {
+    easy: ['怡君', '冠廷', '雅婷'],
+    medium: ['阿哲', '佳蓉', '柏宇'],
+    hard: ['承翰', '雨彤', '奕辰']
   };
-  return `AI ${difficultyNames[difficulty] || ''} ${index + 1}`;
+  return (names[difficulty] || names.medium)[index] || `玩家 ${index + 1}`;
 }
 
 /**
@@ -370,7 +370,7 @@ export const ALL_AI_DIFFICULTIES = Object.values(AI_DIFFICULTY);
  * @readonly
  * @type {string[]}
  */
-export const AI_PLAYER_NAMES = ['小草', '小花', '小樹'];
+export const AI_PLAYER_NAMES = ['阿哲', '佳蓉', '柏宇'];
 
 /**
  * 取得 AI 難度描述

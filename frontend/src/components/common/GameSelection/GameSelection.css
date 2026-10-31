@@ -1,210 +1,330 @@
-/**
- * 遊戲選擇頁面樣式
- * 工單 0276
- */
-
+/* Console game selection: one viewport, navigation always present. */
 .game-selection {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f5dc 0%, #e8dcc4 100%);
-  display: flex;
-  flex-direction: column;
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 60px minmax(0, 1fr);
+  background: #f4f1e8;
+  color: #213b32;
+  font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
 }
-
-/* 頂部欄 */
+.game-selection * {
+  box-sizing: border-box;
+}
+.game-selection button {
+  font: inherit;
+  cursor: pointer;
+}
+.game-selection button:focus-visible,
+.game-selection a:focus-visible {
+  outline: 3px solid #aa8548;
+  outline-offset: 3px;
+}
 .gs-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 24px;
+  background: #e8ecdf;
+  border-bottom: 1px solid #cdd4c3;
 }
-
+.gs-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #163e35;
+  text-decoration: none;
+  font-size: 28px;
+}
+.gs-brand > span {
+  font:
+    700 22px/1.1 "Noto Serif TC",
+    Georgia,
+    serif;
+}
+.gs-brand small {
+  display: block;
+  font: 10px/1.8 system-ui;
+  letter-spacing: 2px;
+}
 .gs-user-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  font-size: 12px;
 }
-
-.gs-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .gs-avatar-placeholder {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b7355 0%, #6b5344 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.2rem;
+  display: grid;
+  place-items: center;
+  background: #ced9c4;
+  color: #31543f;
 }
-
-.gs-username {
-  font-weight: 500;
-  color: #333;
-}
-
 .gs-logout-btn {
-  padding: 8px 16px;
-  border: 1px solid #999;
-  border-radius: 6px;
+  min-height: 44px;
   background: transparent;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: #536a59;
+  border: 0;
+  border-left: 1px solid #becdb3;
+  padding: 8px 16px;
 }
-
-.gs-logout-btn:hover {
-  background: #f5f5f5;
-  border-color: #666;
-}
-
-/* 主內容 */
 .gs-main {
-  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) 44px 16px;
+  gap: 16px;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+}
+.gs-screen-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.gs-title {
+  font:
+    600 24px/1.4 "Noto Serif TC",
+    Georgia,
+    serif;
+  margin: 0;
+  color: #163e35;
+}
+.gs-screen-heading > span {
+  font-size: 12px;
+  color: #7a8871;
+}
+.gs-games {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.game-selection .gs-game-card {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 40px 24px;
-}
-
-.gs-title {
-  font-size: 2rem;
-  color: #4a3728;
-  margin: 0 0 8px 0;
-}
-
-.gs-subtitle {
-  color: #6b5344;
-  margin: 0 0 40px 0;
-}
-
-/* 遊戲卡片區 */
-.gs-games {
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: center;
-  max-width: 800px;
+  gap: 14px;
+  text-align: left;
+  padding: 30px;
+  border: 1px solid #c1cfb6;
+  border-radius: 5px;
+  background: #e4ebdc;
+  color: #163e35;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s;
 }
-
-.gs-game-card {
-  width: 300px;
-  padding: 32px 24px;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
+.game-selection .gs-game-card.evolution {
+  background: #eae4d5;
+  border-color: #d2c5ab;
+  color: #5c4e33;
 }
-
-.gs-game-card.herbalism {
-  background: linear-gradient(145deg, #8b9a6b 0%, #6b7a4b 100%);
-  color: white;
-  box-shadow: 0 8px 24px rgba(107, 122, 75, 0.3);
+.gs-game-number {
+  font-size: 11px;
+  letter-spacing: 1px;
 }
-
-.gs-game-card.herbalism:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 32px rgba(107, 122, 75, 0.4);
+.gs-game-art {
+  position: absolute;
+  top: 14px;
+  right: 24px;
+  font:
+    clamp(70px, 15vh, 150px)/1 Georgia,
+    serif;
+  color: #67845f;
+  opacity: 0.21;
+  pointer-events: none;
 }
-
-.gs-game-card.evolution {
-  background: linear-gradient(145deg, #2d5a3d 0%, #1a472a 100%);
-  color: white;
-  box-shadow: 0 8px 24px rgba(45, 90, 61, 0.3);
+.evolution .gs-game-art {
+  color: #a58a4e;
 }
-
-.gs-game-card.evolution:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 32px rgba(45, 90, 61, 0.4);
-}
-
-.gs-game-icon {
-  font-size: 4rem;
-  margin-bottom: 16px;
-}
-
 .gs-game-title {
-  font-size: 1.5rem;
-  margin: 0 0 12px 0;
+  font:
+    500 clamp(26px, 4vw, 44px)/1.2 "Noto Serif TC",
+    Georgia,
+    serif;
+  position: relative;
 }
-
-.gs-game-desc {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin: 0 0 16px 0;
-  line-height: 1.5;
+.gs-game-title > span {
+  font:
+    italic 14px/1.6 Georgia,
+    serif;
+  display: block;
 }
-
 .gs-game-info {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  font-size: 0.8rem;
-  opacity: 0.8;
+  flex-wrap: wrap;
+  gap: 5px 16px;
+  font-size: 11px;
+  color: #6b7b60;
+  position: relative;
 }
-
-.gs-game-info span {
-  padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-}
-
-/* 底部導航 */
-.gs-nav {
-  margin-top: auto;
-  display: flex;
-  gap: 16px;
-  padding-top: 40px;
-}
-
-.gs-nav-btn {
+.gs-game-cta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 1px solid #8b7355;
-  border-radius: 8px;
+  justify-content: space-between;
+  width: 100%;
+  border-top: 1px solid #bdccb2;
+  margin-top: 12px;
+  padding-top: 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.gs-game-cta > span {
+  font-size: 24px;
+}
+.evolution .gs-game-cta {
+  border-color: #cfbfa1;
+}
+.gs-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.gs-nav-btn {
+  min-height: 44px;
   background: transparent;
-  color: #6b5344;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: #617555;
+  border: 0;
+  border-bottom: 1px solid #c9d3bd;
+  padding: 8px 20px;
+  font-size: 12px;
 }
-
-.gs-nav-btn:hover {
-  background: rgba(139, 115, 85, 0.1);
+.gs-footer {
+  text-align: center;
+  font-size: 9px;
+  margin: 0;
+  color: #8a957f;
+  align-self: center;
 }
-
-.gs-nav-btn .material-symbols-outlined {
-  font-size: 1.2rem;
+.game-selection .gs-game-card:hover:not(:disabled) {
+  background: #dce7d2;
+  color: #163e35;
+  box-shadow: inset 0 0 0 1px #819b71;
 }
-
-/* 響應式 */
-@media (max-width: 680px) {
+.game-selection .gs-game-card.evolution:hover:not(:disabled) {
+  background: #e4dac3;
+  color: #5c4e33;
+  box-shadow: inset 0 0 0 1px #ae945d;
+}
+.game-selection .gs-nav-btn:hover:not(:disabled),
+.game-selection .gs-logout-btn:hover:not(:disabled) {
+  background: #e0e7d6;
+  color: #163e35;
+}
+@media (max-width: 600px) and (min-height: 501px) {
+  .game-selection {
+    grid-template-rows: 56px minmax(0, 1fr);
+  }
+  .gs-header {
+    padding: 6px 16px;
+  }
+  .gs-main {
+    padding: 16px;
+    gap: 12px;
+    grid-template-rows: 28px minmax(0, 1fr) 44px 16px;
+  }
+  .gs-title {
+    font-size: 20px;
+  }
   .gs-games {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
-
-  .gs-game-card {
-    width: 100%;
-    max-width: 300px;
+  .game-selection .gs-game-card {
+    padding: 22px;
+    gap: 9px;
   }
-
+  .gs-game-title {
+    font-size: 30px;
+  }
+  .gs-game-art {
+    font-size: 100px;
+    right: 24px;
+    top: 30px;
+  }
+  .gs-game-cta {
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+  .gs-avatar-placeholder {
+    display: none;
+  }
   .gs-nav {
-    flex-direction: column;
-    width: 100%;
-    max-width: 300px;
+    gap: 10px;
   }
-
   .gs-nav-btn {
-    justify-content: center;
+    padding: 8px 14px;
+  }
+  .gs-screen-heading > span {
+    font-size: 10px;
+  }
+}
+@media (max-height: 500px) {
+  .game-selection {
+    grid-template-rows: 48px minmax(0, 1fr);
+  }
+  .gs-header {
+    padding: 2px 16px;
+  }
+  .gs-main {
+    padding: 8px 20px;
+    gap: 6px;
+    grid-template-rows: 24px minmax(0, 1fr) 36px 12px;
+  }
+  .gs-title {
+    font-size: 17px;
+  }
+  .game-selection .gs-game-card {
+    padding: 16px;
+    gap: 6px;
+  }
+  .gs-game-title {
+    font-size: 25px;
+  }
+  .gs-game-title > span {
+    font-size: 11px;
+  }
+  .gs-game-art {
+    font-size: 75px;
+    top: 18px;
+    right: 16px;
+  }
+  .gs-game-info {
+    font-size: 10px;
+  }
+  .gs-game-cta {
+    padding-top: 7px;
+    margin-top: 0;
+    font-size: 12px;
+  }
+  .gs-game-cta > span {
+    font-size: 18px;
+  }
+  .gs-nav-btn {
+    min-height: 36px;
+    padding: 4px 14px;
+  }
+  .gs-footer {
+    font-size: 8px;
+  }
+  .gs-game-number {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-selection * {
+    transition: none !important;
+    animation: none !important;
   }
 }

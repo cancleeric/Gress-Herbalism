@@ -104,6 +104,46 @@ describe('LocalGameController', () => {
       jest.clearAllMocks();
     });
 
+    test('三張黃牌交換時只給一張；後續對手要全部才會取走其餘兩張', async () => {
+      const [human, target, third] = controller.gameState.players;
+      human.hand = [1, 2, 3].map(id => ({ id, color: 'yellow' }));
+      target.hand = [{ id: 4, color: 'red' }];
+      third.hand = [];
+      await controller.handleAction({ type: 'question', playerId: human.id,
+        targetPlayerId: target.id, colors: ['yellow', 'red'], questionType: 3,
+        giveColor: 'yellow', getColor: 'red' });
+      expect(human.hand).toEqual([{ id: 2, color: 'yellow' }, { id: 3, color: 'yellow' }, { id: 4, color: 'red' }]);
+      expect(target.hand).toEqual([{ id: 1, color: 'yellow' }]);
+      controller.endTurn({ playerId: human.id });
+      await controller.handleAction({ type: 'question', playerId: target.id,
+        targetPlayerId: human.id, colors: ['yellow', 'blue'], questionType: 2 });
+      expect(human.hand.filter(card => card.color === 'yellow')).toHaveLength(2);
+      expect(controller.pendingLocalQuestion).not.toBeNull();
+      await controller.confirmLocalQuestion('yellow');
+      expect(human.hand).toEqual([{ id: 4, color: 'red' }]);
+      expect(target.hand.map(card => card.id).sort()).toEqual([1, 2, 3]);
+      const all = controller.gameState.players.flatMap(player => player.hand);
+      expect(all).toHaveLength(4);
+      expect(new Set(all.map(card => card.id)).size).toBe(4);
+    });
+
+    test('真人被問兩種皆有的全部牌，必須自行選色；確認前不可扣牌或跳回合', async () => {
+      const [human, ai] = controller.gameState.players;
+      human.hand = [{ id: 'r', color: 'red' }, { id: 'y1', color: 'yellow' }, { id: 'y2', color: 'yellow' }];
+      ai.hand = [];
+      controller.gameState.currentPlayerIndex = 1;
+      await controller.handleAction({ type: 'question', playerId: ai.id, targetPlayerId: human.id, colors: ['red','yellow'], questionType: 2 });
+      expect(human.hand).toHaveLength(3);
+      controller.endTurn({playerId:ai.id});
+      expect(controller.gameState.currentPlayerIndex).toBe(1);
+      expect(await controller.confirmLocalQuestion(null)).toBe(false);
+      expect(human.hand).toHaveLength(3);
+      expect(await controller.confirmLocalQuestion('yellow')).toBe(true);
+      expect(human.hand).toEqual([{id:'r',color:'red'}]);
+      expect(ai.hand).toHaveLength(2);
+      expect(await controller.confirmLocalQuestion('red')).toBe(false);
+    });
+
     test('應該處理類型1問牌（兩個顏色各一張）', async () => {
       const state = controller.getState();
       const askingPlayer = state.players[0];

@@ -1,0 +1,1393 @@
+/* Original apothecary art direction. Scoped away from Evolution's routes. */
+.app.apothecary {
+  --ink: #eddfbf;
+  --muted: #b0ad96;
+  --gold: #c8aa70;
+  --line: #baa06a42;
+  --forest: #18372a;
+  --paper: #e9ddc2;
+  --deep: #0f211a;
+  color: var(--ink);
+  background: #101d17;
+  font-family: "Noto Serif TC", "Songti TC", Georgia, serif;
+}
+.apothecary .botanical-fan {
+  position: relative;
+  display: block;
+  width: 300px;
+  height: 200px;
+  pointer-events: none;
+  margin: 0 auto;
+}
+.apothecary .botanical-fan img {
+  position: absolute;
+  width: 105px;
+  height: 158px;
+  left: calc(50% - 52px);
+  bottom: 9px;
+  object-fit: cover;
+  border: 3px solid #d7c294;
+  border-radius: 5px;
+  box-shadow: 0 8px 22px #0009;
+  transform-origin: 50% 120%;
+  transform: translateX(calc((var(--fan-index) - 1.5) * 46px))
+    rotate(calc((var(--fan-index) - 1.5) * 12deg));
+}
+/* Lobby: a single workbench, not independent dashboard cards. */
+.app.apothecary .lobby {
+  background:
+    linear-gradient(#0a1c15b8, #0b1c17eb 63%),
+    var(--apothecary-surface) center/cover;
+  color: var(--ink);
+  grid-template-rows: 64px minmax(0, 1fr) 40px;
+}
+.app.apothecary .lobby::before {
+  display: none;
+}
+.app.apothecary .lobby .herb-lobby-topbar {
+  background: #0f251de8;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  padding: 0 28px;
+}
+.app.apothecary .herb-lobby-brand {
+  color: #e9d4a6;
+  background: none;
+}
+.app.apothecary .herb-lobby-brand small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+.app.apothecary .herb-lobby-brand > span:first-child {
+  border: 1px solid var(--gold);
+  background: none;
+  color: var(--gold);
+  font-size: 21px;
+}
+.app.apothecary .lobby .lobby-sidebar {
+  gap: 2px;
+}
+.app.apothecary .lobby .lobby-sidebar button {
+  color: #bdbba8;
+  background: none;
+  border: 0;
+  font-size: 11px;
+  padding: 8px;
+}
+.app.apothecary .lobby .lobby-avatar {
+  background: #243b2a;
+  border: 1px solid #b99b61;
+  color: #dfc89b;
+}
+.app.apothecary .lobby-user-area {
+  color: #c2c3ae;
+  font-size: 11px;
+}
+.app.apothecary .lobby .herb-lobby-content {
+  display: grid;
+  grid-template-rows: 220px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 36px 0;
+  max-width: 1100px;
+  overflow: auto;
+  align-content: start;
+}
+.app.apothecary .herb-lobby-intro {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.app.apothecary .herb-lobby-intro .botanical-fan {
+  margin: 0;
+  width: 310px;
+  height: 205px;
+}
+.app.apothecary .herb-title-lockup {
+  min-width: 160px;
+  text-align: center;
+}
+.app.apothecary .herb-title-lockup > small {
+  font:
+    10px Georgia,
+    serif;
+  letter-spacing: 0.35em;
+  color: #d0b478;
+}
+.app.apothecary .herb-lobby-intro h1 {
+  font:
+    500 64px "Songti TC",
+    serif;
+  letter-spacing: 0.22em;
+  margin: 4px -12px 8px 0;
+  color: #ecdbb2;
+  text-shadow: 0 3px 16px #0007;
+}
+.app.apothecary .herb-title-lockup > span {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #c7c2a9;
+}
+.app.apothecary .herb-lobby-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 36px;
+  min-height: 0;
+  overflow: visible;
+}
+.app.apothecary .herb-practice,
+.app.apothecary .herb-online {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+.app.apothecary .lobby .herb-practice-heading h2 {
+  font:
+    500 20px Georgia,
+    "Songti TC",
+    serif;
+  letter-spacing: 0.08em;
+  color: #e8dbb9;
+}
+.app.apothecary .herb-mode-tag {
+  font: 10px sans-serif;
+  color: var(--muted);
+  border: 0;
+  background: none;
+}
+.app.apothecary .lobby .nickname-section {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  gap: 6px;
+}
+.app.apothecary .lobby .nickname-label {
+  color: #c7c6ac;
+  font: 11px sans-serif;
+}
+.app.apothecary .nickname-label small {
+  color: #9ba18b;
+}
+.app.apothecary .lobby .nickname-input,
+.app.apothecary .lobby .join-room-input {
+  background: #10241be6;
+  border: 1px solid #a58c585e;
+  color: #e9ddbd;
+  border-radius: 4px;
+  min-height: 44px;
+  box-shadow: inset 0 2px 8px #0003;
+  font-size: 14px;
+}
+.app.apothecary .lobby .nickname-section > small {
+  font-size: 10px;
+  color: #9da38e;
+}
+.app.apothecary .lobby .single-player-btn {
+  background: linear-gradient(140deg, #e4cfa1, #b99a5d);
+  color: #1c3226;
+  border: 1px solid #e3c993;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px #fff7,
+    0 5px 20px #0004;
+  min-height: 48px;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  flex: none;
+}
+.app.apothecary .lobby .herb-practice-foot {
+  color: #a9ae95;
+  font-size: 10px;
+  margin: 0;
+  text-align: center;
+}
+.app.apothecary .herb-network {
+  background: #251e19;
+  color: #c1aa84;
+  border: 1px solid #b591603b;
+  font-size: 9px;
+}
+.app.apothecary .herb-network.is-online {
+  color: #b9c8a3;
+  background: #203829;
+}
+.app.apothecary .lobby .herb-network-note {
+  font-size: 10px;
+  color: #a7ab92;
+  margin: 0;
+}
+.app.apothecary .lobby .create-room-btn,
+.app.apothecary .lobby .join-room-btn {
+  background: #243e2f;
+  color: #e2d3ae;
+  border: 1px solid #b39a665e;
+  border-radius: 4px;
+  min-height: 44px;
+  box-shadow: none;
+}
+.app.apothecary .lobby .herb-room-label,
+.app.apothecary .herb-room-list-heading {
+  font-size: 11px;
+  color: #c1b99c;
+}
+.app.apothecary .lobby .room-table-container {
+  background: none;
+  border: 0;
+  min-height: 55px;
+  flex: 1;
+}
+.app.apothecary .lobby .no-rooms {
+  background: none;
+  border: 1px dashed #aa916530;
+  color: #aca78f;
+  min-height: 60px;
+  font-size: 11px;
+}
+.app.apothecary .lobby .no-rooms > span {
+  font-size: 10px;
+  color: #939d85;
+}
+.app.apothecary .lobby .room-table {
+  background: none;
+  color: #e0d3b5;
+  font-size: 12px;
+}
+.app.apothecary .lobby .room-table th {
+  background: #163024;
+  color: #d4bc86;
+  border-color: var(--line);
+}
+.app.apothecary .lobby .room-table td {
+  background: #11261c;
+  border-color: var(--line);
+}
+.app.apothecary .herb-lobby-footer {
+  background: #0e211ae8;
+  border-top: 1px solid var(--line);
+  color: #939e87;
+  padding: 0 24px;
+  font-size: 10px;
+}
+.app.apothecary .herb-lobby-footer button {
+  background: none;
+  color: #bfbc9e;
+  border: 0;
+  font-size: 11px;
+}
+/* Bound setup sheets share parchment and dark brass-trimmed headers. */
+.app.apothecary .lobby :is(.modal-overlay) {
+  background: #06100bd6;
+  backdrop-filter: blur(6px);
+}
+.app.apothecary .lobby :is(.modal, .create-room-modal) {
+  background: linear-gradient(130deg, #f0e5cc, #e3d6b6);
+  border: 1px solid #b69a68;
+  border-radius: 8px;
+  color: #293e2c;
+  box-shadow: 0 25px 80px #0009;
+}
+.app.apothecary .lobby .modal.ai-modal {
+  background: #e9ddc2;
+}
+.app.apothecary .lobby .ai-modal .ai-modal-header {
+  background: linear-gradient(120deg, #213d2d, #132b20);
+  border-color: #ad9258;
+  padding: 20px;
+  border-radius: 7px 7px 0 0;
+}
+.app.apothecary .lobby .ai-modal-header h3 {
+  color: #ead8af;
+  letter-spacing: 0.08em;
+  font: 500 23px serif;
+}
+.app.apothecary .lobby .ai-modal-header .modal-description {
+  color: #b8bea3;
+}
+.app.apothecary .lobby .ai-modal-close {
+  color: #e8d7ac;
+  border-color: #a98d5559;
+  background: none;
+}
+.app.apothecary .lobby .ai-modal .modal-actions {
+  background: #e0d2af;
+  border-color: #b09a6f;
+}
+.app.apothecary .lobby :is(.btn-primary, .crm-btn-confirm) {
+  background: linear-gradient(130deg, #35533a, #1c3728);
+  color: #eee1bf;
+  border: 1px solid #647451;
+  box-shadow: none;
+}
+.app.apothecary .lobby :is(.btn-secondary, .crm-btn-cancel) {
+  background: transparent;
+  color: #3e5137;
+  border: 1px solid #a69772;
+  box-shadow: none;
+}
+.app.apothecary .ai-player-selector {
+  color: #2b412e;
+  gap: 17px;
+}
+.app.apothecary .ai-player-selector :is(.ai-count-select, .difficulty-select) {
+  background: #f1e8d4;
+  border-color: #b1a17c;
+  color: #263b29;
+}
+.app.apothecary .ai-player-selector .ai-seat-number {
+  background: #2a4432;
+  color: #e6d3a2;
+  border-color: #c2ab75;
+}
+.app.apothecary .ai-player-selector .config-summary {
+  background: #dcd1b3;
+  border-color: #bcb08d;
+}
+.app.apothecary .ai-player-selector .difficulty-info {
+  border-color: #c0b38d;
+}
+.app.apothecary .ai-player-selector .ai-difficulty-row {
+  border-bottom: 1px solid #c1b48d5c;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.app.apothecary .ai-player-selector .ai-name {
+  font-family: serif;
+  font-size: 16px;
+}
+.app.apothecary .lobby .crm-header {
+  background: none;
+}
+.app.apothecary .lobby .crm-title {
+  color: #273e2d;
+}
+.app.apothecary
+  .lobby
+  :is(.crm-select, .crm-password-input, .password-modal input) {
+  background: #f6eedb;
+  color: #273b2b;
+  border-color: #b6a77e;
+}
+.app.apothecary .lobby .crm-actions {
+  background: #e4d6b5;
+  border-color: #bdab80;
+}
+/* Login and selection carry the same art instead of abstract placeholder symbols. */
+.app.apothecary .login-page,
+.app.apothecary .game-selection {
+  background:
+    linear-gradient(#10271cd9, #0c2119f0),
+    var(--apothecary-surface) center/cover;
+  color: var(--ink);
+}
+.app.apothecary .login-page .bg-decoration {
+  display: none;
+}
+.app.apothecary .login-page .login-nav,
+.app.apothecary .game-selection .gs-header {
+  background: #10271fe8;
+  border-color: var(--line);
+  color: #e4d4ad;
+}
+.app.apothecary .login-page :is(.nav-title, .nav-icon, .nav-links a),
+.app.apothecary .gs-brand,
+.app.apothecary .gs-username {
+  color: #e4d4ad;
+}
+.app.apothecary .login-page .branding::before {
+  display: none;
+}
+.app.apothecary .login-page .brand-title {
+  font-size: 38px;
+  color: #e5d3a4;
+  letter-spacing: 0.1em;
+}
+.app.apothecary .login-page .brand-subtitle {
+  color: #b9c2a6;
+  font: 12px sans-serif;
+  letter-spacing: 0.12em;
+}
+.app.apothecary .login-page .brand-subtitle-wrapper {
+  border-color: var(--line);
+}
+.app.apothecary .login-page .login-card {
+  background: #e9ddc2;
+  border: 1px solid #bda26a;
+  border-radius: 8px;
+  box-shadow: 0 15px 45px #0005;
+  color: #2d4230;
+}
+.app.apothecary .login-page .login-card::before {
+  color: #2d4230;
+}
+.app.apothecary .login-page .btn-guest {
+  background: linear-gradient(135deg, #35533c, #1b3829);
+  color: #f1e1ba;
+  border-color: #6b7854;
+}
+.app.apothecary .login-page .btn-google {
+  background: #f4ebd7;
+  border-color: #bfb08a;
+  color: #334633;
+}
+.app.apothecary .login-page :is(.divider, .login-signup-help) {
+  color: #687454;
+}
+.app.apothecary .login-page .divider::before,
+.app.apothecary .login-page .divider::after {
+  background: #c0af84;
+}
+.app.apothecary .login-page .login-footer {
+  color: #9da78d;
+}
+.app.apothecary .login-page .login-reference-panel:not([hidden]) {
+  background: #e9ddc2;
+  color: #2d4230;
+}
+.app.apothecary .game-selection :is(.gs-title, .gs-screen-heading span) {
+  color: #e6d8b7;
+}
+.app.apothecary .game-selection .gs-game-card.herbalism {
+  background: linear-gradient(150deg, #263f2f, #10261c);
+  border-color: #bda16a;
+  color: #f0e0ba;
+  box-shadow: 0 15px 40px #0005;
+}
+.app.apothecary .game-selection .herbalism .gs-game-art {
+  background: none;
+  border: 0;
+  position: absolute;
+  inset: 18px 5% auto 35%;
+  width: auto;
+  height: auto;
+  opacity: 0.85;
+}
+.app.apothecary .game-selection .herbalism .botanical-fan {
+  width: 240px;
+  height: 190px;
+  transform: rotate(7deg);
+}
+.app.apothecary .game-selection .herbalism .botanical-fan img {
+  width: 88px;
+  height: 132px;
+}
+.app.apothecary .game-selection .herbalism .gs-game-title {
+  z-index: 1;
+  color: #ead9b0;
+}
+.app.apothecary .game-selection .herbalism :is(.gs-game-info, .gs-game-number) {
+  color: #bcc5a7;
+  z-index: 1;
+}
+.app.apothecary .game-selection .herbalism .gs-game-cta {
+  color: #dfc48a;
+  border-color: #ba9d6144;
+  z-index: 1;
+}
+.app.apothecary .game-selection .gs-nav-btn {
+  background: #1b3427;
+  border: 1px solid var(--line);
+  color: #d9cead;
+}
+.app.apothecary .game-selection .gs-footer {
+  color: #95a38b;
+}
+.app.apothecary .game-selection .gs-logout-btn {
+  color: #c9c4a8;
+  border-color: var(--line);
+  background: none;
+}
+/* Player services keep data legible on warm paper, inside the same quiet shell. */
+.app.apothecary :is(.profile-page, .friends-page, .leaderboard-page) {
+  background:
+    linear-gradient(#10281ce8, #0d2119f2),
+    var(--apothecary-surface) center/cover;
+  color: #eadcbb;
+}
+.app.apothecary :is(.profile-nav, .friends-nav, .leaderboard-nav) {
+  background: #142c22;
+  border-color: var(--line);
+  color: #decea7;
+}
+.app.apothecary :is(.profile-nav, .friends-nav, .leaderboard-nav) .back-btn {
+  color: #e4cf9e;
+}
+.app.apothecary :is(.profile-card, .friends-card, .leaderboard-card) {
+  background: #ece1c8;
+  border-color: #bfa774;
+  color: #2c412c;
+  box-shadow: 0 10px 35px #0004;
+  border-radius: 6px;
+}
+.app.apothecary .profile-page .stat-card {
+  background: #dfd5b9;
+  border: 0;
+  border-bottom: 2px solid #ac945e;
+  border-radius: 4px;
+}
+.app.apothecary .profile-page .stat-value {
+  color: #365038;
+}
+.app.apothecary :is(.profile-footer, .friends-footer, .leaderboard-footer) p {
+  color: #9ba48d;
+}
+.app.apothecary .leaderboard-page .leaderboard-table th {
+  background: #d9cead;
+  color: #334931;
+}
+.app.apothecary :is(.friends-tabs, .sort-tabs) button {
+  border-color: #b4a27b;
+  color: #4d5e40;
+  background: none;
+}
+.app.apothecary :is(.friends-tabs, .sort-tabs) button.active {
+  background: #2b4933;
+  color: #f0e1b9;
+}
+.app.apothecary
+  :is(.profile-nav, .friends-nav, .leaderboard-nav)
+  :is(h1, h2, a, span) {
+  color: #decfa7;
+}
+/* In-game sheets: parchment surfaces, consistent dark headers, no neon blocks. */
+.app.apothecary
+  .game-room
+  :is(.question-flow-modal, .modal-content, .console-panel) {
+  background: linear-gradient(120deg, #efe5ce, #e5d9bb);
+  color: #2b402e;
+  border-color: #b79a62;
+  border-radius: 8px;
+  box-shadow: 0 25px 80px #0009;
+}
+.app.apothecary
+  .game-room
+  :is(.modal-overlay, .question-flow-overlay, .console-panel-backdrop) {
+  background: #07130cd4;
+  backdrop-filter: blur(5px);
+}
+.app.apothecary
+  .game-room
+  :is(
+    .question-flow-header,
+    .guess-card-header,
+    .gr-header,
+    .fg-header,
+    .console-panel > header
+  ) {
+  background: linear-gradient(120deg, #274230, #142e22);
+  border-color: #a28a54;
+  color: #e7d7ae;
+}
+.app.apothecary
+  .game-room
+  :is(
+    .qf-title,
+    .guess-card-title,
+    .gr-header h2,
+    .fg-header h2,
+    .console-panel > header h2
+  ) {
+  color: #edddb5;
+  font-family: serif;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+.app.apothecary .game-room :is(.qf-title-sub, .qf-color-chips-label) {
+  color: #afb99c;
+}
+.app.apothecary
+  .game-room
+  :is(
+    .qf-decor-top,
+    .qf-decor-bottom,
+    .guess-motif-tl,
+    .guess-motif-br,
+    .qf-btn .material-symbols-outlined,
+    .guess-btn .material-symbols-outlined
+  ) {
+  display: none;
+}
+.app.apothecary .game-room .qf-color-chip {
+  background: #183123;
+  border: 1px solid #be9f5c55;
+  border-radius: 4px;
+  box-shadow: none;
+}
+.app.apothecary .game-room .qf-color-name {
+  color: #e3d1aa;
+}
+.app.apothecary .game-room :is(.qf-player-option, .qf-type-option) {
+  background: #f6eedb;
+  border-color: #c0b18c;
+  border-radius: 5px;
+  box-shadow: none;
+}
+.app.apothecary
+  .game-room
+  :is(.qf-player-option.selected, .qf-type-option.selected) {
+  background: #d5ddc2;
+  border-color: #6d8256;
+  box-shadow: inset 3px 0 #5a7249;
+}
+.app.apothecary .game-room :is(.qf-confirm-card, .guess-warning) {
+  background: #dfd5b8;
+  border-color: #bcac82;
+  border-radius: 4px;
+  color: #4b5b3b;
+}
+.app.apothecary
+  .game-room
+  :is(.qf-confirm-label, .qf-confirm-value, .qf-step-title) {
+  color: #364c32;
+}
+.app.apothecary
+  .game-room
+  :is(.question-flow-footer, .guess-card-footer, .gr-footer, .fg-footer) {
+  background: #dfd2b0;
+  border-color: #b9a575;
+}
+.app.apothecary
+  .game-room
+  :is(
+    .qf-btn-primary,
+    .guess-btn-submit,
+    .gr-continue-btn,
+    .fg-confirm-btn,
+    .prediction-card .btn-primary
+  ) {
+  background: linear-gradient(140deg, #3a563c, #1d392a);
+  color: #f3e4c0;
+  border-color: #687952;
+  box-shadow: inset 0 1px #ffffff24;
+}
+.app.apothecary .game-room :is(.qf-btn-secondary, .guess-btn-cancel) {
+  background: transparent;
+  color: #44583d;
+  border-color: #a5966f;
+  box-shadow: none;
+}
+.app.apothecary .game-room .guess-card {
+  background: transparent;
+  color: #30452f;
+}
+.app.apothecary
+  .game-room
+  :is(
+    .guess-selector-title,
+    .guess-selected-label,
+    .guess-herb-name,
+    .prediction-card h3,
+    .prediction-prompt
+  ) {
+  color: #344b30;
+}
+.app.apothecary .game-room .guess-color-btn {
+  background: #152b21;
+  border: 1px solid #a88d57;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 3px 9px #0003;
+}
+.app.apothecary .game-room .guess-color-label {
+  color: #e6d1a3;
+}
+.app.apothecary .game-room .guess-herb-name {
+  color: #d8c69d;
+}
+.app.apothecary .game-room .guess-selected-area {
+  background: #dfd4b6;
+  border-color: #bcad84;
+}
+.app.apothecary .game-room .prediction-card {
+  background: transparent;
+}
+.app.apothecary .game-room .prediction-rules,
+.app.apothecary .game-room .prediction-hint {
+  color: #697552;
+}
+.app.apothecary .game-room .prediction-colors .btn-color {
+  background: #152c21;
+  border-color: #ac935e;
+  box-shadow: none;
+  color: #e7d6aa;
+}
+.app.apothecary .game-room .console-panel-scroll {
+  color: #354a32;
+}
+.app.apothecary .game-room .console-panel-scroll :is(h3, h4) {
+  color: #253e2c;
+}
+.app.apothecary .game-room .console-panel-scroll p {
+  color: #526044;
+}
+@media (max-width: 600px) {
+  .app.apothecary .lobby {
+    grid-template-rows: 56px minmax(0, 1fr) 36px;
+  }
+  .app.apothecary .lobby .herb-lobby-topbar {
+    padding: 0 14px;
+  }
+  .app.apothecary .lobby .lobby-sidebar button {
+    font-size: 10px;
+    padding: 7px 5px;
+  }
+  .app.apothecary .lobby-user-area > span:last-child {
+    display: none;
+  }
+  .app.apothecary .lobby .herb-lobby-content {
+    grid-template-rows: 180px minmax(0, 1fr);
+    padding: 0 24px;
+    gap: 5px;
+  }
+  .app.apothecary .herb-lobby-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .app.apothecary .herb-lobby-intro .botanical-fan {
+    width: 160px;
+    height: 150px;
+    margin-left: -5px;
+  }
+  .app.apothecary .herb-lobby-intro .botanical-fan img {
+    width: 65px;
+    height: 99px;
+    left: calc(50% - 32px);
+    transform: translateX(calc((var(--fan-index) - 1.5) * 24px))
+      rotate(calc((var(--fan-index) - 1.5) * 12deg));
+    border-width: 2px;
+  }
+  .app.apothecary .herb-title-lockup {
+    min-width: 0;
+  }
+  .app.apothecary .herb-lobby-intro h1 {
+    font-size: 46px;
+    letter-spacing: 0.15em;
+  }
+  .app.apothecary .herb-title-lockup > small {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+  }
+  .app.apothecary .herb-title-lockup > span {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+  .app.apothecary .herb-lobby-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(160px, 1fr);
+    gap: 8px;
+    overflow: visible;
+  }
+  .app.apothecary .herb-practice,
+  .app.apothecary .herb-online {
+    padding: 13px 0;
+    gap: 9px;
+  }
+  .app.apothecary .lobby .herb-practice-heading h2 {
+    font-size: 17px;
+  }
+  .app.apothecary .lobby .nickname-section > small,
+  .app.apothecary .lobby .herb-practice-foot {
+    display: none;
+  }
+  .app.apothecary .lobby .herb-network-note {
+    font-size: 10px;
+  }
+  .app.apothecary .herb-online .herb-room-list-heading,
+  .app.apothecary .lobby .room-table-container {
+    display: none;
+  }
+  .app.apothecary .herb-online:has(.room-table) .herb-room-list-heading,
+  .app.apothecary .herb-online:has(.room-table) .room-table-container {
+    display: block;
+  }
+  .app.apothecary .lobby .create-room-btn {
+    min-height: 40px;
+    flex: none;
+  }
+  .app.apothecary .lobby .join-room-section {
+    flex: none;
+  }
+  .app.apothecary .lobby .herb-lobby-footer {
+    padding: 0 16px;
+  }
+  .app.apothecary .login-page .login-main {
+    gap: 10px;
+    padding: 4px 24px 10px;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .app.apothecary .login-page .branding .botanical-fan {
+    height: 170px;
+    width: 270px;
+  }
+  .app.apothecary .login-page .branding .botanical-fan img {
+    width: 85px;
+    height: 128px;
+    left: calc(50% - 42px);
+    transform: translateX(calc((var(--fan-index) - 1.5) * 36px))
+      rotate(calc((var(--fan-index) - 1.5) * 12deg));
+  }
+  .app.apothecary .login-page .brand-title {
+    font-size: 29px;
+  }
+  .app.apothecary .login-page .login-card {
+    padding: 18px;
+    align-self: start;
+  }
+  .app.apothecary .login-page .login-card::before {
+    margin-bottom: 12px;
+  }
+  .app.apothecary .login-page .btn {
+    min-height: 44px;
+  }
+  .app.apothecary .game-selection .herbalism .gs-game-art {
+    inset: -10px -12px auto 40%;
+  }
+  .app.apothecary .game-selection .herbalism .botanical-fan {
+    height: 125px;
+    width: 170px;
+  }
+  .app.apothecary .game-selection .herbalism .botanical-fan img {
+    width: 62px;
+    height: 94px;
+    left: calc(50% - 31px);
+    transform: translateX(calc((var(--fan-index) - 1.5) * 24px))
+      rotate(calc((var(--fan-index) - 1.5) * 12deg));
+  }
+}
+@media (max-height: 760px) and (max-width: 600px) {
+  .app.apothecary .lobby .herb-lobby-content {
+    grid-template-rows: 140px minmax(0, 1fr);
+  }
+  .app.apothecary .herb-lobby-intro .botanical-fan {
+    height: 132px;
+  }
+  .app.apothecary .lobby .herb-network-note {
+    display: none;
+  }
+  .app.apothecary .herb-practice,
+  .app.apothecary .herb-online {
+    gap: 7px;
+    padding: 10px 0;
+  }
+  .app.apothecary .herb-lobby-layout {
+    gap: 5px;
+  }
+  .app.apothecary .login-page .branding .botanical-fan {
+    height: 135px;
+  }
+  .app.apothecary .login-page .branding .botanical-fan img {
+    height: 108px;
+    width: 72px;
+  }
+  .app.apothecary .login-page .login-main {
+    gap: 8px;
+  }
+}
+/* Keep short portrait screens usable: decoration yields to room controls. */
+@media (max-width: 600px) and (min-height: 501px) and (max-height: 620px) {
+  .app.apothecary .lobby .herb-lobby-content {
+    grid-template-rows: 76px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: 16px;
+  }
+  .app.apothecary .herb-lobby-layout { grid-template-columns: minmax(0, 1fr); }
+  .app.apothecary .herb-lobby-intro .botanical-fan {
+    height: 76px;
+    width: 120px;
+  }
+  .app.apothecary .herb-lobby-intro .botanical-fan img {
+    height: 65px;
+    width: 43px;
+    left: calc(50% - 21px);
+    transform: translateX(calc((var(--fan-index) - 1.5) * 18px)) rotate(calc((var(--fan-index) - 1.5) * 10deg));
+  }
+  .app.apothecary .herb-lobby-intro h1 { font-size: 32px; }
+  .app.apothecary .herb-title-lockup > span { display: none; }
+}
+@media (max-width: 600px) {
+  .app.apothecary .lobby .herb-lobby-footer > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .app.apothecary .lobby .herb-lobby-footer > div { flex-shrink: 0; }
+  .app.apothecary .lobby .herb-lobby-footer button { white-space: nowrap; }
+}
+@media (max-height: 500px) {
+  .app.apothecary .lobby .herb-lobby-content {
+    grid-template-rows: 0 minmax(0, 1fr);
+  }
+  .app.apothecary .herb-lobby-intro {
+    visibility: hidden;
+  }
+  .app.apothecary .herb-lobby-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .app.apothecary .login-page .branding .botanical-fan {
+    display: none;
+  }
+}
+
+.app.apothecary .game-room .qf-herb-medallion {
+  display: block;
+  width: 26px;
+  height: 34px;
+  overflow: hidden;
+  border-radius: 3px;
+  border: 1px solid #b59d69;
+}
+.app.apothecary .game-room .qf-herb-medallion img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.app.apothecary .game-room .qf-color-chip {
+  padding: 4px 8px;
+  gap: 6px;
+}
+
+.app.apothecary .game-room.playing-stage .question-flow-modal {
+  height: auto;
+  max-height: calc(100dvh - 36px);
+}
+.app.apothecary .game-room .question-flow-body {
+  flex: 0 1 auto;
+}
+.app.apothecary .game-room .qf-confirm-card {
+  border-style: solid;
+}
+.app.apothecary .game-room .qf-confirm-empty {
+  min-height: 40px;
+  padding: 12px;
+}
+.app.apothecary .game-room .qf-step-number {
+  background: #b3945e;
+  color: #fff4d5;
+}
+.app.apothecary .game-room .qf-type-desc {
+  font-style: normal;
+  color: #687153;
+}
+.app.apothecary .game-room .qf-player-option input {
+  accent-color: #426342;
+}
+
+.app.apothecary .lobby .ai-player-selector .ai-name {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+}
+.app.apothecary .lobby .ai-player-selector {
+  gap: 13px;
+}
+.app.apothecary .lobby .ai-modal .ai-modal-body {
+  padding: 16px 20px;
+}
+.app.apothecary .lobby .ai-player-selector .ai-difficulty-row {
+  min-height: 48px;
+}
+.app.apothecary .lobby .ai-player-selector .ai-count-hint {
+  font-size: 10px;
+}
+.app.apothecary .lobby .ai-player-selector .config-summary {
+  font-size: 11px;
+}
+.app.apothecary .lobby .ai-modal .ai-modal-header {
+  padding: 15px 20px;
+}
+@media (max-width: 600px) {
+  .app.apothecary .herb-lobby-intro .botanical-fan {
+    transform: scale(0.9);
+    transform-origin: center;
+    margin-left: 4px;
+  }
+  .app.apothecary .lobby .ai-player-selector {
+    gap: 11px;
+  }
+  .app.apothecary .lobby .ai-modal .ai-modal-header h3 {
+    font-size: 21px;
+  }
+  .app.apothecary .lobby .ai-player-selector .config-summary {
+    padding: 8px;
+  }
+  .app.apothecary .lobby .ai-modal .ai-modal-body {
+    padding: 14px 18px;
+  }
+}
+
+.app.apothecary .game-room.playing-stage .guess-console-shell {
+  height: auto;
+  max-height: calc(100dvh - 36px);
+}
+.app.apothecary .game-room .guess-console-shell .guess-card {
+  height: auto;
+  max-height: calc(100dvh - 38px);
+}
+.app.apothecary .game-room .guess-card-body {
+  flex: 0 1 auto;
+}
+.app.apothecary .game-room .guess-selected-area {
+  border-style: solid;
+}
+.app.apothecary .game-room .guess-header-line {
+  background: #b89a61;
+}
+.app.apothecary :is(.lobby, .game-room) {
+  user-select: none;
+}
+.app.apothecary :is(input, textarea) {
+  user-select: text;
+}
+
+.app.apothecary .game-room.playing-stage .guess-color-btn .guess-herb-name {
+  color: #d7c49b;
+}
+.app.apothecary .game-room.playing-stage .guess-warning .warning-text {
+  color: #735638;
+}
+.app.apothecary .game-room.playing-stage .guess-warning .warning-icon {
+  color: #8c643d;
+  background: none;
+}
+.app.apothecary .game-room.playing-stage .guess-no-selection {
+  color: #756f55;
+}
+.app.apothecary
+  .game-room.playing-stage
+  .prediction-colors
+  .btn-color
+  :is(span, small) {
+  color: #e1cfa6;
+}
+
+.app.apothecary :is(.profile-page, .friends-page, .leaderboard-page) .nav-icon {
+  color: #b59d67;
+  width: 24px;
+  height: 24px;
+}
+.app.apothecary
+  :is(.profile-page, .friends-page, .leaderboard-page)
+  .nav-title {
+  font:
+    15px Georgia,
+    serif;
+  letter-spacing: 0.08em;
+}
+.app.apothecary :is(.profile-page, .friends-page) .avatar-placeholder {
+  background: radial-gradient(ellipse at top left, #546747, #203d2c);
+  border: 2px solid #bda46e;
+  color: #e8d6a8;
+  box-shadow: 0 4px 12px #15291b33;
+}
+.app.apothecary :is(.profile-page, .friends-page) .anonymous-content {
+  background: none;
+  border: 0;
+  padding: 20px 10px;
+}
+.app.apothecary
+  :is(.profile-page, .friends-page)
+  :is(
+    .anonymous-hint,
+    .anonymous-benefits,
+    .anonymous-benefits li,
+    .user-email
+  ) {
+  color: #5c6949;
+}
+.app.apothecary
+  :is(.profile-page, .friends-page)
+  :is(.user-info h2, .anonymous-hint) {
+  color: #344e34;
+}
+.app.apothecary
+  :is(.profile-page, .friends-page)
+  :is(.google-login-btn, .login-btn) {
+  background: linear-gradient(135deg, #3d5940, #203d2b);
+  border: 1px solid #7e8b60;
+  color: #efdfb9;
+  box-shadow: none;
+  min-height: 44px;
+  border-radius: 4px;
+  font-size: 15px;
+}
+.app.apothecary :is(.profile-page, .friends-page) .anonymous-back-btn {
+  color: #4f6040;
+  border: 1px solid #ad9f78;
+  border-radius: 4px;
+  background: none;
+  font-size: 13px;
+}
+.app.apothecary :is(.profile-footer, .friends-footer, .leaderboard-footer) {
+  letter-spacing: 0.05em;
+}
+.app.apothecary
+  :is(.profile-page, .friends-page, .leaderboard-page)
+  :is(.profile-error, .friends-error, .leaderboard-error) {
+  background: #e4cdb0;
+  border: 1px solid #b79672;
+  color: #7b4e34;
+}
+.app.apothecary :is(.leaderboard-empty, .friends-empty, .empty-state) {
+  color: #65704e;
+}
+.app.apothecary .leaderboard-page :is(.hint, .leaderboard-empty p) {
+  color: #64704e;
+}
+
+.app.apothecary
+  :is(.friends-page, .leaderboard-page)
+  :is(.friends-title, .leaderboard-title) {
+  color: #31482e;
+  font-family: serif;
+  font-weight: 500;
+}
+.app.apothecary
+  :is(.friends-page, .leaderboard-page)
+  :is(.hint, .empty-hint, .empty-state p) {
+  color: #687353;
+  font-style: normal;
+}
+.app.apothecary :is(.profile-footer, .friends-footer, .leaderboard-footer) p {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.app.apothecary .login-page .divider span {
+  color: #706b50;
+}
+
+.app.apothecary .game-room .console-panel-backdrop {
+  align-items: flex-start;
+}
+.app.apothecary .game-room .console-panel {
+  max-height: 100%;
+  height: auto;
+}
+
+/* Color groups remain readable even when the botanical painting is tiny. */
+.app.apothecary .game-room .guess-color-btn {
+  background: #f7efd9;
+  color: #233d30;
+  border-top-width: 6px;
+}
+.app.apothecary .game-room .guess-color-btn.group-red {
+  border-color: #ad2639;
+}
+.app.apothecary .game-room .guess-color-btn.group-yellow {
+  border-color: #976500;
+}
+.app.apothecary .game-room .guess-color-btn.group-green {
+  border-color: #216438;
+}
+.app.apothecary .game-room .guess-color-btn.group-blue {
+  border-color: #245baf;
+}
+.app.apothecary .game-room.playing-stage .guess-color-btn .guess-herb-name {
+  color: #465540;
+  font-size: 10px;
+  white-space: normal;
+}
+.app.apothecary .game-room .guess-color-label {
+  color: #263d2d;
+}
+.app.apothecary .game-room .guess-herb-art {
+  background: #f7efd9;
+}
+.app.apothecary .game-room .prediction-colors .btn-color {
+  background: #f7efd9;
+  border-top-width: 6px;
+}
+.app.apothecary
+  .game-room.playing-stage
+  .prediction-colors
+  .btn-color
+  :is(small, span) {
+  color: #263d2d;
+}
+
+/* Shared engraved actions, matching the physical tabletop controls. */
+.app.apothecary
+  .game-room
+  :is(.question-flow-footer, .guess-card-footer)
+  button,
+.app.apothecary .game-room .end-turn-btn {
+  position: relative;
+  border: 1px solid #b09257;
+  border-radius: 3px;
+  background: linear-gradient(165deg, #3b5746, #17382b 55%, #10271e);
+  color: #efdeb2;
+  box-shadow:
+    inset 0 1px #ecd9a988,
+    inset 0 -3px #04170e99,
+    0 3px 6px #30241844;
+  font-family: Georgia, "Noto Serif TC", serif;
+  letter-spacing: 0.08em;
+  clip-path: polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  );
+}
+.app.apothecary
+  .game-room
+  :is(.question-flow-footer, .guess-card-footer)
+  button::after,
+.app.apothecary .game-room .end-turn-btn::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid #cdb47a66;
+  pointer-events: none;
+}
+.app.apothecary .game-room .question-flow-footer .qf-btn-primary:not(:disabled),
+.app.apothecary .game-room .guess-card-footer button:last-child:not(:disabled) {
+  background: linear-gradient(
+    165deg,
+    #f3dfa4,
+    #d2af62 35%,
+    #b28943 70%,
+    #dcc48a
+  );
+  color: #27372a;
+  text-shadow: 0 1px #fff3cc99;
+  box-shadow:
+    inset 0 1px #fff2c6,
+    inset 0 -3px #684b2277,
+    0 3px 7px #30241844;
+}
+.app.apothecary
+  .game-room
+  :is(.question-flow-footer, .guess-card-footer)
+  button:disabled {
+  background: linear-gradient(150deg, #c4bea8, #a59f88);
+  color: #595e4c;
+  box-shadow: inset 0 1px #fff7;
+  opacity: 1;
+}
+.app.apothecary
+  .game-room
+  :is(.question-flow-footer, .guess-card-footer)
+  button:not(:disabled):active,
+.app.apothecary .game-room .end-turn-btn:active {
+  transform: translateY(2px);
+  filter: brightness(0.95);
+}
+
+/* Live elemental light for color choices; selected states do not rely on text alone. */
+.app.apothecary
+  .game-room
+  :is(.guess-color-btn, .prediction-colors .btn-color) {
+  border-color: var(--herb-ink);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--herb-glow) 35%, transparent),
+    inset 0 0 0 1px var(--herb-ink);
+  transition:
+    transform 0.16s,
+    box-shadow 0.16s;
+  position: relative;
+}
+.app.apothecary
+  .game-room
+  :is(.guess-color-btn, .prediction-colors .btn-color)::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 1px solid var(--herb-glow);
+  border-radius: 7px;
+  box-shadow: 0 0 10px var(--herb-glow);
+  opacity: 0.35;
+  pointer-events: none;
+  animation: herb-choice-breathe 3s ease-in-out infinite;
+}
+.app.apothecary .game-room .prediction-colors .btn-color.selected {
+  transform: translateY(-6px);
+  border-color: var(--herb-glow);
+  box-shadow:
+    0 0 0 2px var(--herb-ink),
+    0 0 21px var(--herb-glow);
+  background: #fff6da;
+}
+.app.apothecary .game-room .prediction-colors .btn-color.selected::after {
+  opacity: 1;
+  border-width: 2px;
+  animation: none;
+}
+.app.apothecary
+  .game-room
+  :is(.guess-color-btn, .prediction-colors .btn-color):active {
+  transform: translateY(-3px) scale(0.96);
+  box-shadow: 0 0 25px var(--herb-glow);
+}
+@keyframes herb-choice-breathe {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app.apothecary
+    .game-room
+    :is(.guess-color-btn, .prediction-colors .btn-color) {
+    transition: none;
+  }
+  .app.apothecary
+    .game-room
+    :is(.guess-color-btn, .prediction-colors .btn-color)::after {
+    animation: none;
+  }
+}
+
+.app.apothecary .game-room .guess-color-btn.selected {
+  transform: translateY(-5px);
+  border-color: var(--herb-glow);
+  box-shadow:
+    0 0 0 2px var(--herb-ink),
+    0 0 20px var(--herb-glow);
+  opacity: 1;
+}
+.app.apothecary .game-room .guess-color-btn.selected::after {
+  opacity: 1;
+  border-width: 2px;
+  animation: none;
+}
+.app.apothecary .game-room .color-choice-count {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  background: #173d2b;
+  color: #fff3c5;
+  border: 1px solid var(--herb-glow);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 12px;
+  box-shadow: 0 0 9px var(--herb-glow);
+}
+.app.apothecary .game-room .guess-color-chip {
+  box-shadow: 0 0 12px var(--herb-glow);
+  border-color: var(--herb-glow);
+}

@@ -1,0 +1,24 @@
+.local-transfer-backdrop {position:fixed;inset:0;z-index:350;display:grid;place-items:center;background:#03120dd9;padding:12px;box-sizing:border-box;}
+.local-transfer-dialog {box-sizing:border-box;width:min(420px,100%);max-height:100%;padding:22px;background:radial-gradient(ellipse at 0 0,#53614335,transparent 70%),linear-gradient(140deg,#203d30,#0a2119);border:1px solid #bda068;border-radius:14px;box-shadow:inset 0 0 0 5px #d7b8780b,0 20px 55px #0009;text-align:center;color:#eadbb6;}
+.local-transfer-eyebrow {font-size:12px;color:#b7c5ae;letter-spacing:.15em;}
+.local-transfer-dialog h2 {font:500 28px/1.3 'Songti TC',serif;margin:8px 0;color:#f0dfb2;}
+.local-transfer-method {font-size:17px;margin:8px 0;line-height:1.5;}
+.local-transfer-color-pair {display:flex;gap:22px;justify-content:center;margin:12px 0;}
+.local-transfer-color-pair i {font-style:normal;font-size:36px;line-height:1.2;}
+.local-transfer-choices {display:grid;gap:8px;margin:12px 0;}
+.local-transfer-choices button {min-height:48px;display:flex;gap:14px;align-items:center;justify-content:center;border:1px solid #aa925b70;background:#10291e;color:#ddcba5;border-radius:6px;}
+.local-transfer-choices button[aria-pressed=true] {border-color:#e8cb88;background:#3a4d31;}
+.local-transfer-choices i {font-style:normal;font-size:25px;}
+.local-transfer-preview {padding:12px 0;border-top:1px solid #a28b554a;color:#efd69d;font-size:17px;}
+.local-transfer-note {color:#afbea9;font-size:12px;line-height:1.5;margin:0 0 14px;}
+.local-transfer-confirm {width:100%;min-height:48px;border:1px solid #ddc18a;border-radius:5px;background:linear-gradient(140deg,#dbc389,#a78847);color:#112c21;font-size:17px;box-shadow:inset 0 0 0 3px #ffe3a32b;}
+.local-transfer-confirm:disabled {opacity:.4;}
+.app.apothecary .game-room .local-transfer-dialog button:focus-visible {outline:2px solid #f2d798;outline-offset:3px;}
+.local-transfer-stage {position:fixed;inset:0;z-index:350;pointer-events:all;background:#06160d18;}
+.local-transfer-announcement {position:absolute;left:12px;right:12px;top:20%;text-align:center;padding:10px;background:#10291fe8;border-block:1px solid #c2a56c70;color:#f1deb0;font-size:15px;}
+.local-transfer-flying-card {position:absolute;left:var(--flight-x);top:var(--flight-y);width:44px;height:64px;margin:-32px 0 0 -22px;background:#f3ead5;border:2px solid #ccb174;border-radius:4px;box-shadow:0 5px 15px #0009;padding:3px;box-sizing:border-box;animation:local-card-transfer 1500ms cubic-bezier(.35,0,.25,1) var(--flight-delay) both;}
+.local-transfer-flying-card .herb-specimen {width:100%;height:100%;object-fit:contain;}
+.local-transfer-flying-card > i {position:absolute;right:1px;top:1px;font-style:normal;font-size:12px;text-shadow:0 1px #000;}
+@keyframes local-card-transfer {0%,22%{opacity:1;transform:translate(0,0) scale(1.08) rotate(-6deg);}75%,94%{opacity:1;transform:translate(var(--flight-dx),var(--flight-dy)) scale(.8) rotate(4deg);}100%{opacity:0;transform:translate(var(--flight-dx),var(--flight-dy)) scale(.6);}}
+@media(max-height:440px){.local-transfer-dialog {width:min(540px,100%);padding:12px 20px;display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;align-items:center;}.local-transfer-dialog h2{font-size:22px;margin:2px;}.local-transfer-color-pair{margin:2px;}.local-transfer-choices{margin:2px;}.local-transfer-method{font-size:15px;margin:2px;}.local-transfer-preview{padding:6px 0;}.local-transfer-confirm{min-height:44px;}.local-transfer-note{margin:0;}.local-transfer-eyebrow{grid-column:1 / -1;}}
+@media(prefers-reduced-motion:reduce){.local-transfer-flying-card {animation-name:local-card-transfer-reduced;animation-duration:1200ms;}@keyframes local-card-transfer-reduced{0%,65%{opacity:1;transform:translate(0,0);}66%,99%{opacity:1;transform:translate(var(--flight-dx),var(--flight-dy));}100%{opacity:0;transform:translate(var(--flight-dx),var(--flight-dy));}}}

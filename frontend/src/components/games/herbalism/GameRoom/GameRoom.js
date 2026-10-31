@@ -1,3 +1,5 @@
+import TabletopHeader from './TabletopHeader';
+import { colorCombinations } from './tabletopConfig';
 /**
  * 遊戲房間組件
  *
@@ -5,6 +7,10 @@
  * @description 遊戲進行時的主要介面，整合 GameBoard、PlayerHand、QuestionCard、GuessCard、GameStatus 等子組件
  */
 
+import HerbArt from './HerbArt';
+import { herbForCard, HERB_GROUPS } from './herbSpecies';
+import Tabletop3D from './Tabletop3D';
+import LocalQuestionTransfer from './LocalQuestionTransfer';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -16,6 +22,7 @@ import {
 import { selectGameRoomState } from '../../../../store/selectors';
 import useAIPlayers from '../../../../hooks/herbalism/useAIPlayers';
 import LocalGameController from '../../../../controllers/herbalism/LocalGameController';
+import { createPracticeReplayRecorder } from '../../../../services/practiceReplayStore';
 import {
   onGameState,
   onError,
@@ -59,6 +66,7 @@ import GameBoard from '../GameBoard/GameBoard';
 import PlayerHand from '../PlayerHand/PlayerHand';
 import QuestionCard from '../QuestionCard/QuestionCard';
 import GuessCard from '../GuessCard/GuessCard';
+import TreasureGuessDialog from './TreasureGuessDialog';
 import { GameStatusContainer } from '../GameStatus/GameStatus';
 import Prediction from '../Prediction/Prediction';
 import { PredictionResult } from '../Prediction';
@@ -69,6 +77,7 @@ import { useAuth } from '../../../../firebase/AuthContext';
 import VersionInfo from '../../../common/VersionInfo';
 import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
 import './GameRoom.css';
+import './TabletopTheme.css';
 
 /**
  * 遊戲房間組件
@@ -124,7 +133,9 @@ function GameRoom() {
 
   // 本地遊戲控制器（單人模式專用）
   const localControllerRef = useRef(null);
+  const practiceRecorderRef = useRef(null);
   const aiTurnEpochRef = useRef(0);
+
 
   // AI 玩家管理（本地模式專用）
   const {
@@ -151,6 +162,7 @@ function GameRoom() {
       if (controller.getState().gamePhase !== GAME_PHASE_PLAYING) return;
 
       await controller.handleAction(action);
+      if (controller.pendingLocalQuestion) return;
 
       // A question leaves the local controller in POST_QUESTION; only the
       // human UI has a manual end-turn control. AI turns must advance
@@ -167,6 +179,28 @@ function GameRoom() {
   });
 
   // 本地狀態
+  const [localQuestionRequest, setLocalQuestionRequest] = useState(null);
+  const [consolePanel, setConsolePanel] = useState(null);
+  const [threeReady, setThreeReady] = useState(false);
+  const consolePanelRef = useRef(null);
+  const consoleOpenerRef = useRef(null);
+  useEffect(() => {
+    if (!consolePanel) return undefined;
+    consoleOpenerRef.current = document.activeElement;
+    const panel = consolePanelRef.current;
+    panel?.querySelector('button')?.focus();
+    const handlePanelKey = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); setConsolePanel(null); }
+      if (event.key === 'Tab' && panel) {
+        const items = [...panel.querySelectorAll('button, [href], [tabindex="0"]')].filter(el => !el.hidden && !el.disabled);
+        const first = items[0]; const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    };
+    document.addEventListener('keydown', handlePanelKey);
+    return () => { document.removeEventListener('keydown', handlePanelKey); consoleOpenerRef.current?.focus(); };
+  }, [consolePanel]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showQuestionCard, setShowQuestionCard] = useState(false);
@@ -209,6 +243,7 @@ function GameRoom() {
 
   // Firebase Auth（工單 0123）
   const { user: authUser } = useAuth();
+  useEffect(() => () => practiceRecorderRef.current?.close(), [authUser?.uid]);
 
   /**
    * 取得當前回合的玩家
@@ -276,11 +311,15 @@ function GameRoom() {
 
     // 創建 AI 玩家實例（使用 aiPlayers 中的實例）
     const allPlayers = [humanPlayer, ...aiPlayers];
+    const practiceRecorder = createPracticeReplayRecorder(authUser?.uid, humanPlayer.id,
+      () => setError('AI 練習記錄容量已滿，本場僅保留先前片段'));
+    practiceRecorderRef.current = practiceRecorder;
 
     // 創建本地控制器
     const controller = new LocalGameController({
       players: allPlayers,
       onStateChange: (newState) => {
+        practiceRecorder?.capture(newState);
         console.log('[GameRoom] 本地狀態變更:', newState.gamePhase);
         dispatch(updateGameState({
           ...newState,
@@ -288,8 +327,13 @@ function GameRoom() {
         }));
       },
       onEvent: (event) => {
+        practiceRecorder?.capture(controller.getState(), event.type, event);
         console.log('[GameRoom] 本地事件:', event.type);
 
+        if (event.type === 'localQuestionRequested') {
+          setLocalQuestionRequest(event.request);
+          return; // This proposal includes only the human's private hand, never send it to AI.
+        }
         // 傳遞事件給 AI 玩家
         handleGameEvent(event);
 
@@ -998,6 +1042,7 @@ function GameRoom() {
    */
   const handleCloseCardGiveNotification = () => {
     setCardGiveNotification(null);
+
   };
 
   /**
@@ -1156,7 +1201,7 @@ function GameRoom() {
    * 複製房間連結（工單 0123）
    */
   const handleCopyRoomLink = async () => {
-    const roomLink = `${window.location.origin}/game/${gameId}`;
+    const roomLink = `${window.location.origin}${process.env.PUBLIC_URL || ''}/game/${encodeURIComponent(gameId)}`;
     try {
       await navigator.clipboard.writeText(roomLink);
       setShowCopyToast(true);
@@ -1193,13 +1238,13 @@ function GameRoom() {
     const emptySlots = maxPlayers - gameState.players.length;
 
     return (
-      <div className="game-room waiting-stage">
+      <div className={`game-room waiting-stage ${threeReady ? 'three-enabled' : ''}`}>
         {/* 等待階段 Header */}
         <header className="waiting-header">
           <div className="waiting-header-left">
             <div className="waiting-brand">
               <div className="waiting-brand-icon">
-                <span className="material-symbols-outlined">eco</span>
+                <span aria-hidden="true">本</span>
               </div>
               <span className="waiting-brand-text">本草 Herbalism</span>
             </div>
@@ -1210,12 +1255,16 @@ function GameRoom() {
           <div className="waiting-header-right">
             <span className="waiting-room-id">房間 ID: {gameId}</span>
             <button className="waiting-leave-btn" onClick={handleLeaveRoom}>
-              <span className="material-symbols-outlined">logout</span>
+
               離開房間
             </button>
           </div>
         </header>
 
+        <div className="console-turn-strip" role="status">房間 {gameId} · {gameState.players.length}/{maxPlayers} 人就座</div>
+        <Tabletop3D key="waiting-table" players={gameState.players} hand={[]} myId={myPlayer?.id}
+          currentIndex={-1} combos={[]} canAsk={false} canGuess={false} onReady={setThreeReady}
+          waitingAction={<><button onClick={handleCopyRoomLink}>邀請好友</button>{myPlayer?.isHost ? <button onClick={handleStartGame} disabled={gameState.players.length < 3 || isLoading}>{isLoading ? '啟動中...' : `開始遊戲 (${gameState.players.length}/${maxPlayers})`}</button> : <span>等待房主開始遊戲...</span>}</>} />
         {/* 主內容 - 三欄佈局 */}
         <main className="waiting-main">
           {/* 左欄 - 自己的 Hero Card */}
@@ -1257,7 +1306,7 @@ function GameRoom() {
                 onClick={handleStartGame}
                 disabled={gameState.players.length < 3 || isLoading}
               >
-                <span className="material-symbols-outlined">play_arrow</span>
+
                 {isLoading ? '啟動中...' : `開始遊戲 (${gameState.players.length}/${maxPlayers})`}
               </button>
             ) : (
@@ -1271,8 +1320,7 @@ function GameRoom() {
           <div className="waiting-center-column">
             <div className="waiting-hidden-cards-area">
               <h3 className="waiting-hidden-title">
-                <span className="material-symbols-outlined">help</span>
-                蓋牌
+                等待開局
               </h3>
               <div className="waiting-hidden-cards">
                 <div className="waiting-hidden-card"></div>
@@ -1286,7 +1334,7 @@ function GameRoom() {
           <div className="waiting-right-column">
             <div className="waiting-players-header">
               <h3 className="waiting-players-title">
-                <span className="material-symbols-outlined">group</span>
+
                 玩家
               </h3>
               <span className="waiting-players-count">{gameState.players.length}/{maxPlayers}</span>
@@ -1312,7 +1360,7 @@ function GameRoom() {
                   )}
                   <div className="waiting-player-info">
                     <p className="waiting-player-name">
-                      {player.name}
+                      <span className="waiting-player-display-name" title={player.name}>{player.name}</span>
                       {player.id === myPlayer?.id && <span className="me-tag">我</span>}
                       {player.isHost && <span className="host-tag">房主</span>}
                     </p>
@@ -1327,7 +1375,7 @@ function GameRoom() {
               {/* 空位 */}
               {Array.from({ length: emptySlots }).map((_, index) => (
                 <div key={`empty-${index}`} className="waiting-empty-slot">
-                  <span className="material-symbols-outlined">hourglass_empty</span>
+                  <span aria-hidden="true">＋</span>
                   等待中...
                 </div>
               ))}
@@ -1335,7 +1383,7 @@ function GameRoom() {
 
             {/* 邀請好友按鈕 */}
             <button className="waiting-invite-btn" onClick={handleCopyRoomLink}>
-              <span className="material-symbols-outlined">person_add</span>
+
               邀請好友
             </button>
           </div>
@@ -1363,14 +1411,7 @@ function GameRoom() {
   }
 
   // 顏色組合牌定義（工單 0124，工單 0217：改用圖片）
-  const colorCombinations = [
-    { id: 'yellow-red', colors: ['red', 'yellow'], name: '紅黃' },
-    { id: 'red-green', colors: ['red', 'green'], name: '紅綠' },
-    { id: 'red-blue', colors: ['red', 'blue'], name: '紅藍' },
-    { id: 'green-yellow', colors: ['green', 'yellow'], name: '綠黃' },
-    { id: 'yellow-blue', colors: ['yellow', 'blue'], name: '黃藍' },
-    { id: 'green-blue', colors: ['green', 'blue'], name: '綠藍' },
-  ];
+
 
   // 遊戲進行中/結束階段：渲染新的三欄式 UI（工單 0124, 0132）
   if (gameState.gamePhase === GAME_PHASE_PLAYING ||
@@ -1379,166 +1420,24 @@ function GameRoom() {
       gameState.gamePhase === GAME_PHASE_ROUND_END ||
       gameState.gamePhase === GAME_PHASE_FINISHED) {
     return (
-      <div className="game-room playing-stage">
-        {/* 遊戲進行中 Header */}
-        <header className="playing-header">
-          <div className="playing-header-left">
-            <div className="playing-brand">
-              <div className="playing-brand-icon">
-                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <path clipRule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fillRule="evenodd"></path>
-                  <path clipRule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fillRule="evenodd"></path>
-                </svg>
-              </div>
-              <span className="playing-brand-text">Herbalism 本草</span>
-            </div>
-            <div className={`playing-status ${gameState.gamePhase === GAME_PHASE_FINISHED ? 'finished' : ''}`}>
-              <span className="playing-status-dot"></span>
-              <span>{gameState.gamePhase === GAME_PHASE_FINISHED ? '遊戲結束' : '遊戲進行中'}</span>
-            </div>
-          </div>
-          <div className="playing-header-right">
+      <div className={`game-room playing-stage ${threeReady ? 'three-enabled' : ''}`}>
+        <TabletopHeader mode={isLocalMode ? '單人' : '連線'} isYourTurn={canAct}
+          guide={gameState.gamePhase === GAME_PHASE_FINISHED ? '本局結束' : gameState.gamePhase === GAME_PHASE_FOLLOW_GUESSING ? '跟猜階段' : gameState.gamePhase === GAME_PHASE_ROUND_END ? '本輪結算' : gameState.gamePhase === GAME_PHASE_POST_QUESTION ? '問牌完成 · 決定預測或結束回合' : canAct ? (onlyGuess ? '輪到你 · 請猜牌' : '輪到你 · 選擇問牌組合或猜牌') : `輪到 ${currentPlayer?.name || '其他玩家'} 行動`}
+          actions={<>
+            <button type="button" className="console-hud-button" aria-label="開啟遊戲規則" onClick={() => setConsolePanel('rules')}>規則</button>
+            <button type="button" className="console-hud-button" aria-label="開啟遊戲紀錄" onClick={() => setConsolePanel('history')}>紀錄</button>
             <button className="playing-leave-btn" onClick={handleLeaveRoom}>
               離開
             </button>
-          </div>
-        </header>
+          </>} />
 
+        <Tabletop3D key={`playing-${gameId}-${gameState.round ?? gameState.currentRound ?? 0}`} players={gameState.players} hand={myPlayer?.hand || []} myId={myPlayer?.id}
+          currentIndex={gameState.currentPlayerIndex} combos={colorCombinations} lastCombo={myLastColorCardId}
+          canAsk={canAct && !onlyGuess} canGuess={canAct} onReady={setThreeReady}
+          result={gameState.gamePhase === GAME_PHASE_FINISHED ? (gameState.winner ? `獲勝者：${gameState.players.find(p => p.id === gameState.winner)?.name || '玩家'}` : '本局結束') : null}
+          onAsk={combo => handleColorCardSelect({id: combo.id, colors: combo.colors})} onGuess={handleOpenGuess} />
         {/* 主內容 - 三欄佈局 */}
         <main className="playing-main">
-          {/* 左欄 */}
-          <aside className="playing-left-column">
-            {/* 自己的玩家卡片 */}
-            <div className="playing-my-card">
-              <div className="playing-my-avatar-wrapper">
-                {authUser?.photoURL ? (
-                  <img
-                    className="playing-my-avatar-img"
-                    src={authUser.photoURL}
-                    alt={myPlayer?.name || '玩家'}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="playing-my-avatar">
-                    {getPlayerInitial(myPlayer?.name)}
-                  </div>
-                )}
-                <span className="playing-my-badge">ME</span>
-              </div>
-              <div className="playing-my-info">
-                <h3>{myPlayer?.name || '載入中...'}</h3>
-              </div>
-              <div className="playing-my-stats">
-                <div className="playing-my-stat">
-                  <span className="playing-my-stat-label">分數</span>
-                  <span className="playing-my-stat-value">{myPlayer?.score || 0}</span>
-                </div>
-                <div className="playing-my-stat">
-                  <span className="playing-my-stat-label">手牌</span>
-                  <span className="playing-my-stat-value">{myPlayer?.hand?.length || 0}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 遊戲紀錄 */}
-            <div className="playing-history">
-              <div className="playing-history-header">
-                <span className="material-symbols-outlined">history_edu</span>
-                <h3>遊戲紀錄</h3>
-              </div>
-              <div className="playing-history-list">
-                {gameState.gameHistory && gameState.gameHistory.slice(-10).reverse().map((record, index) => {
-                  const formatted = formatHistoryRecord(record);
-                  return (
-                    <div
-                      key={index}
-                      className={`playing-history-item ${record.playerId === myPlayer?.id ? 'is-me' : ''}`}
-                    >
-                      <p className="playing-history-item-player">
-                        {formatted.playerName}
-                        {record.playerId === myPlayer?.id && ' (我)'}
-                      </p>
-                      <p className="playing-history-item-action">{formatted.action}</p>
-                    </div>
-                  );
-                })}
-                {(!gameState.gameHistory || gameState.gameHistory.length === 0) && (
-                  <p style={{ color: '#7f786c', fontSize: '12px', textAlign: 'center' }}>暫無紀錄</p>
-                )}
-              </div>
-            </div>
-          </aside>
-
-          {/* 中央區域 */}
-          <section className="playing-center-column">
-            {/* 蓋牌區 */}
-            <div className="playing-hidden-area">
-              <h2 className="playing-hidden-title">
-                <span className="material-symbols-outlined">help</span>
-                蓋牌
-              </h2>
-              <div className="playing-hidden-cards">
-                <div className="playing-hidden-card"></div>
-                <div className="playing-hidden-card"></div>
-              </div>
-            </div>
-
-            {/* 顏色組合牌 */}
-            <div className="playing-inquiry-area">
-              <h3 className="playing-inquiry-title">
-                <span className="material-symbols-outlined">view_module</span>
-                問牌選擇
-              </h3>
-              <div className="playing-inquiry-grid">
-                {colorCombinations.map((combo) => {
-                  const isDisabledBySelf = combo.id === myLastColorCardId;
-                  const marker = colorCardMarkers[combo.id];
-                  const isDisabled = !canAct || onlyGuess || isDisabledBySelf;
-
-                  return (
-                    <div
-                      key={combo.id}
-                      className={`playing-inquiry-card ${isDisabled ? 'disabled' : ''} ${isDisabledBySelf ? 'disabled-by-self' : ''}`}
-                      onClick={() => {
-                        if (isDisabledBySelf) {
-                          handleDisabledCardClick();
-                        } else if (canAct && !onlyGuess) {
-                          handleColorCardSelect({ id: combo.id, colors: combo.colors });
-                        }
-                      }}
-                    >
-                      {/* 工單 0217：使用雙色卡片圖片 */}
-                      <img
-                        src={`${process.env.PUBLIC_URL}/images/cards/${combo.id}.jpg`}
-                        alt={combo.name}
-                        className="playing-inquiry-card-image"
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
-                      {isDisabledBySelf && (
-                        <div className="playing-inquiry-card-disabled-overlay">
-                          <span className="material-symbols-outlined">block</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 遊戲結束資訊 - 工單 0132 */}
-            {gameState.gamePhase === GAME_PHASE_FINISHED && (
-              <div className="playing-game-over-info">
-                {gameState.winner ? (
-                  <p className="playing-winner-message">
-                    獲勝者: {gameState.players.find(p => p.id === gameState.winner)?.name || '未知'}
-                  </p>
-                ) : (
-                  <p className="playing-no-winner-message">遊戲結束，沒有獲勝者</p>
-                )}
-              </div>
-            )}
-          </section>
-
           {/* 右欄 - 玩家列表 */}
           <aside className="playing-right-column">
             <h3 className="playing-players-title">玩家</h3>
@@ -1569,17 +1468,84 @@ function GameRoom() {
                   <h4>
                     {player.name}
                     {player.id === myPlayer?.id && ' (我)'}
+                    {player.difficulty && <small className="table-ai-level"> · {{easy: '簡單', medium: '中等', hard: '困難'}[player.difficulty]}</small>}
                   </h4>
                   <p>分數: {player.score || 0} | 手牌: {player.hand?.length || 0}</p>
                 </div>
               </div>
             ))}
 
-            <div className="playing-round-info">
-              <p>目前回合</p>
-              <p>輪到 {currentPlayer?.name || '...'} 行動</p>
-            </div>
           </aside>
+          {/* 中央區域 */}
+          <section className="playing-center-column">
+            {/* 蓋牌區 */}
+            <div className="playing-hidden-area">
+              <h2 className="playing-hidden-title">
+                蓋牌
+              </h2>
+              <div className="playing-hidden-cards">
+                <div className="playing-hidden-card" aria-label="未揭曉的蓋牌"><span aria-hidden="true">本<br />草</span></div>
+                <div className="playing-hidden-card" aria-label="未揭曉的蓋牌"><span aria-hidden="true">本<br />草</span></div>
+              </div>
+
+            </div>
+
+            {/* 顏色組合牌 */}
+            <div className="playing-inquiry-area">
+              <h3 className="playing-inquiry-title">
+                問牌選擇
+              </h3>
+
+              <div className="playing-inquiry-grid">
+                {colorCombinations.map((combo) => {
+                  const isDisabledBySelf = combo.id === myLastColorCardId;
+                  const marker = colorCardMarkers[combo.id];
+                  const isDisabled = !canAct || onlyGuess || isDisabledBySelf;
+
+                  return (
+                    <button
+                      type="button"
+                      key={combo.id}
+                      disabled={!canAct || onlyGuess}
+                      aria-label={`問牌：${combo.name}${isDisabledBySelf ? '，上一輪已使用' : ''}`}
+                      aria-disabled={isDisabled}
+                      className={`playing-inquiry-card ${isDisabled ? 'disabled' : ''} ${isDisabledBySelf ? 'disabled-by-self' : ''}`}
+                      onClick={() => {
+                        if (isDisabledBySelf) {
+                          handleDisabledCardClick();
+                        } else if (canAct && !onlyGuess) {
+                          handleColorCardSelect({ id: combo.id, colors: combo.colors });
+                        }
+                      }}
+                    >
+                      <span className="table-combination-swatches" aria-hidden="true">{combo.colors.map(color => <span key={color} className={`table-herb-pair ${color}`}><HerbArt color={color} /></span>)}</span>
+                      <span className="table-combination-name">{combo.name}</span>
+
+                      {isDisabledBySelf && (
+                        <div className="playing-inquiry-card-disabled-overlay">
+                          <span>上次已使用</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 遊戲結束資訊 - 工單 0132 */}
+            {gameState.gamePhase === GAME_PHASE_FINISHED && (
+              <div className="playing-game-over-info">
+                {gameState.winner ? (
+                  <p className="playing-winner-message">
+                    獲勝者: {gameState.players.find(p => p.id === gameState.winner)?.name || '未知'}
+                  </p>
+                ) : (
+                  <p className="playing-no-winner-message">遊戲結束，沒有獲勝者</p>
+                )}
+              </div>
+            )}
+          </section>
+
         </main>
 
         {/* 底部手牌區 */}
@@ -1593,18 +1559,17 @@ function GameRoom() {
             </div>
 
             <div className="playing-hand-cards">
-              {myPlayer?.hand?.map((card, index) => (
+              {(myPlayer?.hand || []).map((card, index) => (
                 <div
                   key={card.id || index}
                   className={`playing-hand-card color-${card.color}`}
+                  role="img"
+                  aria-label={`${HERB_GROUPS[card.color].name} ${herbForCard(card)?.name || ''}`}
                 >
                   <div className="playing-hand-card-inner">
-                    <span className="material-symbols-outlined">
-                      {card.color === 'red' ? 'eco' :
-                       card.color === 'yellow' ? 'energy_savings_leaf' :
-                       card.color === 'green' ? 'spa' : 'water_drop'}
-                    </span>
-                    <div className="playing-hand-card-circle"></div>
+                    <span className="table-card-color">{herbForCard(card)?.name}</span>
+                    <HerbArt color={card.color} card={card} />
+                    <span className="table-card-label">{HERB_GROUPS[card.color].symbol} {HERB_GROUPS[card.color].name}</span>
                   </div>
                 </div>
               ))}
@@ -1616,12 +1581,46 @@ function GameRoom() {
                 disabled={!canAct}
                 onClick={handleOpenGuess}
               >
-                <span className="material-symbols-outlined">search_check</span>
                 <span>猜牌</span>
+                <small>猜錯將退出本輪</small>
               </button>
             </div>
           </div>
         </footer>
+
+        <div className="console-panel-backdrop" hidden={!consolePanel} onClick={() => setConsolePanel(null)}>
+          <section className="console-panel" ref={consolePanelRef} role="dialog" aria-modal="true" aria-labelledby="console-panel-title" onClick={event => event.stopPropagation()}>
+            <header><h2 id="console-panel-title">{consolePanel === 'rules' ? '遊戲規則' : '遊戲紀錄'}</h2><button type="button" aria-label="關閉面板" onClick={() => setConsolePanel(null)}>關閉 ×</button></header>
+            <div className="console-panel-scroll">
+              <div hidden={consolePanel === 'rules'}>              <div className="playing-history-list">
+                {gameState.gameHistory && gameState.gameHistory.slice(-10).reverse().map((record, index) => {
+                  const formatted = formatHistoryRecord(record);
+                  return (
+                    <div
+                      key={index}
+                      className={`playing-history-item ${record.playerId === myPlayer?.id ? 'is-me' : ''}`}
+                    >
+                      <p className="playing-history-item-player">
+                        {formatted.playerName}
+                        {record.playerId === myPlayer?.id && ' (我)'}
+                      </p>
+                      <p className="playing-history-item-action">{formatted.action}</p>
+                    </div>
+                  );
+                })}
+                {(!gameState.gameHistory || gameState.gameHistory.length === 0) && (
+                  <p style={{ color: '#7f786c', fontSize: '12px', textAlign: 'center' }}>暫無紀錄</p>
+                )}
+              </div>
+</div>
+              <div hidden={consolePanel !== 'rules'} className="console-rules">
+                <h3>當下任務</h3><p>{canAct ? '從六種顏色組合選一組，向其他玩家問牌；有把握時可猜中央兩張蓋牌。' : '等待目前玩家完成行動，並利用遊戲紀錄整理線索。'}</p>
+                <h3>一個回合</h3><ol><li>選顏色組合，再選問牌對象與方式。</li><li>依回覆取得線索；問牌後可預測或結束回合。</li><li>猜牌時選兩個顏色（可重複），其他玩家依序決定跟猜。</li></ol>
+                <p>猜錯會退出本輪。你只能看自己的手牌；中央蓋牌會在結算時揭曉。</p>
+              </div>
+            </div>
+          </section>
+        </div>
 
         {/* 新版問牌流程 Modal */}
         {showQuestionFlow && selectedColorCard && (
@@ -1638,8 +1637,7 @@ function GameRoom() {
 
         {/* 猜牌介面 Modal */}
         {showGuessCard && (
-          <div className="modal-overlay" onClick={handleCloseGuess}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <TreasureGuessDialog onClose={handleCloseGuess} busy={isLoading}>
               <GuessCard
                 onSubmit={handleGuessSubmit}
                 onCancel={handleCloseGuess}
@@ -1650,10 +1648,18 @@ function GameRoom() {
                 hiddenCards={hiddenCardsForGuess}
                 canViewAnswer={true}
               />
-            </div>
-          </div>
+          </TreasureGuessDialog>
         )}
 
+        {localQuestionRequest && <LocalQuestionTransfer request={localQuestionRequest} onComplete={async chosenColor => {
+          const controller = localControllerRef.current;
+          if (!controller) return;
+          const committed = await controller.confirmLocalQuestion(chosenColor);
+          if (committed) {
+            setLocalQuestionRequest(null);
+            controller.endTurn({ playerId: localQuestionRequest.playerId, prediction: null });
+          }
+        }} />}
         {/* 預測介面 Modal */}
         {showPrediction && isMyTurn() && (
           <div className="modal-overlay">
@@ -1667,7 +1673,7 @@ function GameRoom() {
         )}
 
         {/* 等待問牌玩家結束回合 */}
-        {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && (
+        {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && !localQuestionRequest && (
           <div className="waiting-overlay">
             <div className="waiting-message">
               <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>
@@ -1925,6 +1931,7 @@ function GameRoom() {
                 </h1>
               </div>
 
+              <div className="console-result-body">
               {/* 工單 0172：蓋牌顯示區 — 只在猜對且有蓋牌資料時顯示 */}
               {guessResultData.isCorrect && guessResultData.hiddenCards && (
                 <div className="gr-hidden-cards">
@@ -1939,8 +1946,9 @@ function GameRoom() {
                       };
                       const config = colorConfig[card.color] || colorConfig.green;
                       return (
-                        <div key={index} className="gr-card-pill" style={{ backgroundColor: config.bg }}>
-                          <span>{config.name}</span>
+                        <div key={index} className="gr-card-pill gr-reveal-card" style={{'--reveal-ink':config.bg, animationDelay:`${index * 180}ms`}}>
+                          <div className="gr-reveal-back" aria-hidden="true">本草</div>
+                          <div className="gr-reveal-front"><HerbArt color={card.color} card={card} /><span>{herbForCard(card)?.name || config.name}</span></div>
                         </div>
                       );
                     })}
@@ -2026,6 +2034,7 @@ function GameRoom() {
                 </div>
               )}
 
+              </div>
               {/* 工單 0207：底部按鈕區 — 所有玩家都顯示確認按鈕 */}
               <div className="gr-actions">
                 {gameState.gamePhase === GAME_PHASE_FINISHED ? (
@@ -2160,6 +2169,7 @@ function GameRoom() {
                     {player.name}
                     {player.isHost && ' (房主)'}
                     {player.id === myPlayer?.id && ' (我)'}
+                    {player.difficulty && <small className="table-ai-level"> · {{easy: '簡單', medium: '中等', hard: '困難'}[player.difficulty]}</small>}
                     {isAI && <span className="ai-badge">🤖 AI</span>}
                   </span>
                   <span className="player-score">{player.score || 0} 分</span>
@@ -2256,8 +2266,7 @@ function GameRoom() {
 
       {/* 猜牌介面 Modal */}
       {showGuessCard && (
-        <div className="modal-overlay" onClick={handleCloseGuess}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <TreasureGuessDialog onClose={handleCloseGuess} busy={isLoading}>
             <GuessCard
               onSubmit={handleGuessSubmit}
               onCancel={handleCloseGuess}
@@ -2268,8 +2277,7 @@ function GameRoom() {
               hiddenCards={hiddenCardsForGuess}
               canViewAnswer={true}
             />
-          </div>
-        </div>
+        </TreasureGuessDialog>
       )}
 
       {/* 預測介面 Modal（工單 0071：問牌後選擇預測） */}
@@ -2285,7 +2293,7 @@ function GameRoom() {
       )}
 
       {/* 等待問牌玩家結束回合 */}
-      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && (
+      {gameState.gamePhase === GAME_PHASE_POST_QUESTION && !isMyTurn() && !cardGiveNotification && !localQuestionRequest && (
         <div className="waiting-overlay">
           <div className="waiting-message">
             <p>等待 {getCurrentPlayer()?.name || '對方'} 結束回合...</p>

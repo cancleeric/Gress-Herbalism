@@ -4,12 +4,13 @@
  * 重新設計：基於 Google Stitch 生成的中國風設計
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../firebase';
 import { loginWithLids, isLidsEnabled } from '../../../lids/lidsService';
 import LoginGuide from './LoginGuide';
 import './Login.css';
+import BotanicalFan from '../BotanicalFan/BotanicalFan';
 
 /**
  * 判斷是否為配置錯誤
@@ -29,6 +30,32 @@ function Login() {
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [guideTarget, setGuideTarget] = useState(null);
+  const guideRef = useRef(null);
+  const guideOpenerRef = useRef(null);
+
+  useEffect(() => {
+    if (!guideTarget) return undefined;
+    const target = document.getElementById(guideTarget);
+    target?.focus();
+    target?.scrollIntoView?.({ block: 'start' });
+    const handleKey = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); setGuideTarget(null); }
+      if (event.key !== 'Tab') return;
+      const controls = Array.from(guideRef.current?.querySelectorAll('button, a[href], [tabindex="0"]') || []);
+      const first = controls[0]; const last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !controls.includes(document.activeElement))) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !controls.includes(document.activeElement))) {
+        event.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      guideOpenerRef.current?.focus();
+    };
+  }, [guideTarget]);
 
   // 登入後導向目標頁，from 由 ProtectedRoute 注入
   const from = location.state?.from?.pathname ?? '/';
@@ -52,8 +79,9 @@ function Login() {
     const target = document.getElementById(event.currentTarget.hash.slice(1));
     if (!target) return;
     event.preventDefault();
-    target.focus();
-    target.scrollIntoView?.({ block: 'start' });
+    guideOpenerRef.current = event.currentTarget;
+    setGuideTarget(target.id);
+    if (guideTarget === target.id) target.focus();
   };
 
   const handleGoogleLogin = async () => {
@@ -137,6 +165,7 @@ function Login() {
         <main className="login-main">
           {/* Branding */}
           <div className="branding">
+            {!isEvolution && <BotanicalFan />}
             <h1 className="brand-title">{brand.title}</h1>
             <div className="brand-subtitle-wrapper">
               <h2 className="brand-subtitle">{brand.subtitle}</h2>
@@ -208,6 +237,10 @@ function Login() {
             <p className="login-signup-help">選擇 Google 帳號登入，或以訪客身份開始遊戲。</p>
           </div>
 
+          <div ref={guideRef} className="login-reference-panel" hidden={!guideTarget}
+            role="dialog" aria-modal="true" aria-label="遊戲說明">
+          <header className="login-reference-header"><strong>遊戲說明</strong><button type="button" onClick={() => setGuideTarget(null)}>關閉說明</button></header>
+          <div className="login-reference-body">
           {/* Game Introduction */}
           <section id="login-about" className="game-intro" tabIndex={-1} aria-labelledby="login-about-title">
             <h2 id="login-about-title" className="login-section-title">關於{brand.title}</h2>
@@ -230,6 +263,8 @@ function Login() {
             </div>
           </section>
           <LoginGuide isEvolution={isEvolution} />
+          </div>
+          </div>
         </main>
 
         <footer className="login-footer">

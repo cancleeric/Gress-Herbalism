@@ -7,6 +7,9 @@ function getProvider(env = process.env) {
 }
 
 function createDataClient({ serviceRole = false, optional = false } = {}) {
+  // Explicit non-persistent hosting: real authenticated rooms still use the
+  // authoritative game server. Never manufacture database records or success.
+  if (process.env.REALTIME_ONLY === '1') return null;
   if (getProvider() === 'postgres') {
     return require('./postgresClient').getPostgresClient();
   }

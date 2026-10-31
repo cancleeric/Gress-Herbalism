@@ -18,7 +18,7 @@ test('binds search text rather than interpolating it', async () => {
   const compiled = run.mock.calls[0][0].toSQL();
   expect(compiled.bindings).toEqual([text, 20]);
   expect(compiled.sql).not.toContain(text);
-  expect(compiled.sql).toContain('"public"."players"');
+  expect(compiled.sql).toContain('"herbalism"."players"');
 });
 
 test('compiles comparison, null, exclusion and ordering filters together', async () => {

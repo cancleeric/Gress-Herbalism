@@ -1,0 +1,36 @@
+/* Phone portrait is the base composition; footer never scrolls off-screen. */
+.app.apothecary .game-room .treasure-guess-overlay {position:fixed;inset:0;z-index:400;display:grid;place-items:center;box-sizing:border-box;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:#02110ff2;animation:treasure-stage-in .35s ease both;}
+.app.apothecary .game-room .treasure-guess-shell {width:100%;height:100%;max-width:760px;max-height:860px;min-height:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid #b99a5e;border-radius:22px;background:radial-gradient(ellipse at 50% 10%,#5c543b55,transparent 55%),linear-gradient(150deg,#1b382e,#071d18);box-shadow:inset 0 0 0 5px #e9d6a209,0 18px 70px #000a;color:#f0dfb9;}
+.treasure-guess-hero {position:relative;flex:0 0 clamp(150px,30dvh,250px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:0;padding:12px 16px 0;box-sizing:border-box;isolation:isolate;}
+.treasure-guess-hero::before {content:'';position:absolute;inset:15% 0 -10%;z-index:-1;background:radial-gradient(ellipse,#e9c47528,transparent 65%);}
+.treasure-guess-hero p {margin:0;font:10px/1.5 'Songti TC',serif;letter-spacing:.35em;color:#c1aa78;}
+.treasure-guess-hero h2 {margin:2px 0 0;font:500 24px/1.4 'Songti TC',serif;letter-spacing:.2em;color:#f0ddb0;}
+.treasure-guess-hero-chest {display:block;width:min(360px,100%);height:calc(100% - 53px);min-height:0;object-fit:contain;filter:drop-shadow(0 12px 14px #0009);animation:treasure-chest-arrive .65s cubic-bezier(.2,.7,.2,1) both;}
+.app.apothecary .game-room .treasure-guess-close {position:absolute;top:8px;right:8px;width:44px;height:44px;min-height:44px;padding:0;border:1px solid #c2a46a50;border-radius:50%;color:#ead8ac;background:#0a211baa;font:28px/1 sans-serif;}
+.treasure-guess-controls {flex:1 1 auto;min-height:0;display:flex;animation:treasure-controls-in .35s ease .25s both;}
+.app.apothecary .game-room .treasure-guess-shell .guess-card {display:flex;flex-direction:column;flex:1;min-height:0;max-width:none;max-height:none;height:100%;border:0;border-radius:0;background:none;box-shadow:none;}
+.treasure-guess-shell .guess-card-header,.treasure-guess-shell .guess-motif-tl,.treasure-guess-shell .guess-motif-br {display:none;}
+.app.apothecary .game-room .treasure-guess-shell .guess-card-body {flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:10px;padding:8px 16px 12px;}
+.app.apothecary .game-room .treasure-guess-shell .guess-warning {padding:8px 10px;gap:6px;background:#67512a30;border:1px solid #b9995350;border-radius:8px;}
+.app.apothecary .game-room .treasure-guess-shell .guess-warning .warning-text {color:#e6cf9d;font-size:12px;line-height:1.4;}
+.treasure-guess-shell .warning-icon {display:none;}
+.app.apothecary .game-room .treasure-guess-shell .guess-selector-title {font-size:14px;color:#edddb8;margin:0 0 10px;}
+.app.apothecary .game-room .treasure-guess-shell .guess-color-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.app.apothecary .game-room .treasure-guess-shell .guess-color-btn {min-width:0;padding:5px;border:1px solid #bda16665;border-radius:9px;background:#0a2019;}
+.app.apothecary .game-room .treasure-guess-shell .guess-color-btn.selected {border-color:#f1ce80;box-shadow:0 0 0 1px #f1ce80,inset 0 0 20px #e7c36d20;}
+.app.apothecary .game-room .treasure-guess-shell .guess-herb-art {height:clamp(62px,12dvh,110px);border:0;}
+.treasure-guess-shell .guess-herb-name {display:none;}
+.app.apothecary .game-room .treasure-guess-shell .guess-color-label {font-size:13px;color:#ecdfbe;}
+.app.apothecary .game-room .treasure-guess-shell .guess-selected-area {padding:10px;margin-top:12px;border:1px solid #ae955950;border-radius:8px;background:#041810;}
+.app.apothecary .game-room .treasure-guess-shell .guess-card-footer {flex:0 0 auto;display:flex;flex-direction:row;gap:10px;padding:12px 16px;background:#081c16;border-top:1px solid #b99b5f55;}
+.app.apothecary .game-room .treasure-guess-shell .guess-card-footer button {flex:1;min-width:0;min-height:50px;font-size:16px;}
+.app.apothecary .game-room .treasure-guess-shell button:focus-visible {outline:2px solid #f6da94;outline-offset:2px;}
+@keyframes treasure-stage-in {from{background:#02110f00;}to{background:#02110ff2;}}
+@keyframes treasure-chest-arrive {from{transform:translate(var(--chest-from-x,0px),var(--chest-from-y,20px)) scale(var(--chest-from-scale,.5));}to{transform:translate(0,0) scale(1);}}
+@keyframes treasure-controls-in {from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@media(min-width:700px) and (min-height:600px){.app.apothecary .game-room .treasure-guess-overlay{padding:24px;}.treasure-guess-hero{flex-basis:300px;}.treasure-guess-hero h2{font-size:30px;}.treasure-guess-hero-chest{width:390px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-body{padding:10px 32px 20px;}.app.apothecary .game-room .treasure-guess-shell .guess-herb-art{height:125px;}}
+@media(max-height:600px) and (orientation:portrait){.treasure-guess-hero{flex-basis:180px;padding-top:7px;}.treasure-guess-hero h2{font-size:21px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-body{gap:6px;padding:6px 12px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-footer{padding:8px 12px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-footer button{min-height:46px;}.app.apothecary .game-room .treasure-guess-shell .guess-selected-area{margin-top:8px;padding:7px;}}
+@media(max-height:559px) and (orientation:landscape){.app.apothecary .game-room .treasure-guess-shell{flex-direction:row;}.treasure-guess-hero{flex:0 0 32%;height:100%;justify-content:center;padding:12px;}.treasure-guess-hero-chest{height:65%;width:100%;}.treasure-guess-controls{flex:1;min-width:0;}.app.apothecary .game-room .treasure-guess-close{top:4px;right:auto;left:4px;}.app.apothecary .game-room .treasure-guess-shell .guess-herb-art{height:48px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-body{padding:8px 12px;gap:5px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-footer{padding:7px 12px;}.app.apothecary .game-room .treasure-guess-shell .guess-card-footer button{min-height:44px;}}
+@media(prefers-reduced-motion:reduce){.treasure-guess-overlay,.treasure-guess-hero-chest,.treasure-guess-controls{animation:none!important;}}
+
+.app.apothecary .game-room .treasure-guess-shell .guess-selected-label,.app.apothecary .game-room .treasure-guess-shell .guess-no-selection {color:#e8d5ac;}

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, act, waitFor } from '@testing-library/react';
+import { render, act, waitFor, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { createStore, combineReducers } from 'redux';
@@ -167,7 +167,7 @@ describe('GameRoom 本地模式', () => {
     expect(container.querySelector('.game-room')).toBeInTheDocument();
   });
 
-  test('AI 問牌後應自動結束回合，不讓本地遊戲停在 AI', async () => {
+  test('無真人待確認的 AI 問牌應繼續下一回合', async () => {
     const testRootReducer = combineReducers({ herbalism: gameReducer });
     const store = createStore(testRootReducer, { herbalism: initialState });
 

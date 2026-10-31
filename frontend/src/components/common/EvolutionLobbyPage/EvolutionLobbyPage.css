@@ -1,206 +1,85 @@
-/**
- * 演化論大廳專用樣式
- * 深綠色主題覆蓋
- * 工單 0276
- */
-
-/* 演化論主題變數 */
+/* Self-contained evolution menu: never depend on Herbalism's console markup. */
 .lobby.evolution-theme {
-  --primary: #1a5a3a;
-  --primary-dark: #0d3d26;
-  --accent-gold: #8fbc8f;
-  --bg-main: #e8f5e9;
-  --bg-light: #f1f8e9;
+  --primary: #1a5a3a; --primary-dark: #0d3d26; --accent-gold: #8fbc8f;
+  --bg-main: #edf2e8; --bg-light: #f7faf3;
+  height: calc(100dvh - var(--console-alert-height, 0px)); min-height: 0;
+  display: grid; grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+  overflow: hidden; background: var(--bg-main); color: #233e30;
 }
-
-/* 側邊欄深綠色 */
-.lobby.evolution-theme .lobby-sidebar {
-  background-color: #1a5a3a;
+.evolution-theme .material-symbols-outlined, .evolution-theme > .version-info { display: none; }
+.evolution-theme .lobby-sidebar { grid-column: 1; min-height: 0; background: #1a5a3a; display: flex; flex-direction: column; align-items: center; padding: 16px 6px; gap: 12px; }
+.evolution-theme .sidebar-logo::after { content: '演'; color: #dbe7bb; font: 28px/1.5 serif; }
+.evolution-theme .sidebar-title { color: #dbe7bb; font-size: 14px; margin: 0; }
+.evolution-theme .sidebar-nav { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.evolution-theme .sidebar-nav-item { width: 100%; min-height: 48px; padding: 8px 4px; background: transparent; color: #e7f0df; border: 1px solid transparent; }
+.evolution-theme .sidebar-nav-item::after { content: attr(title); font-size: 11px; }
+.evolution-theme .sidebar-nav-item.active { border-color: #9fbd88; background: #ffffff12; }
+.evolution-theme .sidebar-decoration { display: none; }
+.evolution-theme .lobby-main { grid-column: 2; min-width: 0; min-height: 0; margin: 0; display: grid; grid-template-rows: 56px minmax(0, 1fr); }
+.evolution-theme .lobby-header { padding: 6px 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid #ced8c5; background: #f7faf3; }
+.evolution-theme .lobby-user-area { max-width: min(65%, 320px); min-width: 0; display: flex; align-items: center; gap: 10px; }
+.evolution-theme .lobby-user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #254531; font-size: 13px; margin: 0; }
+.evolution-theme .lobby-avatar, .evolution-theme .lobby-avatar-img { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: #1a5a3a; color: white; display: grid; place-items: center; object-fit: cover; }
+/* This is an inline room status, not the app-wide fixed alert. */
+.evolution-theme .lobby-header .connection-status { position: static; inset: auto; width: auto; height: auto; min-height: 0; padding: 4px 8px; z-index: auto; animation: none; font-size: 11px; color: #805f2c; background: #eee8d7; }
+.evolution-theme .lobby-content { width: 100%; max-width: 1100px; margin: 0 auto; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 90px auto 44px 44px minmax(0, 1fr); align-content: stretch; gap: 12px; padding: 20px 24px; }
+.evolution-theme .nickname-section { grid-column: 1 / -1; grid-row: 1; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 18px 44px 16px; gap: 4px; min-height: 0; }
+.evolution-theme .nickname-label { color: #34573d; font-size: 12px; display: block; }
+.evolution-theme .nickname-input { width: 100%; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid #b7c9ab; background: #fffef7; color: #243f2d; }
+.evolution-theme .welcome-message { color: #5f7959; font-size: 11px; }
+.evolution-theme .lobby-content > .error-message { grid-column: 1 / -1; grid-row: 2; position: static; transform: none; margin: 0; padding: 6px 10px; color: #8a482d; background: #f7e9db; font-size: 11px; line-height: 1.4; }
+.evolution-theme .back-to-selection-btn, .evolution-theme .create-room-btn { min-height: 44px; width: 100%; margin: 0; padding: 8px 12px; border: 1px solid #86a27a; border-radius: 4px; background: #e4eddc; color: #224b2e; font-size: 13px; }
+.evolution-theme .back-to-selection-btn { grid-row: 3; grid-column: 1; }
+.evolution-theme .create-room-btn { grid-row: 3; grid-column: 2; background: #1a5a3a; color: #fffdf5; }
+.evolution-theme .join-room-section { grid-column: 1 / -1; grid-row: 4; min-width: 0; display: flex; gap: 8px; margin: 0; }
+.evolution-theme .join-room-input { flex: 1; min-width: 0; min-height: 44px; padding: 8px 12px; background: #fffef7; color: #233e30; border: 1px solid #b7c9ab; }
+.evolution-theme .join-room-btn, .evolution-theme .room-action-btn { min-height: 44px; padding: 8px 16px; background: #1a5a3a; color: #fffdf5; border-radius: 4px; white-space: nowrap; }
+.evolution-theme .room-table-container { grid-column: 1 / -1; grid-row: 5; min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; border: 1px solid #ccd8c3; background: #f9fbf5; }
+.evolution-theme .room-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.evolution-theme .room-table th { position: sticky; top: 0; background: #e5eddc; color: #365338; z-index: 1; }
+.evolution-theme .room-table td, .evolution-theme .room-table th { padding: 8px; border-bottom: 1px solid #d5dfcc; }
+.evolution-theme .room-id { overflow-wrap: anywhere; font-size: 10px; }
+.evolution-theme .room-status { font-size: 11px; white-space: nowrap; color: #5a7850; }
+.evolution-theme .no-rooms { min-height: 0; padding: 18px; text-align: center; font-size: 12px; line-height: 1.6; color: #61785b; }
+.evolution-theme .mobile-nav { display: none; }
+.evolution-theme .modal-overlay { position: fixed; inset: 0; top: var(--console-alert-height, 0px); padding: 12px; background: #10291fb8; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.evolution-theme .create-room-modal { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(460px, 100%); max-height: calc(100dvh - var(--console-alert-height, 0px) - 24px); min-height: 0; padding: 20px; border: 1px solid #9db68b; background: #f7faf1; border-radius: 8px; overflow: hidden; color: #213f2c; }
+.evolution-theme .crm-header { padding: 0 0 12px; }
+.evolution-theme .crm-title { font: 24px/1.4 serif; color: #214b2d; margin: 0 0 6px; }
+.evolution-theme .crm-subtitle { color: #647d5a; font-size: 12px; margin: 0; }
+.evolution-theme .crm-form { overflow-y: auto; min-height: 0; padding: 8px 0; }
+.evolution-theme .crm-input-group label { display: block; margin-bottom: 8px; font-size: 13px; }
+.evolution-theme .crm-select { width: 100%; min-height: 44px; color: #25452f; background: #fffdf6; border: 1px solid #b6c9a8; }
+.evolution-theme .crm-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 12px; }
+.evolution-theme .crm-btn { min-height: 44px; padding: 8px 20px; border: 1px solid #a3b696; color: #274b30; background: transparent; }
+.evolution-theme .crm-btn-confirm { background: #1a5a3a; color: #fffdf5; }
+.evolution-theme .crm-error { color: #984a31; font-size: 12px; margin: 8px 0; }
+.evolution-theme .crm-bottom-accent { display: none; }
+.evolution-theme button:focus-visible, .evolution-theme input:focus-visible, .evolution-theme select:focus-visible { outline: 3px solid #aa8548; outline-offset: 2px; }
+.evolution-theme button:hover:not(:disabled) { background: #d4e2c7; color: #173e25; }
+.evolution-theme .create-room-btn:hover:not(:disabled), .evolution-theme .crm-btn-confirm:hover:not(:disabled), .evolution-theme .join-room-btn:hover:not(:disabled), .evolution-theme .room-action-btn:hover:not(:disabled) { background: #286c46; color: white; }
+@media (max-width: 700px) {
+  .lobby.evolution-theme { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 50px; }
+  .evolution-theme .lobby-sidebar { display: none; }
+  .evolution-theme .lobby-main { grid-column: 1; grid-row: 1; grid-template-rows: 48px minmax(0, 1fr); }
+  .evolution-theme .lobby-header { padding: 4px 12px; }
+  .evolution-theme .lobby-content { padding: 12px; gap: 8px; }
+  .evolution-theme .mobile-nav { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 3px 6px; background: #1a5a3a; }
+  .evolution-theme .mobile-nav-item { min-height: 44px; padding: 6px; font-size: 11px; color: #eaf3e0; background: transparent; }
+  .evolution-theme .mobile-nav-item.active { background: #ffffff1a; color: #e1d29c; }
 }
-
-.lobby.evolution-theme .sidebar-logo {
-  background-color: rgba(255, 255, 255, 0.12);
+@media (max-height: 500px) {
+  .evolution-theme .lobby-sidebar { padding: 4px; gap: 4px; }
+  .evolution-theme .sidebar-logo, .evolution-theme .sidebar-title { display: none; }
+  .evolution-theme .sidebar-nav { gap: 2px; }
+  .evolution-theme .lobby-main { grid-template-rows: 44px minmax(0, 1fr); }
+  .evolution-theme .lobby-content { padding: 6px 12px; gap: 6px; grid-template-rows: 68px auto 44px 44px minmax(0, 1fr); }
+  .evolution-theme .nickname-section { grid-template-rows: 18px 44px; }
+  .evolution-theme .welcome-message { display: none; }
+  .evolution-theme .no-rooms { padding: 10px; }
+  .evolution-theme .create-room-modal { padding: 12px; }
+  .evolution-theme .crm-title { font-size: 20px; }
 }
-
-.lobby.evolution-theme .sidebar-logo .material-symbols-outlined {
-  color: #8fbc8f;
-}
-
-.lobby.evolution-theme .sidebar-title {
-  color: #8fbc8f;
-}
-
-.lobby.evolution-theme .sidebar-nav-item.active {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #8fbc8f;
-}
-
-.lobby.evolution-theme .sidebar-decoration .material-symbols-outlined {
-  color: rgba(255, 255, 255, 0.2);
-}
-
-/* 頂部欄 */
-.lobby.evolution-theme .lobby-header {
-  background-color: #f1f8e9;
-  border-bottom-color: rgba(26, 90, 58, 0.1);
-}
-
-.lobby.evolution-theme .lobby-avatar {
-  background-color: #1a5a3a;
-  border-color: #8fbc8f;
-}
-
-/* 主內容區 */
-.lobby.evolution-theme .lobby-content {
-  background-color: #e8f5e9;
-}
-
-/* 暱稱輸入 */
-.lobby.evolution-theme .nickname-input {
-  border-color: rgba(26, 90, 58, 0.2);
-  background-color: #f1f8e9;
-}
-
-.lobby.evolution-theme .nickname-input:focus {
-  border-color: #1a5a3a;
-}
-
-.lobby.evolution-theme .welcome-message {
-  color: #1a5a3a;
-}
-
-/* 返回按鈕 */
-.lobby.evolution-theme .back-to-selection-btn {
-  border-color: #1a5a3a;
-  color: #1a5a3a;
-}
-
-.lobby.evolution-theme .back-to-selection-btn:hover {
-  background-color: rgba(26, 90, 58, 0.1);
-}
-
-/* 創建房間按鈕 */
-.lobby.evolution-theme .create-room-btn {
-  border-color: #8fbc8f;
-}
-
-.lobby.evolution-theme .create-room-btn:hover:not(:disabled) {
-  background-color: rgba(143, 188, 143, 0.1);
-}
-
-.lobby.evolution-theme .create-room-btn .material-symbols-outlined {
-  color: #8fbc8f;
-}
-
-/* 加入房間 */
-.lobby.evolution-theme .join-room-input {
-  border-color: rgba(26, 90, 58, 0.2);
-  background-color: #f1f8e9;
-}
-
-.lobby.evolution-theme .join-room-input:focus {
-  border-color: #1a5a3a;
-}
-
-.lobby.evolution-theme .join-room-btn {
-  background-color: #1a5a3a;
-}
-
-.lobby.evolution-theme .join-room-btn:hover:not(:disabled) {
-  background-color: #0d3d26;
-}
-
-/* 房間表格 */
-.lobby.evolution-theme .room-table-container {
-  background-color: #f1f8e9;
-  border-color: rgba(26, 90, 58, 0.1);
-}
-
-.lobby.evolution-theme .room-table thead {
-  background-color: rgba(26, 90, 58, 0.05);
-}
-
-.lobby.evolution-theme .room-table th {
-  border-bottom-color: rgba(26, 90, 58, 0.1);
-}
-
-.lobby.evolution-theme .room-table td {
-  border-bottom-color: rgba(26, 90, 58, 0.05);
-}
-
-.lobby.evolution-theme .room-table tbody tr:hover {
-  background-color: rgba(26, 90, 58, 0.03);
-}
-
-.lobby.evolution-theme .room-players-count {
-  color: #1a5a3a;
-}
-
-.lobby.evolution-theme .room-status.waiting {
-  background-color: rgba(26, 90, 58, 0.1);
-  color: #1a5a3a;
-}
-
-.lobby.evolution-theme .room-status.waiting::before {
-  background-color: #1a5a3a;
-}
-
-.lobby.evolution-theme .room-action-btn {
-  background-color: #1a5a3a;
-}
-
-.lobby.evolution-theme .room-action-btn:hover:not(:disabled) {
-  background-color: #0d3d26;
-}
-
-/* 無房間提示 */
-.lobby.evolution-theme .no-rooms .material-symbols-outlined {
-  color: rgba(26, 90, 58, 0.2);
-}
-
-/* 手機版底部導航 */
-.lobby.evolution-theme .mobile-nav {
-  background-color: #1a5a3a;
-}
-
-.lobby.evolution-theme .mobile-nav-item.active {
-  color: #8fbc8f;
-}
-
-/* 創建房間 Modal */
-.lobby.evolution-theme .create-room-modal {
-  background-color: #e8f5e9;
-  border-color: #8fbc8f;
-}
-
-.lobby.evolution-theme .create-room-modal .crm-decor-top,
-.lobby.evolution-theme .create-room-modal .crm-decor-bottom {
-  color: #1a5a3a;
-}
-
-.lobby.evolution-theme .crm-header-icon {
-  color: #1a5a3a;
-}
-
-.lobby.evolution-theme .crm-select {
-  border-color: rgba(143, 188, 143, 0.3);
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
-.lobby.evolution-theme .crm-select:focus {
-  border-color: #8fbc8f;
-  box-shadow: 0 0 0 1px #8fbc8f;
-}
-
-.lobby.evolution-theme .crm-btn-confirm {
-  background-color: #1a5a3a;
-  box-shadow: 0 4px 6px -1px rgba(26, 90, 58, 0.2);
-}
-
-.lobby.evolution-theme .crm-btn-confirm:hover:not(:disabled) {
-  background-color: #0d3d26;
-}
-
-.lobby.evolution-theme .crm-bottom-accent {
-  background-color: #8fbc8f;
+@media (prefers-reduced-motion: reduce) {
+  .evolution-theme *, .evolution-theme *::before, .evolution-theme *::after { animation: none !important; transition: none !important; }
 }

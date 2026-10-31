@@ -37,9 +37,9 @@ describe('AI Constants', () => {
     });
 
     test('should contain expected names', () => {
-      expect(AI_PLAYER_NAMES).toContain('小草');
-      expect(AI_PLAYER_NAMES).toContain('小花');
-      expect(AI_PLAYER_NAMES).toContain('小樹');
+      expect(AI_PLAYER_NAMES).toContain('阿哲');
+      expect(AI_PLAYER_NAMES).toContain('佳蓉');
+      expect(AI_PLAYER_NAMES).toContain('柏宇');
     });
   });
 
@@ -98,25 +98,23 @@ describe('AI Constants', () => {
   describe('getAIPlayerName', () => {
     test('should return formatted name with index', () => {
       const name = getAIPlayerName(0, 'easy');
-      expect(name).toContain('AI');
-      expect(name).toContain('1');
+      expect(name).toBe('怡君');
     });
 
     test('should include difficulty description in name', () => {
       const easyName = getAIPlayerName(0, 'easy');
-      expect(easyName).toContain('初學者');
+      expect(easyName).toBe('怡君');
 
       const mediumName = getAIPlayerName(0, 'medium');
-      expect(mediumName).toContain('中級');
+      expect(mediumName).toBe('阿哲');
 
       const hardName = getAIPlayerName(0, 'hard');
-      expect(hardName).toContain('專家');
+      expect(hardName).toBe('承翰');
     });
 
     test('should handle missing difficulty gracefully', () => {
       const name = getAIPlayerName(0);
-      expect(name).toContain('AI');
-      expect(name).toContain('1');
+      expect(name).toBe('阿哲');
     });
   });
 });

@@ -1,0 +1,166 @@
+.herb-catalog-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1250;
+  background: #071a17e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  backdrop-filter: blur(7px);
+}
+.herb-catalog {
+  width: min(700px, 100%);
+  height: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #eee4ce;
+  color: #263a2c;
+  border: 1px solid #bda16a;
+  border-radius: 10px;
+  box-shadow: 0 25px 70px #0008;
+  overflow: hidden;
+}
+.herb-catalog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #18362b;
+  color: #e9d7ac;
+  gap: 12px;
+}
+.herb-catalog header small {
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.herb-catalog header h2 {
+  font-size: 22px;
+  margin: 4px 0 0;
+  color: inherit;
+}
+.herb-catalog button {
+  font: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  border: 1px solid #b39b6f;
+  border-radius: 5px;
+  background: #f8f0dd;
+  color: #263a2c;
+}
+.herb-catalog header button {
+  padding: 0 12px;
+  background: transparent;
+  color: #ead8b2;
+}
+.herb-catalog nav {
+  display: flex;
+  gap: 5px;
+  padding: 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #cdbf9d;
+}
+.herb-catalog nav button {
+  flex: 1;
+  min-width: 0;
+  padding: 0 3px;
+  font-size: 12px;
+  border-color: transparent;
+  color: var(--group-ink, #334d3b);
+  background: transparent;
+  font-weight: 700;
+}
+.herb-catalog nav button[aria-pressed="true"] {
+  background: #fff8e5;
+  border-color: var(--group-ink, #334d3b);
+  box-shadow: 0 2px 5px #3024171a;
+}
+.herb-catalog-scroll {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+}
+.herb-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.herb-catalog-grid .herb-catalog-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 0 8px;
+  overflow: hidden;
+  border: 1px solid var(--group-ink);
+  border-top-width: 6px;
+  background: var(--group-paper);
+  box-shadow: 0 3px 7px #35281220;
+}
+.herb-catalog-card img {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  background: #f7efd9;
+}
+.herb-catalog-card strong {
+  font-size: 14px;
+  padding: 8px 2px 3px;
+  color: #28342a;
+}
+.herb-catalog-card span {
+  font-size: 12px;
+  color: var(--group-ink);
+  font-weight: bold;
+}
+.herb-catalog footer {
+  font-size: 11px;
+  line-height: 1.7;
+  padding: 10px 12px;
+  border-top: 1px solid #cdbf9d;
+  flex-shrink: 0;
+  color: #5c654a;
+  text-align: center;
+}
+.herb-catalog-detail img {
+  display: block;
+  width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  background: #f3ead5;
+  margin: 12px auto;
+}
+.herb-catalog-detail p {
+  text-align: center;
+  font-weight: bold;
+}
+.herb-catalog-detail button {
+  padding: 0 12px;
+}
+.herb-catalog button:focus-visible {
+  outline: 3px solid #b5843c;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .herb-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .herb-catalog header {
+    padding: 12px;
+  }
+  .herb-catalog header h2 {
+    font-size: 19px;
+  }
+  .herb-catalog-detail img {
+    max-height: 45dvh;
+  }
+}
+
+.herb-catalog .herb-locked { color: #705c38; font-size: 11px; padding: 3px 8px; background: #e8dbbb; border-radius: 4px; }
+
+.herb-catalog nav {display: flex; overflow-x: auto; gap: 6px; flex-wrap: nowrap;}
+.herb-catalog nav button {flex: 0 0 auto; white-space: nowrap;}
+.herb-catalog .herb-catalog-card.is-composition img {aspect-ratio: 1; object-fit: contain; height: auto; width: 100%;}
+.herb-catalog button:focus {outline-color: #d5b770;}

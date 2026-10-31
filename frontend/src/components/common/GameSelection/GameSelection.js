@@ -6,10 +6,11 @@
  * 工單 0276
  */
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../firebase/AuthContext';
-import './GameSelection.css';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../firebase/AuthContext";
+import "./GameSelection.css";
+import BotanicalFan from "../BotanicalFan/BotanicalFan";
 
 /**
  * 遊戲選擇頁面組件
@@ -18,16 +19,18 @@ function GameSelection() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  const displayName = user?.isAnonymous ? '訪客' : (user?.displayName || user?.email?.split('@')[0] || '訪客');
+  const displayName = user?.isAnonymous
+    ? "訪客"
+    : user?.displayName || user?.email?.split("@")[0] || "訪客";
 
   /**
    * 處理遊戲選擇
    */
   const handleSelectGame = (gameType) => {
-    if (gameType === 'herbalism') {
-      navigate('/lobby/herbalism');
-    } else if (gameType === 'evolution') {
-      navigate('/lobby/evolution');
+    if (gameType === "herbalism") {
+      navigate("/lobby/herbalism");
+    } else if (gameType === "evolution") {
+      navigate("/lobby/evolution");
     }
   };
 
@@ -37,106 +40,93 @@ function GameSelection() {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('登出失敗:', error);
+      console.error("登出失敗:", error);
     }
   };
 
   return (
     <div className="game-selection">
-      {/* 頂部欄 */}
       <header className="gs-header">
+        <a className="gs-brand" href="/herbalism">
+          ✳{" "}
+          <span>
+            本草<small>主選單</small>
+          </span>
+        </a>
         <div className="gs-user-info">
-          {user?.photoURL ? (
-            <img
-              className="gs-avatar"
-              src={user.photoURL}
-              alt={displayName}
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="gs-avatar-placeholder">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <span className="gs-avatar-placeholder" aria-hidden="true">
+            {displayName.charAt(0).toUpperCase()}
+          </span>
           <span className="gs-username">{displayName}</span>
+          <button className="gs-logout-btn" onClick={handleLogout}>
+            登出
+          </button>
         </div>
-        <button className="gs-logout-btn" onClick={handleLogout}>
-          登出
-        </button>
       </header>
-
-      {/* 主內容 */}
       <main className="gs-main">
-        <h1 className="gs-title">選擇遊戲</h1>
-        <p className="gs-subtitle">請選擇您想要遊玩的遊戲</p>
-
-        <div className="gs-games">
-          {/* 本草 */}
-          <div
-            className="gs-game-card herbalism"
-            onClick={() => handleSelectGame('herbalism')}
-          >
-            <div className="gs-game-icon">🌿</div>
-            <h2 className="gs-game-title">本草</h2>
-            <p className="gs-game-desc">
-              3-4 人推理桌遊
-              <br />
-              透過問牌和推理猜測蓋牌顏色
-            </p>
-            <div className="gs-game-info">
-              <span>3-4 人</span>
-              <span>15-30 分鐘</span>
-            </div>
-          </div>
-
-          {/* 演化論 */}
-          <div
-            className="gs-game-card evolution"
-            onClick={() => handleSelectGame('evolution')}
-          >
-            <div className="gs-game-icon">🦎</div>
-            <h2 className="gs-game-title">演化論</h2>
-            <p className="gs-game-desc">
-              2-4 人策略卡牌遊戲
-              <br />
-              創造生物並讓牠們在競爭中存活
-            </p>
-            <div className="gs-game-info">
-              <span>2-4 人</span>
-              <span>30-60 分鐘</span>
-            </div>
-          </div>
+        <div className="gs-screen-heading">
+          <h1 className="gs-title">選擇遊戲</h1>
+          <span>選一桌，開始玩。</span>
         </div>
-
-        {/* 底部導航 */}
-        <div className="gs-nav">
+        <div className="gs-games">
           <button
-            className="gs-nav-btn"
-            onClick={() => navigate('/profile')}
+            className="gs-game-card herbalism"
+            onClick={() => handleSelectGame("herbalism")}
           >
-            <span className="material-symbols-outlined">person</span>
-            個人資料
+            <span className="gs-game-number">01 · 推理桌遊</span>
+            <span className="gs-game-art" aria-hidden="true">
+              <BotanicalFan />
+            </span>
+            <span className="gs-game-title" role="heading" aria-level="2">
+              本草<span>Herbalism</span>
+            </span>
+            <span className="gs-game-info">
+              <span>3–4 人 · 可與 AI 練習</span>
+              <span>15–30 分鐘</span>
+            </span>
+            <span className="gs-game-cta">
+              進入本草大廳 <span aria-hidden="true">↗</span>
+            </span>
           </button>
           <button
-            className="gs-nav-btn"
-            onClick={() => navigate('/friends')}
+            className="gs-game-card evolution"
+            onClick={() => handleSelectGame("evolution")}
           >
-            <span className="material-symbols-outlined">group</span>
+            <span className="gs-game-number">02 · 策略卡牌</span>
+            <span className="gs-game-art" aria-hidden="true">
+              ❋
+            </span>
+            <span className="gs-game-title" role="heading" aria-level="2">
+              演化論<span>Evolution</span>
+            </span>
+            <span className="gs-game-info">
+              <span>2–4 人</span>
+              <span>30–60 分鐘</span>
+            </span>
+            <span className="gs-game-cta">
+              進入演化論大廳 <span aria-hidden="true">↗</span>
+            </span>
+          </button>
+        </div>
+        <nav className="gs-nav" aria-label="玩家功能">
+          <button className="gs-nav-btn" onClick={() => navigate("/profile")}>
+            個人資料
+          </button>
+          <button className="gs-nav-btn" onClick={() => navigate("/friends")}>
             好友
           </button>
           <button
             className="gs-nav-btn"
-            onClick={() => navigate('/leaderboard')}
+            onClick={() => navigate("/leaderboard")}
           >
-            <span className="material-symbols-outlined">leaderboard</span>
             排行榜
           </button>
-        </div>
+        </nav>
+        <p className="gs-footer">選擇卡片進入大廳 · Tab 切換，Enter 確認</p>
       </main>
     </div>
   );
 }
-
 export default GameSelection;

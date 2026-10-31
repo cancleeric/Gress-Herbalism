@@ -1,5 +1,5 @@
 const originalEnv = process.env;
-beforeEach(() => { jest.resetModules(); process.env = { ...originalEnv }; delete process.env.DB_PROVIDER; });
+beforeEach(() => { jest.resetModules(); process.env = { ...originalEnv }; delete process.env.DB_PROVIDER; delete process.env.REALTIME_ONLY; });
 afterEach(() => { process.env = originalEnv; jest.restoreAllMocks(); jest.dontMock('../postgresClient'); jest.dontMock('@supabase/supabase-js'); });
 
 test('default stays Supabase even when a PostgreSQL URL exists', () => {
@@ -45,3 +45,12 @@ test('Supabase paths retain distinct anon and service keys', () => {
   expect(createClient.mock.calls[1]).toEqual(['https://example.invalid', 'service-fixture',
     { auth: { autoRefreshToken: false, persistSession: false } }]);
 });
+
+ test('explicit realtime-only mode never initializes or fabricates storage', () => {
+  process.env.REALTIME_ONLY = '1';
+  jest.doMock('../postgresClient', () => { throw new Error('No database access'); });
+  jest.doMock('@supabase/supabase-js', () => { throw new Error('No database access'); });
+  const { createDataClient } = require('../provider');
+  expect(createDataClient()).toBeNull();
+  expect(createDataClient({ serviceRole: true })).toBeNull();
+ });

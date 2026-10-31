@@ -1,0 +1,98 @@
+/* Quiet metalwork: botanical art remains the focus, with no screen-space boxes. */
+.tabletop3d .tabletop3d-treasure-box {position:absolute;left:-26px;top:68px;z-index:4;width:200px;height:150px;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;filter:drop-shadow(3px 9px 6px #0008);transform:translate(0,0);transition:left .7s ease,top .7s ease,width .7s ease,height .7s ease,filter .25s,transform .7s ease;}
+.tabletop3d-treasure-box img {position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;transition:opacity .3s;}
+.tabletop3d-treasure-box .treasure-chest-open {opacity:0;}
+.tabletop3d-treasure-box.is-receiving .treasure-chest-open {opacity:1;}
+.tabletop3d-treasure-box.is-receiving .treasure-chest-closed {opacity:0;}
+.tabletop3d .tabletop3d-treasure-box:disabled {cursor:default;opacity:1;}
+.tabletop3d .tabletop3d-treasure-box:focus-visible {outline:2px solid #e6c885;outline-offset:-6px;border-radius:24px;}
+.tabletop3d .tabletop3d-treasure-box:not(:disabled):hover {transform:translateX(4px) translateY(-2px);filter:drop-shadow(0 0 8px #dcb65c70) drop-shadow(3px 9px 6px #0008);}
+.app.apothecary .game-room .tabletop3d .tabletop3d-treasure-box,
+.app.apothecary .game-room .tabletop3d .tabletop3d-treasure-box:is(:hover,:focus,:active,:disabled) {background:transparent;border:0;box-shadow:none;padding:0;appearance:none;-webkit-tap-highlight-color:transparent;}
+@media(max-width:600px){.tabletop3d .tabletop3d-treasure-box {width:112px;height:86px;left:-56px;top:46%;}}
+@media(orientation:landscape) and (max-height:559px){.tabletop3d .tabletop3d-treasure-box {width:100px;height:76px;left:-18px;top:38px;}}
+.tabletop3d .tabletop3d-treasure-box.is-receiving {left:50%;top:42%;z-index:7;width:min(420px,78%);height:min(300px,60%);transform:translate(-50%,-50%);filter:drop-shadow(0 14px 25px #000a);transition:none;}
+@media(prefers-reduced-motion:reduce){.tabletop3d-treasure-box,.tabletop3d-treasure-box img{transition:none;}}
+.tabletop3d .tabletop3d-buttons:empty { display:none; }
+.tabletop3d-ambience { position:absolute; inset:0; z-index:2; overflow:hidden; pointer-events:none; contain:strict; }
+.tabletop3d-lightwash { position:absolute; left:-55%; top:8%; width:100%; height:100%; background:radial-gradient(ellipse at 50% 25%,#ffe7a918,transparent 65%); transform:rotate(-18deg); animation:table-light-drift 14s ease-in-out infinite alternate; }
+.tabletop3d-ambience > i { position:absolute; left:var(--mote-x); bottom:5%; width:3px; height:3px; border-radius:50%; background:#efdc9a; box-shadow:0 0 6px #e5c88680; opacity:0; animation:table-mote-rise var(--mote-duration) linear var(--mote-delay) infinite; }
+.tabletop3d--ambient .tabletop-seat.active { animation:table-turn-breathe 4s ease-in-out infinite; }
+@keyframes table-light-drift { from {transform:translateX(0) rotate(-18deg);opacity:.35;} to {transform:translateX(70%) rotate(-10deg);opacity:1;} }
+@keyframes table-mote-rise { 0% {transform:translate3d(0,0,0);opacity:0;} 20% {opacity:.5;} 75% {opacity:.3;} 100% {transform:translate3d(22px,-260px,0);opacity:0;} }
+@keyframes table-turn-breathe { 0%,100% {border-color:#bba271;box-shadow:inset 0 0 0 1px #d7bc7712;} 50% {border-color:#f1d796;box-shadow:inset 0 0 14px #d7bc772b;} }
+@media(prefers-reduced-motion:reduce) {
+  .tabletop3d-ambience { display:none; }
+  .tabletop3d--ambient .tabletop-seat.active { animation:none; }
+}
+/* Colors and group symbols stay readable at phone size; names remain accessible. */
+.app.apothecary .game-room .tabletop3d-access > div { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; padding:6px 0; background:transparent; border:0; }
+.app.apothecary .game-room .tabletop3d-access button { position:relative; min-width:0; min-height:48px; padding:4px; border:1px solid #a68c5570; border-radius:6px; color:#eadab2; background:linear-gradient(145deg,#243c2f,#091e17); box-shadow:inset 0 1px #ddc48a20,0 3px 7px #0005; outline:none; }
+.app.apothecary .game-room .tabletop3d-access button[aria-pressed=true] { border-color:#f1d598; background:linear-gradient(140deg,#5a5132,#263e2b); box-shadow:inset 0 0 0 1px #e3c582; }
+.app.apothecary .game-room .tabletop3d-access button[aria-pressed=true]::after { content:''; position:absolute; bottom:2px; left:25%; right:25%; height:2px; background:#f2d28b; }
+.app.apothecary .game-room .tabletop3d-access button:focus-visible { outline:2px solid #edd49c; outline-offset:2px; }
+.app.apothecary .game-room .tabletop3d-access button:disabled { opacity:.4; }
+.quick-color-pair { display:flex; align-items:center; justify-content:center; gap:12px; }
+.quick-color { display:flex; align-items:center; justify-content:center; width:25px; height:34px; font:normal 25px/1 sans-serif; text-shadow:0 1px 2px #0005; }
+.quick-color-red { color:#ff6c80; }
+.quick-color-yellow { color:#ffda58; }
+.quick-color-green { color:#72e39b; }
+.quick-color-blue { color:#75cfff; }
+@media(max-width:600px) {
+  .tabletop3d .tabletop3d-canvas,.tabletop3d .tabletop3d-labels { bottom:var(--tabletop-tray-height,172px); }
+  .tabletop3d .tabletop3d-top { bottom:auto; top:62px; }
+  .tabletop3d .tabletop3d-view > div { top:30px; bottom:auto; }
+  .app.apothecary .game-room .tabletop3d-access > div { gap:4px; }
+  .app.apothecary .game-room .tabletop3d-access button { padding:0; }
+  .quick-color { width:16px; height:36px; font-size:20px; }
+  .quick-color-pair { gap:8px; }
+}
+@media(orientation:landscape) and (max-height:559px) {
+  .tabletop3d .tabletop3d-canvas,.tabletop3d .tabletop3d-labels { bottom:6px; }
+}
+.tabletop3d .tabletop-seat {
+  background: linear-gradient(130deg,#1b352bd9,#0a211bdd);
+  border-color: #bda46a50;
+  box-shadow: inset 0 1px #eee1b012,0 4px 12px #0003;
+  border-radius: 7px;
+}
+.tabletop3d .tabletop-seat.active {
+  border-color: #d9bd7d;
+  box-shadow: inset 0 0 0 2px #cfb3761b,0 4px 14px #0004;
+}
+.tabletop3d .tabletop3d-hand-groups button {
+  border-color: #bfa46b59;
+  background: linear-gradient(140deg,#31453355,#0b231ecf);
+  box-shadow: inset 0 1px #f4dfaa15,0 3px 10px #0003;
+  border-radius: 6px;
+}
+.tabletop3d .tabletop3d-hand-groups button:not(:disabled):hover { border-color: #e1c68c; }
+.tabletop3d .tabletop3d-hand-groups button:disabled { opacity: .35; box-shadow: none; }
+.tabletop3d .hand-specimen-fan img { border-color: #e2c98d; box-shadow: 1px 3px 5px #0009; }
+.tabletop3d .tabletop3d-caption { color: #dcc99e; letter-spacing: .09em; }
+@media (min-width:960px) and (min-height:560px) {
+  .tabletop3d .tabletop3d-actions {
+    justify-content: center;
+    border: 1px solid #c6aa715e;
+    border-radius: 9px;
+    background: radial-gradient(ellipse at 0 0,#b49a5620,transparent 65%),linear-gradient(150deg,#17352ce8,#091e19f5);
+    box-shadow: inset 0 0 0 4px #c7a86b0a,0 12px 26px #0006;
+    padding: 20px 16px;
+  }
+  .tabletop3d .tabletop3d-actions::before {
+    content: '手 中 藏 方';
+    color: #d7c18c;
+    font: 500 15px/1.6 'Songti TC',serif;
+    letter-spacing: .3em;
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #a28a5359;
+  }
+  .tabletop3d .tabletop3d-hand-groups { gap: 8px; }
+}
+@media (max-width:600px) {
+  .tabletop3d .tabletop3d-actions { background: linear-gradient(#0b201bf5,#071a16); border-top: 1px solid #b69b6259; }
+}
+
+.app.apothecary .game-room .tabletop3d .tabletop3d-treasure-box:focus:not(:focus-visible){outline:none;}
+.app.apothecary .game-room .tabletop3d .tabletop3d-treasure-box:focus-visible{outline:2px solid #e6c885;outline-offset:-6px;}

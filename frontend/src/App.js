@@ -13,10 +13,20 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import store, { persistor } from './store/gameStore';
 import { AuthProvider, useAuth } from './firebase';
 import { Login, Lobby, Profile, Leaderboard, Friends, ConnectionStatus, GameSelection, EvolutionLobbyPage } from './components/common';
+import MatchHistory from './components/common/MatchHistory';
 import LidsCallback from './components/common/LidsCallback';
+import useConsoleViewport from './hooks/useConsoleViewport';
 import { GameRoom } from './components/games/herbalism';
 import { EvolutionRoom } from './components/games/evolution';
 import './styles/App.css';
+import './styles/apothecary.css';
+import './components/games/herbalism/GameSetup/AIPlayerSalon.css';
+import './components/games/herbalism/GameRoom/TabletopLuxe.css';
+import './components/games/herbalism/Prediction/PredictionSalon.css';
+import './components/games/herbalism/QuestionFlow/QuestionFlowMobile.css';
+
+const TabletopPreview = process.env.NODE_ENV === 'development'
+  ? React.lazy(() => import('./dev/HerbalismTabletopPreview')) : null;
 
 /**
  * 受保護路由組件 - 需要登入才能訪問
@@ -81,10 +91,24 @@ class ErrorBoundary extends React.Component {
  * 工單 0276：新增遊戲選擇頁面和各遊戲大廳路由
  */
 function AppContent() {
+  const viewportStyle = useConsoleViewport();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const isPreview = process.env.NODE_ENV === 'development' && location.pathname === '/dev/tabletop';
+  const isHerbalismGame = location.pathname.startsWith('/game/') &&
+    !location.pathname.startsWith('/game/evolution/');
+  const isLocalGame = isHerbalismGame && Boolean(location.state?.aiConfig ||
+    (params.get('mode') === 'single' && params.get('aiCount') && params.get('difficulties')));
+  const isHistory = location.pathname === '/history' || location.pathname.startsWith('/history/');
+  const isConsole = (process.env.NODE_ENV === 'development' && location.pathname === '/dev/tabletop') || location.pathname.startsWith('/game/') || location.pathname === '/' ||
+    ['/lobby/herbalism', '/lobby/evolution', '/login', '/profile', '/friends', '/leaderboard'].includes(location.pathname) || isHistory;
   return (
-    <div className="app">
-      <ConnectionStatus />
+    <div className={`app${isConsole ? ' app--console' : ''}${isHistory ? ' app--history' : ''}${location.pathname.includes('evolution') || location.state?.from?.pathname?.includes('evolution') ? '' : ' apothecary'}`} style={{...viewportStyle, '--apothecary-surface': `url(${process.env.PUBLIC_URL}/images/tabletop/apothecary-table.webp)`}}>
+      {!isLocalGame && !isPreview && <ConnectionStatus />}
       <Routes>
+        {process.env.NODE_ENV === 'development' && <Route path="/dev/tabletop" element={<React.Suspense fallback={<p>載入牌桌</p>}><TabletopPreview /></React.Suspense>}/>}
+        <Route path="/history" element={<ProtectedRoute><MatchHistory /></ProtectedRoute>} />
+        <Route path="/history/:matchId" element={<ProtectedRoute><MatchHistory /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         {/* Phase 2a LIDS callback 路由（basename="/herbalism" 已做前綴，此處只需相對 path） */}
         {/* ⚠️ path="/callback" → 實際 URL = /herbalism/callback（與 LIDS client 白名單一致） */}
