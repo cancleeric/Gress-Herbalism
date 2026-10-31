@@ -17,7 +17,7 @@ test('uses actual pg scalar parsers without changing global numeric/identifier h
 
 test('validates explicit PostgreSQL configuration without connecting', () => {
   const options = postgresOptions({ DATABASE_URL });
-  expect(options.schema).toBe('public');
+  expect(options.schema).toBe('herbalism');
   expect(options.knex).toMatchObject({ client: 'pg', connection: { connectionString: DATABASE_URL, ssl: false }, pool: { min: 0, max: 10 } });
   expect(() => postgresOptions({})).toThrow('DATABASE_URL');
   expect(() => postgresOptions({ DATABASE_URL: 'not-a-url' })).toThrow('Invalid DATABASE_URL');

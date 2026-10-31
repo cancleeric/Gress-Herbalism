@@ -236,7 +236,7 @@ class PostgresQuery {
   }
 }
 
-function createPostgresAdapter(knex, { schema = 'public', run = query => query } = {}) {
+function createPostgresAdapter(knex, { schema = 'herbalism', run = query => query } = {}) {
   identifier(schema);
   const adapter = { knex, schema, run, from: table => new PostgresQuery(adapter, table), close: () => knex.destroy() };
   return adapter;

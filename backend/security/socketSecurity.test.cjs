@@ -13,7 +13,7 @@ test('real broadcast function does not expose hidden cards, peer hand, password 
   const body = source.slice(source.indexOf('function broadcastGameState('), source.indexOf("io.on('connection'"));
   const state = room(); const sent = [];
   const socket = { id: 'sa', uid: 'ua', emit: (event, payload) => sent.push(payload) };
-  const context = { gameRooms: new Map([['room', state]]), playerSockets: new Map([['sa', {gameId:'room', playerId:'a'}]]), io: { to: () => ({emit: (event, payload) => sent.push(payload)}), sockets: { sockets: new Map([['sa', socket]]) } } };
+  const context = { replayRecorder: null, gameRooms: new Map([['room', state]]), playerSockets: new Map([['sa', {gameId:'room', playerId:'a'}]]), io: { to: () => ({emit: (event, payload) => sent.push(payload)}), sockets: { sockets: new Map([['sa', socket]]) } } };
   try { Object.assign(context, require('./socketSecurity')); } catch (_) {}
   vm.runInNewContext(body + "\nbroadcastGameState('room');", context);
   assert.equal(sent.length, 1);

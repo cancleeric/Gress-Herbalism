@@ -301,6 +301,7 @@ async function updatePlayerGameStats(playerId, gameResult) {
  * @returns {Promise<string|null>} 玩家 ID (UUID)
  */
 async function getPlayerIdByFirebaseUid(firebaseUid) {
+  if (!supabase) return null; // Explicit realtime-only mode has no account store.
   try {
     const { data, error } = await supabase
       .from('players')
