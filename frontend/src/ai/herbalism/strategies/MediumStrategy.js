@@ -111,7 +111,7 @@ class MediumStrategy extends BaseStrategy {
    * @returns {Object|null} 目標玩家物件
    */
   selectTargetPlayer(gameState, knowledge) {
-    const otherPlayers = this.getOtherActivePlayers(gameState, this.selfId);
+    const otherPlayers = this.getQuestionTargets(gameState, this.selfId);
 
     if (!otherPlayers || otherPlayers.length === 0) {
       return null;

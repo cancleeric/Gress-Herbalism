@@ -1,0 +1,73 @@
+/* A card-table result scene: original art, outcome, personal score, then standings. */
+.app.apothecary .game-room .gr-ledger-overlay { padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));box-sizing:border-box;background:#020b09d9;backdrop-filter:blur(8px); }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ledger { position:relative;isolation:isolate;display:flex;flex-direction:column;width:100%;max-width:510px;min-height:0;height:auto;max-height:100%;padding:0;overflow:hidden;border:1px solid #907346a8;border-radius:3px;background:linear-gradient(160deg,#19332a,#071711 75%);box-shadow:0 30px 100px #000c,inset 0 0 0 5px #c3a5680a;color:#e7d7b4; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ledger::after { content:"";position:absolute;inset:5px;pointer-events:none;border:1px solid #b2996024;z-index:12; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-texture { display:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-header { flex:0 0 auto;position:relative;padding:16px 18px 0;text-align:center;background:none;border:0; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-round-meta { display:flex;align-items:center;justify-content:space-between;color:#b4a17b;font:10px/1.5 serif;letter-spacing:.13em; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-result-scene { position:relative;height:clamp(135px,26dvh,230px);margin:4px -18px -18px;overflow:hidden; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-result-scene::after { content:"";position:absolute;inset:0;background:linear-gradient(0deg,#10251d 0%,transparent 45%); }
+.app.apothecary .game-room .gr-ledger-overlay .gr-result-scene img { width:100%;height:100%;display:block;object-fit:cover;object-position:50% 53%;mask-image:linear-gradient(0deg,transparent,black 20%,black 85%,transparent);animation:gr-scene-arrive .7s ease-out both; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-scene-sigil { position:absolute;z-index:2;right:13%;bottom:18%;width:48px;height:48px;display:grid;place-items:center;border:2px solid #d19170;border-radius:3px;box-shadow:inset 0 0 0 3px #102119,0 0 0 1px #a86b4f;background:#6b3025ed;color:#e9bd97;font:28px/1 "Songti TC",serif;transform:rotate(11deg);animation:gr-seal-land .45s .35s both; }
+.app.apothecary .game-room .gr-ledger-overlay .is-victory .gr-scene-sigil { background:#6f6230;color:#f1d793;border-color:#ddc680; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-outcome-copy { position:relative;z-index:3; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-outcome-kicker { margin:0 0 4px;color:#bd9d68;letter-spacing:.4em;font:10px/1.5 serif; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-title { margin:0;color:#f4dcaf;font:600 38px/1.3 "Songti TC","Noto Serif TC",serif;letter-spacing:.18em;text-shadow:0 3px 14px #0009; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-title-wrong { color:#efc4a1; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ledger-caption { margin:5px 0 0;color:#acae99;font:11px/1.6 sans-serif;letter-spacing:.06em; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score { display:flex;gap:9px;align-items:center;justify-content:center;margin:12px 0 0;padding:8px;border-top:1px solid #aa8e5630;border-bottom:1px solid #aa8e5630;background:linear-gradient(90deg,transparent,#aa7d2920,transparent); }
+.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score > span { font:11px/1.5 sans-serif;color:#b8b69b; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score strong { font:600 42px/1 Georgia,serif;color:#efcd7f;text-shadow:0 0 24px #a5893635;animation:gr-score-strike .5s .45s both;font-variant-numeric:tabular-nums; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score strong.is-negative { color:#e7a085; }
+.app.apothecary .game-room .gr-ledger-overlay .console-result-body { flex:0 1 auto;min-height:0;padding:10px 18px 0;overflow-y:auto;overscroll-behavior:contain;background:none;scrollbar-color:#927846 transparent; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-section { padding:0;margin:0 0 12px; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-section-title { margin:0 0 8px;font:10px/1.5 sans-serif;color:#b8a47a;letter-spacing:.1em; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-section-title .material-symbols-outlined { display:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-changes-section { text-align:left; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-changes-section > summary { cursor:pointer;padding:4px 0;margin:0;min-height:28px;list-style-position:inside; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-card-list { padding:0;border:0;border-radius:0;background:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-score-item { min-height:44px;padding:8px 0;display:flex;gap:10px;background:none;border:0;border-bottom:1px solid #ac925b24; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-player-info { min-width:0;gap:0; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-avatar { display:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-player-name { margin:0;font:500 12px/1.5 sans-serif;color:#e1d6b7;overflow-wrap:anywhere; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-role-tag { margin-left:5px;color:#b39e77;font:10px/1.5 sans-serif; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-player-desc { margin:2px 0 0;color:#b1b39f;font:10px/1.5 sans-serif; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-score-change { font:24px/1 Georgia,serif;font-variant-numeric:tabular-nums; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-score-negative { color:#e7a085; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-score-positive { color:#e4c783; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-standing-section .gr-card-list { display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ranking-item { display:flex;min-width:0;min-height:0;flex-direction:column;gap:5px;padding:8px 3px;background:linear-gradient(#31503c38,#0b201480);border:1px solid #9d88552b;border-radius:3px;opacity:1; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ranking-item.is-self { border-color:#bd995d90;background:linear-gradient(#b08b4224,#142d1c90); }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ranking-info { display:flex;min-width:0;width:100%;flex-direction:column;gap:5px; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-rank-number { display:grid;place-items:center;width:23px;height:23px;border:1px solid #947a4e75;border-radius:50%;color:#d2bb86;font:12px/1 serif; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-rank-name { min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:10px/1.5 sans-serif;color:#c9c8b2;font-weight:400;margin:0; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-rank-score { color:#e8d6ac;font:25px/1 Georgia,serif;font-variant-numeric:tabular-nums; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-winner-badge { font-size:9px;background:#726335;color:#fff0bd; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-actions { flex:0 0 auto;position:relative;padding:10px 18px 16px;border:0;background:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-ledger-footnote { margin:0 0 8px;text-align:center;font-size:10px;line-height:1.5;color:#a7ab94; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-btn { position:relative;width:100%;min-height:48px;padding:11px 20px;border:1px solid #a18a59;border-radius:2px;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);background:linear-gradient(180deg,#bba16a,#8c713e);box-shadow:inset 0 0 0 3px #24302350;color:#102116;font:600 15px/1.5 serif;letter-spacing:.22em; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-btn::after { content:"";position:absolute;inset:4px;border:1px solid #ead6a65c;pointer-events:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-btn:hover:not(:disabled) { background:linear-gradient(180deg,#d8bf83,#a8884a);color:#0c1d11;filter:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-btn:focus-visible { outline:2px solid #f4d693;outline-offset:2px; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-btn .material-symbols-outlined { display:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-bottom-line { display:none; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-hidden-cards { padding:8px 0 12px; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-hidden-label { color:#d0b274;font-size:11px;margin:0 0 8px; }
+.app.apothecary .game-room .gr-ledger-overlay .gr-winner-announcement { padding:10px 0;font-size:14px;color:#ebd197; }
+@keyframes gr-scene-arrive {from{opacity:0;transform:scale(1.09);}to{opacity:1;transform:scale(1);}}
+@keyframes gr-seal-land {from{opacity:0;transform:scale(1.7) rotate(24deg);}to{opacity:1;transform:scale(1) rotate(11deg);}}
+@keyframes gr-score-strike {from{opacity:0;transform:translateY(-12px) scale(1.3);}to{opacity:1;transform:translateY(0) scale(1);}}
+@media(max-height:650px){
+.app.apothecary .game-room .gr-ledger-overlay .gr-header{padding:12px 14px 0;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-result-scene{height:105px;margin:0 -14px -12px;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-title{font-size:30px;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-ledger-caption{margin-top:2px;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score{margin-top:8px;padding:5px;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score strong{font-size:34px;}
+.app.apothecary .game-room .gr-ledger-overlay .console-result-body{padding:6px 14px 0;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-ranking-item{padding:5px 3px;gap:4px;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-rank-number{display:none;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-section{margin-bottom:8px;}
+.app.apothecary .game-room .gr-ledger-overlay .gr-actions{padding:6px 14px 12px;}
+}
+@media(prefers-reduced-motion:reduce){.app.apothecary .game-room .gr-ledger-overlay .gr-result-scene img,.app.apothecary .game-room .gr-ledger-overlay .gr-scene-sigil,.app.apothecary .game-room .gr-ledger-overlay .gr-personal-score strong{animation:none;}}

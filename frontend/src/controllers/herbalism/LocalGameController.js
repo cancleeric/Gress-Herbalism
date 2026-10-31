@@ -213,6 +213,8 @@ class LocalGameController {
       console.error('[LocalGameController] 找不到玩家');
       return;
     }
+    // 行動資格與被問牌資格不同；只驗證發起者，不能排除猜錯的目標。
+    if (askingPlayer.isActive === false || this.gameState.players.filter(p => p.isActive !== false).length <= 1) return;
     if (this.pendingLocalQuestion) return;
     if (!confirmed && askingPlayer.isAI && !targetPlayer.isAI) {
       this.pendingLocalQuestion = { ...action };

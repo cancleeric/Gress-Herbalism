@@ -34,6 +34,34 @@ describe('LocalGameController', () => {
     });
   });
 
+  test('wrong guesser retains hidden cards and can still give cards when asked', async () => {
+    controller.startGame();
+    controller.gameState.players = [
+      {id:'ask',isActive:true,isAI:false,hand:[]},
+      {id:'wrong',isActive:false,isAI:true,hand:[{id:'r1',color:'red'},{id:'b1',color:'blue'}]},
+      {id:'next',isActive:true,isAI:true,hand:[]}
+    ];
+    controller.gameState.currentPlayerIndex=0;
+    controller.gameState.gamePhase=GAME_PHASE_PLAYING;
+    await controller.handleQuestion({playerId:'ask',targetPlayerId:'wrong',colors:['red','yellow'],questionType:1});
+    expect(controller.gameState.players[0].hand).toEqual([{id:'r1',color:'red'}]);
+    expect(controller.gameState.players[1].hand).toEqual([{id:'b1',color:'blue'}]);
+    expect(controller.gameState.players[1].isActive).toBe(false);
+  });
+
+  test('sole eligible player cannot question; inactive asker cannot question either', async () => {
+    controller.startGame();
+    controller.gameState.players = [
+      {id:'ask',isActive:true,isAI:false,hand:[]},
+      {id:'wrong',isActive:false,isAI:true,hand:[{id:'r1',color:'red'}]}
+    ];
+    const before=JSON.stringify(controller.gameState.players);
+    await controller.handleQuestion({playerId:'ask',targetPlayerId:'wrong',colors:['red','yellow'],questionType:1});
+    expect(JSON.stringify(controller.gameState.players)).toBe(before);
+    await controller.handleQuestion({playerId:'wrong',targetPlayerId:'ask',colors:['red','yellow'],questionType:1});
+    expect(JSON.stringify(controller.gameState.players)).toBe(before);
+  });
+
   describe('初始化', () => {
     test('應該正確初始化遊戲狀態', () => {
       const state = controller.getState();

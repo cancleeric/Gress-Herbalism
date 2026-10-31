@@ -326,7 +326,7 @@ describe('QuestionFlow Component', () => {
     });
   });
 
-  test('excludes inactive players from selection', () => {
+  test('keeps players without guessing rights selectable for questions', () => {
     const playersWithInactive = [
       { id: 'p1', name: '玩家1', isActive: true },
       { id: 'p2', name: '玩家2', isActive: false },

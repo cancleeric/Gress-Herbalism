@@ -1,0 +1,27 @@
+# 11731測試結果摘錄（11734補存）
+原始暫存日誌是先前執行證據；本次文件整理未重跑產品測試。
+兩批有重疊，不可加總；首批失敗後已更新GameRoom舊斷言並重跑。
+
+## herbalism-11731-tests.log
+FAIL src/components/games/herbalism/GameRoom/GameRoom.test.js (17.497 s)
+PASS src/components/games/herbalism/QuestionFlow/QuestionFlow.test.js (6.501 s)
+PASS src/components/games/herbalism/GameRoom/__tests__/GameRoom.local.test.js (9.233 s)
+PASS src/controllers/herbalism/__tests__/LocalGameController.test.js (6.798 s)
+PASS src/ai/herbalism/__tests__/BaseStrategy.test.js
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       2 failed, 154 passed, 156 total
+Time:        44.228 s
+
+## herbalism-11731-retest.log
+PASS src/components/games/herbalism/GameRoom/GameRoom.test.js (6.44 s)
+PASS src/ai/herbalism/__tests__/AIPlayer.test.js
+PASS src/ai/herbalism/__tests__/MediumStrategy.test.js
+PASS src/ai/herbalism/__tests__/HardStrategy.test.js
+PASS src/ai/herbalism/__tests__/EasyStrategy.test.js
+Test Suites: 5 passed, 5 total
+Tests:       184 passed, 184 total
+Time:        8.82 s, estimated 19 s
+
+## herbalism-11731-build-final.log
+Compiled with warnings.
+The build folder is ready to be deployed.

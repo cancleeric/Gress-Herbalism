@@ -138,6 +138,11 @@ class BaseStrategy {
     );
   }
 
+  // 猜錯者只失去主動行動資格，仍須回答／交牌（規則 Curing）。
+  getQuestionTargets(gameState, selfId) {
+    return (gameState?.players || []).filter(player => player.id !== selfId && !player.isDisconnected);
+  }
+
   /**
    * 檢查是否必須猜牌（只剩自己一個活躍玩家）
    *

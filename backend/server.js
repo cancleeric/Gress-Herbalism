@@ -1710,6 +1710,10 @@ function processQuestionAction(gameState, action) {
   const player = gameState.players[playerIndex];
   const target = gameState.players[targetIndex];
 
+  if (player.isActive === false || gameState.players.filter(p => p.isActive !== false).length <= 1) {
+    return { success: false, message: '已失去主動行動資格，或僅剩一人必須立即猜牌' };
+  }
+
   let cardsToGive = [];
   let cardsToReceive = [];
 

@@ -1,0 +1,56 @@
+/* Mobile-first follow decision stage; overrides the legacy horizontal modal. */
+.app.apothecary .game-room .fg-stage {
+  display: flex; flex-direction: column; width: min(100%, 480px); height: auto;
+  max-height: calc(100dvh - 24px); min-height: 0; padding: 0; gap: 0;
+  overflow: hidden; isolation: isolate; color: #f2e5bf;
+  background: radial-gradient(ellipse at 50% 8%, #284a39, #10291f 58%, #091d16);
+  border: 1px solid #a28b55; border-radius: 14px;
+  box-shadow: 0 24px 80px #000b, inset 0 0 0 4px #d0af6720;
+}
+.app.apothecary .fg-stage :is(.fg-texture,.fg-corner-tr,.fg-corner-bl,.fg-title-line) { display: none; }
+.app.apothecary .fg-stage .fg-header { flex: none; width: auto; padding: 22px 18px 10px; text-align: center; background: none; border: 0; }
+.app.apothecary .fg-stage .fg-eyebrow { margin: 0 0 7px; color: #c8b581; letter-spacing: .22em; font-size: 10px; }
+.app.apothecary .fg-stage .fg-title { margin: 0; color: #f4e5b8; font: 600 28px/1.2 'Noto Serif TC',serif; }
+.app.apothecary .fg-stage .fg-guess-info { flex: none; width: auto; margin: 0; padding: 6px 20px 16px; background: none; border: 0; border-radius: 0; text-align: center; }
+.app.apothecary .fg-stage .fg-guess-text { color: #e5d9bb; font-size: 13px; margin: 0 0 16px; }
+.app.apothecary .fg-stage .fg-color-pills { display: flex; justify-content: center; gap: 15px; }
+.app.apothecary .fg-stage .fg-color-pill { display: flex; flex-direction: column; align-items: center; width: 116px; height: 152px; padding: 7px; border-radius: 5px; background: linear-gradient(140deg,#f1e6c7,#cdbf95); border: 1px solid #e1cd8b; color: #342d20; box-shadow: 0 9px 16px #0006; transform: rotate(-5deg); }
+.app.apothecary .fg-stage .fg-color-pill:nth-child(2) { transform: rotate(5deg); }
+.app.apothecary .fg-stage .fg-herb-illustration { display: block; flex: 1; min-height: 0; width: 100%; overflow: hidden; }
+.app.apothecary .fg-stage .herb-specimen { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.app.apothecary .fg-stage .fg-herb-label { font-size: 12px; font-weight: 700; padding: 5px 0 2px; }
+.app.apothecary .fg-stage .fg-status-section { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 10px 18px; margin: 0; background: #061b1540; border-top: 1px solid #c0a66933; }
+.app.apothecary .fg-stage .fg-status-title { margin: 0 0 7px; color: #b6b69a; font-size: 10px; letter-spacing: .12em; }
+.app.apothecary .fg-stage .fg-player-list { display: flex; flex-direction: column; gap: 5px; }
+.app.apothecary .fg-stage .fg-player-item { display: flex; justify-content: space-between; align-items: center; min-height: 37px; padding: 6px 9px; margin: 0; background: transparent; border: 1px solid #a6b99b21; border-radius: 5px; opacity: 1; }
+.app.apothecary .fg-stage .fg-current-decider { background: #bc97551c; border-color: #c0a46699; }
+.app.apothecary .fg-stage .fg-avatar { display: none; }
+.app.apothecary .fg-stage .fg-player-info { min-width: 0; gap: 6px; }
+.app.apothecary .fg-stage .fg-player-details { flex-direction: row; align-items: center; gap: 6px; }
+.app.apothecary .fg-stage .fg-player-name { color: #eee3c8; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.app.apothecary .fg-stage .fg-badge { background: none; color: #cfb678; font-size: 9px; padding: 0; }
+.app.apothecary .fg-stage .fg-status { flex-shrink: 0; color: #d0c8af; font-size: 11px; }
+.app.apothecary .fg-stage .fg-status .material-symbols-outlined { display: none; }
+.app.apothecary .fg-stage .fg-status-follow { color: #bbdcad; }
+.app.apothecary .fg-stage .fg-status-deciding { color: #f3d795; background: #a88a4133; border: 1px solid #c3a56755; padding: 4px 7px; border-radius: 4px; }
+.app.apothecary .fg-stage .fg-action-area { flex: none; margin: 0; padding: 12px 18px 16px; background: #081e17; border-top: 1px solid #b49b623f; }
+.app.apothecary .fg-stage .fg-action-prompt { display: block; margin: 0 0 10px; text-align: center; }
+.app.apothecary .fg-stage .fg-prompt-title { color: #f2deb1; font-size: 14px; margin: 0; }
+.app.apothecary .fg-stage .fg-prompt-desc { font-size: 11px; color: #d3cbb3; margin: 5px 0 0; }
+.app.apothecary .fg-stage .fg-score-plus { color: #c1e2aa; }
+.app.apothecary .fg-stage .fg-score-minus { color: #f0a596; }
+.app.apothecary .fg-stage .fg-buttons { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; }
+.app.apothecary .fg-stage .fg-btn { min-height: 48px; border-radius: 5px; font-size: 15px; padding: 10px; }
+.app.apothecary .fg-stage .fg-btn-pass { background: #183128; color: #eadfbe; border: 1px solid #8c815d; }
+.app.apothecary .fg-stage .fg-btn-follow { background: linear-gradient(120deg,#e7d297,#b49a5c); border: 1px solid #f5dda0; color: #16251c; box-shadow: inset 0 0 0 3px #66532f25,0 3px 0 #69562f; }
+.app.apothecary .fg-stage .fg-btn .material-symbols-outlined { display: none; }
+.app.apothecary .fg-stage .fg-waiting-text { flex: none; padding: 14px 18px; margin: 0; color: #d8c99d; background: #061a14; text-align: center; font-size: 12px; border-top: 1px solid #ad955d33; }
+@media (max-height: 650px) {
+ .app.apothecary .fg-stage .fg-header { padding: 13px 14px 6px; }
+ .app.apothecary .fg-stage .fg-title { font-size: 23px; }
+ .app.apothecary .fg-stage .fg-guess-info { padding: 4px 16px 12px; }
+ .app.apothecary .fg-stage .fg-guess-text { margin-bottom: 10px; }
+ .app.apothecary .fg-stage .fg-color-pill { width: 86px; height: 112px; }
+ .app.apothecary .fg-stage .fg-player-item { min-height: 31px; padding: 4px 7px; }
+ .app.apothecary .fg-stage .fg-action-area { padding: 9px 14px 13px; }
+}

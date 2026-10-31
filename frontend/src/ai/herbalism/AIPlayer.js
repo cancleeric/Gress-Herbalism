@@ -276,7 +276,7 @@ class AIPlayer {
    */
   defaultSelectTargetPlayer(gameState, knowledge) {
     const otherPlayers = (gameState.players || []).filter(
-      p => p.id !== this.id && p.isActive
+      p => p.id !== this.id && !p.isDisconnected
     );
 
     if (otherPlayers.length === 0) return null;

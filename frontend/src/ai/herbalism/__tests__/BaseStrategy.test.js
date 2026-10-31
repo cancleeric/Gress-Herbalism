@@ -159,6 +159,15 @@ describe('BaseStrategy', () => {
       });
     });
 
+    test('question targets include a wrong guesser while active-player counting stays separate', () => {
+      const state = {players: [{id:'self',isActive:true},{id:'wrong',isActive:false},{id:'other',isActive:true}]};
+      expect(strategy.getQuestionTargets(state,'self').map(p=>p.id)).toEqual(['wrong','other']);
+      expect(strategy.mustGuess(state,'self')).toBe(false);
+      state.players[2].isActive = false;
+      expect(strategy.mustGuess(state,'self')).toBe(true);
+      expect(strategy.getQuestionTargets(state,'self')).toHaveLength(2);
+    });
+
     describe('mustGuess', () => {
       test('should return true when no other active players', () => {
         const gameState = {

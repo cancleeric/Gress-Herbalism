@@ -73,7 +73,7 @@ class EasyStrategy extends BaseStrategy {
    * @returns {Object|null} 目標玩家物件，如果沒有可選玩家則返回 null
    */
   selectTargetPlayer(gameState, knowledge) {
-    const otherPlayers = this.getOtherActivePlayers(gameState, this.selfId);
+    const otherPlayers = this.getQuestionTargets(gameState, this.selfId);
     return this.randomSelectPlayer(otherPlayers);
   }
 

@@ -225,6 +225,8 @@ describe('GameRoom - 工作單 0023', () => {
       fireEvent.click(screen.getByRole('button', {name: '開啟遊戲規則'}));
       const panel = screen.getByRole('dialog', {name: '遊戲規則'});
       expect(within(panel).getByText('當下任務')).toBeVisible();
+      expect(within(panel).getByText(/其他玩家仍可向你問牌/)).toBeVisible();
+      expect(within(panel).getByText(/最後一位有猜牌資格/)).toBeVisible();
       expect(screen.getAllByRole('button', {name: /^問牌：/})).toHaveLength(6);
       expect(screen.getByRole('button', {name: /猜牌/})).toBeEnabled();
       fireEvent.click(screen.getByRole('button', {name: '關閉面板'}));
@@ -243,7 +245,10 @@ describe('GameRoom - 工作單 0023', () => {
       const {container} = renderWithProviders(<GameRoom />, {preloadedState: consoleState});
       act(() => socketCallbacks.guessResult({isCorrect: true, guessingPlayerId: 'p1', followingPlayers: ['p2', 'p3'], scoreChanges: {p1: 3, p2: 1, p3: 1, p4: 0}, hiddenCards: [{color: 'red'}, {color: 'blue'}]}));
       const detail = container.querySelector('.console-result-body');
-      expect(detail).toHaveTextContent('分數變化');
+      expect(detail).toHaveTextContent('查看本次得失');
+      fireEvent.click(screen.getByText('查看本次得失'));
+      expect(detail.querySelector('details')).toHaveAttribute('open');
+      expect(detail).toHaveTextContent('+3');
       expect(detail).toHaveTextContent('目前分數');
       const confirm = screen.getByRole('button', {name: /確定/});
       expect(detail.contains(confirm)).toBe(false);
@@ -435,7 +440,7 @@ describe('GameRoom - 工作單 0023', () => {
       };
       renderWithProviders(<GameRoom />, { preloadedState: state });
       // 退出標記會出現在多個地方（GameStatus 和 players-sidebar）
-      expect(screen.getAllByText('已退出').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('停止主動行動').length).toBeGreaterThan(0);
     });
   });
 
@@ -1028,7 +1033,7 @@ describe('GameRoom - 工作單 0023', () => {
 
       // 局開始後 roundEnd 面板應該消失
       await waitFor(() => {
-        expect(screen.queryByText(/下一局/)).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: /下一局/})).not.toBeInTheDocument();
       });
     });
 

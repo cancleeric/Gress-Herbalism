@@ -913,7 +913,7 @@ export default function Tabletop3D({
               </strong>
               <small>
                 {p.isActive === false
-                  ? "本輪退出"
+                  ? `停止主動行動 · ${p.hand?.length || 0} 張`
                   : `${p.hand?.length || 0} 張手牌`}
                 {p.difficulty
                   ? ` · ${{ easy: "簡單", medium: "中等", hard: "困難" }[p.difficulty]}`
@@ -978,8 +978,8 @@ export default function Tabletop3D({
                   ? `${hand.length} 張手牌 · 點色組查看`
                   : "選擇兩個色組，探問線索"
                 : players.find((p) => p.id === myId)?.isActive === false
-                  ? "本輪已退出，等待其餘玩家完成"
-                  : `等待 ${players[currentIndex]?.name || "其他玩家"} 行動`}
+                  ? "本局停止主動行動；仍須回應問牌與交牌"
+                  : canGuess ? "僅剩你可猜牌 · 請立即猜測藥方" : `等待 ${players[currentIndex]?.name || "其他玩家"} 行動`}
         </div>
         <div
           className="tabletop3d-buttons"

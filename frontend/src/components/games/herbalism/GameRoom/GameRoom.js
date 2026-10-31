@@ -78,6 +78,8 @@ import VersionInfo from '../../../common/VersionInfo';
 import AIThinkingIndicator from '../AIThinkingIndicator/AIThinkingIndicator';
 import './GameRoom.css';
 import './TabletopTheme.css';
+import './RoundResultLedger.css';
+import './FollowGuessStage.css';
 
 /**
  * 遊戲房間組件
@@ -1422,7 +1424,7 @@ function GameRoom() {
     return (
       <div className={`game-room playing-stage ${threeReady ? 'three-enabled' : ''}`}>
         <TabletopHeader mode={isLocalMode ? '單人' : '連線'} isYourTurn={canAct}
-          guide={gameState.gamePhase === GAME_PHASE_FINISHED ? '本局結束' : gameState.gamePhase === GAME_PHASE_FOLLOW_GUESSING ? '跟猜階段' : gameState.gamePhase === GAME_PHASE_ROUND_END ? '本輪結算' : gameState.gamePhase === GAME_PHASE_POST_QUESTION ? '問牌完成 · 決定預測或結束回合' : canAct ? (onlyGuess ? '輪到你 · 請猜牌' : '輪到你 · 選擇問牌組合或猜牌') : `輪到 ${currentPlayer?.name || '其他玩家'} 行動`}
+          guide={gameState.gamePhase === GAME_PHASE_FINISHED ? '本局結束' : gameState.gamePhase === GAME_PHASE_FOLLOW_GUESSING ? '跟猜階段' : gameState.gamePhase === GAME_PHASE_ROUND_END ? '本輪結算' : gameState.gamePhase === GAME_PHASE_POST_QUESTION ? '問牌完成 · 決定預測或結束回合' : myPlayer?.isActive === false ? '本局停止主動行動 · 仍須回應問牌與交牌' : canAct ? (onlyGuess ? '僅剩你可猜牌 · 請立即猜測藥方' : '輪到你 · 選擇問牌組合或猜牌') : `輪到 ${currentPlayer?.name || '其他玩家'} 行動`}
           actions={<>
             <button type="button" className="console-hud-button" aria-label="開啟遊戲規則" onClick={() => setConsolePanel('rules')}>規則</button>
             <button type="button" className="console-hud-button" aria-label="開啟遊戲紀錄" onClick={() => setConsolePanel('history')}>紀錄</button>
@@ -1450,7 +1452,7 @@ function GameRoom() {
                   <span className="playing-turn-badge">回合</span>
                 )}
                 {player.isActive === false && (
-                  <span className="playing-eliminated-badge">已退出</span>
+                  <span className="playing-eliminated-badge">停止主動行動</span>
                 )}
                 {(player.id === myPlayer?.id ? authUser?.photoURL : player.photoURL) ? (
                   <img
@@ -1616,7 +1618,11 @@ function GameRoom() {
               <div hidden={consolePanel !== 'rules'} className="console-rules">
                 <h3>當下任務</h3><p>{canAct ? '從六種顏色組合選一組，向其他玩家問牌；有把握時可猜中央兩張蓋牌。' : '等待目前玩家完成行動，並利用遊戲紀錄整理線索。'}</p>
                 <h3>一個回合</h3><ol><li>選顏色組合，再選問牌對象與方式。</li><li>依回覆取得線索；問牌後可預測或結束回合。</li><li>猜牌時選兩個顏色（可重複），其他玩家依序決定跟猜。</li></ol>
-                <p>猜錯會退出本輪。你只能看自己的手牌；中央蓋牌會在結算時揭曉。</p>
+                <h3>猜錯後不是離開房間</h3>
+                <p>猜錯或跟錯後，本局不能再主動問牌、猜牌或跟猜，自己的回合會被跳過；但其他玩家仍可向你問牌，你仍須照問法收牌、交牌或回答張數。</p>
+                <p>剩餘手牌保留並維持保密，不公開、不封存、不交給旁人、不放回牌堆。看過的藥方答案也不能洩漏。</p>
+                <h3>只剩一人可猜牌</h3><p>最後一位有猜牌資格的玩家必須立即猜測藥方，不能繼續問牌。有人猜對或所有人都用完猜牌資格，本局才結束；下一局重新洗牌並恢復行動資格。</p>
+                <p>依據：EmperorS4《本草》英文規則 Curing（第 10 頁）。本版本仍有數位改編差異，並非所有流程皆已完成原規則一致性驗收。</p>
               </div>
             </div>
           </section>
@@ -1765,7 +1771,7 @@ function GameRoom() {
         {/* 跟猜面板 Modal - 工單 0131 */}
         {showFollowGuessPanel && followGuessData && (
           <div className="modal-overlay">
-            <div className="modal-content fg-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content fg-modal fg-stage" role="dialog" aria-modal="true" aria-labelledby="fg-stage-title" onClick={(e) => e.stopPropagation()}>
               {/* 草藥紋理背景 */}
               <div className="fg-texture"></div>
               {/* 角落裝飾 */}
@@ -1774,7 +1780,8 @@ function GameRoom() {
 
               {/* 標題區 */}
               <div className="fg-header">
-                <h3 className="fg-title">跟猜階段</h3>
+                <p className="fg-eyebrow">本草 · 同探藥方</p>
+                <h3 id="fg-stage-title" className="fg-title">跟猜階段</h3>
                 <div className="fg-title-line"></div>
               </div>
 
@@ -1786,10 +1793,13 @@ function GameRoom() {
                 <div className="fg-color-pills">
                   {followGuessData.guessedColors.map((color, idx) => (
                     <span key={idx} className={`fg-color-pill fg-color-${color}`}>
+                      <span className="fg-herb-illustration" aria-hidden="true"><HerbArt color={color} /></span>
+                      <span className="fg-herb-label">
                       {color === 'red' ? '紅色藥草' :
                        color === 'yellow' ? '黃色藥草' :
                        color === 'green' ? '綠色藥草' :
                        color === 'blue' ? '藍色藥草' : color}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -1914,21 +1924,31 @@ function GameRoom() {
 
         {/* 局結束 / 猜牌結果面板 - 工單 0133 / 工單 0172 重構 */}
         {showRoundEnd && guessResultData && (
-          <div className="modal-overlay">
-            <div className="modal-content gr-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-overlay gr-ledger-overlay">
+            <div className="modal-content gr-modal gr-ledger" role="dialog" aria-modal="true" aria-labelledby="gr-result-title" onClick={(e) => e.stopPropagation()}>
               {/* 紋理背景 */}
               <div className="gr-texture"></div>
 
-              {/* 頂部標題區 */}
-              <div className="gr-header">
-                <div className="gr-icon-wrapper">
-                  <span className={`material-symbols-outlined gr-icon ${guessResultData.isCorrect ? 'gr-icon-correct' : 'gr-icon-wrong'}`}>
-                    {guessResultData.isCorrect ? 'badge' : 'close'}
-                  </span>
+              {/* 結算演出：牌桌物件 → 結果 → 個人得失分 */}
+              <div className={`gr-header ${guessResultData.isCorrect ? 'is-victory' : 'is-miss'}`}>
+                <div className="gr-round-meta"><span>第 {gameState.currentRound || 1} 局</span><span>本草 · HERBALISM</span></div>
+                <div className="gr-result-scene" aria-hidden="true">
+                  <img src={`${process.env.PUBLIC_URL}/images/tabletop/result-apothecary-vignette.webp`} alt="" draggable="false" />
+                  <div className="gr-scene-sigil">{guessResultData.isCorrect ? '解' : '失'}</div>
                 </div>
-                <h1 className={`gr-title ${guessResultData.isCorrect ? 'gr-title-correct' : 'gr-title-wrong'}`}>
-                  {guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}
-                </h1>
+                <div className="gr-outcome-copy">
+                  <p className="gr-outcome-kicker">{guessResultData.isCorrect ? '藥方已解' : '藥方未明'}</p>
+                  <h1 id="gr-result-title" className={`gr-title ${guessResultData.isCorrect ? 'gr-title-correct' : 'gr-title-wrong'}`}>
+                    {guessResultData.isCorrect ? '猜對了！' : '猜錯了！'}
+                  </h1>
+                  <p className="gr-ledger-caption">{guessResultData.isCorrect ? '線索相合，真相揭曉。' : '蓋牌仍藏著未解的線索。'}</p>
+                </div>
+                <div className="gr-personal-score" aria-label="你的本次得失分">
+                  <span>你的本次得分</span>
+                  <strong className={(guessResultData.scoreChanges[myPlayer?.id] || 0) < 0 ? 'is-negative' : ''}>
+                    {(guessResultData.scoreChanges[myPlayer?.id] || 0) > 0 ? '+' : ''}{guessResultData.scoreChanges[myPlayer?.id] || 0}
+                  </strong><span>分</span>
+                </div>
               </div>
 
               <div className="console-result-body">
@@ -1957,11 +1977,8 @@ function GameRoom() {
               )}
 
               {/* 分數變化區塊 */}
-              <div className="gr-section">
-                <h3 className="gr-section-title">
-                  <span className="material-symbols-outlined">analytics</span>
-                  分數變化
-                </h3>
+              <details className="gr-section gr-changes-section">
+                <summary className="gr-section-title">查看本次得失</summary>
                 <div className="gr-card-list">
                   {Object.entries(guessResultData.scoreChanges).map(([playerId, change]) => {
                     const player = gameState.players.find(p => p.id === playerId);
@@ -1971,7 +1988,7 @@ function GameRoom() {
                       <div key={playerId} className="gr-score-item">
                         <div className="gr-player-info">
                           <div className={`gr-avatar ${change > 0 ? 'gr-avatar-positive' : 'gr-avatar-neutral'}`}>
-                            <span className="material-symbols-outlined">person</span>
+                            <span aria-hidden="true">{(player?.name || '客').slice(0, 1)}</span>
                           </div>
                           <div className="gr-player-details">
                             <p className="gr-player-name">
@@ -1992,7 +2009,7 @@ function GameRoom() {
                     );
                   })}
                 </div>
-              </div>
+              </details>
 
               {/* 預測結果 */}
               {guessResultData.predictionResults && guessResultData.predictionResults.length > 0 && (
@@ -2004,7 +2021,7 @@ function GameRoom() {
               )}
 
               {/* 目前分數區塊 */}
-              <div className="gr-section">
+              <div className="gr-section gr-standing-section">
                 <h3 className="gr-section-title">
                   <span className="material-symbols-outlined">leaderboard</span>
                   目前分數
@@ -2013,9 +2030,9 @@ function GameRoom() {
                   {[...gameState.players]
                     .sort((a, b) => (b.score || 0) - (a.score || 0))
                     .map((player, index) => (
-                      <div key={player.id} className={`gr-ranking-item ${index > 0 ? 'gr-ranking-other' : ''}`}>
+                      <div key={player.id} className={`gr-ranking-item ${player.id === myPlayer?.id ? 'is-self' : ''}`} >
                         <div className="gr-ranking-info">
-                          <span className="gr-rank-number">{index + 1}</span>
+                          <span className="gr-rank-number">{player.name?.slice(0, 1) || index + 1}</span>
                           <p className="gr-rank-name">{player.name}</p>
                           {(player.score || 0) >= 7 && (
                             <span className="gr-winner-badge">勝利！</span>
@@ -2037,6 +2054,7 @@ function GameRoom() {
               </div>
               {/* 工單 0207：底部按鈕區 — 所有玩家都顯示確認按鈕 */}
               <div className="gr-actions">
+                <p className="gr-ledger-footnote">確認後返回牌桌</p>
                 {gameState.gamePhase === GAME_PHASE_FINISHED ? (
                   /* 遊戲結束：所有人看到「離開房間」 */
                   <button className="gr-btn gr-btn-secondary" onClick={handleLeaveRoom}>
@@ -2226,7 +2244,7 @@ function GameRoom() {
               <p className="waiting-turn">等待 {currentPlayer.name} 的回合...</p>
             )}
             {myPlayer?.isActive === false && (
-              <p className="eliminated-message">你已退出遊戲，等待結果...</p>
+              <p className="eliminated-message">你本局不能再主動行動；手牌保密，仍須回應其他玩家問牌與交牌。</p>
             )}
           </div>
         )}
